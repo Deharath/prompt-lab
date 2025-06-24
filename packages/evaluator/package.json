@@ -9,7 +9,7 @@
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "openai": "^4.26.0",
+    "openai": "^4.104.0",
     "p-limit": "^5.0.0"
   }
 }

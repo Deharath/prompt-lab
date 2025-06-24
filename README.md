@@ -59,6 +59,7 @@ pnpm install
 
 cp .env.example .env    # add OPENAI_API_KEY & GEMINI_API_KEY
 pnpm dev
+# starts API (3000) and Vite (5173) with proxy – no URL tweaks needed
 ```
 
 Then visit `http://localhost:5173`.
@@ -87,7 +88,6 @@ prompt-lab/
 ├─ packages/
 │  ├─ evaluator/      # Metrics lib
 │  └─ test-cases/     # JSONL fixtures
-└─ .github/           # CI workflows
 ```
 
 ---
