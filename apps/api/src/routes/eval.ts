@@ -6,6 +6,8 @@ import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
 import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const router = Router();
 
@@ -15,7 +17,12 @@ const bodySchema = z.object({
   testSetId: z.string(),
 });
 
-const dataRoot = path.join(process.cwd(), 'packages', 'test-cases');
+// Absolute path to repo root, regardless of where the process starts
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+
+function datasetPath(id: string) {
+  return join(repoRoot, 'packages', 'test-cases', `${id}.jsonl`);
+}
 
 router.post('/', async (req, res, next) => {
   try {
@@ -28,10 +35,7 @@ router.post('/', async (req, res, next) => {
 
     let raw: string;
     try {
-      raw = await fs.readFile(
-        path.join(dataRoot, `${testSetId}.jsonl`),
-        'utf8',
-      );
+      raw = await fs.readFile(datasetPath(testSetId), 'utf8');
     } catch (readErr) {
       if ((readErr as NodeJS.ErrnoException).code === 'ENOENT') {
         res.status(404).json({ error: 'Dataset not found' });
