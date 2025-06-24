@@ -1,6 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import evalRouter from './routes/eval.js';
 
 dotenv.config();
@@ -20,7 +21,9 @@ const envSchema = z.object({
 
 const { PORT } = envSchema.parse(process.env);
 
-if (require.main === module) {
+// eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename) {
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`API listening on port ${PORT}`);

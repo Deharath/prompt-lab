@@ -2,12 +2,10 @@ import { Router } from 'express';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import {
-  applyTemplate,
-  runBatch,
-} from '../../../../packages/evaluator/src/index.js';
+import { applyTemplate, runBatch } from 'evaluator';
 
 const router = Router();
 
@@ -16,6 +14,9 @@ const bodySchema = z.object({
   model: z.string(),
   testSetId: z.string(),
 });
+
+// eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function datasetPath(id: string): string {
   return path.join(
@@ -30,6 +31,11 @@ function datasetPath(id: string): string {
 router.post('/', async (req, res, next) => {
   try {
     const { promptTemplate, model, testSetId } = bodySchema.parse(req.body);
+
+    if (!process.env.OPENAI_API_KEY) {
+      res.status(503).json({ error: 'OpenAI key not configured' });
+      return;
+    }
 
     const raw = await fs.readFile(datasetPath(testSetId), 'utf8');
     const cases = raw

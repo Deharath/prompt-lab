@@ -5,8 +5,11 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts",
+    "dev": "node --loader ts-node/esm src/index.ts",
     "build": "tsc"
+  },
+  "imports": {
+    "evaluator": "../../packages/evaluator/src/index.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

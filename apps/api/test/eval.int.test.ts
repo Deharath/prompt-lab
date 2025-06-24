@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file, @typescript-eslint/lines-between-class-members */
 import request from 'supertest';
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
@@ -46,7 +47,19 @@ afterAll(() => {
 });
 
 describe('POST /eval integration', () => {
-  it('evaluates prompt over dataset', async () => {
+  it('503 when key missing', async () => {
+    delete process.env.OPENAI_API_KEY;
+    const res = await request('http://localhost:3002').post('/eval').send({
+      promptTemplate: '{{input}}',
+      model: 'gpt-4.1-mini',
+      testSetId: 'news-summaries',
+    });
+
+    expect(res.status).toBe(503);
+  });
+
+  it('evaluates prompt over dataset with key', async () => {
+    process.env.OPENAI_API_KEY = 'test';
     const res = await request('http://localhost:3002').post('/eval').send({
       promptTemplate: '{{input}}',
       model: 'gpt-4.1-mini',

@@ -8,7 +8,11 @@
     "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "evaluator": ["packages/evaluator/src/index.ts"]
+    }
   },
   "include": ["apps/**/*", "packages/**/*", "vitest.config.mts"]
 }
