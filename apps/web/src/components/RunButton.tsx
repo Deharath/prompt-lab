@@ -1,10 +1,11 @@
 interface Props {
   onRun: () => void;
+  loading?: boolean;
 }
 
-const RunButton = ({ onRun }: Props) => (
-  <button type="button" onClick={onRun}>
-    Run
+const RunButton = ({ onRun, loading = false }: Props) => (
+  <button type="button" onClick={onRun} disabled={loading}>
+    {loading ? 'Running...' : 'Run'}
   </button>
 );
 

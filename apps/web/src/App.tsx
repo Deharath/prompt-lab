@@ -1,11 +1,60 @@
+import { useState } from 'react';
 import PromptEditor from './components/PromptEditor.js';
 import RunButton from './components/RunButton.js';
+import ResultsTable from './components/ResultsTable.js';
 
-const App = () => (
-  <div>
-    <PromptEditor />
-    <RunButton onRun={() => {}} />
-  </div>
-);
+interface EvalResult {
+  perItem: unknown[];
+  aggregates: { avgCosSim: number };
+}
+
+const App = () => {
+  const [template, setTemplate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<EvalResult | null>(null);
+
+  const handleRun = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const resp = await fetch('/eval', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptTemplate: template,
+          model: 'gpt-4.1-mini',
+          testSetId: 'news-summaries',
+        }),
+      });
+      if (!resp.ok) throw new Error('Request failed');
+      const data = (await resp.json()) as EvalResult;
+      setResult(data);
+    } catch (err) {
+      setError('Failed to run');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      {error && (
+        <div role="alert" data-testid="error-toast">
+          {error}
+        </div>
+      )}
+      <PromptEditor value={template} onChange={setTemplate} />
+      <RunButton onRun={handleRun} loading={loading} />
+      {loading && <div data-testid="spinner">Loading...</div>}
+      {result && (
+        <ResultsTable
+          perItemCount={result.perItem.length}
+          avgCosSim={result.aggregates.avgCosSim}
+        />
+      )}
+    </div>
+  );
+};
 
 export default App;
