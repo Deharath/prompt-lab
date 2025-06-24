@@ -29,7 +29,7 @@ RUN corepack enable && pnpm fetch --prod
 # Copy manifest & lock-file so pnpm can do a prod-only install
 #───────────────────────────────────────────────────────────────────────────────
 COPY --from=builder /app/package.json           ./
-COPY --from=builder /app/pnpm-workspace.yaml    ./        # ok if absent
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=builder /app/pnpm-lock.yaml         ./
 
 RUN pnpm install --offline --prod
