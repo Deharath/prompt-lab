@@ -58,6 +58,14 @@ describe('POST /eval integration', () => {
     expect(res.status).toBe(503);
   });
 
+  it('500 with JSON when validation fails', async () => {
+    process.env.OPENAI_API_KEY = 'test';
+    const res = await request('http://localhost:3002').post('/eval').send({});
+
+    expect(res.status).toBe(500);
+    expect(JSON.parse(res.text)).toEqual({ error: 'Internal Server Error' });
+  });
+
   it('evaluates prompt over dataset with key', async () => {
     process.env.OPENAI_API_KEY = 'test';
     const res = await request('http://localhost:3002').post('/eval').send({

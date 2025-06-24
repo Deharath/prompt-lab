@@ -19,6 +19,19 @@ app.get('/health', (_req, res) => {
 
 app.use('/eval', evalRouter);
 
+app.use(
+  (
+    err: unknown,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ) => {
+    // eslint-disable-next-line no-console
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  },
+);
+
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
 });
