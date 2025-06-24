@@ -22,6 +22,7 @@ PromptLab is a minimalist playground for **testing, scoring and version-controll
 | `packages/evaluator`  | Pure-TS metrics lib                           |
 | `packages/test-cases` | JSONL fixtures used in eval                   |
 | `scripts`             | Utility scripts (e.g., JSONL lint)            |
+| `.github/workflows`   | GitHub Actions CI configs                     |
 | `tsconfig.json`       | Base TS config shared across apps             |
 
 _Agents must update this table before adding new top-level dirs._
