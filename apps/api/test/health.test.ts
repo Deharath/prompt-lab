@@ -2,7 +2,7 @@
 import request from 'supertest';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it } from 'vitest';
-import { app } from '../src/index';
+import { app } from '../src/index.js';
 
 process.env.PORT = process.env.PORT || '3000';
 
