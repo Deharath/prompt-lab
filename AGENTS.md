@@ -1,86 +1,69 @@
 # PromptLab MVP — Codex Agent Guide
-_This file is **for autonomous agents** (OpenAI Codex or similar) that will open PRs in this repository.  
-Humans may read it too, but the primary audience is code-writing automation._
+_This file is for autonomous agents (OpenAI Codex, etc.) collaborating in this repo._
 
 ---
 
 ## 1. Project Snapshot
-PromptLab is a minimalist playground for **testing, scoring and version-controlling LLM prompts**.  
-Key claims we must uphold:
+PromptLab is a minimalist playground for **testing, scoring and version-controlling prompts** against two ultra-cheap, up-to-date families:
 
-* Node + TypeScript backend hits multiple LLM APIs.  
-* Automated quality / cost metrics over JSONL test-sets.  
-* React (Vite) UI for live prompt tweaking.  
-* CI gate fails on quality regression.
+* **OpenAI GPT-4.1** (plus `gpt-4.1-mini` / `gpt-4.1-nano`)
+* **Google Gemini 2.5 Flash**
 
 ---
 
 ## 2. Folder Map
-
 | Path | Purpose |
 |------|---------|
-| `apps/api` | Express + Zod service. Main entry: `src/index.ts` |
+| `apps/api` | Express + Zod service. Entry → `src/index.ts` |
 | `apps/web` | React 18 + shadcn/ui front-end (Vite) |
-| `packages/evaluator` | Pure-TS lib: embeddings, metrics, retry logic |
-| `packages/test-cases` | JSONL fixtures (`*.jsonl`) used in eval |
+| `packages/evaluator` | Pure-TS metrics lib |
+| `packages/test-cases` | JSONL fixtures used in eval |
 | `.github/workflows` | CI definitions |
-| `docs/*` _(optional)_ | Extra diagrams / ADRs |
 
-> **Rule:** Agents must not create new top-level folders without updating this table.
+_Agents must update this table before adding new top-level dirs._
 
 ---
 
 ## 3. Canonical Dev Commands
-
-| Intent | Command (root) |
-|--------|----------------|
-| Start both servers in watch-mode | `pnpm dev` |
-| Unit tests (Vitest) | `pnpm test` |
-| End-to-end prompt eval | `pnpm test:e2e` |
-| Type-check all workspaces | `pnpm -r tsc --noEmit` |
-| Lint & format | `pnpm lint && pnpm format` |
-
-Scripts live in `package.json` **at the root**; individual workspaces may add overrides.
+| Intent | Command |
+|--------|---------|
+| Dev servers (API + Web) | `pnpm dev` |
+| Unit tests | `pnpm test` |
+| Prompt E2E | `pnpm test:e2e` |
+| Type-check | `pnpm -r tsc --noEmit` |
+| Lint / Format | `pnpm lint && pnpm format` |
 
 ---
 
 ## 4. Style Guardrails
+* **Strict TS**, ESLint (Airbnb+TS) & Prettier  
+* **Vitest** for unit / integration  
+* React hooks-only
 
-* **TypeScript strict** everywhere (`"strict": true` in base `tsconfig.json`).  
-* **ESLint + Prettier** with Airbnb/TypeScript preset.  
-* **Vitest** for both unit and integration tests.  
-* React components: functional, hooks-only, no class components.
-
-Agents should run `pnpm lint && pnpm test && pnpm test:e2e && pnpm -r tsc --noEmit` locally (or via CI) **before** opening a PR.
+Agents must run the full command suite above before opening PRs.
 
 ---
 
 ## 5. Merge Policy
-
-1. **PR-only** workflow. Agents must never push directly to `main`.  
-2. A PR is merge-ready when:  
-   * CI is green on Node 18 and 20.  
-   * Coverage delta ≥ 0 (we do not accept coverage regressions).  
-   * No `eslint --max-warnings 0` violations.  
-3. Human review may request changes; agents should respond with an updated PR.
+1. PR-only, never push straight to `main`.  
+2. CI green on Node 18 & 20, no coverage regressions, zero ESLint warnings.  
+3. Human reviewer may require changes; agent amends the PR.
 
 ---
 
 ## 6. Dependency Boundaries
-
-* Use **OpenAI official SDK** (`openai`) for calls + embeddings.  
-* No heavy frameworks (Nest, Next) — keep api layer lean.  
-* Front-end state: React context or TanStack Query; avoid Redux or MobX.  
-* All secrets live in `.env`; do **not** commit keys.
+* **OpenAI SDK** for GPT-4.1 endpoints.  
+* **Google Generative AI SDK** (or REST) for Gemini 2.5 Flash.  
+* No heavy frameworks; lean Express.  
+* Secrets via `.env`; never commit keys.
 
 ---
 
 ## 7. Forbidden Actions
-
-* Publishing Docker images to public registries.  
-* Creating cloud resources (S3 buckets, Vercel projects, etc.).  
-* Writing to `.npmrc` or `.yarnrc`.  
-* Committing `package-lock.json` (pnpm workspace uses `pnpm-lock.yaml`).
+* Publishing Docker images publicly  
+* Creating cloud resources automatically  
+* Writing to `.npmrc` / `.yarnrc`  
+* Committing `package-lock.json` (we use `pnpm-lock.yaml`)
 
 ---
 
