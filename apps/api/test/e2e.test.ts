@@ -1,0 +1,60 @@
+/* eslint-disable max-classes-per-file, @typescript-eslint/lines-between-class-members */
+import request from 'supertest';
+import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
+
+vi.mock('openai', () => ({
+  default: class {
+    chat = {
+      completions: {
+        create: vi.fn(async () => ({
+          choices: [{ message: { content: 'mock completion' } }],
+          usage: { total_tokens: 5 },
+        })),
+      },
+    };
+    embeddings = {
+      create: vi.fn(async () => ({ data: [{ embedding: [1, 0] }] })),
+    };
+  },
+}));
+
+if (!process.env.GEMINI_API_KEY) {
+  vi.mock('@google/generative-ai', () => ({
+    GoogleGenerativeAI: class {
+      // eslint-disable-next-line class-methods-use-this
+      getGenerativeModel() {
+        return {
+          generateContent: vi.fn(async () => ({
+            response: { text: () => 'gem' },
+          })),
+        };
+      }
+    },
+  }));
+}
+
+// eslint-disable-next-line import/first
+import { app } from '../src/index.js';
+
+let server: ReturnType<typeof app.listen>;
+
+beforeAll(() => {
+  server = app.listen(4000);
+});
+
+afterAll(() => {
+  server.close();
+});
+
+describe('E2E /eval', () => {
+  it('runs evaluation and checks avgCosSim', async () => {
+    process.env.OPENAI_API_KEY = 'test';
+    const res = await request('http://localhost:4000').post('/eval').send({
+      promptTemplate: '{{input}}',
+      model: 'gpt-4.1-mini',
+      testSetId: 'news-summaries',
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.aggregates.avgCosSim).toBeGreaterThanOrEqual(0);
+  });
+});

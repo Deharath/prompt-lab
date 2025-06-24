@@ -2,6 +2,7 @@ import { useState } from 'react';
 import PromptEditor from './components/PromptEditor.js';
 import RunButton from './components/RunButton.js';
 import ResultsTable from './components/ResultsTable.js';
+import ModelSelector from './components/ModelSelector.js';
 
 interface EvalResult {
   perItem: unknown[];
@@ -10,6 +11,7 @@ interface EvalResult {
 
 const App = () => {
   const [template, setTemplate] = useState('');
+  const [model, setModel] = useState('gpt-4.1-mini');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<EvalResult | null>(null);
@@ -23,7 +25,7 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           promptTemplate: template,
-          model: 'gpt-4.1-mini',
+          model,
           testSetId: 'news-summaries',
         }),
       });
@@ -45,6 +47,7 @@ const App = () => {
         </div>
       )}
       <PromptEditor value={template} onChange={setTemplate} />
+      <ModelSelector model={model} onChange={setModel} />
       <RunButton onRun={handleRun} loading={loading} />
       {loading && <div data-testid="spinner">Loading...</div>}
       {result && (
