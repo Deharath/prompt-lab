@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { applyTemplate, runBatch } from 'evaluator';
+import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
 
 const router = Router();
 

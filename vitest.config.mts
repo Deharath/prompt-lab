@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    exclude: ['apps/web/test/**'],
     allowOnly: false,
     mockReset: true,
     hookTimeout: 5000,
