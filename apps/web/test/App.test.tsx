@@ -18,5 +18,14 @@ describe('App', () => {
     await waitFor(() => screen.getByTestId('perItemCount'));
     expect(screen.getByTestId('perItemCount').textContent).toBe('3');
     expect(screen.getByTestId('avgCosSim').textContent).toBe('0.7');
+    expect(global.fetch).toHaveBeenCalledWith('/eval', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        promptTemplate: 'hi {{input}}',
+        model: 'gpt-4.1-mini',
+        testSetId: 'news-summaries',
+      }),
+    });
   });
 });
