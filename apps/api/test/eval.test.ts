@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file, @typescript-eslint/lines-between-class-members */
 import request from 'supertest';
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
+import getPort from 'get-port';
 
 vi.mock('openai', () => ({
   default: class {
@@ -37,9 +38,11 @@ if (!process.env.GEMINI_API_KEY) {
 import { app } from '../src/index.js';
 
 let server: ReturnType<typeof app.listen>;
+let port: number;
 
-beforeAll(() => {
-  server = app.listen(3001);
+beforeAll(async () => {
+  port = await getPort();
+  server = app.listen(port);
 });
 
 afterAll(() => {
@@ -49,7 +52,7 @@ afterAll(() => {
 describe('POST /eval', () => {
   it('503 when key missing', async () => {
     delete process.env.OPENAI_API_KEY;
-    const res = await request('http://localhost:3001').post('/eval').send({
+    const res = await request(`http://localhost:${port}`).post('/eval').send({
       promptTemplate: '{{input}}',
       model: 'gpt-4.1-mini',
       testSetId: 'news-summaries',
@@ -60,7 +63,7 @@ describe('POST /eval', () => {
 
   it('returns evaluation results with key', async () => {
     process.env.OPENAI_API_KEY = 'test';
-    const res = await request('http://localhost:3001').post('/eval').send({
+    const res = await request(`http://localhost:${port}`).post('/eval').send({
       promptTemplate: '{{input}}',
       model: 'gpt-4.1-mini',
       testSetId: 'news-summaries',

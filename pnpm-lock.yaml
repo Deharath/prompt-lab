@@ -74,6 +74,9 @@ importers:
       eslint-plugin-vitest:
         specifier: 0.5.4
         version: 0.5.4(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)(vitest@1.5.0(@types/node@24.0.3)(jsdom@26.1.0))
+      get-port:
+        specifier: ^7.1.0
+        version: 7.1.0
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -123,6 +126,9 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.23
+      get-port:
+        specifier: ^7.1.0
+        version: 7.1.0
       supertest:
         specifier: ^6.3.3
         version: 6.3.4
@@ -2855,6 +2861,13 @@ packages:
         integrity: sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==,
       }
     engines: { node: '>= 0.4' }
+
+  get-port@7.1.0:
+    resolution:
+      {
+        integrity: sha512-QB9NKEeDg3xxVwCCwJQ9+xycaz6pBB6iQ76wiWMl1927n0Kir6alPiP+yuiICLLU4jpMe08dXfpebuQppFA2zw==,
+      }
+    engines: { node: '>=16' }
 
   get-proto@1.0.1:
     resolution:
@@ -6876,6 +6889,8 @@ snapshots:
       has-symbols: 1.1.0
       hasown: 2.0.2
       math-intrinsics: 1.1.0
+
+  get-port@7.1.0: {}
 
   get-proto@1.0.1:
     dependencies:

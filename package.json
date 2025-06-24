@@ -38,6 +38,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-vitest": "0.5.4",
+    "get-port": "^7.1.0",
     "jsdom": "^26.1.0",
     "prettier": "^2.8.8",
     "supertest": "^6.3.3",

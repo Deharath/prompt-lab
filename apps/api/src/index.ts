@@ -1,14 +1,14 @@
 import express from 'express';
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import evalRouter from './routes/eval.js';
 
+// Resolve repo root from this file location
+const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
 // Explicitly load the root .env file
-dotenv.config({
-  path: join(dirname(fileURLToPath(import.meta.url)), '../../../.env'),
-});
+dotenv.config({ path: join(rootDir, '.env') });
 
 export const app = express();
 app.use(express.json());

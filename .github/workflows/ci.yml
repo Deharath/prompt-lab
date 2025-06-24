@@ -19,8 +19,8 @@ jobs:
       - name: Set up pnpm 10
         uses: pnpm/action-setup@v2
         with:
-          version: 10.12.3        # keep in sync with your local version
-          run_install: false      # we run install ourselves
+          version: 10.12.3 # keep in sync with your local version
+          run_install: false # we run install ourselves
 
       # 3. Set up Node for the current matrix entry
       - uses: actions/setup-node@v4
