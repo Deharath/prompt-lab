@@ -2,9 +2,10 @@
   "name": "@prompt-lab/api",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts",
+    "dev": "ts-node-dev --loader ts-node/esm src/index.ts",
     "build": "tsc"
   },
   "dependencies": {

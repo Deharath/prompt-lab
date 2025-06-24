@@ -1,6 +1,8 @@
+import { fileURLToPath } from 'url';
 import express from 'express';
-import { z } from 'zod';
 import dotenv from 'dotenv';
+import { z } from 'zod';
+import evalRouter from './routes/eval.js';
 
 dotenv.config();
 
@@ -11,16 +13,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-const evalSchema = z.object({
-  promptTemplate: z.string(),
-  model: z.string(),
-  testSetId: z.string(),
-});
-
-app.post('/eval', (req, res) => {
-  const parsed = evalSchema.parse(req.body);
-  res.json(parsed);
-});
+app.use('/eval', evalRouter);
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
@@ -28,7 +21,9 @@ const envSchema = z.object({
 
 const { PORT } = envSchema.parse(process.env);
 
-if (require.main === module) {
+const isEntry = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isEntry) {
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`API listening on port ${PORT}`);

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { beforeAll, afterAll, describe, it } from 'vitest';
-import { app } from '../src/index';
+import { app } from '../src/index.js';
 
 let server: ReturnType<typeof app.listen>;
 
