@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import fs from 'fs/promises';
-import path from 'path';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
