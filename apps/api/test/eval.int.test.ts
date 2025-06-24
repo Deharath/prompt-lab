@@ -38,23 +38,23 @@ import { app } from '../src/index.js';
 let server: ReturnType<typeof app.listen>;
 
 beforeAll(() => {
-  server = app.listen(3001);
+  server = app.listen(3002);
 });
 
 afterAll(() => {
   server.close();
 });
 
-describe('POST /eval', () => {
-  it('returns evaluation results', async () => {
-    const res = await request('http://localhost:3001').post('/eval').send({
+describe('POST /eval integration', () => {
+  it('evaluates prompt over dataset', async () => {
+    const res = await request('http://localhost:3002').post('/eval').send({
       promptTemplate: '{{input}}',
       model: 'gpt-4.1-mini',
       testSetId: 'news-summaries',
     });
 
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.perItem)).toBe(true);
     expect(res.body.perItem.length).toBe(15);
+    expect(Number.isFinite(res.body.aggregates.avgCosSim)).toBe(true);
   });
 });
