@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Express } from 'express';
 import { z } from 'zod';
 import dotenv from 'dotenv';
 import { join } from 'node:path';
@@ -10,7 +10,7 @@ const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
 // Explicitly load the root .env file
 dotenv.config({ path: join(rootDir, '.env') });
 
-export const app = express();
+export const app: Express = express();
 app.use(express.json());
 
 app.get('/health', (_req, res) => {

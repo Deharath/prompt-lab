@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Router as ExpressRouter } from 'express';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import OpenAI from 'openai';
@@ -8,7 +8,7 @@ import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 const bodySchema = z.object({
   promptTemplate: z.string(),
