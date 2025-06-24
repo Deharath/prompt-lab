@@ -2,9 +2,20 @@
   "name": "@prompt-lab/web",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "main": "src/main.tsx",
   "scripts": {
-    "dev": "echo 'web dev'",
+    "dev": "vite",
     "build": "tsc"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "vite": "7.0.0",
+    "vitest": "1.5.0",
+    "@vitejs/plugin-react": "^4.6.0",
+    "@testing-library/react": "^16.3.0"
   }
 }

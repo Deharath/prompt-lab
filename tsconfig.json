@@ -9,10 +9,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "evaluator": ["packages/evaluator/src/index.ts"]
     }
   },
-  "include": ["apps/**/*", "packages/**/*", "vitest.config.mts"]
+  "include": ["apps/**/*", "packages/**/*", "vitest.config.mts"],
+  "exclude": ["**/vite.config.ts", "**/vitest.config.ts"]
 }
