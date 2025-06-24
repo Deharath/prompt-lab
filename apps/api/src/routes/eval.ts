@@ -26,10 +26,19 @@ router.post('/', async (req, res, next) => {
       return;
     }
 
-    const raw = await fs.readFile(
-      path.join(dataRoot, `${testSetId}.jsonl`),
-      'utf8',
-    );
+    let raw: string;
+    try {
+      raw = await fs.readFile(
+        path.join(dataRoot, `${testSetId}.jsonl`),
+        'utf8',
+      );
+    } catch (readErr) {
+      if ((readErr as NodeJS.ErrnoException).code === 'ENOENT') {
+        res.status(404).json({ error: 'Dataset not found' });
+        return;
+      }
+      throw readErr;
+    }
     const cases = raw
       .trim()
       .split('\n')
@@ -38,7 +47,10 @@ router.post('/', async (req, res, next) => {
           JSON.parse(line) as { id: string; input: string; expected: string },
       );
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      timeout: 15000,
+    });
     const genAI = process.env.GEMINI_API_KEY
       ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
       : null;
@@ -74,8 +86,16 @@ router.post('/', async (req, res, next) => {
       } else if (model === 'gemini-2.5-flash') {
         if (genAI) {
           const gemModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
-          const resp = await gemModel.generateContent(prompt);
-          completion = resp.response.text();
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 15000);
+          try {
+            const resp = await gemModel.generateContent(prompt, {
+              signal: controller.signal,
+            });
+            completion = resp.response.text();
+          } finally {
+            clearTimeout(timer);
+          }
         } else {
           completion = 'MOCK_GEMINI_RESPONSE';
         }
