@@ -8,6 +8,5 @@ export default defineConfig({
     hookTimeout: 5000,
     deps: { inline: [/vitest/] },
     coverage: { reporter: ['text', 'json'] },
-    threads: false,
   },
 });
