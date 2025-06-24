@@ -17,27 +17,33 @@
 
 ## 🗂️ Architecture
 ```mermaid
-sequenceDiagram
-  participant Editor
-  participant Web_UI as Web UI (React)
-  participant API as Express API
-  participant GPT as GPT-4.1
-  participant GEM as Gemini 2.5 Flash
-  participant Eval as Evaluator
+%% PromptLab high-level flow (GPT-4.1 & Gemini 2.5 Flash)
+flowchart LR
+    %% style tweaks for readability – safe in GitHub
+    classDef comp fill:#1f2937,stroke:#fff,color:#fff,rx:6,ry:6;
+    classDef ext  fill:#0f766e,stroke:#fff,color:#fff,rx:6,ry:6;
+    classDef user fill:#f59e0b,stroke:#fff,color:#fff,rx:50,ry:50;
 
-  Editor->>Web_UI: Edit prompt + Run
-  Web_UI->>API: POST /eval {template,model,setId}
-  alt model == GPT-4.1*
-    API->>GPT: batched prompts
-    GPT-->>API: completions
-  else model == Gemini 2.5 Flash
-    API->>GEM: batched prompts
-    GEM-->>API: completions
-  end
-  API->>Eval: {input,expected,completion}
-  Eval-->>API: scores, tokens, latency, cost
-  API-->>Web_UI: per-item + aggregate
-  Web_UI-->>Editor: render results
+    U[Editor]:::user -->|Run| A["Web UI"]:::comp
+    A -->|POST /eval| B["Express API"]:::comp
+
+    subgraph "LLM Pool"
+        direction LR
+        C["GPT-4.1*"]:::ext
+        D["Gemini 2.5 Flash"]:::ext
+    end
+
+    B -->|route by <br>model| C
+    B --> D
+
+    C --> B
+    D --> B
+
+    B --> E["Evaluator<br>(metrics + cost)"]:::comp
+    E --> B
+    B --> A
+    A -->|Render results| U
+
 ````
 
 ---
