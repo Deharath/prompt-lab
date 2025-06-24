@@ -1,4 +1,7 @@
-# ❶ Builder stage – installs *all* deps & compiles every workspace package
+    && pnpm --filter api --prod install \
+    && pnpm --filter @prompt-lab/evaluator --prod install
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/packages/evaluator/node_modules ./packages/evaluator/node_modules
 ###############################################################################
 FROM node:22-alpine AS builder
 
