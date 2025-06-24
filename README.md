@@ -66,6 +66,14 @@ Then visit `http://localhost:5173`.
 
 ---
 
+### Local build
+
+```bash
+pnpm build:api && pnpm --filter web run build
+```
+
+---
+
 ## 🛠️ Dev Scripts
 
 | Command                     | Purpose                                      |
