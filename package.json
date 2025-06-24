@@ -15,7 +15,8 @@
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts",
     "lint": "eslint \"**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "lint:data": "node scripts/lint-jsonl.cjs"
+    "lint:data": "node scripts/lint-jsonl.cjs",
+    "build:api": "pnpm --filter api run build"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
