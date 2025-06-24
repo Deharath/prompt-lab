@@ -1,21 +1,21 @@
 ###############################################################################
-# 1. BUILD STAGE – compile API (and web bundle so we keep the old behaviour)  #
+# 1. BUILD STAGE – compile API and build web bundle                           #
 ###############################################################################
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 RUN corepack enable
 
-# full monorepo context
+# full workspace
 COPY . .
 
-# install once – uses the lock-file that’s already in the repo
+# install + build once (kept in a single layer for CI speed)
 RUN pnpm install --frozen-lockfile \
-  && pnpm --filter api run build \
-  && pnpm --filter web run build   # ← still produces the static web bundle
+  && pnpm --filter api  run build \
+  && pnpm --filter web  run build
 
 ###############################################################################
-# 2. RUNTIME STAGE – only what we actually need to run the API                #
+# 2. RUNTIME STAGE – minimal image that only runs the API                     #
 ###############################################################################
 FROM node:22-slim AS runner
 
@@ -25,15 +25,22 @@ ENV NODE_ENV=production \
 
 RUN corepack enable && pnpm fetch --prod
 
-# ── production dependencies only ────────────────────────────────────────────
-COPY --from=builder /app/pnpm-lock.yaml ./
+#───────────────────────────────────────────────────────────────────────────────
+# Copy manifest & lock-file so pnpm can do a prod-only install
+#───────────────────────────────────────────────────────────────────────────────
+COPY --from=builder /app/package.json           ./
+COPY --from=builder /app/pnpm-workspace.yaml    ./        # ok if absent
+COPY --from=builder /app/pnpm-lock.yaml         ./
+
 RUN pnpm install --offline --prod
 
-# ── compiled API + evaluator sources (needed at runtime) ────────────────────
+#───────────────────────────────────────────────────────────────────────────────
+# Bring in compiled API artefacts + evaluator code required at runtime
+#───────────────────────────────────────────────────────────────────────────────
 COPY --from=builder /app/apps/api/dist            ./apps/api/dist
 COPY --from=builder /app/packages/evaluator/src   ./packages/evaluator/src
 
-# ── optional: serve the built web bundle from /public using any static host ─
+# OPTIONAL: if you want to serve the static web bundle from this container
 # COPY --from=builder /app/apps/web/dist           ./public
 
 EXPOSE 3000
