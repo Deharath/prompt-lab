@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev:api": "pnpm --filter api run dev",
-    "dev:web": "vite --filter web",
+    "dev:web": "pnpm --filter web run dev",
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "tsc": "pnpm exec tsc --noEmit -p tsconfig.json",
     "test": "pnpm tsc && pnpm exec vitest run --config apps/web/vitest.config.ts",
@@ -41,7 +41,7 @@
     "jsdom": "^26.1.0",
     "prettier": "^2.8.8",
     "supertest": "^6.3.3",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.20.3",
     "typescript": "4.9.5",
     "vite": "7.0.0",
     "vitest": "1.5.0"

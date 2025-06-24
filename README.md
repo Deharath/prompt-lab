@@ -6,16 +6,18 @@
 ---
 
 ## ✨ Features
-* **Multi-model**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash.  
-* **Automated eval**: embedding-cosine, exact-match & length heuristics; DeepEval/BERTScore pluggable.  
-* **Cost & latency tracking** baked into every run.  
-* **React UI** with history pane — no backend refresh.  
-* **CI gate** fails if your latest prompt degrades benchmark.  
-* **Monorepo** (`pnpm`) with strict TypeScript.
+
+- **Multi-model**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash.
+- **Automated eval**: embedding-cosine, exact-match & length heuristics; DeepEval/BERTScore pluggable.
+- **Cost & latency tracking** baked into every run.
+- **React UI** with history pane — no backend refresh.
+- **CI gate** fails if your latest prompt degrades benchmark.
+- **Monorepo** (`pnpm`) with strict TypeScript.
 
 ---
 
 ## 🗂️ Architecture
+
 ```mermaid
 %% PromptLab high-level flow (GPT-4.1 & Gemini 2.5 Flash)
 flowchart LR
@@ -44,7 +46,7 @@ flowchart LR
     B --> A
     A -->|Render results| U
 
-````
+```
 
 ---
 
@@ -92,20 +94,20 @@ prompt-lab/
 
 ## 📋 Stretch Goals
 
-* Adapter layer for “bring-your-own” model.
-* GPT self-eval metric vs. embedding cosine.
-* Micro RAG experiment tracking hallucination.
+- Adapter layer for “bring-your-own” model.
+- GPT self-eval metric vs. embedding cosine.
+- Micro RAG experiment tracking hallucination.
 
 ---
 
 ## 🛑 Disclaimers
 
-* No cloud creds stored—use your own `.env`.
-* Test cases are synthetic.
-* MIT licence; double-check token cost before running `pnpm test:e2e`.
+- No cloud creds stored—use your own `.env`.
+- Test cases are synthetic.
+- MIT licence; double-check token cost before running `pnpm test:e2e`.
 
 ---
 
-![CI](https://img.shields.io/badge/CI-pending-lightgrey)  ![Coverage](https://img.shields.io/badge/coverage-0%25-red)
+![CI](https://img.shields.io/badge/CI-pending-lightgrey) ![Coverage](https://img.shields.io/badge/coverage-0%25-red)
 
-*End of README.md*
+_End of README.md_

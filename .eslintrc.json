@@ -4,12 +4,7 @@
   "parserOptions": {
     "project": "./tsconfig.json"
   },
-  "plugins": [
-    "@typescript-eslint",
-    "prettier",
-    "react",
-    "react-hooks"
-  ],
+  "plugins": ["@typescript-eslint", "prettier", "react", "react-hooks"],
   "extends": [
     "airbnb-base",
     "airbnb-typescript/base",
