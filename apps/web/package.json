@@ -1,0 +1,10 @@
+{
+  "name": "@prompt-lab/web",
+  "private": true,
+  "version": "0.0.0",
+  "main": "src/main.tsx",
+  "scripts": {
+    "dev": "echo 'web dev'",
+    "build": "tsc"
+  }
+}
