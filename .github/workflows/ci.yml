@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 22.x]
+
+    steps:
+      # 1. Check out repo
+      - uses: actions/checkout@v4
+
+      # 2. Install the exact pnpm major that generated pnpm-lock.yaml
+      - name: Set up pnpm 10
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.12.3        # keep in sync with your local version
+          run_install: false      # we run install ourselves
+
+      # 3. Set up Node for the current matrix entry
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      # 4. Cache pnpm store for faster installs
+      - name: Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/share/pnpm/store/v3
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 5. Install deps using the lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 6. Lint, type-check, unit tests, e2e tests
+      - run: pnpm lint
+      - run: pnpm tsc
+      - run: pnpm test
+      - run: pnpm test:e2e

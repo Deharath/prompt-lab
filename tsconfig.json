@@ -17,6 +17,11 @@
       "evaluator": ["packages/evaluator/src/index.ts"]
     }
   },
-  "include": ["apps/**/*", "packages/**/*", "scripts/**/*", "vitest.config.mts"],
+  "include": [
+    "apps/**/*",
+    "packages/**/*",
+    "scripts/**/*",
+    "vitest.config.mts"
+  ],
   "exclude": ["**/vite.config.ts", "**/vitest.config.ts"]
 }
