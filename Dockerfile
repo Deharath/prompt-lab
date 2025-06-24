@@ -1,4 +1,3 @@
-CMD ["node","apps/api/dist/index.js"]
 # ❶ Builder stage – installs *all* deps & compiles every workspace package
 ###############################################################################
 FROM node:22-alpine AS builder
