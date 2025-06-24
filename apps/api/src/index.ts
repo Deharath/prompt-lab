@@ -1,6 +1,7 @@
 import express from 'express';
-import { z } from 'zod';
 import dotenv from 'dotenv';
+import { z } from 'zod';
+import evalRoutes from './routes/eval.js';
 
 dotenv.config();
 
@@ -11,16 +12,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-const evalSchema = z.object({
-  promptTemplate: z.string(),
-  model: z.string(),
-  testSetId: z.string(),
-});
-
-app.post('/eval', (req, res) => {
-  const parsed = evalSchema.parse(req.body);
-  res.json(parsed);
-});
+app.use('/eval', evalRoutes);
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
