@@ -12,23 +12,20 @@ jobs:
         node-version: [18.x, 22.x]
 
     steps:
-      # 1. Check out repo
+      # ──────────────────────────────── common JS/TS tasks ────────────────────────────────
       - uses: actions/checkout@v4
 
-      # 2. Install the exact pnpm major that generated pnpm-lock.yaml
       - name: Set up pnpm 10
         uses: pnpm/action-setup@v2
         with:
-          version: 10.12.3         # keep in sync with your local version
-          run_install: false       # we run install ourselves
+          version: 10.12.3          # keep in sync with local install
+          run_install: false
 
-      # 3. Set up Node for the current matrix entry
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
-      # 4. Cache pnpm store for faster installs
       - name: Cache pnpm store
         uses: actions/cache@v3
         with:
@@ -37,11 +34,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      # 5. Install deps using the lockfile
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 6. Lint, type-check, unit tests, e2e tests
       - run: pnpm lint
       - run: pnpm tsc
       - run: pnpm test
@@ -53,37 +48,44 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: docker/setup-buildx-action@v3
 
-      # Build the production image and load it into the local Docker daemon
+      # build image and load into local docker daemon
       - uses: docker/build-push-action@v5
         with:
           context: .
           tags: promptlab:test
           load: true
 
-      # Start the container in the background
+      # start the container (‼️ no --rm so we can read logs even if it crashes)
       - name: Start container
-        run: docker run -d --rm --name promptlab -p 3000:3000 promptlab:test
+        run: docker run -d --name promptlab -p 3000:3000 promptlab:test
 
-      # Poll /health for up to 40 s, printing logs on each failed attempt
-      - name: Wait for API to become healthy
+      # health-check loop (max 40 s).  Fails fast if container dies.
+      - name: Wait for API /health
         run: |
           for i in {1..20}; do
+            # has the container exited?
+            if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
+              echo "Container exited early 😭"
+              docker logs promptlab || true
+              exit 1
+            fi
+
+            # try the health endpoint
             if curl -sf http://localhost:3000/health > /dev/null ; then
               echo "API is up 🎉"
               exit 0
             fi
             echo "API not up yet… retrying ($i/20)"
-            docker logs --tail=20 promptlab || true
             sleep 2
           done
-          echo "API never started 😭"
+
+          echo "Gave up waiting for API"
           docker logs promptlab || true
           exit 1
 
-      # Always stop the container
-      - name: Shut down container
+      # always stop & remove container so the runner stays clean
+      - name: Stop container
         if: always()
-        run: docker kill promptlab || true
+        run: docker rm -f promptlab || true
