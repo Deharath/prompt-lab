@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["apps/**/*", "packages/**/*", "vitest.config.ts"]
+  "include": ["apps/**/*", "packages/**/*", "vitest.config.mts"]
 }

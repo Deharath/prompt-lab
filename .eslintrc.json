@@ -18,12 +18,12 @@
   "ignorePatterns": ["dist", "node_modules"],
   "overrides": [
     {
-      "files": ["vitest.config.ts", "**/*.test.ts"],
+      "files": ["vitest.config.mts", "**/*.test.ts"],
       "env": { "jest": true },
       "rules": {
         "import/no-extraneous-dependencies": [
           "error",
-          { "devDependencies": ["vitest.config.ts", "**/*.test.ts"] }
+          { "devDependencies": ["vitest.config.mts", "**/*.test.ts"] }
         ]
       }
     }
