@@ -1,8 +1,12 @@
-###############################################################################
-# ── ❶ Build stage ──────────────────────────────────────────────────────────── #
-# Uses Alpine to keep the build container tiny.
-###############################################################################
-FROM node:22-alpine AS builder
+    && pnpm --filter @prompt-lab/evaluator run build \
+    && pnpm --filter api run build \
+    && pnpm --filter web run build \
+    && pnpm prune --prod
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/packages/evaluator/dist ./packages/evaluator/dist
+COPY --from=builder /app/node_modules ./node_modules
+RUN test -f node_modules/.modules.yaml
+CMD ["node","apps/api/dist/src/index.js"]
 
 WORKDIR /app
 RUN corepack enable                         # enables pnpm

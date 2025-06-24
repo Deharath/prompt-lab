@@ -45,9 +45,17 @@ jobs:
   docker:
     needs: build
     runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
+      - run: docker run -d -p 3000:3000 --name promptlab promptlab:test
+      - name: Health check
+        run: |
+          for i in {1..20}; do
+            if curl -sf http://localhost:3000/health > /dev/null; then
+              echo "healthy" && exit 0
+            fi
+            sleep 2
+          done
+          echo "container did not become healthy" && docker logs --tail=20 promptlab && exit 1
+      - run: docker rm -f promptlab || true
       - uses: docker/setup-buildx-action@v3
 
       # build image and load into local docker daemon
