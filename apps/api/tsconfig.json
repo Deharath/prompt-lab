@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "evaluator": ["../../packages/evaluator/src/index.ts"]
+    }
   },
   "include": ["src"]
 }
