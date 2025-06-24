@@ -55,6 +55,6 @@ describe('E2E /eval', () => {
       testSetId: 'news-summaries',
     });
     expect(res.status).toBe(200);
-    expect(res.body.aggregates.avgCosSim).toBeGreaterThanOrEqual(0);
+    expect(res.body.aggregates.avgCosSim).toBeGreaterThanOrEqual(0.7);
   });
 });
