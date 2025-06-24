@@ -1,48 +1,37 @@
-    && pnpm --filter @prompt-lab/evaluator run build \
-    && pnpm --filter api run build \
-    && pnpm --filter web run build \
-    && pnpm prune --prod
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/packages/evaluator/dist ./packages/evaluator/dist
-COPY --from=builder /app/node_modules ./node_modules
-RUN test -f node_modules/.modules.yaml
-CMD ["node","apps/api/dist/src/index.js"]
+# ────────────────────────────── build stage ──────────────────────────────
+FROM node:22-alpine AS builder
 
 WORKDIR /app
-RUN corepack enable                         # enables pnpm
+RUN corepack enable                             # enables pnpm
 
-# copy *everything* the build needs
+# Copy full repo for a monorepo build
 COPY . .
 
-# install full workspace deps & build both sub-apps in one shot
+# Install all deps and build both sub-apps
 RUN pnpm install --frozen-lockfile \
- && pnpm --filter api  run build            \
- && pnpm --filter web  run build
+ && pnpm --filter api run build \
+ && pnpm --filter web run build
 
-###############################################################################
-# ── ❷ Runtime stage ───────────────────────────────────────────────────────── #
-# Slim image + only production bits → small and fast.
-###############################################################################
+# ────────────────────────────── runtime stage ────────────────────────────
 FROM node:22-slim AS runner
 
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable                             # enables pnpm
 
-# ── copy runtime artefacts ───────────────────────────────────────────────────
-# compiled JS bundles
+# ─ copy production assets from the builder image ─
 COPY --from=builder /app/apps/web/dist  ./public
-COPY --from=builder /app/apps/api/dist  ./dist
+COPY --from=builder /app/apps/api/dist  ./apps/api/dist
 
-# package manager files
-COPY --from=builder /app/package.json \
-                     /app/pnpm-lock.yaml \
-                     /app/pnpm-workspace.yaml \
-                     ./
+# root package manager files for pnpm --prod install
+COPY --from=builder /app/package.json        ./
+COPY --from=builder /app/pnpm-lock.yaml      ./
+COPY --from=builder /app/pnpm-workspace.yaml ./   # ignore-missing won’t be needed now
 
-# production-only node_modules (already prepared by the builder)
-COPY --from=builder /app/node_modules ./node_modules
+# prune dev-only deps.
+RUN pnpm install --prod --frozen-lockfile
 
-ENV NODE_ENV=production
+# Expose API port
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+# Start the compiled API (entrypoint lives in apps/api/dist/index.js)
+CMD ["node", "apps/api/dist/index.js"]
