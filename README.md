@@ -1,43 +1,43 @@
-### `README.md`
-
-````markdown
 # PromptLab MVP
 
-> A production-grade sandbox for **LLM prompt engineering & evaluation**.  
-> Editors tweak a prompt, hit **Run**, and instantly see quality, latency and $$$ metrics.  
-> Built to showcase solid Node/TS chops, not slide-deck vapour.
+> **LLM prompt sandbox** with live metrics on _GPT-4.1 (+ mini / nano)_ and _Gemini 2.5 Flash_.  
+> Built to show real Node + TS chops, not slide-deck vapourware.
 
 ---
 
 ## ✨ Features
-
-* **Multi-model**: GPT-4o, GPT-3.5-turbo, Gemini-pro (adapter pattern).  
-* **Automated eval**: cosine similarity via embeddings, exact-match & length heuristics, pluggable DeepEval/BERTScore.  
+* **Multi-model**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash.  
+* **Automated eval**: embedding-cosine, exact-match & length heuristics; DeepEval/BERTScore pluggable.  
 * **Cost & latency tracking** baked into every run.  
-* **React UI** with history sidebar — zero backend refresh.  
-* **CI gate** fails if your latest prompt worsens the benchmark.  
-* **Monorepo** (`pnpm`) with strict TypeScript everywhere.
+* **React UI** with history pane — no backend refresh.  
+* **CI gate** fails if your latest prompt degrades benchmark.  
+* **Monorepo** (`pnpm`) with strict TypeScript.
 
 ---
 
 ## 🗂️ Architecture
-
 ```mermaid
 sequenceDiagram
   participant Editor
   participant Web_UI as Web UI (React)
   participant API as Express API
-  participant LLM
-  participant Evaluator
+  participant GPT as GPT-4.1
+  participant GEM as Gemini 2.5 Flash
+  participant Eval as Evaluator
 
-  Editor->>Web_UI: Edit prompt + click Run
+  Editor->>Web_UI: Edit prompt + Run
   Web_UI->>API: POST /eval {template,model,setId}
-  API->>LLM: Batched calls with hydrated prompts
-  LLM-->>API: Completions
-  API->>Evaluator: {input,expected,completion}
-  Evaluator-->>API: Scores, tokenUsage, latency
-  API-->>Web_UI: per-item + aggregate JSON
-  Web_UI-->>Editor: Render table & graphs
+  alt model == GPT-4.1*
+    API->>GPT: batched prompts
+    GPT-->>API: completions
+  else model == Gemini 2.5 Flash
+    API->>GEM: batched prompts
+    GEM-->>API: completions
+  end
+  API->>Eval: {input,expected,completion}
+  Eval-->>API: scores, tokens, latency, cost
+  API-->>Web_UI: per-item + aggregate
+  Web_UI-->>Editor: render results
 ````
 
 ---
@@ -49,23 +49,23 @@ git clone https://github.com/you/prompt-lab.git
 cd prompt-lab
 pnpm install
 
-cp .env.example .env   # add your OPENAI_API_KEY
-pnpm dev               # runs api + web concurrently
+cp .env.example .env    # add OPENAI_API_KEY & GEMINI_API_KEY
+pnpm dev
 ```
 
-Visit `http://localhost:5173` and start hacking.
+Then visit `http://localhost:5173`.
 
 ---
 
 ## 🛠️ Dev Scripts
 
-| Command                     | What it does                                                      |
-| --------------------------- | ----------------------------------------------------------------- |
-| `pnpm dev`                  | Vite front-end + ts-node-dev backend                              |
-| `pnpm test`                 | Vitest unit tests                                                 |
-| `pnpm test:e2e`             | One full prompt-eval against test set; fails if `avgCosSim < 0.7` |
-| `pnpm -r tsc --noEmit`      | Type-check all workspaces                                         |
-| `pnpm lint` / `pnpm format` | ESLint + Prettier                                                 |
+| Command                     | Purpose                                      |
+| --------------------------- | -------------------------------------------- |
+| `pnpm dev`                  | Vite front-end + ts-node-dev API             |
+| `pnpm test`                 | Vitest unit                                  |
+| `pnpm test:e2e`             | Full prompt-eval; fails if `avgCosSim < 0.7` |
+| `pnpm -r tsc --noEmit`      | Type-check all pkgs                          |
+| `pnpm lint` / `pnpm format` | Lint & auto-format                           |
 
 ---
 
@@ -74,43 +74,32 @@ Visit `http://localhost:5173` and start hacking.
 ```text
 prompt-lab/
 ├─ apps/
-│  ├─ api/           # Express + Zod, /health & /eval
-│  └─ web/           # React 18 + shadcn/ui front-end
+│  ├─ api/            # Express + Zod
+│  └─ web/            # React + shadcn/ui
 ├─ packages/
-│  ├─ evaluator/     # Pure-TS metrics lib
-│  └─ test-cases/    # JSONL fixtures for eval
-└─ .github/          # CI workflows
+│  ├─ evaluator/      # Metrics lib
+│  └─ test-cases/     # JSONL fixtures
+└─ .github/           # CI workflows
 ```
 
 ---
 
-## 🧪 Test Philosophy
+## 📋 Stretch Goals
 
-* **Unit** → deterministic logic (`applyTemplate`, `scorePair`).
-* **Integration** → mocked OpenAI calls to assert api contract.
-* **E2E** → real model hit on a tiny set, run in CI nightly or on demand.
-
----
-
-## 📋 TODO / Stretch Goals
-
-* LangChain adapters for “bring-your-own model”.
-* Swap embedding cosine for GPT-4o self-eval & compare correlation.
-* Minimal RAG pipeline measuring hallucination rate.
+* Adapter layer for “bring-your-own” model.
+* GPT self-eval metric vs. embedding cosine.
+* Micro RAG experiment tracking hallucination.
 
 ---
 
 ## 🛑 Disclaimers
 
-* This repo stores **no** cloud credentials. Provide your own `.env`.
-* Example test-cases are synthetic to avoid copyright fuss.
-* Licensed MIT — use at your own risk; double-check token cost before slamming `pnpm test:e2e`.
+* No cloud creds stored—use your own `.env`.
+* Test cases are synthetic.
+* MIT licence; double-check token cost before running `pnpm test:e2e`.
 
 ---
 
 ![CI](https://img.shields.io/badge/CI-pending-lightgrey)  ![Coverage](https://img.shields.io/badge/coverage-0%25-red)
-*Badge placeholders auto-update once CI is wired.*
-
----
 
 *End of README.md*
