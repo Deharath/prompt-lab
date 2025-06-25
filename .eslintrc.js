@@ -3,7 +3,6 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
-      './tsconfig.json',
       './apps/*/tsconfig.json',
       './packages/*/tsconfig.json',
     ],
@@ -34,7 +33,6 @@ module.exports = {
       {
         ts: 'never',
         tsx: 'never',
-        js: 'never',
       },
     ],
   },

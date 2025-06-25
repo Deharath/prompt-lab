@@ -2,7 +2,6 @@
 import { describe, it, vi, expect } from 'vitest';
 // eslint-disable-next-line object-curly-newline
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-// eslint-disable-next-line import/extensions
 import App from '../src/App.js';
 
 describe('App', () => {

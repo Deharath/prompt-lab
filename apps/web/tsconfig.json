@@ -3,14 +3,15 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "outDir": "dist",
-    "rootDir": "src",
     "lib": ["DOM", "ESNext"],
     "types": ["vite/client", "vitest"],
     "composite": true
   },
   "include": [
-    "src/**/*",
-    "src/*.d.ts"
+    "src",
+    "test",
+    "vite.config.ts",
+    "vitest.config.ts"
   ],
   "references": [
     { "path": "../../packages/evaluator" },
