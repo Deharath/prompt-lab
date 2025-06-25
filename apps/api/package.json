@@ -11,7 +11,7 @@
     "tsc": "tsc -p tsconfig.json --noEmit"
   },
   "imports": {
-    "evaluator": "../../packages/evaluator/src/index.ts"
+    "@prompt-lab/evaluator": "../../packages/evaluator/src/index.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

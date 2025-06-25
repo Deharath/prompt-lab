@@ -1,5 +1,6 @@
 import type OpenAI from 'openai';
 import pLimit from 'p-limit';
+import { discoverMetrics, runMetric } from './loader.js';
 
 function applyTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(
@@ -55,4 +56,10 @@ async function runBatch(
   );
 }
 
-export { applyTemplate, scorePair, runBatch };
+export {
+  applyTemplate,
+  scorePair,
+  runBatch,
+  discoverMetrics,
+  runMetric,
+};
