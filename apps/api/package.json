@@ -6,11 +6,11 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -b",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit",
-    "clean": "rimraf dist",
-    "test": "vitest run"
+    "clean": "rimraf dist src/**/*.js src/**/*.d.ts",
+    "test": "pnpm run clean && vitest run --threads=false"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
