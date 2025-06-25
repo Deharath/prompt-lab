@@ -77,4 +77,6 @@ Agents must run the full command suite above before opening PRs.
 
 ---
 
+workspace alias @prompt-lab/evaluator
+
 _End of AGENTS.md_

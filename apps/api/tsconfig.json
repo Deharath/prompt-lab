@@ -5,8 +5,11 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "evaluator": ["../../packages/evaluator/src/index.ts"]
+      "@prompt-lab/evaluator": ["../../packages/evaluator/src/index.ts"]
     }
   },
+  "references": [
+    { "path": "../../packages/evaluator" }
+  ],
   "include": ["src"]
 }
