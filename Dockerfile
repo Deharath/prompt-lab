@@ -34,7 +34,6 @@ COPY --from=builder /app/node_modules             ./node_modules
 COPY --from=builder /app/apps/api/node_modules   ./apps/api/node_modules
 COPY --from=builder /app/apps/web/node_modules   ./apps/web/node_modules
 COPY --from=builder /app/packages/evaluator/node_modules ./packages/evaluator/node_modules
-COPY --from=builder /app/packages/test-cases/node_modules ./packages/test-cases/node_modules
 
 ENV NODE_ENV=production
 EXPOSE 3000
