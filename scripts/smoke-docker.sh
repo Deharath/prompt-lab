@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-docker build -t promptlab:test ..
+docker build -t promptlab:test .
 CONTAINER=$(docker run -d -p 3000:3000 promptlab:test)
 for i in {1..20}; do
   if curl -sf http://localhost:3000/health > /dev/null; then
