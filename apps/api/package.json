@@ -10,9 +10,6 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit"
   },
-  "imports": {
-    "@prompt-lab/evaluator": "../../packages/evaluator/src/index.ts"
-  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prompt-lab/evaluator": "workspace:*",
