@@ -3,14 +3,15 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 RUN corepack enable      # enables pnpm
 
+# Install pnpm at a fixed version for reproducibility
+RUN npm install -g pnpm@10.12.3
+
 # copy the entire repo
 COPY . .
 
 # install deps once (cached) and build every workspace that has a build script
 RUN pnpm install --frozen-lockfile \
-    && pnpm --filter "@prompt-lab/evaluator" run build \
-    && pnpm --filter api run build \
-    && pnpm --filter web run build
+    && pnpm -r build
 
 ###############################################################################
 # ❷ Runtime stage – slim image with only production artefacts

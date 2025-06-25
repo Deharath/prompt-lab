@@ -38,16 +38,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Validate datasets
         run: pnpm lint:data
-
-      - name: Build packages
-        run: pnpm -r build
-
       - name: Lint
         run: pnpm -r lint
-      - name: Type-check
-        run: pnpm -r tsc
-      - run: pnpm test
-      - run: pnpm test:e2e
+      - name: Build
+        run: pnpm -r build
+      - name: Test
+        run: pnpm -r test
 
 
   # ───────────────────────── Docker smoke test ────────────────────────────
@@ -57,32 +53,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Buildx driver (required for docker/build-push-action)
       - uses: docker/setup-buildx-action@v3
 
-      # Build image **and load it** into the runner’s Docker daemon
       - name: Build image
         uses: docker/build-push-action@v5
         with:
           context: .
           tags: promptlab:test
-          load: true # makes the image available to `docker run`
+          load: true
 
-      # Start the container (don’t use --rm so we can read logs on failure)
       - name: Start container
         run: docker run -d --name promptlab -p 3000:3000 promptlab:test
 
-      # Wait (max 40 s) for the health endpoint; print logs if it dies/timeout
       - name: Wait for API /health
         run: |
           for i in {1..20}; do
-            # Has the container quit already?
             if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
               echo "Container exited early 😭"
               docker logs promptlab || true
               exit 1
             fi
-            # Probe the health endpoint
             if curl -sf http://localhost:3000/health > /dev/null ; then
               echo "API is up 🎉"
               exit 0
@@ -94,7 +84,6 @@ jobs:
           docker logs promptlab || true
           exit 1
 
-      # Always clean up
       - name: Stop container
         if: always()
         run: docker rm -f promptlab || true

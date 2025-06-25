@@ -17,11 +17,11 @@
       "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"]
     }
   },
-  "include": [
-    "apps/**/*",
-    "packages/**/*",
-    "scripts/**/*",
-    "vitest.config.mts"
-  ],
-  "exclude": []
+  "files": [],
+  "references": [
+    { "path": "./apps/api" },
+    { "path": "./apps/web" },
+    { "path": "./packages/evaluator" },
+    { "path": "./packages/test-cases" }
+  ]
 }

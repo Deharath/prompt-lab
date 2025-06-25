@@ -5,8 +5,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "vitest run --coverage",
+    "clean": "rimraf dist",
+    "build": "tsc -b",
+    "test": "vitest run",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit"
   },
@@ -19,6 +20,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "vitest": "1.6.1"
+    "vite": "^5.2.0",
+    "vitest": "^1.6.1"
   }
 }

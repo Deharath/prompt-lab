@@ -14,98 +14,71 @@
 - **CI gate** fails if your latest prompt degrades benchmark.
 - **Coverage gate**: `@prompt-lab/evaluator` must keep ≥90% test coverage;
   any ESLint warning fails CI.
-- **Monorepo** (`pnpm`) with strict TypeScript.
+- **Monorepo** (`pnpm`) with strict TypeScript and project references.
 
 ---
 
-## 🗂️ Architecture
-
-```mermaid
-%% PromptLab high-level flow (GPT-4.1 & Gemini 2.5 Flash)
-flowchart LR
-    %% style tweaks for readability – safe in GitHub
-    classDef comp fill:#1f2937,stroke:#fff,color:#fff,rx:6,ry:6;
-    classDef ext  fill:#0f766e,stroke:#fff,color:#fff,rx:6,ry:6;
-    classDef user fill:#f59e0b,stroke:#fff,color:#fff,rx:50,ry:50;
-
-    U[Editor]:::user -->|Run| A["Web UI"]:::comp
-    A -->|POST /eval| B["Express API"]:::comp
-
-    subgraph "LLM Pool"
-        direction LR
-        C["GPT-4.1*"]:::ext
-        D["Gemini 2.5 Flash"]:::ext
-    end
-
-    B -->|route by <br>model| C
-    B --> D
-
-    C --> B
-    D --> B
-
-    B --> E["Evaluator<br>(metrics + cost)"]:::comp
-    E --> B
-    B --> A
-    A -->|Render results| U
+## 🗂️ Monorepo Structure
 
 ```
+apps/
+  api/         # Express API backend
+  web/         # React frontend
+packages/
+  evaluator/   # Core evaluation logic
+  test-cases/  # Test data and helpers
+```
+
+- All packages use TypeScript project references for fast, reliable builds.
+- Unified scripts: `build`, `test`, `lint`, `clean` in every package.
+- All `.d.ts` files are ignored by ESLint.
 
 ---
 
-## 🛠️ Setup
+## 🛠️ Scripts
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and provide values for `OPENAI_API_KEY` and `GEMINI_API_KEY`.
-
----
-
-## 🚀 Quick Start
-
-```bash
-git clone https://github.com/you/prompt-lab.git
-cd prompt-lab
-pnpm install
-
-cp .env.example .env    # add OPENAI_API_KEY & GEMINI_API_KEY
-pnpm dev
-# starts API (3000) and Vite (5173) with proxy – no URL tweaks needed
-```
-
-Then visit `http://localhost:5173`.
+- `pnpm -r build` — Build all packages using TypeScript project references
+- `pnpm -r test` — Run all tests
+- `pnpm -r lint` — Lint all code
+- `pnpm -r clean` — Clean all build artifacts
 
 ---
 
-### Local build
+## 🚦 CI/CD
 
-```bash
-pnpm build:api && pnpm --filter web run build
-```
-
-### Docker
-
-```bash
-docker build -t promptlab:latest .
-docker run -d -p 3000:3000 promptlab:latest
-```
-
-Then hit `http://localhost:3000/health`.
+- See `.github/workflows/ci.yml` for full pipeline: install, lint, build, test, and Docker smoke test
 
 ---
 
-## 🛠️ Dev Scripts
+## 🐳 Docker & Dev Containers
 
-| Command                     | Purpose                                      |
-| --------------------------- | -------------------------------------------- |
-| `pnpm dev`                  | Vite front-end + ts-node-dev API             |
-| `pnpm test`                 | Vitest unit                                  |
-| `pnpm test:e2e`             | Full prompt-eval; fails if `avgCosSim < 0.7` |
-| `pnpm tsc`                  | Type-check all pkgs                          |
-| `pnpm lint` / `pnpm format` | Lint & auto-format                           |
+- **Production:**
+  - Build and run with Docker:
+    ```sh
+    docker build -t promptlab:latest .
+    docker run -p 3000:3000 promptlab:latest
+    ```
+- **Development:**
+  - Use VS Code Dev Containers for a reproducible local environment:
+    - Open folder in container (requires Docker and VS Code)
+    - All dependencies and build tools are pre-installed
 
-Run `pnpm test` and `pnpm lint` locally to catch coverage or lint issues before opening a PR.
+---
+
+## ➕ Adding a New Package
+
+1. Create a new folder in `apps/` or `packages/`.
+2. Add a `tsconfig.json` with `composite: true` and a `package.json` with standard scripts.
+3. Add a reference in the root `tsconfig.json`.
+4. Run `pnpm install` and `pnpm -r build`.
+
+---
+
+## 📝 Contributing
+
+- PRs must pass lint, build, and test gates.
+- Keep all dependencies in sync using `pnpm.overrides`.
+- Document any native dependencies or special setup in this README.
 
 ---
 

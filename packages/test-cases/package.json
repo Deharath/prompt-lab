@@ -2,6 +2,9 @@
   "name": "@prompt-lab/test-cases",
   "version": "0.0.0",
   "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc -b",
+    "test": "vitest run",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit"
   }

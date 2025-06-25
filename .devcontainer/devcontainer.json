@@ -1,0 +1,21 @@
+{
+  "name": "PromptLab DevContainer",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "npm install -g pnpm@10.12.3 && pnpm install && pnpm -r build",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "forwardPorts": [3000],
+  "remoteUser": "node"
+}
