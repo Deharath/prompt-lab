@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "openai": "^4.104.0",
-    "p-limit": "^5.0.0"
+    "p-limit": "^5.0.0",
+    "zod": "^3.23.8",
+    "@dqbd/tiktoken": "^1.0.0"
   }
 }
