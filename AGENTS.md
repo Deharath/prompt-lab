@@ -54,7 +54,7 @@ Agents must run the full command suite above before opening PRs.
 ## 5. Merge Policy
 
 1. PR-only, never push straight to `main`.
-2. CI green on Node 18 & 20, no coverage regressions, zero ESLint warnings.
+2. CI green on Node 18 & 22, no coverage regressions, zero ESLint warnings.
 3. Human reviewer may require changes; agent amends the PR.
 
 ---

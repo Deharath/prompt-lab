@@ -10,14 +10,14 @@
     "dev:api": "pnpm --filter api run dev",
     "dev:web": "pnpm --filter web run dev",
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
-    "tsc": "pnpm exec tsc --noEmit -p tsconfig.json",
+    "tsc": "pnpm -r tsc",
     "test": "vitest run --coverage --config vitest.config.mts && pnpm --filter web vitest run --config apps/web/vitest.config.ts",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts",
-    "lint": "eslint \"**/*.{ts,tsx}\"",
+    "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "lint:data": "node scripts/lint-jsonl.cjs",
     "build:api": "pnpm --filter api run build",
-    "docker:run": "docker build -t promptlab . && docker run -p 3000:3000 promptlab"
+    "docker:run": "docker build -t promptlab:latest . && docker run -d -p 3000:3000 promptlab:latest"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
@@ -46,7 +46,7 @@
     "tsx": "^4.20.3",
     "typescript": "4.9.5",
     "vite": "7.0.0",
-    "vitest": "1.5.0"
+    "vitest": "1.6.1"
   },
   "dependencies": {
     "react": "^19.1.0",

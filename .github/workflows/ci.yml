@@ -37,8 +37,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
-      - run: pnpm tsc
+      - name: Lint
+        run: pnpm -r lint
+      - name: Type-check
+        run: pnpm -r tsc
       - run: pnpm test
       - run: pnpm test:e2e
 

@@ -6,7 +6,9 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "openai": "^4.104.0",

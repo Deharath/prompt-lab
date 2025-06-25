@@ -1,4 +1,8 @@
 {
   "name": "@prompt-lab/test-cases",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "tsc": "tsc -p tsconfig.json --noEmit"
+  }
 }
