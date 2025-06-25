@@ -5,6 +5,7 @@ on:
   pull_request:
 
 jobs:
+  # ───────────────────────── JS / TS quality gate ─────────────────────────
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -12,23 +13,19 @@ jobs:
         node-version: [18.x, 22.x]
 
     steps:
-      # 1. Check out repo
       - uses: actions/checkout@v4
 
-      # 2. Install the exact pnpm major that generated pnpm-lock.yaml
       - name: Set up pnpm 10
         uses: pnpm/action-setup@v2
         with:
-          version: 10.12.3 # keep in sync with your local version
-          run_install: false # we run install ourselves
+          version: 10.12.3           # keep in sync with local
+          run_install: false         # we run install below
 
-      # 3. Set up Node for the current matrix entry
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
-      # 4. Cache pnpm store for faster installs
       - name: Cache pnpm store
         uses: actions/cache@v3
         with:
@@ -37,12 +34,59 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      # 5. Install deps using the lockfile
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 6. Lint, type-check, unit tests, e2e tests
       - run: pnpm lint
       - run: pnpm tsc
       - run: pnpm test
       - run: pnpm test:e2e
+
+  # ───────────────────────── Docker smoke test ────────────────────────────
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Buildx driver (required for docker/build-push-action)
+      - uses: docker/setup-buildx-action@v3
+
+      # Build image **and load it** into the runner’s Docker daemon
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: promptlab:test
+          load: true                # makes the image available to `docker run`
+
+      # Start the container (don’t use --rm so we can read logs on failure)
+      - name: Start container
+        run: docker run -d --name promptlab -p 3000:3000 promptlab:test
+
+      # Wait (max 40 s) for the health endpoint; print logs if it dies/timeout
+      - name: Wait for API /health
+        run: |
+          for i in {1..20}; do
+            # Has the container quit already?
+            if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
+              echo "Container exited early 😭"
+              docker logs promptlab || true
+              exit 1
+            fi
+            # Probe the health endpoint
+            if curl -sf http://localhost:3000/health > /dev/null ; then
+              echo "API is up 🎉"
+              exit 0
+            fi
+            echo "API not up yet… retrying ($i/20)"
+            sleep 2
+          done
+          echo "Gave up waiting for API"
+          docker logs promptlab || true
+          exit 1
+
+      # Always clean up
+      - name: Stop container
+        if: always()
+        run: docker rm -f promptlab || true

@@ -66,6 +66,22 @@ Then visit `http://localhost:5173`.
 
 ---
 
+### Local build
+
+```bash
+pnpm build:api && pnpm --filter web run build
+```
+
+### Docker
+
+```bash
+pnpm run docker:run
+```
+
+Then hit `http://localhost:3000/health`.
+
+---
+
 ## 🛠️ Dev Scripts
 
 | Command                     | Purpose                                      |
