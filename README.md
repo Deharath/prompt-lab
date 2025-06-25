@@ -12,6 +12,8 @@
 - **Cost & latency tracking** baked into every run.
 - **React UI** with history pane — no backend refresh.
 - **CI gate** fails if your latest prompt degrades benchmark.
+- **Coverage gate**: `@prompt-lab/evaluator` must keep ≥90% test coverage;
+  any ESLint warning fails CI.
 - **Monorepo** (`pnpm`) with strict TypeScript.
 
 ---
@@ -92,6 +94,8 @@ Then hit `http://localhost:3000/health`.
 | `pnpm test:e2e`             | Full prompt-eval; fails if `avgCosSim < 0.7` |
 | `pnpm tsc`                  | Type-check all pkgs                          |
 | `pnpm lint` / `pnpm format` | Lint & auto-format                           |
+
+Run `pnpm test` and `pnpm lint` locally to catch coverage or lint issues before opening a PR.
 
 ---
 
