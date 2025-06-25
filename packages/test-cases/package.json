@@ -1,9 +1,4 @@
 {
   "name": "@prompt-lab/test-cases",
-  "version": "0.0.0",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
-  "scripts": {
-    "build": "tsc"
-  }
+  "version": "0.0.0"
 }
