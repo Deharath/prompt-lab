@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import evalRouter from './routes/eval.js';
+import jobsRouter from './routes/jobs.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
@@ -18,6 +19,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/eval', evalRouter);
+app.use('/jobs', jobsRouter);
 
 // Serve built web UI from /public when present
 app.use(express.static(join(rootDir, 'public')));

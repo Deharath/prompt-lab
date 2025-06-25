@@ -1,0 +1,10 @@
+{
+  "name": "@prompt-lab/jobs",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "lint": "eslint . --ext .ts --max-warnings 0",
+    "tsc": "tsc -p tsconfig.json --noEmit"
+  }
+}

@@ -21,6 +21,8 @@ PromptLab is a minimalist playground for **testing, scoring and version-controll
 | `apps/web`            | React 18 + shadcn/ui front-end (Vite)         |
 | `packages/evaluator`  | Pure-TS metrics lib                           |
 | `packages/test-cases` | JSONL fixtures used in eval                   |
+| `providers`           | Pluggable LLM provider implementations        |
+| `jobs`                | Job model and controller for completions      |
 | `scripts`             | Utility scripts (e.g., JSONL lint)            |
 | `.github/workflows`   | GitHub Actions CI configs                     |
 | `tsconfig.json`       | Base TS config shared across apps             |
