@@ -1,6 +1,9 @@
 import type OpenAI from 'openai';
 import pLimit from 'p-limit';
 
+export type { Metric, MetricArgs, MetricResult } from './types.js';
+export { discoverMetrics, runMetric } from './loader.js';
+
 function applyTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(
     /{{\s*(\w+)\s*}}/g,

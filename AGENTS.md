@@ -77,4 +77,13 @@ Agents must run the full command suite above before opening PRs.
 
 ---
 
+## How to add a metric
+
+1. Drop a `*.ts` file in `packages/evaluator/src/metrics` exporting a default `Metric`.
+2. Implement `evaluate({ prediction, references })` → `{ score, explanation? }`.
+3. Metrics load automatically via `discoverMetrics()`; file name is the key.
+4. Run `pnpm -r tsc` and `pnpm -r test` before PRs.
+
+---
+
 _End of AGENTS.md_
