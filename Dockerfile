@@ -1,8 +1,3 @@
-    && pnpm --filter web run build
-RUN pnpm --filter api --prod install \
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder /app/packages/evaluator/node_modules ./packages/evaluator/node_modules
-###############################################################################
 FROM node:22-alpine AS builder
 
 WORKDIR /app
