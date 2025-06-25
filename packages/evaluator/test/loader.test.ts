@@ -35,7 +35,10 @@ describe('runMetric', () => {
   });
 
   it('executes the cosineSim metric', async () => {
-    const openai = new MockOpenAI({ a: [1, 2], b: [1, 0] }) as unknown as OpenAI;
+    const openai = new MockOpenAI({
+      a: [1, 2],
+      b: [1, 0],
+    }) as unknown as OpenAI;
     const scores = await runMetric('cosineSim', openai, [
       { prediction: 'a', reference: 'b' },
     ]);
@@ -48,25 +51,31 @@ describe('runMetric', () => {
 
   it('throws for unknown metric', async () => {
     const openai = {} as OpenAI;
-    await expect(runMetric('missing', openai, [])).rejects.toThrow('Unknown metric');
+    await expect(runMetric('missing', openai, [])).rejects.toThrow(
+      'Unknown metric',
+    );
   });
 
   it('respects concurrency limits', async () => {
-    const openai = new MockOpenAI({ x: [1, 0], y: [1, 0] }) as unknown as OpenAI;
+    const openai = new MockOpenAI({
+      x: [1, 0],
+      y: [1, 0],
+    }) as unknown as OpenAI;
     let inFlight = 0;
     let maxInFlight = 0;
-    (openai as unknown as { embeddings: { create: Mock } }).embeddings.create
-      .mockImplementation(async () => {
-        inFlight += 1;
-        maxInFlight = Math.max(maxInFlight, inFlight);
-        await new Promise<void>((resolve) => {
-          setTimeout(resolve, 10);
-        });
-        inFlight -= 1;
-        return {
-          data: [{ embedding: [1, 0] }] as { embedding: number[] }[],
-        } as { data: { embedding: number[] }[] };
+    (
+      openai as unknown as { embeddings: { create: Mock } }
+    ).embeddings.create.mockImplementation(async () => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 10);
       });
+      inFlight -= 1;
+      return {
+        data: [{ embedding: [1, 0] }] as { embedding: number[] }[],
+      } as { data: { embedding: number[] }[] };
+    });
     const items = [
       { prediction: 'x', reference: 'y' },
       { prediction: 'x', reference: 'y' },
