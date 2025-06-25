@@ -4,7 +4,7 @@ import { resolve } from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      evaluator: resolve('packages/evaluator/src/index.ts'),
+      '@prompt-lab/evaluator': resolve('packages/evaluator/src/index.ts'),
     },
   },
   test: {
