@@ -2,3 +2,9 @@ node_modules
 .env
 
 tsconfig.tsbuildinfo
+
+# Ignore coverage output
+coverage/
+coverage-*/
+.coverage/
+**/coverage/
