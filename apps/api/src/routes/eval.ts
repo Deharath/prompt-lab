@@ -45,11 +45,15 @@ router.post('/', async (req, res, next) => {
     const cases = raw
       .trim()
       .split('\n')
-      .map((line) => JSON.parse(line) as {
-        id: string;
-        input: string;
-        expected: string;
-      });
+      .map(
+        (line) =>
+          // eslint-disable-next-line implicit-arrow-linebreak
+          JSON.parse(line) as {
+            id: string;
+            input: string;
+            expected: string;
+          },
+      );
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
