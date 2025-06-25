@@ -61,5 +61,12 @@ module.exports = {
         ],
       },
     },
+    {
+      files: ['packages/evaluator/test/**/*.ts'],
+      parserOptions: {
+        project: ['./packages/evaluator/tsconfig.lint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
   ],
 };
