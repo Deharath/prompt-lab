@@ -1,8 +1,26 @@
 // eslint-disable-next-line import/no-extraneous-dependencies, object-curly-newline
 import { describe, it, expect, vi, type Mock } from 'vitest';
 import type OpenAI from 'openai';
-// eslint-disable-next-line object-curly-newline
-import { applyTemplate, scorePair, runBatch, BatchItem } from '../src/index.js';
+import {
+  applyTemplate,
+  scorePair,
+  runBatch,
+  BatchItem,
+  discoverMetrics,
+  runMetric,
+  runDeepEval,
+} from '../src/index.js';
+
+vi.mock('@dqbd/tiktoken', () => ({
+  get_encoding: () => ({
+    encode: (t: string) => Array.from(t).map((c) => c.charCodeAt(0)),
+  }),
+}));
+
+vi.mock('deepeval', () => ({
+  __esModule: true,
+  metric: vi.fn(async (_name: string, opts: unknown) => ({ ok: true, opts })),
+}));
 
 class MockOpenAI {
   embeddings = {
@@ -75,5 +93,52 @@ describe('runBatch', () => {
     expect(scores).toEqual([1, 1]);
     expect(maxInFlight).toBeLessThanOrEqual(2);
     expect(calls).toHaveLength(4); // 2 items * 2 calls each
+  });
+});
+
+describe('metric loader', () => {
+  it('discovers bundled metrics', async () => {
+    const metrics = await discoverMetrics();
+    const names = Array.from(metrics.keys()).sort();
+    expect(names).toEqual(['cosineSim', 'exactMatch']);
+    const res = await runMetric('exactMatch', {
+      prediction: 'foo',
+      references: ['foo'],
+    });
+    expect(res.score).toBe(1);
+  });
+
+  it('throws on missing metric', async () => {
+    await expect(
+      runMetric('missing', { prediction: 'a', references: ['b'] }),
+    ).rejects.toThrow();
+  });
+
+  it('cosineSim returns high score for same text', async () => {
+    const { score } = await runMetric('cosineSim', {
+      prediction: 'abc',
+      references: ['abc'],
+    });
+    expect(score).toBeCloseTo(1);
+  });
+
+  it('cosineSim returns lower score for different text', async () => {
+    const { score } = await runMetric('cosineSim', {
+      prediction: 'abc',
+      references: ['xyz'],
+    });
+    expect(score).toBeLessThanOrEqual(1);
+    expect(score).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('runDeepEval', () => {
+  it('forwards to deepeval.metric', async () => {
+    const out = await runDeepEval('coherence', { a: 1 });
+    const mod = await import('deepeval');
+    expect((mod as unknown as { metric: Mock }).metric).toHaveBeenCalledWith('coherence', {
+      a: 1,
+    });
+    expect(out).toEqual({ ok: true, opts: { a: 1 } });
   });
 });

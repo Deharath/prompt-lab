@@ -2,7 +2,14 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "module": "CommonJS"
   },
-  "include": ["src", "test"]
+  "include": [
+    "src",
+    "test",
+    "src/deepeval.d.ts",
+    "src/tiktoken.d.ts",
+    "src/zod.d.ts"
+  ]
 }

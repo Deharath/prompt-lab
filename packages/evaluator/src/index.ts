@@ -1,11 +1,12 @@
 import type OpenAI from 'openai';
 import pLimit from 'p-limit';
 
+export type { Metric, EvalArgs, EvalResult } from './types.js';
+export { discoverMetrics, runMetric } from './loader.js';
+export { default as runDeepEval } from './bridges/deepEval.js';
+
 function applyTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(
-    /{{\s*(\w+)\s*}}/g,
-    (_, key: string) => vars[key] ?? '',
-  );
+  return template.replace(/{{\s*(\w+)\s*}}/g, (_, key: string) => vars[key] ?? '');
 }
 
 async function scorePair(
