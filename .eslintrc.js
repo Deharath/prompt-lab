@@ -2,10 +2,8 @@ module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: [
-      './apps/*/tsconfig.json',
-      './packages/*/tsconfig.json',
-    ],
+    ecmaVersion: 'latest',
+    sourceType: 'module',
     tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint', 'prettier', 'react', 'react-hooks'],
@@ -48,6 +46,28 @@ module.exports = {
   overrides: [
     {
       files: [
+        'packages/*/src/**/*.ts',
+        'apps/*/src/**/*.ts',
+        'packages/*/src/**/*.tsx',
+        'apps/*/src/**/*.tsx',
+      ],
+      parserOptions: {
+        project: [
+          './packages/*/tsconfig.json',
+          './apps/*/tsconfig.json',
+        ],
+        tsconfigRootDir: __dirname,
+      },
+    },
+    {
+      files: ['packages/evaluator/test/**/*.ts'],
+      parserOptions: {
+        project: ['./packages/evaluator/tsconfig.lint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+    {
+      files: [
         'vitest.config.mts',
         '**/vite.config.ts',
         '**/vitest.config.ts',
@@ -59,13 +79,6 @@ module.exports = {
           'error',
           { devDependencies: true },
         ],
-      },
-    },
-    {
-      files: ['packages/evaluator/test/**/*.ts'],
-      parserOptions: {
-        project: ['./packages/evaluator/tsconfig.lint.json'],
-        tsconfigRootDir: __dirname,
       },
     },
   ],
