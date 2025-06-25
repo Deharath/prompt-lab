@@ -4,7 +4,7 @@
     "jsx": "react-jsx",
     "outDir": "dist",
     "lib": ["DOM", "ESNext"],
-    "types": ["vite/client", "vitest", "testing-library__react"]
+    "types": ["vite/client", "vitest"]
   },
   "include": ["src"]
 }

@@ -31,6 +31,12 @@ COPY --from=builder /app/package.json \
                      /app/pnpm-workspace.yaml \
                      ./
 COPY --from=builder /app/node_modules             ./node_modules
+COPY --from=builder /app/apps/api/node_modules   ./apps/api/node_modules
+COPY --from=builder /app/apps/web/node_modules   ./apps/web/node_modules
+COPY --from=builder /app/packages/evaluator/node_modules ./packages/evaluator/node_modules
+COPY --from=builder /app/apps/api/package.json   ./apps/api/package.json
+COPY --from=builder /app/packages/evaluator/package.json ./packages/evaluator/package.json
+COPY --from=builder /app/packages/test-cases    ./packages/test-cases
 
 ENV NODE_ENV=production
 EXPOSE 3000
