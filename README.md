@@ -89,7 +89,7 @@ Then hit `http://localhost:3000/health`.
 | `pnpm dev`                  | Vite front-end + ts-node-dev API             |
 | `pnpm test`                 | Vitest unit                                  |
 | `pnpm test:e2e`             | Full prompt-eval; fails if `avgCosSim < 0.7` |
-| `pnpm -r tsc --noEmit`      | Type-check all pkgs                          |
+| `pnpm tsc`                  | Type-check all pkgs                          |
 | `pnpm lint` / `pnpm format` | Lint & auto-format                           |
 
 ---

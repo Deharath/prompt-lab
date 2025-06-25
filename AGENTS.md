@@ -36,7 +36,7 @@ _Agents must update this table before adding new top-level dirs._
 | Dev servers (API + Web) | `pnpm dev`                 |
 | Unit tests              | `pnpm test`                |
 | Prompt E2E              | `pnpm test:e2e`            |
-| Type-check              | `pnpm -r tsc --noEmit`     |
+| Type-check              | `pnpm tsc`                 |
 | Lint / Format           | `pnpm lint && pnpm format` |
 
 ---
