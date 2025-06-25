@@ -6,7 +6,7 @@
   "main": "src/main.tsx",
   "scripts": {
     "dev": "vite",
-    "build": "tsc",
+    "build": "vite build",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit"
   },
