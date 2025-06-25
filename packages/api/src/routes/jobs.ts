@@ -1,9 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
-import { Router } from 'express';
+import type { Router } from 'express';
+import { Router as createRouter } from 'express';
 import { getProvider } from '../providers';
 import * as JobService from '../jobs/service';
 
-const jobsRouter = Router();
+const jobsRouter = createRouter();
 
 // POST /jobs - Create a new job
 jobsRouter.post('/', async (req: Request, res: Response, next: NextFunction) => {
@@ -103,4 +104,4 @@ jobsRouter.get('/:id/stream', async (req: Request, res: Response, next: NextFunc
   }
 });
 
-export default jobsRouter;
+export default jobsRouter as Router;
