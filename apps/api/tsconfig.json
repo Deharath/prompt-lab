@@ -1,17 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@prompt-lab/evaluator": ["../../packages/evaluator/src/index.ts"]
-    },
-    "composite": true
+    "lib": ["ESNext"]
   },
   "include": [
-    "src/**/*",
-    "src/*.d.ts"
+    "src",
+    "test"
   ],
   "references": [
     { "path": "../../packages/evaluator" },
@@ -19,8 +14,6 @@
   ],
   "exclude": [
     "dist",
-    "dist/*",
-    "dist/routes",
     "node_modules"
   ]
 }
