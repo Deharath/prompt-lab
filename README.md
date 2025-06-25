@@ -50,6 +50,16 @@ flowchart LR
 
 ---
 
+## 🛠️ Setup
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and provide values for `OPENAI_API_KEY` and `GEMINI_API_KEY`.
+
+---
+
 ## 🚀 Quick Start
 
 ```bash
