@@ -8,11 +8,7 @@
     "declarationMap": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/*.d.ts",
-    "test/**/*.ts",
-    "test/**/*.d.ts",
-    "test/*.d.ts"
+    "src/**/*",
+    "test/**/*"
   ]
 }
