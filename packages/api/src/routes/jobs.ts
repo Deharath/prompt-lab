@@ -1,3 +1,4 @@
+import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { getProvider } from '../providers';
 import * as JobService from '../jobs/service';
@@ -5,7 +6,7 @@ import * as JobService from '../jobs/service';
 const jobsRouter = Router();
 
 // POST /jobs - Create a new job
-jobsRouter.post('/', async (req, res, next) => {
+jobsRouter.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { prompt, provider: providerName, model } = req.body;
 
@@ -42,7 +43,7 @@ jobsRouter.post('/', async (req, res, next) => {
 });
 
 // GET /jobs/:id/stream - Stream job results via SSE
-jobsRouter.get('/:id/stream', async (req, res, next) => {
+jobsRouter.get('/:id/stream', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const job = await JobService.getJob(id);

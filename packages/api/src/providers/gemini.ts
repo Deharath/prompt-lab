@@ -1,4 +1,4 @@
-import { LLMProvider, ProviderOptions } from './index';
+import type { LLMProvider, ProviderOptions } from './index';
 
 const apiKey = process.env.GEMINI_API_KEY;
 

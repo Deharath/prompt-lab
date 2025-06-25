@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { LLMProvider, ProviderOptions } from './index';
+import type { LLMProvider, ProviderOptions } from './index';
 
 const apiKey = process.env.OPENAI_API_KEY;
 
