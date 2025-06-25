@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "providers",
+    "jobs"
   ],
   "scripts": {
     "dev:api": "pnpm --filter api run dev",

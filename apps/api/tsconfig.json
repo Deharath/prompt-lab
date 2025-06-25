@@ -1,15 +1,25 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "../..",
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@prompt-lab/evaluator": ["../../packages/evaluator/src/index.ts"]
+      "@prompt-lab/evaluator": ["../../packages/evaluator/src/index.ts"],
+      "@prompt-lab/providers": ["../../providers/index.ts"],
+      "@prompt-lab/providers/*": ["../../providers/*.ts"],
+      "@prompt-lab/jobs": ["../../jobs/index.ts"],
+      "@prompt-lab/jobs/*": ["../../jobs/*.ts"]
     }
   },
   "references": [
-    { "path": "../../packages/evaluator" }
+    { "path": "../../packages/evaluator" },
+    { "path": "../../providers" },
+    { "path": "../../jobs" }
   ],
-  "include": ["src"]
+  "include": [
+    "src",
+    "../../providers/**/*",
+    "../../jobs/**/*"
+  ]
 }

@@ -14,7 +14,11 @@
     "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"]
+      "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"],
+      "@prompt-lab/providers": ["providers/index.ts"],
+      "@prompt-lab/providers/*": ["providers/*.ts"],
+      "@prompt-lab/jobs": ["jobs/index.ts"],
+      "@prompt-lab/jobs/*": ["jobs/*.ts"]
     }
   },
   "include": [
