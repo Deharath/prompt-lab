@@ -112,6 +112,22 @@ prompt-lab/
 
 ---
 
+## 🛠️ Native/Platform-Specific Dependencies
+
+- If you are running on Windows, ensure you have SQLite installed or use the provided Docker setup.
+- No native Node.js modules are required, but some dependencies may require build tools (e.g., node-gyp, Python 3, C++ build tools) for optional features.
+- See package READMEs for any additional requirements.
+
+---
+
+## 📦 Dependency Management
+
+- Always install `@types` for all dependencies, including dev-only packages.
+- Use [Renovate](https://github.com/renovatebot/renovate) or [Dependabot](https://github.com/dependabot) for automated dependency updates.
+- After any dependency change, run `pnpm install` at the root and commit `pnpm-lock.yaml`.
+
+---
+
 ![CI](https://img.shields.io/badge/CI-pending-lightgrey) ![Coverage](https://img.shields.io/badge/coverage-0%25-red)
 
 _End of README.md_
