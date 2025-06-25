@@ -8,9 +8,9 @@ COPY . .
 
 # install deps once (cached) and build every workspace that has a build script
 RUN pnpm install --frozen-lockfile \
- && pnpm --filter api      run build \
- && pnpm --filter web      run build \
- && pnpm --filter "@prompt-lab/evaluator" run build
+    && pnpm --filter "@prompt-lab/evaluator" run build \
+    && pnpm --filter api run build \
+    && pnpm --filter web run build
 
 ###############################################################################
 # ❷ Runtime stage – slim image with only production artefacts
