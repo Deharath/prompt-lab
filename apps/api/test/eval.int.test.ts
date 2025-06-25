@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file, @typescript-eslint/lines-between-class-members */
 import request from 'supertest';
+// eslint-disable-next-line object-curly-newline
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
 vi.mock('openai', () => ({

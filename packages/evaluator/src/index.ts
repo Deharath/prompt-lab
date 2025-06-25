@@ -51,9 +51,7 @@ async function runBatch(
 ): Promise<number[]> {
   const limit = pLimit(concurrency);
   return Promise.all(
-    items.map((it) =>
-      limit(() => scorePair(openai, it.prediction, it.reference)),
-    ),
+    items.map((it) => limit(() => scorePair(openai, it.prediction, it.reference))),
   );
 }
 

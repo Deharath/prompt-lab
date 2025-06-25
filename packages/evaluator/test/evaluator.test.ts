@@ -1,6 +1,7 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+// eslint-disable-next-line import/no-extraneous-dependencies, object-curly-newline
 import { describe, it, expect, vi, type Mock } from 'vitest';
 import type OpenAI from 'openai';
+// eslint-disable-next-line object-curly-newline
 import { applyTemplate, scorePair, runBatch, BatchItem } from '../src/index.js';
 
 class MockOpenAI {

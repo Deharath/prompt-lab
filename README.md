@@ -75,7 +75,8 @@ pnpm build:api && pnpm --filter web run build
 ### Docker
 
 ```bash
-pnpm run docker:run
+docker build -t promptlab:latest .
+docker run -d -p 3000:3000 promptlab:latest
 ```
 
 Then hit `http://localhost:3000/health`.

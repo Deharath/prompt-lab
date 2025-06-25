@@ -1,7 +1,11 @@
 import { useState } from 'react';
+// eslint-disable-next-line import/extensions
 import PromptEditor from './components/PromptEditor.js';
+// eslint-disable-next-line import/extensions
 import RunButton from './components/RunButton.js';
+// eslint-disable-next-line import/extensions
 import ResultsTable from './components/ResultsTable.js';
+// eslint-disable-next-line import/extensions
 import ModelSelector from './components/ModelSelector.js';
 
 interface EvalResult {

@@ -23,5 +23,5 @@
     "scripts/**/*",
     "vitest.config.mts"
   ],
-  "exclude": ["**/vite.config.ts", "**/vitest.config.ts"]
+  "exclude": []
 }
