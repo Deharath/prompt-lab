@@ -9,14 +9,14 @@
   },
   "include": [
     "src/**/*",
-    "src/*.d.ts",
-    "test/**/*"
+    "src/*.d.ts"
   ],
   "exclude": [
     "dist",
     "dist/*",
     "dist/src",
-    "node_modules"
+    "node_modules",
+    "test"
   ],
   "references": []
 }
