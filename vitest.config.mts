@@ -4,12 +4,12 @@ import { resolve } from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      evaluator: resolve('packages/evaluator/src/index.ts'),
+      '@prompt-lab/evaluator': resolve('packages/evaluator/src/index.ts'),
     },
   },
   test: {
     environment: 'node',
-    exclude: ['apps/web/test/**', 'node_modules/**'],
+    exclude: ['apps/web/test/**', 'node_modules/**', '**/dist/**'],
     allowOnly: false,
     mockReset: true,
     hookTimeout: 5000,

@@ -19,6 +19,14 @@ app.get('/health', (_req, res) => {
 
 app.use('/eval', evalRouter);
 
+// Serve built web UI from /public when present
+app.use(express.static(join(rootDir, 'public')));
+
+// Fallback to index.html for SPA routing
+app.get('*', (_req, res) => {
+  res.sendFile(join(rootDir, 'public', 'index.html'));
+});
+
 app.use(
   (
     err: unknown,

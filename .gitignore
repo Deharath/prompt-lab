@@ -8,3 +8,6 @@ coverage/
 coverage-*/
 .coverage/
 **/coverage/
+# Ignore build artifacts
+dist/
+**/dist/
