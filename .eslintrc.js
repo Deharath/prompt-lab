@@ -65,6 +65,10 @@ module.exports = {
         'packages/*/test/**/*.tsx',
         'apps/*/test/**/*.ts',
         'apps/*/test/**/*.tsx',
+        'packages/*/*.config.ts',
+        'apps/*/*.config.ts',
+        'packages/*/*.config.js',
+        'apps/*/*.config.js',
       ],
       parserOptions: {
         project: [

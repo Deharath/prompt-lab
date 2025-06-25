@@ -10,7 +10,9 @@
   "include": [
     "src/**/*",
     "src/*.d.ts",
-    "test/**/*"
+    "test/**/*",
+    "*.config.ts",
+    "*.config.js"
   ],
   "exclude": [
     "dist",

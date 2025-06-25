@@ -9,7 +9,9 @@
   },
   "include": [
     "src/**/*",
-    "test/**/*"
+    "test/**/*",
+    "*.config.ts",
+    "*.config.js"
   ],
   "exclude": [
     "dist",
