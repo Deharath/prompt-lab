@@ -18,8 +18,8 @@ jobs:
       - name: Set up pnpm 10
         uses: pnpm/action-setup@v2
         with:
-          version: 10.12.3           # keep in sync with local
-          run_install: false         # we run install below
+          version: 10.12.3 # keep in sync with local
+          run_install: false # we run install below
 
       - uses: actions/setup-node@v4
         with:
@@ -58,7 +58,7 @@ jobs:
         with:
           context: .
           tags: promptlab:test
-          load: true                # makes the image available to `docker run`
+          load: true # makes the image available to `docker run`
 
       # Start the container (don’t use --rm so we can read logs on failure)
       - name: Start container
