@@ -47,8 +47,8 @@ module.exports = {
     {
       files: [
         'packages/*/src/**/*.ts',
-        'apps/*/src/**/*.ts',
         'packages/*/src/**/*.tsx',
+        'apps/*/src/**/*.ts',
         'apps/*/src/**/*.tsx',
       ],
       parserOptions: {
@@ -60,9 +60,17 @@ module.exports = {
       },
     },
     {
-      files: ['packages/evaluator/test/**/*.ts'],
+      files: [
+        'packages/*/test/**/*.ts',
+        'packages/*/test/**/*.tsx',
+        'apps/*/test/**/*.ts',
+        'apps/*/test/**/*.tsx',
+      ],
       parserOptions: {
-        project: ['./packages/evaluator/tsconfig.lint.json'],
+        project: [
+          './packages/*/tsconfig.lint.json',
+          './apps/*/tsconfig.lint.json',
+        ],
         tsconfigRootDir: __dirname,
       },
     },
