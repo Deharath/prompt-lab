@@ -1,3 +1,4 @@
+/// <reference types="express-serve-static-core" />
 import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { getProvider } from '../providers';
