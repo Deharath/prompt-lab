@@ -34,22 +34,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --frozen-lockfile --force
+          # Set npm config to avoid issues with native modules
+          npm config set node-gyp-rebuild true
+          pnpm install --frozen-lockfile
         env:
           npm_config_build_from_source: true
           SQLITE3_FORCE_COMPILE: true
           npm_config_cache_max: 0
-
-      - name: Rebuild all native modules
-        run: |
-          pnpm rebuild
-          # Specifically rebuild better-sqlite3 in each package that uses it
-          cd packages/api && pnpm rebuild better-sqlite3 || true
-          cd ../../packages/evaluator && pnpm rebuild better-sqlite3 || true
-          cd ../../apps/api && pnpm rebuild better-sqlite3 || true
-        env:
-          npm_config_build_from_source: true
-          SQLITE3_FORCE_COMPILE: true
+          # Prevent argument list too long errors
+          npm_config_maxsockets: 1
 
       - name: Validate datasets
         run: pnpm lint:data
