@@ -1,20 +1,18 @@
-// eslint-disable-next-line import/no-extraneous-dependencies, object-curly-newline
 import { describe, it, expect, vi, type Mock } from 'vitest';
 import type OpenAI from 'openai';
-// eslint-disable-next-line object-curly-newline
 import { applyTemplate, scorePair, runBatch, BatchItem } from '../src/index.js';
 
 class MockOpenAI {
   embeddings = {
     create: vi.fn(async ({ input }: { input: string }) => {
-      const vec = this.map[input as keyof typeof this.map] || [0, 0];
+      const vec = this._map[input as keyof typeof this._map] || [0, 0];
       return { data: [{ embedding: vec }] } as {
         data: { embedding: number[] }[];
       };
     }),
   };
 
-  constructor(private map: Record<string, number[]>) {}
+  constructor(private _map: Record<string, number[]>) {}
 }
 
 describe('applyTemplate', () => {

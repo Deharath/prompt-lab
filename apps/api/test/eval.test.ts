@@ -1,6 +1,5 @@
-/* eslint-disable max-classes-per-file, @typescript-eslint/lines-between-class-members */
 import request from 'supertest';
-// eslint-disable-next-line object-curly-newline
+
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 import getPort from 'get-port';
 
@@ -23,7 +22,6 @@ vi.mock('openai', () => ({
 if (!process.env.GEMINI_API_KEY) {
   vi.mock('@google/generative-ai', () => ({
     GoogleGenerativeAI: class {
-      // eslint-disable-next-line class-methods-use-this
       getGenerativeModel() {
         return {
           generateContent: vi.fn(async () => ({
@@ -35,7 +33,6 @@ if (!process.env.GEMINI_API_KEY) {
   }));
 }
 
-// eslint-disable-next-line import/first
 import { app } from '../dist/src/index.js';
 
 let server: ReturnType<typeof app.listen>;

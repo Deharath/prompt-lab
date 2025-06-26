@@ -8,7 +8,7 @@
     "clean": "rimraf dist",
     "build": "tsc -b",
     "test": "vitest run",
-    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "lint": "eslint . --max-warnings 0",
     "tsc": "tsc -p tsconfig.lint.json --noEmit"
   },
   "dependencies": {
@@ -21,6 +21,6 @@
   },
   "devDependencies": {
     "vite": "^5.2.0",
-    "vitest": "^1.6.1"
+    "vitest": "^3.2.4"
   }
 }

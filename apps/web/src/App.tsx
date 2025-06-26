@@ -1,11 +1,7 @@
 import { useState } from 'react';
-// eslint-disable-next-line import/extensions
 import PromptEditor from './components/PromptEditor.js';
-// eslint-disable-next-line import/extensions
 import RunButton from './components/RunButton.js';
-// eslint-disable-next-line import/extensions
 import ResultsTable from './components/ResultsTable.js';
-// eslint-disable-next-line import/extensions
 import ModelSelector from './components/ModelSelector.js';
 
 interface EvalResult {
@@ -36,7 +32,7 @@ const App = () => {
       if (!resp.ok) throw new Error('Request failed');
       const data = (await resp.json()) as EvalResult;
       setResult(data);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to run');
     } finally {
       setLoading(false);

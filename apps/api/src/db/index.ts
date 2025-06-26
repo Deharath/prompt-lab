@@ -18,7 +18,7 @@ export class JobDatabase {
         createdAt: new Date(job.createdAt as string),
         updatedAt: new Date(job.updatedAt as string),
       }));
-    } catch (error) {
+    } catch (_error) {
       // File doesn't exist or is invalid, start with empty array
       this.jobs = [];
     }
@@ -31,7 +31,6 @@ export class JobDatabase {
     try {
       await fs.writeFile(DB_FILE, JSON.stringify(this.jobs, null, 2));
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to save jobs database:', error);
       throw new Error('Database save operation failed');
     }

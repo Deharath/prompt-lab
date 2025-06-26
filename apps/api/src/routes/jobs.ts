@@ -8,7 +8,7 @@ const jobsRouter = createRouter();
 // POST /jobs - Create a new job
 jobsRouter.post(
   '/',
-  // eslint-disable-next-line consistent-return
+
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { prompt, provider: providerName, model } = req.body;
@@ -79,7 +79,7 @@ jobsRouter.post(
 // GET /jobs/:id/stream - Stream job results via SSE
 jobsRouter.get(
   '/:id/stream',
-  // eslint-disable-next-line consistent-return
+
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -115,7 +115,7 @@ jobsRouter.get(
 
       try {
         const stream = provider.complete(job.prompt, { model: job.model });
-        // eslint-disable-next-line no-restricted-syntax
+
         for await (const token of stream) {
           fullResponse += token;
           sendEvent({ token });
@@ -134,7 +134,6 @@ jobsRouter.get(
         });
         sendEvent(metrics, 'metrics');
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(`Job ${id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
