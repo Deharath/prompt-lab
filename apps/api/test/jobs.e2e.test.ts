@@ -5,7 +5,7 @@ import getPort from 'get-port';
 import { app } from '../src/index.js';
 
 // Mock the providers module to use test providers instead of real API calls
-vi.mock('../src/providers', async importOriginal => {
+vi.mock('../src/providers', async (importOriginal) => {
   const original = await importOriginal<typeof import('../src/providers')>();
 
   async function* mockCompleteSuccess() {
@@ -23,10 +23,18 @@ vi.mock('../src/providers', async importOriginal => {
     ...original,
     getProvider: (name: string) => {
       if (name === 'mock-success') {
-        return { name: 'mock-success', models: ['default'], complete: mockCompleteSuccess };
+        return {
+          name: 'mock-success',
+          models: ['default'],
+          complete: mockCompleteSuccess,
+        };
       }
       if (name === 'mock-fail') {
-        return { name: 'mock-fail', models: ['default'], complete: mockCompleteFailure };
+        return {
+          name: 'mock-fail',
+          models: ['default'],
+          complete: mockCompleteFailure,
+        };
       }
       // Return undefined for unknown providers to avoid real API calls
       return undefined;
@@ -86,12 +94,14 @@ describe('Jobs E2E Flow', () => {
 
     // Parse the events from the stream
     const events = streamResponse.text.split('\n\n').filter(Boolean);
-    
+
     // Should contain token events and metrics
     expect(events).toHaveLength(4); // 3 tokens + 1 metrics
     expect(events[0]).toBe('data: {"token":"Hel"}');
     expect(events[1]).toBe('data: {"token":"lo"}');
     expect(events[2]).toBe('data: {"token":" test"}');
-    expect(events[3]).toMatch(/^event: metrics\ndata: {"durationMs":\d+,"tokenCount":2}$/);
+    expect(events[3]).toMatch(
+      /^event: metrics\ndata: {"durationMs":\d+,"tokenCount":2}$/,
+    );
   });
 });
