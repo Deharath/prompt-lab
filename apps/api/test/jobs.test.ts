@@ -3,7 +3,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
 import { app } from '../src/index.js';
-import { db } from '../src/db/index.js';
+import { db } from '@prompt-lab/api';
+import { jobs } from '@prompt-lab/api';
 
 let server: Server;
 let request: supertest.SuperTest<supertest.Test>;
@@ -11,7 +12,7 @@ let request: supertest.SuperTest<supertest.Test>;
 beforeEach(async () => {
   // Clean up jobs table before each test
   try {
-    await db.deleteAll();
+    await db.delete(jobs);
   } catch (_error) {
     // Ignore errors
   }

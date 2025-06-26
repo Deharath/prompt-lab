@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
-import { getProvider } from '@prompt-lab/api';
-import * as JobService from '../jobs/service.js';
+import { getProvider, createJob, getJob, updateJob } from '@prompt-lab/api';
 
 const jobsRouter = createRouter();
 
@@ -63,7 +62,7 @@ jobsRouter.post(
           .json({ error: 'Gemini API key is not configured on the server.' });
       }
 
-      const job = await JobService.createJob({
+      const job = await createJob({
         prompt,
         provider: providerName,
         model,
@@ -82,7 +81,7 @@ jobsRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const job = await JobService.getJob(id);
+      const job = await getJob(id);
 
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
@@ -102,7 +101,7 @@ jobsRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const job = await JobService.getJob(id);
+      const job = await getJob(id);
 
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
@@ -120,7 +119,7 @@ jobsRouter.get(
         );
       }
 
-      await JobService.updateJob(id, { status: 'running' });
+      await updateJob(id, { status: 'running' });
 
       const startTime = Date.now();
       let fullResponse = '';
@@ -146,7 +145,7 @@ jobsRouter.get(
           tokenCount: fullResponse.split(/\s+/).filter(Boolean).length,
         };
 
-        await JobService.updateJob(id, {
+        await updateJob(id, {
           status: 'completed',
           result: fullResponse,
           metrics,
@@ -157,7 +156,7 @@ jobsRouter.get(
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
 
-        await JobService.updateJob(id, {
+        await updateJob(id, {
           status: 'failed',
           result: errorMessage,
         });
