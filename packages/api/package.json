@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",
+    "clean": "rimraf src/**/*.js src/**/*.d.ts dist",
     "test": "pnpm run clean && vitest run"
   },
   "dependencies": {
