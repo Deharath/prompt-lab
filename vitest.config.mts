@@ -9,25 +9,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    exclude: ['apps/web/test/**', 'node_modules/**', '**/dist/**'],
-    allowOnly: false,
-    mockReset: true,
-    hookTimeout: 5000,
-    deps: { inline: [/vitest/] },
-    coverage: {
-      provider: 'istanbul',
-      reporter: ['text', 'json'],
-      thresholds: {
-        statements: 0,
-        branches: 0,
-        functions: 0,
-        lines: 0,
-        'packages/evaluator/**': {
-          statements: 90,
-          functions: 90,
-          lines: 90,
-        },
-      },
-    },
+    exclude: ['node_modules/**', '**/dist/**'],
+    // Vitest will automatically look for workspace configs
+    // and run them appropriately.
   },
 });

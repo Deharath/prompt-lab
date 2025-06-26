@@ -36,7 +36,7 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 // eslint-disable-next-line import/first
-import { app } from '../src/index.js';
+import { app } from '../dist/src/index.js';
 
 let server: ReturnType<typeof app.listen>;
 let port: number;

@@ -17,7 +17,7 @@ const bodySchema = z.object({
 });
 
 // Absolute path to repo root, regardless of where the process starts
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+const repoRoot = fileURLToPath(new URL('../../../../..', import.meta.url));
 
 function datasetPath(id: string) {
   return join(repoRoot, 'packages', 'test-cases', `${id}.jsonl`);

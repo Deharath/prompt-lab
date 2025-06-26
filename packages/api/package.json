@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",
-    "clean": "powershell -Command \"Get-ChildItem -Path src -Recurse -Include *.js,*.d.ts | Remove-Item -Force; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\"",
+    "clean": "node -e \"const fs = require('fs'); const path = require('path'); function rmSync(p) { try { fs.rmSync(p, {recursive: true, force: true}); } catch {} } function findAndRemove(dir, exts) { if (!fs.existsSync(dir)) return; fs.readdirSync(dir, {withFileTypes: true}).forEach(dirent => { const fullPath = path.join(dir, dirent.name); if (dirent.isDirectory()) findAndRemove(fullPath, exts); else if (exts.some(ext => fullPath.endsWith(ext))) rmSync(fullPath); }); } findAndRemove('src', ['.js', '.d.ts']); rmSync('dist');\"",
     "test": "pnpm run clean && vitest run"
   },
   "dependencies": {
