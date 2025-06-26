@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Rebuild native modules
+        run: pnpm rebuild
+
       - name: Validate datasets
         run: pnpm lint:data
 
