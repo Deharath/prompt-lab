@@ -90,7 +90,7 @@ describe('/jobs API endpoints', () => {
     expect(events[0]).toBe('data: {"token":"Hel"}');
     expect(events[1]).toBe('data: {"token":"lo"}');
     expect(events[2]).toBe('data: {"token":" world"}');
-    expect(events[3]).toMatch(/^event: metrics\ndata: {"durationMs":\d+,"tokenCount":2}}$/);
+    expect(events[3]).toMatch(/^event: metrics\ndata: {"durationMs":\d+,"tokenCount":2}$/);
 
     const job = await JobService.getJob(id);
     expect(job?.status).toBe('completed');

@@ -20,60 +20,80 @@ vi.mock('better-sqlite3', () => {
   };
 });
 
-// Mock drizzle database operations
-vi.mock('./src/db/index.ts', () => {
-  const mockDb = {
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          orderBy: vi.fn(() => Promise.resolve([])),
-        })),
-        orderBy: vi.fn(() => Promise.resolve([])),
-      })),
-    })),
-    insert: vi.fn(() => ({
-      values: vi.fn(() => ({
-        returning: vi.fn(() => Promise.resolve([{ id: 1 }])),
-      })),
-    })),
-    update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve({ changes: 1 })),
-      })),
-    })),
-    delete: vi.fn(() => ({
-      where: vi.fn(() => Promise.resolve({ changes: 1 })),
-    })),
+// Mock the JobService - ensuring the mock is hoisted properly
+vi.mock('./src/jobs/service', () => {
+  const mockJobsStore = new Map();
+  let mockJobIdCounter = 1;
+  
+  const mockFunctions = {
+    createJob: vi.fn(async (data) => {
+      console.log('Mock createJob called with:', data);
+      const newJob = {
+        id: `job-${mockJobIdCounter++}`,
+        ...data,
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      console.log('Mock createJob returning:', newJob);
+      mockJobsStore.set(newJob.id, newJob);
+      return newJob;
+    }),
+    getJob: vi.fn(async (id) => {
+      console.log('Mock getJob called with:', id);
+      const job = mockJobsStore.get(id) || null;
+      console.log('Mock getJob returning:', job);
+      return job;
+    }),
+    updateJob: vi.fn(async (id, data) => {
+      const job = mockJobsStore.get(id);
+      if (job) {
+        const updatedJob = { ...job, ...data, updatedAt: new Date() };
+        mockJobsStore.set(id, updatedJob);
+        return updatedJob;
+      }
+      return null;
+    }),
   };
   
-  return { db: mockDb };
+  return mockFunctions;
 });
 
 // Mock OpenAI provider
-vi.mock('./providers/openai', () => ({
-  openai: {
-    chat: {
-      completions: {
-        create: vi.fn().mockResolvedValue({ choices: [{ message: { content: 'mocked response' } }] }),
-      }
+vi.mock('./src/providers/openai', () => {
+  console.log('Setting up OpenAI provider mock');
+  return {
+    OpenAIProvider: {
+      name: 'openai',
+      models: ['gpt-4', 'gpt-3.5-turbo', 'gpt-4-turbo-preview'],
+      complete: vi.fn().mockImplementation(async function* () {
+        console.log('Mock OpenAI complete called');
+        yield 'mocked ';
+        yield 'openai ';
+        yield 'response';
+      }),
     }
-  }
-}));
+  };
+});
 
-// Mock Gemini provider
-vi.mock('./providers/gemini', () => ({
-  gemini: {
-    chat: {
-      completions: {
-        create: vi.fn().mockResolvedValue({ choices: [{ message: { content: 'mocked gemini response' } }] }),
-      }
+// Mock Gemini provider  
+vi.mock('./src/providers/gemini', () => {
+  console.log('Setting up Gemini provider mock');
+  return {
+    GeminiProvider: {
+      name: 'gemini',
+      models: ['gemini-pro'],
+      complete: vi.fn().mockImplementation(async function* () {
+        console.log('Mock Gemini complete called');
+        yield 'mocked ';
+        yield 'gemini ';
+        yield 'response';
+      }),
     }
-  }
-}));
+  };
+});
 
 // Use in-memory SQLite DB for all tests
 beforeAll(() => {
   process.env.DATABASE_URL = ':memory:';
-  // If your code uses process.env.DATABASE_URL, this will ensure it uses in-memory DB.
-  // If you instantiate Database directly, do: new Database(':memory:')
 });

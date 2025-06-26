@@ -8,16 +8,16 @@ export default defineConfig({
     },
   },
   test: {
+    environment: 'node',
+    setupFiles: ['./setupTests.ts'],
     poolOptions: {
       threads: {
         singleThread: true,
       },
     },
-    setupFiles: ['./setupTests.ts'],
-    environment: 'node',
     exclude: ['node_modules/**', '**/dist/**'],
     allowOnly: false,
-    mockReset: true,
+    mockReset: false,
     hookTimeout: 5000,
     deps: { inline: [/vitest/] },
     coverage: {

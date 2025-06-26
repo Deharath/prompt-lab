@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",
-    "clean": "rimraf src/**/*.js src/**/*.d.ts dist",
+    "clean": "powershell -Command \"Get-ChildItem -Path src -Recurse -Include *.js,*.d.ts | Remove-Item -Force; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\"",
     "test": "pnpm run clean && vitest run"
   },
   "dependencies": {
