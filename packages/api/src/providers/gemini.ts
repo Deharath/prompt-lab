@@ -1,27 +1,54 @@
-import type { LLMProvider, ProviderOptions } from './index';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { LLMProvider, ProviderOptions } from './index.js';
 
-const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  console.warn('GEMINI_API_KEY is not set. Gemini provider will not be available.');
+function getGeminiClient(): GoogleGenerativeAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return new GoogleGenerativeAI(apiKey);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function* complete(prompt: string, options: ProviderOptions): AsyncGenerator<string> {
-  if (!apiKey) {
+async function* complete(
+  prompt: string,
+  options: ProviderOptions,
+): AsyncGenerator<string> {
+  const genAI = getGeminiClient();
+  if (!genAI) {
     throw new Error('Gemini API key not configured. Cannot process request.');
   }
-  // This is a stub. Replace with actual Google AI SDK calls.
-  const message = 'Response from Gemini stub. ';
-  for (const word of message.split(' ')) {
-    // eslint-disable-next-line no-await-in-loop
-    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate network latency
-    yield `${word} `;
+
+  const model = genAI.getGenerativeModel({
+    model: options.model,
+    generationConfig: {
+      // Disable thinking for faster responses and lower costs
+      // Note: This is conceptual - actual implementation may vary
+    },
+  });
+
+  try {
+    const result = await model.generateContentStream(prompt);
+
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const chunk of result.stream) {
+      const chunkText = chunk.text();
+      if (chunkText) {
+        yield chunkText;
+      }
+    }
+  } catch (error) {
+    throw new Error(
+      `Gemini API error: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
+    );
   }
 }
 
 export const GeminiProvider: LLMProvider = {
   name: 'gemini',
-  models: ['gemini-2.5-flash'],
+  models: [
+    'gemini-2.5-flash', // Latest and most cost-effective flash model
+  ],
   complete,
 };

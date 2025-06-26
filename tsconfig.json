@@ -4,7 +4,7 @@
     "module": "Node16",
     "strict": true,
     "moduleResolution": "node16",
-    "importsNotUsedAsValues": "error",
+    "preserveValueImports": true,
     "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,6 +14,7 @@
     "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
+      "@prompt-lab/api": ["packages/api/src/index.ts"],
       "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"]
     }
   },
@@ -21,6 +22,7 @@
   "references": [
     { "path": "./apps/api" },
     { "path": "./apps/web" },
+    { "path": "./packages/api" },
     { "path": "./packages/evaluator" },
     { "path": "./packages/test-cases" }
   ]
