@@ -13,6 +13,7 @@ export default defineConfig({
         singleThread: true,
       },
     },
+    setupFiles: ['./setupTests.ts'],
     environment: 'node',
     exclude: ['node_modules/**', '**/dist/**'],
     allowOnly: false,
