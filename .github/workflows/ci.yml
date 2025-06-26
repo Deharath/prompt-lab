@@ -33,20 +33,25 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
+            
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
       - name: Validate datasets
         run: pnpm lint:data
-      - name: Debug: Show apps/api/package.json content
+
+      - name: 'Debug: Show package.json content'
         run: |
-          echo "--- Contents of apps/api/package.json ---"
-          cat apps/api/package.json
-          echo "----------------------------------------"
+          echo "--- Contents of packages/api/package.json ---"
+          cat packages/api/package.json
+          echo "-------------------------------------------"
+
       - name: Lint
         run: pnpm -r lint
+
       - name: Build
         run: pnpm -r build
+
       - name: Test
         run: pnpm -r test
 
