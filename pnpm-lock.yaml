@@ -194,25 +194,28 @@ importers:
 
   packages/api:
     dependencies:
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
+      better-sqlite3:
+        specifier: ^12.1.1
+        version: 12.1.1
+      drizzle-orm:
+        specifier: ^0.30.10
+        version: 0.30.10(@types/better-sqlite3@7.6.13)(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0)
       express:
         specifier: ^4.21.2
         version: 4.21.2
+      openai:
+        specifier: ^4.50.0
+        version: 4.104.0(ws@8.18.2)(zod@3.25.67)
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.23
-      better-sqlite3:
-        specifier: ^12.1.1
-        version: 12.1.1
       drizzle-kit:
         specifier: ^0.20.10
         version: 0.20.18
-      drizzle-orm:
-        specifier: ^0.30.10
-        version: 0.30.10(@types/better-sqlite3@7.6.13)(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0)
-      openai:
-        specifier: ^4.50.0
-        version: 4.104.0(ws@8.18.2)(zod@3.25.67)
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
