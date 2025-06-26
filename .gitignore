@@ -48,3 +48,8 @@ Thumbs.db
 
 # Local development & test files
 **/jobs.json
+
+# SQLite databases (local artifacts)
+*.db
+sqlite.db
+**/sqlite.db
