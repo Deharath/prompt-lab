@@ -5,8 +5,7 @@
     "lib": ["ESNext"]
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "references": [
     { "path": "../../packages/evaluator" },

@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
 import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const router: ExpressRouter = Router();
