@@ -40,4 +40,4 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # start the API (entrypoint produced by tsc)
-CMD ["node", "apps/api/dist/index.js"]
+CMD ["node", "apps/api/dist/src/index.js"]
