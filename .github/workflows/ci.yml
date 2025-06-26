@@ -42,11 +42,11 @@ jobs:
       - name: Validate datasets
         run: pnpm lint:data
 
-      - name: Lint
-        run: pnpm -r lint
-
       - name: Build
         run: pnpm -r build
+
+      - name: Lint
+        run: pnpm -r lint
 
       - name: Test
         run: pnpm -r test

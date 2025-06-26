@@ -76,6 +76,25 @@ jobsRouter.post(
   },
 );
 
+// GET /jobs/:id - Get job status
+jobsRouter.get(
+  '/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const job = await JobService.getJob(id);
+
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      res.json(job);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 // GET /jobs/:id/stream - Stream job results via SSE
 jobsRouter.get(
   '/:id/stream',
