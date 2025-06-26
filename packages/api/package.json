@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",
-    "test": "rimraf src/**/*.js src/**/*.d.ts && vitest run --threads=false"
+    "test": "rimraf src/**/*.js src/**/*.d.ts && vitest run --no-threads"
   },
   "dependencies": {
     "express": "^4.21.2"
