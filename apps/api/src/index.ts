@@ -3,7 +3,9 @@ import { z } from 'zod';
 import dotenv from 'dotenv';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import rateLimit from 'express-rate-limit';
 import evalRouter from './routes/eval.js';
+import jobsRouter from './routes/jobs.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
@@ -11,13 +13,36 @@ const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
 dotenv.config({ path: join(rootDir, '.env') });
 
 export const app: Express = express();
-app.use(express.json());
+
+// Security middleware
+app.use(express.json({ limit: '1mb' })); // Limit request size
+
+// Rate limiting for jobs API
+const jobsRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per windowMs for jobs
+  message: { error: 'Too many job requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Global rate limiting (more permissive)
+const globalRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(globalRateLimit);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
 app.use('/eval', evalRouter);
+app.use('/jobs', jobsRateLimit, jobsRouter);
 
 // Serve built web UI from /public when present
 app.use(express.static(join(rootDir, 'public')));

@@ -34,3 +34,6 @@ coverage/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Local development & test files
+**/jobs.json
