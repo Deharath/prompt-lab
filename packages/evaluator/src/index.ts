@@ -51,11 +51,13 @@ async function runBatch(
   concurrency = 5,
 ): Promise<number[]> {
   const limit = pLimit(concurrency);
-  return Promise.all(
-    items.map((it) => limit(() => scorePair(openai, it.prediction, it.reference))),
-  );
+  function scorer(it: BatchItem) {
+    return limit(() => scorePair(openai, it.prediction, it.reference));
+  }
+  return Promise.all(items.map(scorer));
 }
 
+// prettier-ignore
 export {
   applyTemplate,
   scorePair,
