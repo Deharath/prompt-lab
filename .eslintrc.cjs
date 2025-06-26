@@ -15,4 +15,12 @@ module.exports = {
       typescript: {},
     },
   },
+  overrides: [
+    {
+      files: ['*.d.ts'],
+      parserOptions: {
+        project: null,
+      },
+    },
+  ],
 };
