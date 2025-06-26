@@ -23,7 +23,6 @@ build
 !.env.example
 
 # Test & Coverage
-**/test
 coverage/
 .nyc_output
 *.lcov
