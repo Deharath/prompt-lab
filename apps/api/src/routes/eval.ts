@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
 import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const router: ExpressRouter = Router();
@@ -17,7 +17,7 @@ const bodySchema = z.object({
 });
 
 // Absolute path to repo root, regardless of where the process starts
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+const repoRoot = fileURLToPath(new URL('../../../../..', import.meta.url));
 
 function datasetPath(id: string) {
   return join(repoRoot, 'packages', 'test-cases', `${id}.jsonl`);

@@ -1,4 +1,9 @@
 node_modules
-**/test
+**/node_modules
+.pnpm
+dist
+coverage
+.DS_Store
 .git
 *.log
+**/test

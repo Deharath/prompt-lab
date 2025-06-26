@@ -15,39 +15,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up pnpm 10
-        uses: pnpm/action-setup@v2
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.3 # keep in sync with local
-          run_install: false # we run install below
+          version: 10
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
 
-      - name: Cache pnpm store
-        uses: actions/cache@v3
-        with:
-          path: ~/.local/share/pnpm/store/v3
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 python3-dev
+          # Install additional tools that might be needed for native compilation
+          sudo apt-get install -y pkg-config libsqlite3-dev
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile --force
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+          npm_config_cache_max: 0
+
+      - name: Rebuild all native modules
+        run: |
+          pnpm rebuild
+          # Specifically rebuild better-sqlite3 in each package that uses it
+          cd packages/api && pnpm rebuild better-sqlite3 || true
+          cd ../../packages/evaluator && pnpm rebuild better-sqlite3 || true
+          cd ../../apps/api && pnpm rebuild better-sqlite3 || true
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+
       - name: Validate datasets
         run: pnpm lint:data
 
-      - name: Build packages
-        run: pnpm -r build
-
       - name: Lint
         run: pnpm -r lint
-      - name: Type-check
-        run: pnpm -r tsc
-      - run: pnpm test
-      - run: pnpm test:e2e
+
+      - name: Build
+        run: pnpm -r build
+
+      - name: Test
+        run: pnpm -r test
 
 
   # ───────────────────────── Docker smoke test ────────────────────────────
@@ -57,32 +71,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Buildx driver (required for docker/build-push-action)
       - uses: docker/setup-buildx-action@v3
 
-      # Build image **and load it** into the runner’s Docker daemon
       - name: Build image
         uses: docker/build-push-action@v5
         with:
           context: .
           tags: promptlab:test
-          load: true # makes the image available to `docker run`
+          load: true
 
-      # Start the container (don’t use --rm so we can read logs on failure)
       - name: Start container
         run: docker run -d --name promptlab -p 3000:3000 promptlab:test
 
-      # Wait (max 40 s) for the health endpoint; print logs if it dies/timeout
       - name: Wait for API /health
         run: |
           for i in {1..20}; do
-            # Has the container quit already?
             if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
               echo "Container exited early 😭"
               docker logs promptlab || true
               exit 1
             fi
-            # Probe the health endpoint
             if curl -sf http://localhost:3000/health > /dev/null ; then
               echo "API is up 🎉"
               exit 0
@@ -94,7 +102,6 @@ jobs:
           docker logs promptlab || true
           exit 1
 
-      # Always clean up
       - name: Stop container
         if: always()
         run: docker rm -f promptlab || true

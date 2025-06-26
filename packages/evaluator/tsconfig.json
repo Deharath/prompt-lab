@@ -7,5 +7,16 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*",
+    "src/*.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "dist/*",
+    "dist/src",
+    "node_modules",
+    "test"
+  ],
+  "references": []
 }

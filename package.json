@@ -17,10 +17,12 @@
     "format": "prettier --write .",
     "lint:data": "node scripts/lint-jsonl.cjs",
     "build:api": "pnpm --filter api run build",
-    "docker:run": "docker build -t promptlab:latest . && docker run -d -p 3000:3000 promptlab:latest"
+    "docker:run": "docker build -t promptlab:latest . && docker run -d -p 3000:3000 promptlab:latest",
+    "clean": "pnpm -r clean || true && rimraf node_modules pnpm-lock.yaml dist packages/*/dist apps/*/dist"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
+    "@types/express": "^4.17.23",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/supertest": "^2.0.12",
@@ -28,6 +30,8 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.6.0",
     "@vitest/coverage-istanbul": "1.5.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "better-sqlite3": "^12.1.1",
     "concurrently": "^8.0.0",
     "eslint": "^8.0.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -42,14 +46,22 @@
     "get-port": "^7.1.0",
     "jsdom": "^26.1.0",
     "prettier": "^2.8.8",
+    "rimraf": "^6.0.1",
     "supertest": "^6.3.3",
     "tsx": "^4.20.3",
     "typescript": "4.9.5",
     "vite": "7.0.0",
-    "vitest": "1.6.1"
+    "vitest": "3.2.4"
   },
   "dependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^5.2.0",
+      "vitest": "^1.6.1",
+      "@vitejs/plugin-react": "^4.6.0"
+    }
   }
 }

@@ -8,9 +8,7 @@ COPY . .
 
 # install deps once (cached) and build every workspace that has a build script
 RUN pnpm install --frozen-lockfile \
-    && pnpm --filter "@prompt-lab/evaluator" run build \
-    && pnpm --filter api run build \
-    && pnpm --filter web run build
+    && pnpm -r build
 
 ###############################################################################
 # ❷ Runtime stage – slim image with only production artefacts
@@ -25,21 +23,21 @@ COPY --from=builder /app/apps/web/dist            ./public
 COPY --from=builder /app/apps/api/dist            ./apps/api/dist
 COPY --from=builder /app/packages/evaluator/dist ./packages/evaluator/dist
 
-# ── package-manager metadata & production node_modules ───────────────────────
+# ── package-manager metadata & production deps ───────────────────────────────
 COPY --from=builder /app/package.json \
                      /app/pnpm-lock.yaml \
                      /app/pnpm-workspace.yaml \
                      ./
-COPY --from=builder /app/node_modules             ./node_modules
-COPY --from=builder /app/apps/api/node_modules   ./apps/api/node_modules
-COPY --from=builder /app/apps/web/node_modules   ./apps/web/node_modules
-COPY --from=builder /app/packages/evaluator/node_modules ./packages/evaluator/node_modules
 COPY --from=builder /app/apps/api/package.json   ./apps/api/package.json
 COPY --from=builder /app/packages/evaluator/package.json ./packages/evaluator/package.json
-COPY --from=builder /app/packages/test-cases    ./packages/test-cases
+COPY --from=builder /app/packages/test-cases/package.json ./packages/test-cases/package.json
+COPY --from=builder /app/packages/test-cases/src ./packages/test-cases/src
+
+# install all dependencies for CI/dev (including devDependencies for lint/test)
+RUN pnpm install --frozen-lockfile
 
 ENV NODE_ENV=production
 EXPOSE 3000
 
 # start the API (entrypoint produced by tsc)
-CMD ["node", "apps/api/dist/index.js"]
+CMD ["node", "apps/api/dist/src/index.js"]
