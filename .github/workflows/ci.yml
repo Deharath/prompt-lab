@@ -33,13 +33,20 @@ jobs:
           sudo apt-get install -y pkg-config libsqlite3-dev
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile --force
         env:
           npm_config_build_from_source: true
           SQLITE3_FORCE_COMPILE: true
+          npm_config_cache_max: 0
 
-      - name: Rebuild native modules for current platform
-        run: pnpm rebuild
+      - name: Rebuild all native modules
+        run: |
+          pnpm rebuild
+          # Specifically rebuild better-sqlite3 in each package that uses it
+          cd packages/api && pnpm rebuild better-sqlite3 || true
+          cd ../../packages/evaluator && pnpm rebuild better-sqlite3 || true
+          cd ../../apps/api && pnpm rebuild better-sqlite3 || true
         env:
           npm_config_build_from_source: true
           SQLITE3_FORCE_COMPILE: true

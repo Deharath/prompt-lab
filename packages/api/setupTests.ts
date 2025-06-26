@@ -1,5 +1,53 @@
 import { vi, beforeAll } from 'vitest';
-import Database from 'better-sqlite3';
+
+// Mock better-sqlite3 to avoid native module compilation issues in CI
+vi.mock('better-sqlite3', () => {
+  const mockDb = {
+    prepare: vi.fn(() => ({
+      run: vi.fn(),
+      get: vi.fn(),
+      all: vi.fn(() => []),
+      bind: vi.fn(),
+      finalize: vi.fn(),
+    })),
+    close: vi.fn(),
+    exec: vi.fn(),
+    transaction: vi.fn((fn) => fn),
+  };
+  
+  return {
+    default: vi.fn(() => mockDb),
+  };
+});
+
+// Mock drizzle database operations
+vi.mock('./src/db/index.ts', () => {
+  const mockDb = {
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          orderBy: vi.fn(() => Promise.resolve([])),
+        })),
+        orderBy: vi.fn(() => Promise.resolve([])),
+      })),
+    })),
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({
+        returning: vi.fn(() => Promise.resolve([{ id: 1 }])),
+      })),
+    })),
+    update: vi.fn(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => Promise.resolve({ changes: 1 })),
+      })),
+    })),
+    delete: vi.fn(() => ({
+      where: vi.fn(() => Promise.resolve({ changes: 1 })),
+    })),
+  };
+  
+  return { db: mockDb };
+});
 
 // Mock OpenAI provider
 vi.mock('./providers/openai', () => ({
