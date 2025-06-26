@@ -38,6 +38,11 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Validate datasets
         run: pnpm lint:data
+      - name: Debug: Show apps/api/package.json content
+        run: |
+          echo "--- Contents of apps/api/package.json ---"
+          cat apps/api/package.json
+          echo "----------------------------------------"
       - name: Lint
         run: pnpm -r lint
       - name: Build
