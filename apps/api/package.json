@@ -1,5 +1,5 @@
 {
-  "name": "@prompt-lab/api",
+  "name": "@prompt-lab/app-api",
   "private": true,
   "version": "0.0.0",
   "type": "module",
