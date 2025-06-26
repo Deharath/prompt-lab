@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { Router } from 'express';
 import { Router as createRouter } from 'express';
-import { getProvider } from '../providers';
-import * as JobService from '../jobs/service';
+import { getProvider } from '../providers/index.js';
+import * as JobService from '../jobs/service.js';
 
 const jobsRouter = createRouter();
 

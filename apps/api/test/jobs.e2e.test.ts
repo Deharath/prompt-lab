@@ -5,8 +5,8 @@ import getPort from 'get-port';
 import { app } from '../src/index.js';
 
 // Mock the providers module to use test providers instead of real API calls
-vi.mock('../src/providers', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../src/providers')>();
+vi.mock('@prompt-lab/api', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@prompt-lab/api')>();
 
   async function* mockCompleteSuccess() {
     yield 'Hel';

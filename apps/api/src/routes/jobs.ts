@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
-import { getProvider } from '../providers/index.js';
+import { getProvider } from '@prompt-lab/api';
 import * as JobService from '../jobs/service.js';
 
 const jobsRouter = createRouter();

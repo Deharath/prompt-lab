@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@prompt-lab/api": "workspace:*",
     "@prompt-lab/evaluator": "workspace:*",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",

@@ -4,6 +4,6 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: react(), // Pass react() directly, not as an array
+  plugins: [react()],
   test: { environment: 'jsdom' },
 });

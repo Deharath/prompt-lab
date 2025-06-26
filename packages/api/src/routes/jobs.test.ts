@@ -35,17 +35,13 @@ vi.mock('../providers', async importOriginal => {
   };
 });
 
-const TEST_DB_FILE = 'test-e2e-sqlite.db';
+const TEST_DB_FILE = ':memory:';
 
 describe('/jobs API endpoints', () => {
   let app: Express;
 
   beforeAll(() => {
-    // In a real project, you'd use a dedicated test DB setup.
-    // For this example, we ensure the test DB file doesn't exist.
-    if (fs.existsSync(TEST_DB_FILE)) {
-      fs.unlinkSync(TEST_DB_FILE);
-    }
+    // Use in-memory database for tests
     process.env.DATABASE_URL = TEST_DB_FILE;
 
     // Manually create table for tests since we don't run migrations here.
@@ -59,9 +55,7 @@ describe('/jobs API endpoints', () => {
   });
 
   afterAll(() => {
-    if (fs.existsSync(TEST_DB_FILE)) {
-      fs.unlinkSync(TEST_DB_FILE);
-    }
+    // Memory database doesn't need cleanup
   });
 
   it('POST /jobs should create a job and return 202', async () => {
