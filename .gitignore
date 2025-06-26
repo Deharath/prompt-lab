@@ -16,6 +16,17 @@ dist
 /dist
 build
 /build
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Compiled TypeScript artifacts in source directories
+src/**/*.js
+src/**/*.d.ts
+test/**/*.js
+test/**/*.d.ts
+!**/*.config.js
+!**/vitest.config.js
+!**/vite.config.js
 
 # Environment variables
 .env
