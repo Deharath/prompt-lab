@@ -44,11 +44,8 @@ describe('/jobs API endpoints', () => {
     // Use in-memory database for tests
     process.env.DATABASE_URL = TEST_DB_FILE;
 
-    // Manually create table for tests since we don't run migrations here.
-    db.run(
-      'CREATE TABLE jobs (id TEXT PRIMARY KEY, prompt TEXT NOT NULL, provider TEXT NOT NULL, model TEXT NOT NULL, status TEXT NOT NULL, result TEXT, metrics TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)' as any
-    );
-
+    // Database table is now automatically created by the db initialization
+    
     app = express();
     app.use(express.json());
     app.use('/jobs', jobsRouter);

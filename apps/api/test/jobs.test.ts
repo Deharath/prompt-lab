@@ -3,7 +3,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
 import { app } from '../src/index.js';
-import { db } from '../src/db/index.js';
+import { db } from '@prompt-lab/api';
+import { jobs } from '@prompt-lab/api';
 
 let server: Server;
 let request: supertest.SuperTest<supertest.Test>;
@@ -11,7 +12,7 @@ let request: supertest.SuperTest<supertest.Test>;
 beforeEach(async () => {
   // Clean up jobs table before each test
   try {
-    await db.deleteAll();
+    await db.delete(jobs);
   } catch (_error) {
     // Ignore errors
   }
@@ -33,7 +34,7 @@ describe('Jobs API', () => {
       .post('/jobs')
       .send({
         prompt: 'Hello world',
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
       })
       .expect(400);
 
@@ -45,7 +46,7 @@ describe('Jobs API', () => {
       .post('/jobs')
       .send({
         provider: 'openai',
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
       })
       .expect(400);
 
@@ -70,7 +71,7 @@ describe('Jobs API', () => {
       .send({
         prompt: 'Hello world',
         provider: 'unknown',
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
       })
       .expect(400);
 
@@ -112,6 +113,75 @@ describe('Jobs API', () => {
     if (originalKey) {
       process.env.OPENAI_API_KEY = originalKey;
     }
+  });
+
+  it('should create job successfully with OpenAI', async () => {
+    // Skip if no real OpenAI API key available
+    if (!process.env.OPENAI_API_KEY) {
+      process.env.OPENAI_API_KEY = 'sk-test-dummy-key-for-mock-testing';
+    }
+
+    const response = await request
+      .post('/jobs')
+      .send({
+        prompt: 'Hello world',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+      })
+      .expect(202);
+
+    expect(response.body).toHaveProperty('id');
+    expect(response.body.prompt).toBe('Hello world');
+    expect(response.body.provider).toBe('openai');
+    expect(response.body.model).toBe('gpt-4o-mini');
+    expect(response.body.status).toBe('pending');
+  });
+
+  it('should support all OpenAI model variants', async () => {
+    if (!process.env.OPENAI_API_KEY) {
+      process.env.OPENAI_API_KEY = 'sk-test-dummy-key-for-mock-testing';
+    }
+
+    const models = ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini'];
+
+    for (const model of models) {
+      const response = await request
+        .post('/jobs')
+        .send({
+          prompt: 'Test prompt',
+          provider: 'openai',
+          model,
+        })
+        .expect(202);
+
+      expect(response.body.model).toBe(model);
+      expect(response.body.provider).toBe('openai');
+    }
+  });
+
+  it('should stream OpenAI job completion', async () => {
+    // Skip if no real OpenAI API key available
+    if (!process.env.OPENAI_API_KEY) {
+      process.env.OPENAI_API_KEY = 'sk-test-dummy-key-for-mock-testing';
+    }
+
+    // Create a job first
+    const createResponse = await request
+      .post('/jobs')
+      .send({
+        prompt: 'Say hello',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+      })
+      .expect(202);
+
+    const jobId = createResponse.body.id;
+
+    // Stream the job
+    const response = await request.get(`/jobs/${jobId}/stream`).expect(200);
+
+    expect(response.headers['content-type']).toBe('text/event-stream');
+    expect(response.text).toContain('data:');
   });
 
   it('should create job successfully with Gemini (stub)', async () => {
