@@ -12,7 +12,7 @@ beforeEach(async () => {
   // Clean up jobs table before each test
   try {
     await db.deleteAll();
-  } catch (error) {
+  } catch (_error) {
     // Ignore errors
   }
 

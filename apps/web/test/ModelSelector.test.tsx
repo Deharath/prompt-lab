@@ -1,6 +1,4 @@
-// eslint-disable-next-line object-curly-newline
 import { describe, it, expect, vi } from 'vitest';
-// eslint-disable-next-line object-curly-newline
 import { render, fireEvent, screen } from '@testing-library/react';
 import ModelSelector from '../src/components/ModelSelector.js';
 

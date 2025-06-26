@@ -6,7 +6,10 @@ export interface MetricInput {
   reference: string;
 }
 
-export type MetricFn = (openai: OpenAI, input: MetricInput) => Promise<number>;
+export type MetricFn = (
+  _openai: OpenAI,
+  _input: MetricInput,
+) => Promise<number>;
 
 async function exactMatch(
   _openai: OpenAI,

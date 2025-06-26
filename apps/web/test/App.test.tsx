@@ -1,6 +1,4 @@
-// eslint-disable-next-line object-curly-newline
 import { describe, it, vi, expect } from 'vitest';
-// eslint-disable-next-line object-curly-newline
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from '../src/App.js';
 

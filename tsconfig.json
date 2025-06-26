@@ -4,17 +4,16 @@
     "module": "Node16",
     "strict": true,
     "moduleResolution": "node16",
-    "preserveValueImports": true,
-    "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "composite": true,
+    "declaration": true,
     "jsx": "react-jsx",
     "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@prompt-lab/api": ["packages/api/src/index.ts"],
+      "@prompt-lab/api": ["packages/api/dist/index.d.ts"],
       "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"]
     }
   },

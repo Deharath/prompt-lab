@@ -8,6 +8,7 @@
     "src"
   ],
   "references": [
+    { "path": "../../packages/api" },
     { "path": "../../packages/evaluator" },
     { "path": "../../packages/test-cases" }
   ],

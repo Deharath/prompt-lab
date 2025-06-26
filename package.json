@@ -7,36 +7,39 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:api": "pnpm --filter api run dev",
+    "dev:api": "pnpm --filter @prompt-lab/app-api run dev",
     "dev:web": "pnpm --filter web run dev",
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "tsc": "pnpm -r tsc",
-    "test": "vitest run --coverage --config vitest.config.mts && pnpm --filter web vitest run --config apps/web/vitest.config.ts",
+    "test": "vitest run --coverage --config vitest.config.mts && pnpm --filter web test",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts",
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "lint:data": "node scripts/lint-jsonl.cjs",
-    "build:api": "pnpm --filter api run build",
+    "build:api": "pnpm --filter @prompt-lab/app-api run build",
     "docker:run": "docker build -t promptlab:latest . && docker run -d -p 3000:3000 promptlab:latest",
     "clean": "pnpm -r clean || true && rimraf node_modules pnpm-lock.yaml dist packages/*/dist apps/*/dist"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.3.1",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.29.0",
     "@testing-library/react": "^16.3.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^4.17.23",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/supertest": "^2.0.12",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
     "@vitejs/plugin-react": "^4.6.0",
-    "@vitest/coverage-istanbul": "1.5.0",
     "@vitest/coverage-v8": "^3.2.4",
     "better-sqlite3": "^12.1.1",
     "concurrently": "^8.0.0",
-    "eslint": "^8.0.0",
+    "eslint": "^9.29.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^4.4.3",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-prettier": "^5.0.0",
@@ -44,13 +47,15 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-vitest": "0.5.4",
     "get-port": "^7.1.0",
+    "globals": "^16.2.0",
     "jsdom": "^26.1.0",
-    "prettier": "^2.8.8",
+    "prettier": "^3.6.1",
     "rimraf": "^6.0.1",
     "supertest": "^6.3.3",
     "tsx": "^4.20.3",
-    "typescript": "4.9.5",
+    "typescript": "5.8.3",
     "vite": "7.0.0",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "3.2.4"
   },
   "dependencies": {
@@ -58,10 +63,8 @@
     "react-dom": "^19.1.0"
   },
   "pnpm": {
-    "overrides": {
-      "vite": "^5.2.0",
-      "vitest": "^1.6.1",
-      "@vitejs/plugin-react": "^4.6.0"
-    }
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }

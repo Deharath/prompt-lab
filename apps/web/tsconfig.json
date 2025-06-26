@@ -9,9 +9,7 @@
   },
   "include": [
     "src",
-    "test",
-    "vite.config.ts",
-    "vitest.config.ts"
+    "test"
   ],
   "references": [
     { "path": "../../packages/evaluator" },

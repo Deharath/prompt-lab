@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
-import { getProvider } from '../providers/index.js';
+import { getProvider } from '@prompt-lab/api';
 import * as JobService from '../jobs/service.js';
 
 const jobsRouter = createRouter();
@@ -8,7 +8,7 @@ const jobsRouter = createRouter();
 // POST /jobs - Create a new job
 jobsRouter.post(
   '/',
-  // eslint-disable-next-line consistent-return
+
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { prompt, provider: providerName, model } = req.body;
@@ -76,10 +76,29 @@ jobsRouter.post(
   },
 );
 
+// GET /jobs/:id - Get job status
+jobsRouter.get(
+  '/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const job = await JobService.getJob(id);
+
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      res.json(job);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 // GET /jobs/:id/stream - Stream job results via SSE
 jobsRouter.get(
   '/:id/stream',
-  // eslint-disable-next-line consistent-return
+
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -115,7 +134,7 @@ jobsRouter.get(
 
       try {
         const stream = provider.complete(job.prompt, { model: job.model });
-        // eslint-disable-next-line no-restricted-syntax
+
         for await (const token of stream) {
           fullResponse += token;
           sendEvent({ token });
@@ -134,7 +153,6 @@ jobsRouter.get(
         });
         sendEvent(metrics, 'metrics');
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error(`Job ${id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';

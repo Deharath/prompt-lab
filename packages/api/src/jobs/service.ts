@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
-import { db } from '../db';
-import { jobs, Job, NewJob } from '../db/schema';
+import { db } from '../db/index.js';
+import { jobs, Job, NewJob } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 export async function createJob(

@@ -12,13 +12,20 @@
 2. ✅ **DONE**: Create main `index.ts` export file for `packages/api`
 3. ✅ **DONE**: Add `@prompt-lab/api` path mapping to root tsconfig
 
-### Phase 2: Consolidate provider implementations (NEXT STEPS)
-1. **Compare and merge** provider implementations:
-   - `apps/api/src/providers/openai.ts` vs `packages/api/src/providers/openai.ts`
-   - `apps/api/src/providers/gemini.ts` vs `packages/api/src/providers/gemini.ts`
-2. **Keep the better implementation** in `packages/api`
-3. **Update apps/api** to import from `@prompt-lab/api`
-4. **Remove duplicate** provider files from `apps/api`
+### Phase 2: Consolidate provider implementations (COMPLETED ✅)
+1. ✅ **DONE**: Compare and merge provider implementations:
+   - ✅ Both implementations were nearly identical 
+   - ✅ Kept the better implementation in `packages/api` (named exports)
+2. ✅ **DONE**: Update apps/api to import from `@prompt-lab/api`
+   - ✅ Updated `apps/api/src/routes/jobs.ts` to import `getProvider` from `@prompt-lab/api`
+   - ✅ Updated test mocks to use `@prompt-lab/api` instead of local providers
+   - ✅ Added path mapping resolution to vitest config
+3. ✅ **DONE**: Remove duplicate provider files from `apps/api`
+   - ✅ Removed entire `apps/api/src/providers/` directory
+4. ✅ **DONE**: Fix build and module resolution issues
+   - ✅ Added packages/api reference to apps/api tsconfig
+   - ✅ Fixed ES module exports in packages/api
+   - ✅ Added proper .js extensions to imports in packages/api
 
 ### Phase 3: Migrate other shared logic
 1. Move database logic that should be shared

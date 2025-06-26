@@ -36,7 +36,7 @@ router.post('/', async (req, res, next) => {
     try {
       raw = await fs.readFile(datasetPath(testSetId), 'utf8');
     } catch (readErr) {
-      if ((readErr as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((readErr as { code?: string }).code === 'ENOENT') {
         res.status(404).json({ error: 'Dataset not found' });
         return;
       }
@@ -47,7 +47,6 @@ router.post('/', async (req, res, next) => {
       .split('\n')
       .map(
         (line) =>
-          // eslint-disable-next-line implicit-arrow-linebreak
           JSON.parse(line) as {
             id: string;
             input: string;
@@ -144,7 +143,7 @@ router.post('/', async (req, res, next) => {
 
     res.json({
       perItem,
-      // eslint-disable-next-line object-curly-newline
+
       aggregates: { avgCosSim, totalTokens, meanLatencyMs, costUSD },
     });
   } catch (err) {
