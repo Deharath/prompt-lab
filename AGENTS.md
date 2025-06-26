@@ -1,6 +1,17 @@
 # PromptLab MVP — Codex Agent Guide
 
-_This file is for autonomous agents (OpenAI Codex, etc.) collaborating in this repo._
+_This file is for autonomous agents (OpenAI C## 8. Pitfalls & Gotchas
+
+- **Alias hygiene:** if `@prompt-lab/evaluator` fails to resolve, verify the `paths` entry in `tsconfig.json` and the `imports` section in each package's `package.json`.
+- **Lockfile updates:** run `pnpm install` at repo root and commit the updated `pnpm-lock.yaml`; CI uses `--frozen-lockfile` so mismatches fail.
+- **Composite TypeScript builds:** ensure packages set `"composite": true` and include proper `references`—run `pnpm tsc` after changes to catch stray build info.
+- **Cross-platform compatibility:** Use Node.js path utilities and avoid shell-specific commands. All scripts now work on Windows, macOS, and Linux.
+- **Docker entrypoint:** The correct path is `apps/api/dist/src/index.js` (not `apps/api/dist/index.js`).
+- **Test file imports:** Import from compiled output (`../dist/src/index.js`) not source files.
+- **Database setup:** SQLite database will be created automatically on first run.
+- **Coverage blockers & workflow quirks:** coverage thresholds live in `vitest.config.mts`; the Docker smoke test may hide failing services. Keep an eye on Node 18 vs. 22 runs.
+
+workspace alias @prompt-lab/evaluatorc.) collaborating in this repo._
 
 ---
 
@@ -19,6 +30,7 @@ PromptLab is a minimalist playground for **testing, scoring and version-controll
 | --------------------- | --------------------------------------------- |
 | `apps/api`            | Express + Zod service. Entry → `src/index.ts` |
 | `apps/web`            | React 18 + shadcn/ui front-end (Vite)         |
+| `packages/api`        | Core API logic (providers, jobs, database)    |
 | `packages/evaluator`  | Pure-TS metrics lib                           |
 | `packages/test-cases` | JSONL fixtures used in eval                   |
 | `scripts`             | Utility scripts (e.g., JSONL lint)            |
@@ -61,14 +73,36 @@ Agents must run the full command suite above before opening PRs.
 
 ## 6. Dependency Boundaries
 
-- **OpenAI SDK** for GPT-4.1 endpoints.
+- **OpenAI SDK** for GPT-4.1 endpoints with streaming support.
 - **Google Generative AI SDK** (or REST) for Gemini 2.5 Flash.
-- No heavy frameworks; lean Express.
+- **SQLite + Drizzle ORM** for job persistence and database operations.
+- **Server-Sent Events (SSE)** for real-time streaming completions.
+- No heavy frameworks; lean Express with pluggable provider architecture.
 - Secrets via `.env`; never commit keys.
 
 ---
 
-## 7. Forbidden Actions
+## 7. Key API Architecture
+
+### Provider System
+- **LLMProvider interface**: `complete(prompt, options): AsyncGenerator<string>`
+- **OpenAIProvider**: Supports GPT-4, GPT-3.5-turbo, GPT-4-turbo-preview
+- **GeminiProvider**: Supports gemini-pro (stub implementation)
+- **Extensible**: Add new providers by implementing the interface
+
+### Job System & Database
+- **Job table**: `id`, `prompt`, `provider`, `model`, `status`, `result`, `metrics`, `createdAt`, `updatedAt`
+- **SQLite + Drizzle ORM**: Automatic schema creation and migrations
+- **Job statuses**: `pending`, `running`, `completed`, `failed`
+
+### Streaming Endpoints
+- `POST /jobs` - Create job, returns job metadata
+- `GET /jobs/:id/stream` - SSE stream with real-time tokens and final metrics
+- `POST /eval` - Run evaluation against test datasets
+
+---
+
+## 8. Forbidden Actions
 
 - Publishing Docker images publicly
 - Creating cloud resources automatically
@@ -77,7 +111,7 @@ Agents must run the full command suite above before opening PRs.
 
 ---
 
-## 8. Pitfalls & Gotchas
+## 9. Pitfalls & Gotchas
 
 - **Alias hygiene:** if `@prompt-lab/evaluator` fails to resolve, verify the `paths` entry in `tsconfig.json` and the `imports` section in each package’s `package.json`.
 - **Lockfile updates:** run `pnpm install` at repo root and commit the updated `pnpm-lock.yaml`; CI uses `--frozen-lockfile` so mismatches fail.
