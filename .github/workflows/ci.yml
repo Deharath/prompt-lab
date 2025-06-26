@@ -34,15 +34,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Set npm config to avoid issues with native modules
-          npm config set node-gyp-rebuild true
           pnpm install --frozen-lockfile
         env:
           npm_config_build_from_source: true
           SQLITE3_FORCE_COMPILE: true
-          npm_config_cache_max: 0
-          # Prevent argument list too long errors
-          npm_config_maxsockets: 1
 
       - name: Validate datasets
         run: pnpm lint:data
