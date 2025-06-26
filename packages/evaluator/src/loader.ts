@@ -8,13 +8,16 @@ export interface MetricInput {
 
 export type MetricFn = (openai: OpenAI, input: MetricInput) => Promise<number>;
 
-async function exactMatch(_openai: OpenAI, { prediction, reference }: MetricInput): Promise<number> {
+async function exactMatch(
+  _openai: OpenAI,
+  { prediction, reference }: MetricInput,
+): Promise<number> {
   return prediction.trim() === reference.trim() ? 1 : 0;
 }
 
 async function cosineSim(
   openai: OpenAI,
-  { prediction, reference }: MetricInput
+  { prediction, reference }: MetricInput,
 ): Promise<number> {
   const model = 'text-embedding-3-small';
   const [
@@ -54,7 +57,7 @@ export async function runMetric(
   name: string,
   openai: OpenAI,
   items: MetricInput[],
-  concurrency = 5
+  concurrency = 5,
 ): Promise<number[]> {
   const metric = metricMap[name];
   if (!metric) {
