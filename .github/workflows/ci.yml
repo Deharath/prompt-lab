@@ -15,42 +15,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up pnpm 10
-        uses: pnpm/action-setup@v2
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.3 # keep in sync with local
-          run_install: false # we run install below
+          version: 10
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js and cache pnpm store
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+          cache: 'pnpm'
 
-      - name: Cache pnpm store
-        uses: actions/cache@v3
-        with:
-          path: ~/.local/share/pnpm/store/v3
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-            
-      - name: Remove node_modules
-        run: rm -rf node_modules packages/*/node_modules apps/*/node_modules
+      - name: Install native build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Rebuild native modules
-        run: pnpm rebuild
-
       - name: Validate datasets
         run: pnpm lint:data
-
-      - name: 'Debug: Show package.json content'
-        run: |
-          echo "--- Contents of packages/api/package.json ---"
-          cat packages/api/package.json
-          echo "-------------------------------------------"
 
       - name: Lint
         run: pnpm -r lint
