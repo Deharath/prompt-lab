@@ -10,14 +10,17 @@ export async function createJob(data: NewJob): Promise<Job> {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-  
-  return await db.create(job);
+
+  return db.create(job);
 }
 
 export async function getJob(id: string): Promise<Job | undefined> {
-  return await db.findById(id);
+  return db.findById(id);
 }
 
-export async function updateJob(id: string, data: Partial<Omit<Job, 'id' | 'createdAt'>>): Promise<Job | undefined> {
-  return await db.update(id, data);
+export async function updateJob(
+  id: string,
+  data: Partial<Omit<Job, 'id' | 'createdAt'>>,
+): Promise<Job | undefined> {
+  return db.update(id, data);
 }

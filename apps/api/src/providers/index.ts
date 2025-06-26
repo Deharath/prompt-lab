@@ -1,5 +1,5 @@
-import { OpenAIProvider } from './openai.js';
-import { GeminiProvider } from './gemini.js';
+import OpenAIProvider from './openai.js';
+import GeminiProvider from './gemini.js';
 
 export interface ProviderOptions {
   model: string;

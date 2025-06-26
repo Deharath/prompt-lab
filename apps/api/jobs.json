@@ -2,29 +2,29 @@
   {
     "prompt": "Hello world",
     "provider": "gemini",
-    "model": "gemini-pro",
-    "id": "312e319b-8a3d-4739-be2c-5579b48e83e9",
+    "model": "gemini-2.5-flash",
+    "id": "450ee75a-8b84-4508-bd2a-fb856a2403cd",
     "status": "completed",
-    "createdAt": "2025-06-26T13:33:43.696Z",
-    "updatedAt": "2025-06-26T13:33:44.246Z",
-    "result": "Response from Gemini stub.  ",
+    "createdAt": "2025-06-26T14:33:09.681Z",
+    "updatedAt": "2025-06-26T14:33:12.790Z",
+    "result": "Hello world back! A classic greeting.\n\nI'm here and ready to assist you. What can I help you with today?",
     "metrics": {
-      "durationMs": 545,
-      "tokenCount": 4
+      "durationMs": 3104,
+      "tokenCount": 20
     }
   },
   {
-    "prompt": "Write a short story about a robot",
-    "provider": "gemini",
-    "model": "gemini-pro",
-    "id": "2b3e9aef-3e34-49f4-b180-4ff13e36db8e",
+    "prompt": "Write just the word \"test\"",
+    "provider": "openai",
+    "model": "gpt-4.1-mini",
+    "id": "96d022d9-c2f2-40cf-9bfe-548d93770a58",
     "status": "completed",
-    "createdAt": "2025-06-26T13:33:44.452Z",
-    "updatedAt": "2025-06-26T13:33:44.993Z",
-    "result": "Response from Gemini stub.  ",
+    "createdAt": "2025-06-26T14:33:12.826Z",
+    "updatedAt": "2025-06-26T14:33:15.658Z",
+    "result": "test",
     "metrics": {
-      "durationMs": 537,
-      "tokenCount": 4
+      "durationMs": 2828,
+      "tokenCount": 1
     }
   }
 ]

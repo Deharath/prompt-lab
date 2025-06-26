@@ -22,6 +22,6 @@ async function* complete(prompt: string, options: ProviderOptions): AsyncGenerat
 
 export const GeminiProvider: LLMProvider = {
   name: 'gemini',
-  models: ['gemini-pro'],
+  models: ['gemini-2.5-flash'],
   complete,
 };

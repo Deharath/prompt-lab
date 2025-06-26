@@ -1,10 +1,11 @@
+import type { Server } from 'http';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
 import { app } from '../src/index.js';
 import { db } from '../src/db/index.js';
 
-let server: any;
+let server: Server;
 let request: supertest.SuperTest<supertest.Test>;
 
 beforeEach(async () => {
@@ -14,7 +15,7 @@ beforeEach(async () => {
   } catch (error) {
     // Ignore errors
   }
-  
+
   const port = await getPort();
   server = app.listen(port);
   request = supertest(app);
@@ -32,11 +33,11 @@ describe('Jobs API', () => {
       .post('/jobs')
       .send({
         prompt: 'Hello world',
-        model: 'gpt-4'
+        model: 'gpt-4',
       })
       .expect(400);
 
-    expect(response.body.error).toContain('Request body must include non-empty string fields');
+    expect(response.body.error).toBe('provider must be a non-empty string.');
   });
 
   it('should reject job creation when prompt is missing', async () => {
@@ -44,11 +45,11 @@ describe('Jobs API', () => {
       .post('/jobs')
       .send({
         provider: 'openai',
-        model: 'gpt-4'
+        model: 'gpt-4',
       })
       .expect(400);
 
-    expect(response.body.error).toContain('Request body must include non-empty string fields');
+    expect(response.body.error).toBe('prompt must be a non-empty string.');
   });
 
   it('should reject job creation when model is missing', async () => {
@@ -56,11 +57,11 @@ describe('Jobs API', () => {
       .post('/jobs')
       .send({
         prompt: 'Hello world',
-        provider: 'openai'
+        provider: 'openai',
       })
       .expect(400);
 
-    expect(response.body.error).toContain('Request body must include non-empty string fields');
+    expect(response.body.error).toBe('model must be a non-empty string.');
   });
 
   it('should reject unknown provider', async () => {
@@ -69,7 +70,7 @@ describe('Jobs API', () => {
       .send({
         prompt: 'Hello world',
         provider: 'unknown',
-        model: 'gpt-4'
+        model: 'gpt-4',
       })
       .expect(400);
 
@@ -82,11 +83,13 @@ describe('Jobs API', () => {
       .send({
         prompt: 'Hello world',
         provider: 'openai',
-        model: 'unsupported-model'
+        model: 'unsupported-model',
       })
       .expect(400);
 
-    expect(response.body.error).toContain("Model 'unsupported-model' not supported by provider 'openai'");
+    expect(response.body.error).toContain(
+      "Model 'unsupported-model' not supported by provider 'openai'",
+    );
   });
 
   it('should return 503 when OpenAI API key is missing', async () => {
@@ -99,7 +102,7 @@ describe('Jobs API', () => {
       .send({
         prompt: 'Hello world',
         provider: 'openai',
-        model: 'gpt-4'
+        model: 'gpt-4o-mini',
       })
       .expect(503);
 
@@ -112,34 +115,36 @@ describe('Jobs API', () => {
   });
 
   it('should create job successfully with Gemini (stub)', async () => {
-    // Set a dummy Gemini API key for testing
-    process.env.GEMINI_API_KEY = 'test-key';
+    // Use real Gemini API key if available, otherwise set a dummy one
+    if (!process.env.GEMINI_API_KEY) {
+      process.env.GEMINI_API_KEY = 'test-key';
+    }
 
     const response = await request
       .post('/jobs')
       .send({
         prompt: 'Hello world',
         provider: 'gemini',
-        model: 'gemini-pro'
+        model: 'gemini-2.5-flash',
       })
       .expect(202);
 
     expect(response.body).toHaveProperty('id');
     expect(response.body.prompt).toBe('Hello world');
     expect(response.body.provider).toBe('gemini');
-    expect(response.body.model).toBe('gemini-pro');
+    expect(response.body.model).toBe('gemini-2.5-flash');
     expect(response.body.status).toBe('pending');
   });
 
   it('should return 404 for non-existent job stream', async () => {
-    await request
-      .get('/jobs/non-existent-id/stream')
-      .expect(404);
+    await request.get('/jobs/non-existent-id/stream').expect(404);
   });
 
   it('should stream Gemini job completion', async () => {
-    // Set a dummy Gemini API key for testing
-    process.env.GEMINI_API_KEY = 'test-key';
+    // Use real Gemini API key if available, otherwise set a dummy one
+    if (!process.env.GEMINI_API_KEY) {
+      process.env.GEMINI_API_KEY = 'test-key';
+    }
 
     // Create a job first
     const createResponse = await request
@@ -147,16 +152,14 @@ describe('Jobs API', () => {
       .send({
         prompt: 'Hello world',
         provider: 'gemini',
-        model: 'gemini-pro'
+        model: 'gemini-2.5-flash',
       })
       .expect(202);
 
     const jobId = createResponse.body.id;
 
     // Stream the job
-    const response = await request
-      .get(`/jobs/${jobId}/stream`)
-      .expect(200);
+    const response = await request.get(`/jobs/${jobId}/stream`).expect(200);
 
     expect(response.headers['content-type']).toBe('text/event-stream');
     expect(response.text).toContain('data:');
