@@ -122,9 +122,6 @@ importers:
       '@prompt-lab/evaluator':
         specifier: workspace:*
         version: link:../../packages/evaluator
-      better-sqlite3:
-        specifier: ^12.1.1
-        version: 12.1.1
       dotenv:
         specifier: ^16.4.5
         version: 16.5.0
@@ -193,7 +190,7 @@ importers:
         version: 0.20.18
       drizzle-orm:
         specifier: ^0.30.10
-        version: 0.30.10(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0)
+        version: 0.30.10(@types/better-sqlite3@7.6.13)(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0)
       openai:
         specifier: ^4.50.0
         version: 4.104.0(ws@8.18.2)(zod@3.25.67)
@@ -1202,6 +1199,9 @@ packages:
 
   '@types/babel__traverse@7.20.7':
     resolution: {integrity: sha512-dkO5fhS7+/oos4ciWxyEyjWe48zmG6wbCheo/G2ZnHx4fs3EU6YC6UM8rk56gAjNJ9P3MTH2jo5jb92/K6wbng==}
+
+  '@types/better-sqlite3@7.6.13':
+    resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
 
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
@@ -4572,6 +4572,11 @@ snapshots:
     dependencies:
       '@babel/types': 7.27.6
 
+  '@types/better-sqlite3@7.6.13':
+    dependencies:
+      '@types/node': 24.0.4
+    optional: true
+
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
@@ -5380,8 +5385,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.30.10(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0):
+  drizzle-orm@0.30.10(@types/better-sqlite3@7.6.13)(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0):
     optionalDependencies:
+      '@types/better-sqlite3': 7.6.13
       '@types/react': 19.1.8
       better-sqlite3: 12.1.1
       react: 19.1.0

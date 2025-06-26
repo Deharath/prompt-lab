@@ -1,0 +1,30 @@
+[
+  {
+    "prompt": "Hello world",
+    "provider": "gemini",
+    "model": "gemini-pro",
+    "id": "312e319b-8a3d-4739-be2c-5579b48e83e9",
+    "status": "completed",
+    "createdAt": "2025-06-26T13:33:43.696Z",
+    "updatedAt": "2025-06-26T13:33:44.246Z",
+    "result": "Response from Gemini stub.  ",
+    "metrics": {
+      "durationMs": 545,
+      "tokenCount": 4
+    }
+  },
+  {
+    "prompt": "Write a short story about a robot",
+    "provider": "gemini",
+    "model": "gemini-pro",
+    "id": "2b3e9aef-3e34-49f4-b180-4ff13e36db8e",
+    "status": "completed",
+    "createdAt": "2025-06-26T13:33:44.452Z",
+    "updatedAt": "2025-06-26T13:33:44.993Z",
+    "result": "Response from Gemini stub.  ",
+    "metrics": {
+      "durationMs": 537,
+      "tokenCount": 4
+    }
+  }
+]
