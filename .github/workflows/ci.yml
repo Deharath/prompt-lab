@@ -34,6 +34,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
             
+      - name: Remove node_modules
+        run: rm -rf node_modules packages/*/node_modules apps/*/node_modules
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
