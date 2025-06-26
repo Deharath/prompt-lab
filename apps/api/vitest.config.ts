@@ -1,16 +1,8 @@
 import { defineConfig } from 'vitest/config';
-import path from 'path';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      // Use direct file path for reliable test resolution
-      '@prompt-lab/api': path.resolve(
-        __dirname,
-        '../../packages/api/dist/index.js',
-      ),
-    },
-  },
+  plugins: [tsconfigPaths()],
   test: {
     include: ['test/**/*.{test,spec}.{js,ts}'],
     exclude: ['src/**', '**/*.d.ts'],
