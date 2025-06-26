@@ -27,10 +27,13 @@ jobs:
           cache: 'pnpm'
 
       - name: Install native build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential python3
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3 python3-dev
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Rebuild native modules
+        run: pnpm rebuild better-sqlite3
 
       - name: Validate datasets
         run: pnpm lint:data
