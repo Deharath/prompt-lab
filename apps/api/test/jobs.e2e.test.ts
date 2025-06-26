@@ -60,4 +60,27 @@ describe('Jobs E2E Flow', () => {
     // This is an E2E test, so we're just verifying the basic flow works
     // The actual streaming behavior would require real API keys to test fully
   });
+
+  it('should create and handle Gemini provider E2E', async () => {
+    // Test Gemini provider as well
+    const createResponse = await request.post('/jobs').send({
+      prompt: 'Write just the word "hello"',
+      provider: 'gemini',
+      model: 'gemini-2.5-flash',
+    });
+
+    expect(createResponse.status).toBe(202);
+    expect(createResponse.body).toHaveProperty('id');
+    expect(createResponse.body.provider).toBe('gemini');
+    expect(createResponse.body.model).toBe('gemini-2.5-flash');
+    expect(createResponse.body.status).toBe('pending');
+
+    const jobId = createResponse.body.id;
+
+    // Try to get the job status
+    const statusResponse = await request.get(`/jobs/${jobId}`);
+    expect(statusResponse.status).toBe(200);
+    expect(statusResponse.body).toHaveProperty('id', jobId);
+    expect(statusResponse.body).toHaveProperty('status');
+  });
 });
