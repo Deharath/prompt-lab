@@ -14,7 +14,7 @@ vi.mock('better-sqlite3', () => {
     exec: vi.fn(),
     transaction: vi.fn((fn) => fn),
   };
-  
+
   return {
     default: vi.fn(() => mockDb),
   };
@@ -24,7 +24,7 @@ vi.mock('better-sqlite3', () => {
 vi.mock('./src/jobs/service', () => {
   const mockJobsStore = new Map();
   let mockJobIdCounter = 1;
-  
+
   const mockFunctions = {
     createJob: vi.fn(async (data) => {
       console.log('Mock createJob called with:', data);
@@ -55,7 +55,7 @@ vi.mock('./src/jobs/service', () => {
       return null;
     }),
   };
-  
+
   return mockFunctions;
 });
 
@@ -72,11 +72,11 @@ vi.mock('./src/providers/openai', () => {
         yield 'openai ';
         yield 'response';
       }),
-    }
+    },
   };
 });
 
-// Mock Gemini provider  
+// Mock Gemini provider
 vi.mock('./src/providers/gemini', () => {
   console.log('Setting up Gemini provider mock');
   return {
@@ -89,7 +89,7 @@ vi.mock('./src/providers/gemini', () => {
         yield 'gemini ';
         yield 'response';
       }),
-    }
+    },
   };
 });
 

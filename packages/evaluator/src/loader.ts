@@ -35,7 +35,7 @@ async function cosineSim(
     openai.embeddings.create({ model, input: prediction }),
     openai.embeddings.create({ model, input: reference }),
   ]);
-  
+
   return calculateCosineSimilarity(pred.embedding, ref.embedding);
 }
 

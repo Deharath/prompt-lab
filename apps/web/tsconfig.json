@@ -7,18 +7,10 @@
     "types": ["vite/client", "vitest"],
     "composite": true
   },
-  "include": [
-    "src",
-    "test"
-  ],
+  "include": ["src", "test"],
   "references": [
     { "path": "../../packages/evaluator" },
     { "path": "../../packages/test-cases" }
   ],
-  "exclude": [
-    "dist",
-    "dist/*",
-    "dist/src",
-    "node_modules"
-  ]
+  "exclude": ["dist", "dist/*", "dist/src", "node_modules"]
 }

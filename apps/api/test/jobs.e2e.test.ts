@@ -27,7 +27,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   // Add a small delay between tests for database operations to settle
-  await new Promise(resolve => setTimeout(resolve, 10));
+  await new Promise((resolve) => setTimeout(resolve, 10));
 });
 
 describe('Jobs E2E Flow', () => {

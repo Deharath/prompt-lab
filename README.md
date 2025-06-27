@@ -1,5 +1,11 @@
 # PromptLab MVP
 
+[![CI](https://github.com/your-username/prompt-lab/workflows/CI/badge.svg)](https://github.com/your-username/prompt-lab/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%20%7C%2022-green.svg)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-10.x-orange.svg)](https://pnpm.io/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > **LLM prompt sandbox** with live metrics on _GPT-4.1 (+ mini / nano)_ and _Gemini 2.5 Flash_.  
 > Built to show real Node + TS chops, not slide-deck vapourware.
 
@@ -74,14 +80,6 @@ packages/
 
 ---
 
-## 📝 Contributing
-
-- PRs must pass lint, build, and test gates.
-- Keep all dependencies in sync using `pnpm.overrides`.
-- Document any native dependencies or special setup in this README.
-
----
-
 ## 📦 Folder Structure
 
 ```text
@@ -109,6 +107,111 @@ prompt-lab/
 - No cloud creds stored—use your own `.env`.
 - Test cases are synthetic.
 - MIT licence; double-check token cost before running `pnpm test:e2e`.
+
+---
+
+## 🔧 Development
+
+### Prerequisites
+
+- Node.js 18.x or 22.x
+- pnpm 10.x
+- Git
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/prompt-lab.git
+cd prompt-lab
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys
+
+# Build all packages
+pnpm -r build
+
+# Start development servers
+pnpm dev
+```
+
+### Available Scripts
+
+- `pnpm dev` - Start development servers (API + Web)
+- `pnpm test` - Run all tests with coverage
+- `pnpm lint` - Lint all code
+- `pnpm format` - Format all code with Prettier
+- `pnpm audit` - Check for security vulnerabilities
+- `pnpm deps:check` - Check for unused dependencies
+- `pnpm clean` - Clean all build artifacts
+
+### Testing
+
+- Unit tests: `pnpm test`
+- E2E tests: `pnpm test:e2e`
+- Coverage report is generated in `coverage/` directory
+
+### Code Quality
+
+- Pre-commit hooks automatically lint and format code
+- All commits must pass TypeScript type checking
+- Test coverage must remain above 90% for evaluator package
+- ESLint warnings will fail CI
+
+---
+
+## 🚀 Deployment
+
+### Docker
+
+```bash
+# Build and run with Docker
+pnpm docker:run
+
+# Or manually:
+docker build -t promptlab .
+docker run -p 3000:3000 promptlab
+```
+
+### Environment Variables
+
+Required environment variables:
+
+- `OPENAI_API_KEY` - Your OpenAI API key
+- `GOOGLE_API_KEY` - Your Google Gemini API key
+- `DATABASE_URL` - SQLite database path (defaults to `sqlite.db`)
+
+See `.env.example` for all available options.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `pnpm test`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 📊 Project Status
+
+- ✅ Core functionality complete
+- ✅ Test suite with >90% coverage
+- ✅ CI/CD pipeline
+- ✅ Docker support
+- ✅ Pre-commit hooks
+- 🔄 Automated dependency updates
+- 📋 Issue templates and PR guidelines
 
 ---
 

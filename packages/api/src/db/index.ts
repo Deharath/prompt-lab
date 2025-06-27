@@ -8,7 +8,7 @@ function initializeDb() {
   if (!_db) {
     const sqlite = new Database(process.env.DATABASE_URL || 'sqlite.db');
     _db = drizzle(sqlite, { schema });
-    
+
     // Create the jobs table if it doesn't exist
     try {
       sqlite.exec(`
@@ -27,7 +27,7 @@ function initializeDb() {
     } catch (error) {
       console.warn('Warning: Could not create jobs table:', error);
     }
-    
+
     // Attach raw methods for test setup compatibility
     (_db as any).run = (sql: string) => sqlite.prepare(sql).run();
     (_db as any).exec = sqlite.exec.bind(sqlite);
@@ -39,5 +39,5 @@ export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   get(target, prop) {
     const actualDb = initializeDb();
     return (actualDb as any)[prop];
-  }
+  },
 });

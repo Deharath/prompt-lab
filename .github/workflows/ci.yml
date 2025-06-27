@@ -48,9 +48,14 @@ jobs:
       - name: Lint
         run: pnpm -r lint
 
+      - name: Security audit
+        run: pnpm audit --audit-level moderate
+
+      - name: Check for unused dependencies
+        run: pnpm deps:check
+
       - name: Test
         run: pnpm -r test
-
 
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker:

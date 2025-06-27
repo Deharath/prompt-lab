@@ -6,7 +6,7 @@ const API_BASE = 'http://localhost:3000';
 async function testGemini() {
   try {
     console.log('🚀 Testing Gemini integration...');
-    
+
     // 1. Create a job
     console.log('📝 Creating a job with Gemini...');
     const createResponse = await fetch(`${API_BASE}/jobs`, {
@@ -37,7 +37,7 @@ async function testGemini() {
     // 2. Stream the job
     console.log('🔄 Streaming job completion...');
     const streamResponse = await fetch(`${API_BASE}/jobs/${job.id}/stream`);
-    
+
     if (!streamResponse.ok) {
       throw new Error(`Streaming failed: ${streamResponse.status}`);
     }
@@ -49,7 +49,7 @@ async function testGemini() {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      
+
       const chunk = decoder.decode(value);
       console.log(chunk);
     }
