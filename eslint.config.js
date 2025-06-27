@@ -17,6 +17,8 @@ module.exports = [
       '**/*.d.ts',
       '**/vite.config.js',
       '**/vitest.config.js',
+      '**/postcss.config.js',
+      '**/tailwind.config.js',
     ],
   },
 
