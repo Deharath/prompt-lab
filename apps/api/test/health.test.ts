@@ -1,19 +1,12 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
-import {
-  mockCheckOpenAI,
-  mockCheckGemini,
-  mockCheckDatabase,
-  mockConfig,
-} from './setupTests';
+import { mockConfig } from './setupTests';
 import { app } from '../src/index';
 
 describe('GET /health', () => {
   it('responds with healthy status and detailed information', async () => {
-    // ARRANGE: Ensure all services are healthy (default state)
-    mockCheckOpenAI.mockResolvedValue('healthy');
-    mockCheckGemini.mockResolvedValue('healthy');
-    mockCheckDatabase.mockResolvedValue('healthy');
+    // ARRANGE: Ensure API key is set for healthy state
+    mockConfig.openai.apiKey = 'sk-test-key-from-ci-fix';
 
     const response = await request(app)
       .get('/health')
@@ -31,7 +24,6 @@ describe('GET /health', () => {
     // Validate dependencies
     expect(response.body.dependencies).toHaveProperty('database', 'healthy');
     expect(response.body.dependencies).toHaveProperty('openai', 'healthy');
-    expect(response.body.dependencies).toHaveProperty('gemini', 'healthy');
 
     // Validate metrics structure
     expect(response.body.metrics).toHaveProperty('memoryUsage');

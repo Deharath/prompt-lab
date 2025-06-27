@@ -1,10 +1,162 @@
 import { vi, beforeAll, afterEach } from 'vitest';
 
 // ================================================================================================
-// GLOBAL MOCK FOUNDATION - "Perfect World" Setup
+// CRITICAL CI FIX: PACKAGE-LEVEL MOCKING STRATEGY
 // ================================================================================================
 
-// Mock filesystem operations for datasets
+// --- MOCK CONTROLS FOR TEST MANIPULATION ---
+export const mockEvaluateWithOpenAI = vi.fn();
+export const mockEvaluateWithGemini = vi.fn();
+export const mockGetProvider = vi.fn();
+export const mockCreateJob = vi.fn();
+export const mockGetJob = vi.fn();
+export const mockUpdateJob = vi.fn();
+export const mockJobStore = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * Exported mock config object - the control panel for all tests
+ * Represents the ideal "happy path" state with all necessary API keys defined
+ */
+export const mockConfig = {
+  server: {
+    port: 3000,
+    env: 'test',
+    host: 'localhost',
+  },
+  database: {
+    url: ':memory:',
+    maxConnections: 5,
+  },
+  openai: {
+    apiKey: 'sk-test-key-from-ci-fix',
+    timeout: 30000,
+    maxRetries: 3,
+  },
+  gemini: {
+    apiKey: 'gemini-test-key-from-ci-fix',
+    timeout: 30000,
+    maxRetries: 3,
+  },
+  logging: {
+    level: 'info' as const,
+    enableFileLogging: false,
+    maxFileSize: 10485760,
+    maxFiles: 5,
+  },
+  rateLimit: {
+    windowMs: 900000,
+    globalMax: 10000, // Very high limit for tests
+    jobsMax: 1000, // Very high limit for tests
+  },
+  evaluation: {
+    timeout: 30000,
+    concurrency: 5,
+    maxCases: 1000,
+  },
+  security: {
+    requestSizeLimit: '1mb',
+    enableTrustProxy: false,
+  },
+};
+
+// --- MOCK THE ENTIRE @prompt-lab/api PACKAGE ---
+// This is the single most important change. We are intercepting the package
+// that the application code actually imports.
+vi.mock('@prompt-lab/api', async (importOriginal) => {
+  const originalModule =
+    await importOriginal<typeof import('@prompt-lab/api')>();
+
+  // Set up the job store and mock implementations
+  let jobIdCounter = 1;
+
+  mockCreateJob.mockImplementation(async (data) => {
+    const id = `job-${jobIdCounter++}`;
+    const newJob = {
+      id,
+      ...data,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mockJobStore.set(id, newJob);
+    return newJob;
+  });
+
+  mockGetJob.mockImplementation(async (id: string) => {
+    return mockJobStore.get(id) || null;
+  });
+
+  mockUpdateJob.mockImplementation(async (id, updateData) => {
+    const job = mockJobStore.get(id);
+    if (!job) {
+      return null;
+    }
+    const updatedJob = {
+      ...job,
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    mockJobStore.set(id, updatedJob);
+    return updatedJob;
+  });
+
+  // Return a new module object that mocks specific exports
+  return {
+    ...originalModule, // Keep any original exports we don't need to touch
+
+    // Override the functions that cause failures
+    getProvider: mockGetProvider.mockImplementation((providerName) => {
+      // Return undefined for unknown providers to match real behavior
+      if (providerName !== 'openai' && providerName !== 'gemini') {
+        return undefined;
+      }
+
+      // Return a mock provider with a mock streaming function
+      return {
+        name: providerName,
+        models:
+          providerName === 'openai'
+            ? ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini']
+            : ['gemini-2.5-flash'],
+        complete: async function* () {
+          yield 'mock ';
+          yield 'stream ';
+          yield 'chunk';
+          // Properly terminate the generator
+          return;
+        },
+      };
+    }),
+
+    evaluateWithOpenAI: mockEvaluateWithOpenAI.mockResolvedValue({
+      id: 'test-case-1',
+      prediction: 'mock completion',
+      reference: 'expected output',
+      latencyMs: 100,
+      tokens: 5,
+      score: 0.9,
+    }),
+
+    evaluateWithGemini: mockEvaluateWithGemini.mockResolvedValue({
+      id: 'test-case-1',
+      prediction: 'mock gemini completion',
+      reference: 'expected output',
+      latencyMs: 120,
+      tokens: 7,
+      score: 0.85,
+    }),
+
+    // Mock job service functions
+    createJob: mockCreateJob,
+    getJob: mockGetJob,
+    updateJob: mockUpdateJob,
+
+    // Mock config
+    config: mockConfig,
+  };
+});
+
+// --- MOCK FILESYSTEM OPERATIONS FOR DATASETS ---
 vi.mock('fs/promises', () => {
   const mockReadFile = vi.fn().mockImplementation(async (filePath: string) => {
     // Mock the news-summaries dataset
@@ -77,83 +229,7 @@ vi.mock('fs', async () => {
   };
 });
 
-/**
- * Exported mock config object - the control panel for all tests
- * Represents the ideal "happy path" state with all necessary API keys defined
- */
-export const mockConfig = {
-  server: {
-    port: 3000,
-    env: 'test',
-    host: 'localhost',
-  },
-  database: {
-    url: ':memory:',
-    maxConnections: 5,
-  },
-  openai: {
-    apiKey: 'sk-test-mock-openai-key',
-    timeout: 30000,
-    maxRetries: 3,
-  },
-  gemini: {
-    apiKey: 'sk-test-mock-gemini-key',
-    timeout: 30000,
-    maxRetries: 3,
-  },
-  logging: {
-    level: 'info' as const,
-    enableFileLogging: false,
-    maxFileSize: 10485760,
-    maxFiles: 5,
-  },
-  rateLimit: {
-    windowMs: 900000,
-    globalMax: 10000, // Very high limit for tests
-    jobsMax: 1000, // Very high limit for tests
-  },
-  evaluation: {
-    timeout: 30000,
-    concurrency: 5,
-    maxCases: 1000,
-  },
-  security: {
-    requestSizeLimit: '1mb',
-    enableTrustProxy: false,
-  },
-};
-
-/**
- * Exported mock evaluator function - controllable from any test
- */
-export const mockEvaluateFunction = vi.fn().mockResolvedValue({
-  id: 'test-case-1',
-  prediction: 'mock completion',
-  reference: 'expected output',
-  latencyMs: 100,
-  tokens: 5,
-  score: 0.9,
-});
-
-/**
- * Exported health check mock functions - controllable from any test
- */
-export const mockCheckOpenAI = vi.fn().mockResolvedValue('healthy');
-export const mockCheckGemini = vi.fn().mockResolvedValue('healthy');
-export const mockCheckDatabase = vi.fn().mockResolvedValue('healthy');
-
-/**
- * Exported job store and mock functions - controllable from any test
- */
-export const mockJobStore = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
-export const mockCreateJob = vi.fn();
-export const mockGetJob = vi.fn();
-export const mockUpdateJob = vi.fn();
-
-// ================================================================================================
-// GLOBAL MOCKS - Single Source of Truth
-// ================================================================================================
-
+// --- MOCK DATABASE AND OTHER LIBS (These are usually correct) ---
 // Mock better-sqlite3 to avoid native module compilation issues in CI
 vi.mock('better-sqlite3', () => {
   const mockStatement = {
@@ -177,102 +253,6 @@ vi.mock('better-sqlite3', () => {
     default: vi.fn(() => mockDb),
   };
 });
-
-// Mock the job service at the package level
-vi.mock('../../packages/api/src/jobs/service', () => {
-  return {
-    createJob: mockCreateJob,
-    getJob: mockGetJob,
-    updateJob: mockUpdateJob,
-  };
-});
-
-// Mock the entire config module - single source of truth
-vi.mock('../../packages/api/src/config/index', () => ({
-  config: mockConfig,
-}));
-
-// Also mock the @prompt-lab/api package to ensure config is properly mocked
-vi.mock('@prompt-lab/api', async (importOriginal) => {
-  const originalModule = (await importOriginal()) as Record<string, unknown>;
-
-  // Set up the job store and mock implementations
-  let jobIdCounter = 1;
-
-  mockCreateJob.mockImplementation(async (data) => {
-    const id = `job-${jobIdCounter++}`;
-    const newJob = {
-      id,
-      ...data,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    mockJobStore.set(id, newJob);
-    return newJob;
-  });
-
-  mockGetJob.mockImplementation(async (id: string) => {
-    return mockJobStore.get(id) || null;
-  });
-
-  mockUpdateJob.mockImplementation(async (id, updateData) => {
-    const job = mockJobStore.get(id);
-    if (!job) {
-      return null;
-    }
-    const updatedJob = {
-      ...job,
-      ...updateData,
-      updatedAt: new Date(),
-    };
-    mockJobStore.set(id, updatedJob);
-    return updatedJob;
-  });
-
-  // Mock provider functions
-  const mockOpenAIProvider = {
-    name: 'openai',
-    models: ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini'],
-    complete: vi.fn().mockImplementation(async function* () {
-      yield 'mocked ';
-      yield 'openai ';
-      yield 'response';
-    }),
-  };
-
-  const mockGeminiProvider = {
-    name: 'gemini',
-    models: ['gemini-2.5-flash'],
-    complete: vi.fn().mockImplementation(async function* () {
-      yield 'mocked ';
-      yield 'gemini ';
-      yield 'response';
-    }),
-  };
-
-  const mockGetProvider = vi.fn().mockImplementation((name: string) => {
-    if (name === 'openai') return mockOpenAIProvider;
-    if (name === 'gemini') return mockGeminiProvider;
-    return undefined;
-  });
-
-  return {
-    ...originalModule,
-    config: mockConfig,
-    createJob: mockCreateJob,
-    getJob: mockGetJob,
-    updateJob: mockUpdateJob,
-    getProvider: mockGetProvider,
-  };
-});
-
-// Mock evaluation providers - decouple from actual evaluation logic
-vi.mock('../../packages/api/src/evaluation/providers', () => ({
-  getEvaluator: vi.fn().mockReturnValue(mockEvaluateFunction),
-  evaluateWithOpenAI: mockEvaluateFunction,
-  evaluateWithGemini: mockEvaluateFunction,
-}));
 
 // Mock OpenAI SDK - prevent actual API calls
 vi.mock('openai', () => {
@@ -341,61 +321,6 @@ vi.mock('@google/generative-ai', () => {
   };
 });
 
-// Mock provider modules
-vi.mock('../../packages/api/src/providers/index', () => {
-  const mockOpenAIProvider = {
-    name: 'openai',
-    models: ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini'],
-    complete: vi.fn().mockImplementation(async function* () {
-      yield 'mocked ';
-      yield 'openai ';
-      yield 'response';
-    }),
-  };
-
-  const mockGeminiProvider = {
-    name: 'gemini',
-    models: ['gemini-2.5-flash'],
-    complete: vi.fn().mockImplementation(async function* () {
-      yield 'mocked ';
-      yield 'gemini ';
-      yield 'response';
-    }),
-  };
-
-  return {
-    getProvider: vi.fn().mockImplementation((name: string) => {
-      if (name === 'openai') return mockOpenAIProvider;
-      if (name === 'gemini') return mockGeminiProvider;
-      return undefined;
-    }),
-  };
-});
-
-vi.mock('../../packages/api/src/providers/openai', () => ({
-  OpenAIProvider: {
-    name: 'openai',
-    models: ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini'],
-    complete: vi.fn().mockImplementation(async function* () {
-      yield 'mocked ';
-      yield 'openai ';
-      yield 'response';
-    }),
-  },
-}));
-
-vi.mock('../../packages/api/src/providers/gemini', () => ({
-  GeminiProvider: {
-    name: 'gemini',
-    models: ['gemini-2.5-flash'],
-    complete: vi.fn().mockImplementation(async function* () {
-      yield 'mocked ';
-      yield 'gemini ';
-      yield 'response';
-    }),
-  },
-}));
-
 // ================================================================================================
 // TEST ISOLATION - Enforce Clean State
 // ================================================================================================
@@ -418,23 +343,27 @@ afterEach(() => {
   mockJobStore.clear();
 
   // Reset mockConfig to default "happy path" state
-  mockConfig.openai.apiKey = 'sk-test-mock-openai-key';
-  mockConfig.gemini.apiKey = 'sk-test-mock-gemini-key';
+  mockConfig.openai.apiKey = 'sk-test-key-from-ci-fix';
+  mockConfig.gemini.apiKey = 'gemini-test-key-from-ci-fix';
   mockConfig.server.env = 'test';
 
-  // Reset health check mocks to healthy state
-  mockCheckOpenAI.mockResolvedValue('healthy');
-  mockCheckGemini.mockResolvedValue('healthy');
-  mockCheckDatabase.mockResolvedValue('healthy');
-
-  // Reset evaluator mock to success state
-  mockEvaluateFunction.mockResolvedValue({
+  // Reset evaluator mocks to success state
+  mockEvaluateWithOpenAI.mockResolvedValue({
     id: 'test-case-1',
     prediction: 'mock completion',
     reference: 'expected output',
     latencyMs: 100,
     tokens: 5,
     score: 0.9,
+  });
+
+  mockEvaluateWithGemini.mockResolvedValue({
+    id: 'test-case-1',
+    prediction: 'mock gemini completion',
+    reference: 'expected output',
+    latencyMs: 120,
+    tokens: 7,
+    score: 0.85,
   });
 
   // Re-setup job mocks after clearAllMocks
@@ -469,5 +398,28 @@ afterEach(() => {
     };
     mockJobStore.set(id, updatedJob);
     return updatedJob;
+  });
+
+  // Reset provider mock
+  mockGetProvider.mockImplementation((providerName) => {
+    // Return undefined for unknown providers to match real behavior
+    if (providerName !== 'openai' && providerName !== 'gemini') {
+      return undefined;
+    }
+
+    return {
+      name: providerName,
+      models:
+        providerName === 'openai'
+          ? ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini']
+          : ['gemini-2.5-flash'],
+      complete: async function* () {
+        yield 'mock ';
+        yield 'stream ';
+        yield 'chunk';
+        // Properly terminate the generator
+        return;
+      },
+    };
   });
 });

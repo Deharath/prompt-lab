@@ -16,10 +16,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@prompt-lab/api': new URL(
-        '../../packages/api/src/index.ts',
-        import.meta.url,
-      ).pathname,
+      '@prompt-lab/api': new URL('../../packages/api/src', import.meta.url)
+        .pathname,
     },
   },
 });
