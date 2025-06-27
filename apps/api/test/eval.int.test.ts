@@ -2,35 +2,34 @@ import request from 'supertest';
 
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
+// Force mock modules before importing application code
 vi.mock('openai', () => ({
-  default: class {
-    chat = {
+  default: vi.fn().mockImplementation(() => ({
+    chat: {
       completions: {
-        create: vi.fn(async () => ({
+        create: vi.fn().mockResolvedValue({
           choices: [{ message: { content: 'mock completion' } }],
           usage: { total_tokens: 5 },
-        })),
+        }),
       },
-    };
-    embeddings = {
-      create: vi.fn(async () => ({ data: [{ embedding: [1, 0] }] })),
-    };
-  },
+    },
+    embeddings: {
+      create: vi.fn().mockResolvedValue({
+        data: [{ embedding: [1, 0] }],
+      }),
+    },
+  })),
 }));
 
-if (!process.env.GEMINI_API_KEY) {
-  vi.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: class {
-      getGenerativeModel() {
-        return {
-          generateContent: vi.fn(async () => ({
-            response: { text: () => 'gem' },
-          })),
-        };
-      }
-    },
-  }));
-}
+vi.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
+    getGenerativeModel: vi.fn().mockReturnValue({
+      generateContent: vi.fn().mockResolvedValue({
+        response: { text: () => 'gem' },
+      }),
+    }),
+  })),
+}));
 
 import { app } from '../dist/src/index.js';
 
