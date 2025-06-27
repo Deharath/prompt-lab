@@ -2,32 +2,34 @@ import request from 'supertest';
 
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
-// Mock the evaluation providers directly
-vi.mock('@prompt-lab/api', async (importOriginal) => {
-  const mod = (await importOriginal()) as any;
-  return {
-    ...mod,
-    // Mock the evaluation function to return fake results
-    evaluateWithOpenAI: vi
-      .fn()
-      .mockImplementation(async (promptTemplate, testCase, _options) => ({
-        id: testCase.id,
-        prediction: 'mock completion',
-        reference: testCase.expected,
-        latencyMs: 100,
-        tokens: 5,
-      })),
-    evaluateWithGemini: vi
-      .fn()
-      .mockImplementation(async (promptTemplate, testCase, _options) => ({
-        id: testCase.id,
-        prediction: 'gem',
-        reference: testCase.expected,
-        latencyMs: 100,
-        tokens: 5,
-      })),
-  };
-});
+// Mock the evaluation providers directly at the source file level
+// Note: We mock the source path because Vitest alias points directly to src files
+vi.mock('../../packages/api/src/evaluation/providers.js', () => ({
+  evaluateWithOpenAI: vi
+    .fn()
+    .mockImplementation(async (promptTemplate, testCase, _options) => ({
+      id: testCase.id,
+      prediction: 'mock completion',
+      reference: testCase.expected,
+      latencyMs: 100,
+      tokens: 5,
+    })),
+  evaluateWithGemini: vi
+    .fn()
+    .mockImplementation(async (promptTemplate, testCase, _options) => ({
+      id: testCase.id,
+      prediction: 'gem',
+      reference: testCase.expected,
+      latencyMs: 100,
+      tokens: 5,
+    })),
+  ServiceUnavailableError: class extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'ServiceUnavailableError';
+    }
+  },
+}));
 
 // Also mock the OpenAI and Gemini modules for any direct usage
 vi.mock('openai', () => {
