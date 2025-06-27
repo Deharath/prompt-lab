@@ -69,14 +69,25 @@ export function streamJob(
   es.onerror = (e) => {
     console.error('❌ EventSource error:', e);
     es.close();
-    onDone();
+    // Only call onDone if it's a real error, not just a normal close
+    if (es.readyState === EventSource.CLOSED) {
+      onDone();
+    }
   };
 
   return es;
 }
 
 export async function fetchJob(id: string) {
-  const res = await fetch(`/jobs/${id}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json(); // contains final metrics, cost, etc.
+  try {
+    const res = await fetch(`/jobs/${id}`);
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch job: ${errorText}`);
+    }
+    return res.json(); // contains final metrics, cost, etc.
+  } catch (error) {
+    console.error('Failed to fetch job:', error);
+    throw error;
+  }
 }
