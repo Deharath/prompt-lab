@@ -229,6 +229,9 @@ importers:
       '@google/generative-ai':
         specifier: ^0.24.1
         version: 0.24.1
+      '@prompt-lab/evaluator':
+        specifier: workspace:*
+        version: link:../evaluator
       better-sqlite3:
         specifier: ^12.1.1
         version: 12.1.1

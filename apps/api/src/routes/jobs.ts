@@ -1,6 +1,11 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
 import { getProvider, createJob, getJob, updateJob } from '@prompt-lab/api';
+import {
+  ValidationError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from '../errors/ApiError.js';
 
 const jobsRouter = createRouter();
 
@@ -14,52 +19,44 @@ jobsRouter.post(
 
       // Enhanced validation
       if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
-        return res
-          .status(400)
-          .json({ error: 'prompt must be a non-empty string.' });
+        throw new ValidationError('prompt must be a non-empty string.');
       }
 
       if (!providerName || typeof providerName !== 'string') {
-        return res
-          .status(400)
-          .json({ error: 'provider must be a non-empty string.' });
+        throw new ValidationError('provider must be a non-empty string.');
       }
 
       if (!model || typeof model !== 'string') {
-        return res
-          .status(400)
-          .json({ error: 'model must be a non-empty string.' });
+        throw new ValidationError('model must be a non-empty string.');
       }
 
       // Limit prompt length for security and cost control
       if (prompt.length > 50000) {
-        return res
-          .status(400)
-          .json({ error: 'prompt must be less than 50,000 characters.' });
+        throw new ValidationError(
+          'prompt must be less than 50,000 characters.',
+        );
       }
 
       const provider = getProvider(providerName);
 
       if (!provider) {
-        return res
-          .status(400)
-          .json({ error: `Provider '${providerName}' not found.` });
+        throw new ValidationError(`Provider '${providerName}' not found.`);
       }
       if (!provider.models.includes(model)) {
-        return res.status(400).json({
-          error: `Model '${model}' not supported by provider '${providerName}'.`,
-        });
+        throw new ValidationError(
+          `Model '${model}' not supported by provider '${providerName}'.`,
+        );
       }
 
       if (providerName === 'openai' && !process.env.OPENAI_API_KEY) {
-        return res
-          .status(503)
-          .json({ error: 'OpenAI API key is not configured on the server.' });
+        throw new ServiceUnavailableError(
+          'OpenAI API key is not configured on the server.',
+        );
       }
       if (providerName === 'gemini' && !process.env.GEMINI_API_KEY) {
-        return res
-          .status(503)
-          .json({ error: 'Gemini API key is not configured on the server.' });
+        throw new ServiceUnavailableError(
+          'Gemini API key is not configured on the server.',
+        );
       }
 
       const job = await createJob({
@@ -84,7 +81,7 @@ jobsRouter.get(
       const job = await getJob(id);
 
       if (!job) {
-        return res.status(404).json({ error: 'Job not found' });
+        throw new NotFoundError('Job not found');
       }
 
       res.json(job);
@@ -104,7 +101,7 @@ jobsRouter.get(
       const job = await getJob(id);
 
       if (!job) {
-        return res.status(404).json({ error: 'Job not found' });
+        throw new NotFoundError('Job not found');
       }
 
       res.setHeader('Content-Type', 'text/event-stream');

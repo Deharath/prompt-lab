@@ -2,11 +2,16 @@ import { Router, type Router as ExpressRouter } from 'express';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
-import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
+import { runBatch } from '@prompt-lab/evaluator';
+import { getEvaluator, type EvaluationCase } from '@prompt-lab/api';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  NotFoundError,
+  ServiceUnavailableError,
+  ValidationError,
+} from '../errors/ApiError.js';
 
 const router: ExpressRouter = Router();
 
@@ -19,7 +24,15 @@ const bodySchema = z.object({
 // Absolute path to repo root, regardless of where the process starts
 const repoRoot = fileURLToPath(new URL('../../../../..', import.meta.url));
 
-function datasetPath(id: string) {
+// Security: Define allowed dataset IDs to prevent path traversal attacks
+const ALLOWED_DATASETS = ['news-summaries'] as const;
+type AllowedDataset = (typeof ALLOWED_DATASETS)[number];
+
+function validateDatasetId(id: string): id is AllowedDataset {
+  return ALLOWED_DATASETS.includes(id as AllowedDataset);
+}
+
+function datasetPath(id: AllowedDataset) {
   return join(repoRoot, 'packages', 'test-cases', `${id}.jsonl`);
 }
 
@@ -27,9 +40,15 @@ router.post('/', async (req, res, next) => {
   try {
     const { promptTemplate, model, testSetId } = bodySchema.parse(req.body);
 
+    // Security: Validate testSetId to prevent path traversal attacks
+    if (!validateDatasetId(testSetId)) {
+      throw new ValidationError(
+        `Invalid dataset ID. Allowed datasets: ${ALLOWED_DATASETS.join(', ')}`,
+      );
+    }
+
     if (!process.env.OPENAI_API_KEY) {
-      res.status(503).json({ error: 'OpenAI key not configured' });
-      return;
+      throw new ServiceUnavailableError('OpenAI key not configured');
     }
 
     let raw: string;
@@ -37,88 +56,40 @@ router.post('/', async (req, res, next) => {
       raw = await fs.readFile(datasetPath(testSetId), 'utf8');
     } catch (readErr) {
       if ((readErr as { code?: string }).code === 'ENOENT') {
-        res.status(404).json({ error: 'Dataset not found' });
-        return;
+        throw new NotFoundError('Dataset not found');
       }
       throw readErr;
     }
-    const cases = raw
+    const cases: EvaluationCase[] = raw
       .trim()
       .split('\n')
-      .map(
-        (line) =>
-          JSON.parse(line) as {
-            id: string;
-            input: string;
-            expected: string;
-          },
+      .map((line) => JSON.parse(line));
+
+    const limit = pLimit(5);
+    const evaluator = getEvaluator(model);
+
+    // Get timeout from environment or use default
+    const timeout = process.env.EVALUATION_TIMEOUT_MS
+      ? parseInt(process.env.EVALUATION_TIMEOUT_MS, 10)
+      : 15000;
+
+    const perItem = await Promise.all(
+      cases.map((c) =>
+        limit(() => evaluator(promptTemplate, c, { model, timeout })),
+      ),
+    );
+
+    // Create OpenAI client for scoring (still needed for runBatch)
+    if (!process.env.OPENAI_API_KEY) {
+      throw new ServiceUnavailableError(
+        'OpenAI API key required for evaluation scoring',
       );
+    }
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 15000,
+      timeout,
     });
-    const genAI = process.env.GEMINI_API_KEY
-      ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-      : null;
-
-    const limit = pLimit(5);
-
-    interface Item {
-      id: string;
-      prediction: string;
-      reference: string;
-      latencyMs: number;
-      tokens: number;
-      score?: number;
-    }
-
-    const generateCompletion = async (c: {
-      id: string;
-      input: string;
-      expected: string;
-    }): Promise<Item> => {
-      const prompt = applyTemplate(promptTemplate, { input: c.input });
-      const start = Date.now();
-      let completion = '';
-      let tokens = 0;
-
-      if (model.startsWith('gpt-4.1')) {
-        const resp = await openai.chat.completions.create({
-          model,
-          messages: [{ role: 'user', content: prompt }],
-        });
-        completion = resp.choices[0]?.message?.content || '';
-        tokens = resp.usage?.total_tokens ?? 0;
-      } else if (model === 'gemini-2.5-flash') {
-        if (genAI) {
-          const gemModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 15000);
-          try {
-            const resp = await gemModel.generateContent(prompt, {
-              signal: controller.signal,
-            });
-            completion = resp.response.text();
-          } finally {
-            clearTimeout(timer);
-          }
-        } else {
-          completion = 'MOCK_GEMINI_RESPONSE';
-        }
-      }
-      const latencyMs = Date.now() - start;
-      return {
-        id: c.id,
-        prediction: completion,
-        reference: c.expected,
-        latencyMs,
-        tokens,
-      };
-    };
-    const perItem: Item[] = await Promise.all(
-      cases.map((c) => limit(() => generateCompletion(c))),
-    );
 
     const scores = await runBatch(
       openai,

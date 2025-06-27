@@ -72,6 +72,8 @@ describe('App', () => {
     });
 
     // Verify final job fetch
-    expect(global.fetch).toHaveBeenCalledWith('/jobs/job-123');
+    expect(global.fetch).toHaveBeenCalledWith('/jobs/job-123', {
+      signal: expect.any(AbortSignal),
+    });
   });
 });
