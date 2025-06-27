@@ -52,13 +52,13 @@ This comprehensive cleanup and modernization effort has transformed the prompt-l
 
 ## Technical Details
 
-### Files Removed (16 files)
+### Files Removed (17 files)
 
 - `sqlite.db`, `apps/api/sqlite.db` (tracked databases)
 - `test-db.js`, `test-gemini.js` (moved to scripts/manual/)
 - `apps/api/test-providers.js` (empty test file)
 - `apps/web/vite.config.js`, `apps/web/vitest.config.js` (duplicates)
-- `packages/api/drizzle.config.js` (duplicate)
+- `packages/api/drizzle.config.js`, `packages/api/vitest.config.ts` (duplicates)
 - `vitest.config.mjs` (duplicate)
 - `.eslintrc.js` (legacy config)
 - And more...
@@ -89,7 +89,7 @@ This comprehensive cleanup and modernization effort has transformed the prompt-l
 - ❌ 3 security vulnerabilities
 - ❌ Flaky tests requiring workarounds
 - ❌ Tracked database files
-- ❌ 16 duplicate/redundant files
+- ❌ 17 duplicate/redundant files
 - ❌ No automation or quality gates
 - ❌ Minimal documentation
 
