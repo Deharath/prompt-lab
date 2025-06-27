@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ServiceUnavailableError } from '../errors/ApiError.js';
 
 export interface EvaluationResult {
   id: string;
@@ -44,7 +45,7 @@ export async function evaluateWithOpenAI(
 ): Promise<EvaluationResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error('OpenAI API key not configured');
+    throw new ServiceUnavailableError('OpenAI API key not configured');
   }
 
   const timeout =
