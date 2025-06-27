@@ -10,10 +10,7 @@
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash"
       },
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint"
-      ]
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
     }
   },
   "forwardPorts": [3000],

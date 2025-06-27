@@ -5,15 +5,7 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": [
-    "src/**/*",
-    "src/*.d.ts"
-  ],
-  "exclude": [
-    "dist",
-    "dist/*",
-    "dist/src",
-    "node_modules"
-  ],
+  "include": ["src/**/*", "src/*.d.ts"],
+  "exclude": ["dist", "dist/*", "dist/src", "node_modules"],
   "references": []
 }

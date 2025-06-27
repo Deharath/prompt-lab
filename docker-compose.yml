@@ -7,8 +7,8 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=":memory:"
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - .:/app
-    command: ["pnpm", "-r", "dev"]
+    command: ['pnpm', '-r', 'dev']
     # You can override this with `docker-compose run prompt-lab pnpm -r test` for tests

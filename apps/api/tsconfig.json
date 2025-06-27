@@ -4,16 +4,11 @@
     "outDir": "dist",
     "lib": ["ESNext"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     { "path": "../../packages/api" },
     { "path": "../../packages/evaluator" },
     { "path": "../../packages/test-cases" }
   ],
-  "exclude": [
-    "dist",
-    "node_modules"
-  ]
+  "exclude": ["dist", "node_modules"]
 }

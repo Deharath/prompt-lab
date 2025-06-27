@@ -1,5 +1,5 @@
 import type { Server } from 'http';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
 import { app } from '../src/index.js';
@@ -11,6 +11,8 @@ beforeAll(async () => {
   // Set up test environment with actual API keys for E2E testing
   process.env.GEMINI_API_KEY = 'test-key-for-e2e';
   process.env.OPENAI_API_KEY = 'test-key-for-e2e';
+  // Use a test-specific database to avoid conflicts
+  process.env.DATABASE_URL = ':memory:';
 
   const port = await getPort();
   server = app.listen(port);
@@ -23,6 +25,11 @@ afterAll(async () => {
   }
 });
 
+beforeEach(async () => {
+  // Add a small delay between tests for database operations to settle
+  await new Promise((resolve) => setTimeout(resolve, 10));
+});
+
 describe('Jobs E2E Flow', () => {
   it('should create and stream a job end-to-end', async () => {
     // 1. Create a job with openai provider for testing (but with fake keys)
@@ -33,14 +40,7 @@ describe('Jobs E2E Flow', () => {
       model: 'gpt-4o-mini',
     });
 
-    // Debug: Log the response if it's not 202
-    if (createResponse.status !== 202) {
-      console.log('Expected 202 but got:', createResponse.status);
-      console.log('Response body:', createResponse.body);
-    }
-
     expect(createResponse.status).toBe(202);
-
     expect(createResponse.body).toHaveProperty('id');
     expect(createResponse.body.prompt).toBe('Write just the word "test"');
     expect(createResponse.body.provider).toBe('openai');

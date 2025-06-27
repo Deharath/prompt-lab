@@ -1,5 +1,6 @@
 import type OpenAI from 'openai';
 import pLimit from 'p-limit';
+import { calculateCosineSimilarity } from './utils.js';
 
 export interface MetricInput {
   prediction: string;
@@ -34,17 +35,8 @@ async function cosineSim(
     openai.embeddings.create({ model, input: prediction }),
     openai.embeddings.create({ model, input: reference }),
   ]);
-  const a = pred.embedding;
-  const b = ref.embedding;
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let i = 0; i < a.length; i += 1) {
-    dot += a[i] * b[i];
-    normA += a[i] ** 2;
-    normB += b[i] ** 2;
-  }
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+
+  return calculateCosineSimilarity(pred.embedding, ref.embedding);
 }
 
 const metricMap: Record<string, MetricFn> = {

@@ -17,7 +17,14 @@ export async function getJob(id: string): Promise<Job | undefined> {
   return result[0];
 }
 
-export async function updateJob(id: string, data: Partial<Omit<Job, 'id' | 'createdAt'>>): Promise<Job> {
-  const result = await db.update(jobs).set({ ...data, updatedAt: new Date() }).where(eq(jobs.id, id)).returning();
+export async function updateJob(
+  id: string,
+  data: Partial<Omit<Job, 'id' | 'createdAt'>>,
+): Promise<Job> {
+  const result = await db
+    .update(jobs)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(jobs.id, id))
+    .returning();
   return result[0];
 }

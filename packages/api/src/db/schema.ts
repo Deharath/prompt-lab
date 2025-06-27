@@ -6,7 +6,9 @@ export const jobs = sqliteTable('jobs', {
   prompt: text('prompt').notNull(),
   provider: text('provider').notNull(),
   model: text('model').notNull(),
-  status: text('status', { enum: ['pending', 'running', 'completed', 'failed'] })
+  status: text('status', {
+    enum: ['pending', 'running', 'completed', 'failed'],
+  })
     .notNull()
     .default('pending'),
   result: text('result'),

@@ -1,22 +1,18 @@
 import type { Server } from 'http';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
 import { app } from '../src/index.js';
-import { db } from '@prompt-lab/api';
-import { jobs } from '@prompt-lab/api';
 
 let server: Server;
 let request: supertest.SuperTest<supertest.Test>;
 
-beforeEach(async () => {
-  // Clean up jobs table before each test
-  try {
-    await db.delete(jobs);
-  } catch (_error) {
-    // Ignore errors
-  }
+beforeAll(async () => {
+  // Use a test-specific in-memory database to avoid conflicts
+  process.env.DATABASE_URL = ':memory:';
+});
 
+beforeEach(async () => {
   const port = await getPort();
   server = app.listen(port);
   request = supertest(app);
