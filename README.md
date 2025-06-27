@@ -1,6 +1,6 @@
 # PromptLab MVP
 
-[![CI](https://github.com/your-username/prompt-lab/workflows/CI/badge.svg)](https://github.com/your-username/prompt-lab/actions)
+[![CI](https://github.com/Deharath/prompt-lab/workflows/CI/badge.svg)](https://github.com/Deharath/prompt-lab/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%20%7C%2022-green.svg)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-10.x-orange.svg)](https://pnpm.io/)
