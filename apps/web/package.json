@@ -14,11 +14,18 @@
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
+    "eventsource-polyfill": "^0.9.6",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "vite": "^5.2.0",
     "vitest": "^3.2.4"
   }

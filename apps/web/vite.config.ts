@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/eval': 'http://localhost:3000',
+      '/jobs': 'http://localhost:3000',
     },
   },
 });
