@@ -7,27 +7,42 @@ import { useJobStore } from './store/jobStore.js';
 
 const App = () => {
   const [template, setTemplate] = useState('');
-  const [model, setModel] = useState('gpt-4.1-mini');
+  const [provider, setProvider] = useState('openai');
+  const [model, setModel] = useState('gpt-4o-mini');
   const [error, setError] = useState('');
   const { log, metrics, running, start, append, finish, reset } = useJobStore();
 
   const handleRun = async () => {
+    console.log('🚀 Run button clicked!');
     setError('');
     try {
       reset();
+      console.log('📝 Creating job with:', {
+        prompt: template,
+        provider,
+        model,
+      });
+
       const job = await createJob({
         prompt: template,
-        provider: 'openai',
+        provider,
         model,
-        testSetId: 'news-summaries',
       });
+
+      console.log('✅ Job created:', job);
       start(job);
+
       streamJob(
         job.id,
-        (line) => append(line),
+        (line) => {
+          console.log('📨 Stream message:', line);
+          append(line);
+        },
         async () => {
+          console.log('🏁 Stream ended, fetching final results');
           try {
             const final = await fetchJob(job.id);
+            console.log('📊 Final results:', final);
             finish(final.metrics || {});
           } catch (err) {
             console.error('Failed to fetch final job result:', err);
@@ -35,7 +50,8 @@ const App = () => {
           }
         },
       );
-    } catch (_err) {
+    } catch (err) {
+      console.error('❌ Job creation failed:', err);
       setError('Failed to run');
       reset();
     }
@@ -84,10 +100,31 @@ const App = () => {
             <div className="md:col-span-2">
               <PromptEditor value={template} onChange={setTemplate} />
             </div>
-            <ModelSelector model={model} onChange={setModel} />
+            <ModelSelector
+              provider={provider}
+              model={model}
+              onProviderChange={setProvider}
+              onModelChange={setModel}
+            />
             <div className="flex items-end">
               <RunButton onRun={handleRun} loading={running} />
             </div>
+          </div>
+        </div>
+
+        {/* Debug Info */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+          <h3 className="text-sm font-medium text-yellow-800">Debug Info</h3>
+          <div className="text-xs text-yellow-700 mt-2 space-y-1">
+            <div>Running: {running ? 'YES' : 'NO'}</div>
+            <div>Log entries: {log.length}</div>
+            <div>
+              Has metrics:{' '}
+              {metrics && Object.keys(metrics).length > 0 ? 'YES' : 'NO'}
+            </div>
+            <div>Provider: {provider}</div>
+            <div>Model: {model}</div>
+            <div>Template: "{template}"</div>
           </div>
         </div>
 

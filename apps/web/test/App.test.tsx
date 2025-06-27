@@ -44,9 +44,9 @@ describe('App', () => {
         body: JSON.stringify({
           prompt: 'hi {{input}}',
           provider: 'openai',
-          model: 'gpt-4.1-mini',
-          testSetId: 'news-summaries',
+          model: 'gpt-4o-mini',
         }),
+        signal: expect.any(AbortSignal),
       });
     });
 

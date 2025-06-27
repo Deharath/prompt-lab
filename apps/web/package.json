@@ -25,7 +25,7 @@
     "autoprefixer": "^10.4.21",
     "eventsource-polyfill": "^0.9.6",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.11",
+    "tailwindcss": "^3.4.17",
     "vite": "^5.2.0",
     "vitest": "^3.2.4"
   }

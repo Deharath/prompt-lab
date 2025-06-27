@@ -20,10 +20,20 @@ interface JobState {
 export const useJobStore = create<JobState>((set) => ({
   log: [],
   running: false,
-  start: (job) =>
-    set({ current: job, log: [], metrics: undefined, running: true }),
-  append: (text) => set((s) => ({ log: [...s.log, { ts: Date.now(), text }] })),
-  finish: (metrics) => set({ metrics, running: false }),
-  reset: () =>
-    set({ current: undefined, log: [], metrics: undefined, running: false }),
+  start: (job) => {
+    console.log('🏁 Store: Starting job', job);
+    set({ current: job, log: [], metrics: undefined, running: true });
+  },
+  append: (text) => {
+    console.log('📝 Store: Appending text', text);
+    set((s) => ({ log: [...s.log, { ts: Date.now(), text }] }));
+  },
+  finish: (metrics) => {
+    console.log('🎯 Store: Finishing with metrics', metrics);
+    set({ metrics, running: false });
+  },
+  reset: () => {
+    console.log('🔄 Store: Resetting');
+    set({ current: undefined, log: [], metrics: undefined, running: false });
+  },
 }));
