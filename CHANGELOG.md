@@ -9,28 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Multi-model support for GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash
-- Automated evaluation with embedding-cosine, exact-match & length heuristics
-- Cost & latency tracking for all model runs
-- React UI with history pane and real-time updates
-- CI/CD pipeline with quality gates
-- Comprehensive test suite with >90% coverage
-- TypeScript monorepo with strict typing
-- Pre-commit hooks for code quality
-- EditorConfig for consistent formatting
+- Pre-commit hooks with Husky and lint-staged for automated code quality
+- EditorConfig for consistent formatting across editors
+- Comprehensive GitHub issue and PR templates
+- CHANGELOG.md following Keep a Changelog format
+- Security audit and dependency checks in CI pipeline
+- Automated dependency update workflow via GitHub Actions
+- Professional README with badges, setup instructions, and contribution guidelines
+- Scripts for security auditing, dependency checking, and updates
+- Consolidated cosine similarity utility function
 
 ### Changed
 
-- Refactored test architecture for better isolation
-- Consolidated duplicate configuration files
-- Improved test reliability and removed flakiness
+- Enhanced CI/CD pipeline with security and dependency checks
+- Refactored test architecture for better isolation and reliability
+- Updated README with comprehensive documentation and project status
+- Migrated from legacy `.eslintrc.js` to modern flat config format
+- Improved test setup to use in-memory databases for isolation
+
+### Fixed
+
+- E2E test flakiness and architecture issues
+- Test isolation problems between package and app-level tests
+- All tests now pass consistently (40/40) without workarounds
 
 ### Removed
 
-- Duplicate Vitest and Vite configuration files
+- Tracked SQLite database files (added to .gitignore)
+- Duplicate configuration files (vitest.config.js, vite.config.js, drizzle.config.js)
 - Legacy ESLint configuration (`.eslintrc.js`)
-- Tracked SQLite database files
-- Unused dependencies and empty test files
+- Unused dependencies from packages/evaluator
+- Empty and redundant test files
+- Duplicate job route implementation
 
 ## [0.1.0] - 2025-06-27
 
