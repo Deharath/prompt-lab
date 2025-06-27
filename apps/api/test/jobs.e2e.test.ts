@@ -2,17 +2,16 @@ import type { Server } from 'http';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
-import { app } from '../src/index.ts';
+import { mockConfig } from './setupTests';
+import { app } from '../src/index';
 
 let server: Server;
 let request: supertest.SuperTest<supertest.Test>;
 
 beforeAll(async () => {
-  // Set up test environment with actual API keys for E2E testing
-  process.env.GEMINI_API_KEY = 'test-key-for-e2e';
-  process.env.OPENAI_API_KEY = 'test-key-for-e2e';
-  // Use a test-specific database to avoid conflicts
-  process.env.DATABASE_URL = ':memory:';
+  // ARRANGE: Ensure API keys are available for E2E testing
+  mockConfig.openai.apiKey = 'sk-test-mock-openai-key';
+  mockConfig.gemini.apiKey = 'sk-test-mock-gemini-key';
 
   const port = await getPort();
   server = app.listen(port);
@@ -32,14 +31,14 @@ beforeEach(async () => {
 
 describe('Jobs E2E Flow', () => {
   it('should create and stream a job end-to-end', async () => {
-    // 1. Create a job with openai provider for testing (but with fake keys)
-    // This will fail the actual API call but should create the job entry
+    // ARRANGE: Create a job with openai provider
     const createResponse = await request.post('/jobs').send({
       prompt: 'Write just the word "test"',
       provider: 'openai',
       model: 'gpt-4o-mini',
     });
 
+    // ASSERT: Job should be created successfully
     expect(createResponse.status).toBe(202);
     expect(createResponse.body).toHaveProperty('id');
     expect(createResponse.body.prompt).toBe('Write just the word "test"');
@@ -49,26 +48,24 @@ describe('Jobs E2E Flow', () => {
 
     const jobId = createResponse.body.id;
 
-    // 2. Try to get the job status (it may fail due to fake API key, but job should exist)
+    // ACT: Try to get the job status
     const statusResponse = await request.get(`/jobs/${jobId}`);
 
+    // ASSERT: Job should exist and have proper status
     expect(statusResponse.status).toBe(200);
     expect(statusResponse.body).toHaveProperty('id', jobId);
     expect(statusResponse.body).toHaveProperty('status');
-    // The status could be 'pending', 'failed', or 'completed' depending on timing
-
-    // This is an E2E test, so we're just verifying the basic flow works
-    // The actual streaming behavior would require real API keys to test fully
   });
 
   it('should create and handle Gemini provider E2E', async () => {
-    // Test Gemini provider as well
+    // ARRANGE & ACT: Test Gemini provider
     const createResponse = await request.post('/jobs').send({
       prompt: 'Write just the word "hello"',
       provider: 'gemini',
       model: 'gemini-2.5-flash',
     });
 
+    // ASSERT: Gemini job should be created successfully
     expect(createResponse.status).toBe(202);
     expect(createResponse.body).toHaveProperty('id');
     expect(createResponse.body.provider).toBe('gemini');
@@ -77,8 +74,10 @@ describe('Jobs E2E Flow', () => {
 
     const jobId = createResponse.body.id;
 
-    // Try to get the job status
+    // ACT: Try to get the job status
     const statusResponse = await request.get(`/jobs/${jobId}`);
+
+    // ASSERT: Job should exist and have proper status
     expect(statusResponse.status).toBe(200);
     expect(statusResponse.body).toHaveProperty('id', jobId);
     expect(statusResponse.body).toHaveProperty('status');

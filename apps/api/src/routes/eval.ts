@@ -46,7 +46,17 @@ function datasetPath(id: AllowedDataset) {
 router.post('/', async (req, res, next) => {
   const startTime = Date.now();
   try {
-    const { promptTemplate, model, testSetId } = bodySchema.parse(req.body);
+    // Parse and validate request body - convert ZodError to ValidationError
+    let parsedBody;
+    try {
+      parsedBody = bodySchema.parse(req.body);
+    } catch (_zodError) {
+      throw new ValidationError(
+        'Invalid request body. Required fields: promptTemplate, model, testSetId',
+      );
+    }
+
+    const { promptTemplate, model, testSetId } = parsedBody;
 
     log.info('Evaluation request started', {
       model,
