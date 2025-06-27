@@ -7,6 +7,7 @@ import pLimit from 'p-limit';
 import { applyTemplate, runBatch } from '@prompt-lab/evaluator';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { NotFoundError, ServiceUnavailableError } from '../errors/ApiError.js';
 
 const router: ExpressRouter = Router();
 
@@ -28,8 +29,7 @@ router.post('/', async (req, res, next) => {
     const { promptTemplate, model, testSetId } = bodySchema.parse(req.body);
 
     if (!process.env.OPENAI_API_KEY) {
-      res.status(503).json({ error: 'OpenAI key not configured' });
-      return;
+      throw new ServiceUnavailableError('OpenAI key not configured');
     }
 
     let raw: string;
@@ -37,8 +37,7 @@ router.post('/', async (req, res, next) => {
       raw = await fs.readFile(datasetPath(testSetId), 'utf8');
     } catch (readErr) {
       if ((readErr as { code?: string }).code === 'ENOENT') {
-        res.status(404).json({ error: 'Dataset not found' });
-        return;
+        throw new NotFoundError('Dataset not found');
       }
       throw readErr;
     }

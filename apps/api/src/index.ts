@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import evalRouter from './routes/eval.js';
 import jobsRouter from './routes/jobs.js';
+import { ApiError } from './errors/ApiError.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
@@ -59,8 +60,22 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // If it's one of our custom API errors, use the status code and message
+    if (err instanceof ApiError) {
+      return res.status(err.statusCode).json({
+        error: err.message,
+        code: err.code,
+      });
+    }
+
+    // For any other error, log it for debugging but don't expose details
+    console.error('Unexpected error:', err);
+
+    // Return generic error response
+    res.status(500).json({
+      error: 'Internal Server Error',
+      code: 'INTERNAL_SERVER_ERROR',
+    });
   },
 );
 

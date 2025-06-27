@@ -9,85 +9,130 @@ export interface JobSummary {
   status: 'pending' | 'running' | 'completed' | 'failed';
 }
 
-export async function createJob(body: JobRequest): Promise<JobSummary> {
-  console.log('🚀 Making API call to /jobs with:', body);
+export interface JobResult {
+  id: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  result?: string;
+  metrics?: Record<string, unknown>;
+}
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+export interface ApiError {
+  error: string;
+  code?: string;
+}
 
-  try {
-    const res = await fetch('/jobs', {
+export class ApiClient {
+  private static async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch(endpoint, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errorMessage = 'An error occurred';
+        let errorCode: string | undefined;
+
+        try {
+          const errorData: ApiError = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          errorCode = errorData.code;
+        } catch {
+          // If we can't parse JSON, use the response text
+          errorMessage = (await response.text()) || `HTTP ${response.status}`;
+        }
+
+        const error = new Error(errorMessage) as Error & {
+          code?: string;
+          status?: number;
+        };
+        error.code = errorCode;
+        error.status = response.status;
+        throw error;
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }
+
+  static async createJob(body: JobRequest): Promise<JobSummary> {
+    console.log('🚀 Creating job with:', body);
+
+    const result = await this.makeRequest<JobSummary>('/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
-
-    console.log('📡 API response status:', res.status);
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('❌ API error:', errorText);
-      throw new Error(errorText);
-    }
-
-    const result = await res.json();
-    console.log('✅ API success:', result);
+    console.log('✅ Job created:', result);
     return result;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error('💥 API call failed:', error);
-    throw error;
   }
-}
 
-export function streamJob(
-  id: string,
-  onMessage: (line: string) => void,
-  onDone: () => void,
-): EventSource {
-  console.log('🌊 Starting EventSource for job:', id);
-  const es = new EventSource(`/jobs/${id}/stream`);
+  static async fetchJob(id: string): Promise<JobResult> {
+    console.log('📊 Fetching job:', id);
 
-  es.onopen = () => {
-    console.log('🔗 EventSource connection opened');
-  };
+    const result = await this.makeRequest<JobResult>(`/jobs/${id}`);
 
-  es.onmessage = (e) => {
-    console.log('📡 EventSource message:', e.data);
-    if (e.data === '[DONE]') {
-      console.log('✅ Received [DONE], closing stream');
-      onDone();
+    console.log('✅ Job fetched:', result);
+    return result;
+  }
+
+  static streamJob(
+    id: string,
+    onMessage: (line: string) => void,
+    onDone: () => void,
+    onError?: (error: Error) => void,
+  ): EventSource {
+    console.log('🌊 Starting EventSource for job:', id);
+    const es = new EventSource(`/jobs/${id}/stream`);
+
+    es.onopen = () => {
+      console.log('🔗 EventSource connection opened');
+    };
+
+    es.onmessage = (e) => {
+      console.log('📡 EventSource message:', e.data);
+      if (e.data === '[DONE]') {
+        console.log('✅ Received [DONE], closing stream');
+        onDone();
+        es.close();
+      } else {
+        onMessage(e.data);
+      }
+    };
+
+    es.onerror = (e) => {
+      console.error('❌ EventSource error:', e);
+      const error = new Error('Stream connection failed');
+
+      if (onError) {
+        onError(error);
+      }
+
       es.close();
-    } else {
-      onMessage(e.data);
-    }
-  };
 
-  es.onerror = (e) => {
-    console.error('❌ EventSource error:', e);
-    es.close();
-    // Only call onDone if it's a real error, not just a normal close
-    if (es.readyState === EventSource.CLOSED) {
-      onDone();
-    }
-  };
+      // Only call onDone if it's a real error, not just a normal close
+      if (es.readyState === EventSource.CLOSED) {
+        onDone();
+      }
+    };
 
-  return es;
-}
-
-export async function fetchJob(id: string) {
-  try {
-    const res = await fetch(`/jobs/${id}`);
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Failed to fetch job: ${errorText}`);
-    }
-    return res.json(); // contains final metrics, cost, etc.
-  } catch (error) {
-    console.error('Failed to fetch job:', error);
-    throw error;
+    return es;
   }
 }
+
+// Legacy exports for backward compatibility
+export const createJob = ApiClient.createJob.bind(ApiClient);
+export const fetchJob = ApiClient.fetchJob.bind(ApiClient);
+export const streamJob = ApiClient.streamJob.bind(ApiClient);
