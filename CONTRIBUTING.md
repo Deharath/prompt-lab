@@ -4,11 +4,12 @@ Thank you for your interest in contributing! Please follow these guidelines to e
 
 ## Project Structure
 
-- **apps/api**: Express + Zod backend (TypeScript, Drizzle ORM, providers).
-- **apps/web**: React 19 + Vite + shadcn/ui frontend.
-- **packages/evaluator**: TypeScript metrics library.
-- **packages/test-cases**: JSONL fixtures and helpers.
-- **scripts**: Utility scripts.
+- **apps/api**: Express server with routes and middleware (imports from packages/api)
+- **apps/web**: React 19 + Vite frontend with streaming job interface
+- **packages/api**: Shared business logic (providers, jobs, database)
+- **packages/evaluator**: TypeScript metrics library with pluggable evaluation
+- **packages/test-cases**: JSONL fixtures and test helpers
+- **scripts**: Utility scripts for linting and maintenance
 
 ## Getting Started
 
@@ -48,8 +49,30 @@ Thank you for your interest in contributing! Please follow these guidelines to e
 
 ## Environment Variables
 
+Set up your environment by copying `.env.example` to `.env`:
+
+```bash
+# Required
+OPENAI_API_KEY=your_openai_key_here
+
+# Optional
+GEMINI_API_KEY=your_gemini_key_here
+PORT=3000
+DATABASE_URL=sqlite.db
+```
+
+- **OPENAI_API_KEY**: Required for GPT model providers
+- **GEMINI_API_KEY**: Optional, enables Gemini models (graceful fallback if missing)
+- **DATABASE_URL**: SQLite database path (auto-created on first run)
 - Never commit secrets. Use `.env.example` to document required variables.
 - Always load `.env` at runtime.
+
+## Architecture Notes
+
+- `packages/api` contains shared business logic used by `apps/api`
+- Database uses SQLite with Drizzle ORM (auto-initializes tables)
+- Job execution is async with Server-Sent Events for real-time streaming
+- Provider interface supports OpenAI and Gemini with unified AsyncGenerator streaming
 
 ## CI/CD
 
