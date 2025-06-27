@@ -3,9 +3,36 @@ import request from 'supertest';
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 import getPort from 'get-port';
 
-// Force mock modules before importing application code
-vi.mock('openai', () => ({
-  default: vi.fn().mockImplementation(() => ({
+// Mock the evaluation providers directly
+vi.mock('@prompt-lab/api', async (importOriginal) => {
+  const mod = (await importOriginal()) as any;
+  return {
+    ...mod,
+    // Mock the evaluation function to return fake results
+    evaluateWithOpenAI: vi
+      .fn()
+      .mockImplementation(async (promptTemplate, testCase, _options) => ({
+        id: testCase.id,
+        prediction: 'mock completion',
+        reference: testCase.expected,
+        latencyMs: 100,
+        tokens: 5,
+      })),
+    evaluateWithGemini: vi
+      .fn()
+      .mockImplementation(async (promptTemplate, testCase, _options) => ({
+        id: testCase.id,
+        prediction: 'gem',
+        reference: testCase.expected,
+        latencyMs: 100,
+        tokens: 5,
+      })),
+  };
+});
+
+// Also mock the OpenAI and Gemini modules for any direct usage
+vi.mock('openai', () => {
+  const mockOpenAI = vi.fn().mockImplementation(() => ({
     chat: {
       completions: {
         create: vi.fn().mockResolvedValue({
@@ -19,8 +46,11 @@ vi.mock('openai', () => ({
         data: [{ embedding: [1, 0] }],
       }),
     },
-  })),
-}));
+  }));
+  return {
+    default: mockOpenAI,
+  };
+});
 
 vi.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
