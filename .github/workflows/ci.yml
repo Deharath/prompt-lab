@@ -56,6 +56,8 @@ jobs:
 
       - name: Test
         run: pnpm -r test
+        env:
+          NODE_ENV: test
 
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker:

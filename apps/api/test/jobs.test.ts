@@ -2,7 +2,7 @@ import type { Server } from 'http';
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
-import { app } from '../src/index.js';
+import { app } from '../src/index.ts';
 
 let server: Server;
 let request: supertest.SuperTest<supertest.Test>;

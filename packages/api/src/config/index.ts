@@ -17,79 +17,90 @@ import {
 const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
 dotenv.config({ path: join(rootDir, '.env') });
 
-// Comprehensive configuration schema with validation and defaults
-const configSchema = z.object({
-  // Server configuration
-  server: z.object({
-    port: z.coerce.number().min(1).max(65535).default(3000),
-    env: z
-      .enum([
-        ENVIRONMENTS.DEVELOPMENT,
-        ENVIRONMENTS.TEST,
-        ENVIRONMENTS.PRODUCTION,
-      ] as const)
-      .default(ENVIRONMENTS.DEVELOPMENT),
-    host: z.string().default('localhost'),
-  }),
+// Create configuration schema dynamically based on environment
+function createConfigSchema() {
+  const isTestEnv = process.env.NODE_ENV === 'test';
 
-  // Database configuration
-  database: z.object({
-    url: z.string().default(':memory:'),
-    maxConnections: z.coerce.number().min(1).default(DATABASE.MAX_CONNECTIONS),
-  }),
+  return z.object({
+    // Server configuration
+    server: z.object({
+      port: z.coerce.number().min(1).max(65535).default(3000),
+      env: z
+        .enum([
+          ENVIRONMENTS.DEVELOPMENT,
+          ENVIRONMENTS.TEST,
+          ENVIRONMENTS.PRODUCTION,
+        ] as const)
+        .default(ENVIRONMENTS.DEVELOPMENT),
+      host: z.string().default('localhost'),
+    }),
 
-  // OpenAI configuration
-  openai: z.object({
-    apiKey: z.string().min(1, 'OpenAI API key is required'),
-    timeout: z.coerce.number().min(1000).default(TIMEOUTS.OPENAI_DEFAULT),
-    maxRetries: z.coerce.number().min(0).default(SECURITY.MAX_RETRIES),
-    defaultModel: z.string().default(PROVIDERS.OPENAI.DEFAULT_MODEL),
-  }),
+    // Database configuration
+    database: z.object({
+      url: z.string().default(':memory:'),
+      maxConnections: z.coerce
+        .number()
+        .min(1)
+        .default(DATABASE.MAX_CONNECTIONS),
+    }),
 
-  // Gemini configuration (optional)
-  gemini: z.object({
-    apiKey: z.string().optional(),
-    timeout: z.coerce.number().min(1000).default(TIMEOUTS.GEMINI_DEFAULT),
-    maxRetries: z.coerce.number().min(0).default(SECURITY.MAX_RETRIES),
-  }),
+    // OpenAI configuration
+    openai: z.object({
+      apiKey: isTestEnv
+        ? z.string().optional().default('')
+        : z.string().min(1, 'OpenAI API key is required'),
+      timeout: z.coerce.number().min(1000).default(TIMEOUTS.OPENAI_DEFAULT),
+      maxRetries: z.coerce.number().min(0).default(SECURITY.MAX_RETRIES),
+      defaultModel: z.string().default(PROVIDERS.OPENAI.DEFAULT_MODEL),
+    }),
 
-  // Rate limiting configuration
-  rateLimit: z.object({
-    windowMs: z.coerce.number().min(1000).default(RATE_LIMITS.WINDOW_MS),
-    globalMax: z.coerce.number().min(1).default(RATE_LIMITS.GLOBAL_MAX),
-    jobsMax: z.coerce.number().min(1).default(RATE_LIMITS.JOBS_MAX),
-  }),
+    // Gemini configuration (optional)
+    gemini: z.object({
+      apiKey: z.string().optional(),
+      timeout: z.coerce.number().min(1000).default(TIMEOUTS.GEMINI_DEFAULT),
+      maxRetries: z.coerce.number().min(0).default(SECURITY.MAX_RETRIES),
+    }),
 
-  // Evaluation configuration
-  evaluation: z.object({
-    timeout: z.coerce.number().min(1000).default(TIMEOUTS.EVALUATION_DEFAULT),
-    concurrency: z.coerce
-      .number()
-      .min(1)
-      .max(EVALUATION.MAX_CONCURRENCY)
-      .default(EVALUATION.DEFAULT_CONCURRENCY),
-    maxCases: z.coerce.number().min(1).default(EVALUATION.MAX_CASES),
-  }),
+    // Rate limiting configuration
+    rateLimit: z.object({
+      windowMs: z.coerce.number().min(1000).default(RATE_LIMITS.WINDOW_MS),
+      globalMax: z.coerce.number().min(1).default(RATE_LIMITS.GLOBAL_MAX),
+      jobsMax: z.coerce.number().min(1).default(RATE_LIMITS.JOBS_MAX),
+    }),
 
-  // Logging configuration
-  logging: z.object({
-    level: z
-      .enum(['error', 'warn', 'info', 'debug'])
-      .default(LOGGING.DEFAULT_LEVEL as 'info'),
-    enableFileLogging: z.coerce.boolean().default(false),
-    maxFileSize: z.coerce.number().default(LOGGING.MAX_FILE_SIZE),
-    maxFiles: z.coerce.number().default(LOGGING.MAX_FILES),
-  }),
+    // Evaluation configuration
+    evaluation: z.object({
+      timeout: z.coerce.number().min(1000).default(TIMEOUTS.EVALUATION_DEFAULT),
+      concurrency: z.coerce
+        .number()
+        .min(1)
+        .max(EVALUATION.MAX_CONCURRENCY)
+        .default(EVALUATION.DEFAULT_CONCURRENCY),
+      maxCases: z.coerce.number().min(1).default(EVALUATION.MAX_CASES),
+    }),
 
-  // Security configuration
-  security: z.object({
-    requestSizeLimit: z.string().default(SECURITY.REQUEST_SIZE_LIMIT),
-    enableTrustProxy: z.coerce.boolean().default(false),
-  }),
-});
+    // Logging configuration
+    logging: z.object({
+      level: z
+        .enum(['error', 'warn', 'info', 'debug'])
+        .default(LOGGING.DEFAULT_LEVEL as 'info'),
+      enableFileLogging: z.coerce.boolean().default(false),
+      maxFileSize: z.coerce.number().default(LOGGING.MAX_FILE_SIZE),
+      maxFiles: z.coerce.number().default(LOGGING.MAX_FILES),
+    }),
+
+    // Security configuration
+    security: z.object({
+      requestSizeLimit: z.string().default(SECURITY.REQUEST_SIZE_LIMIT),
+      enableTrustProxy: z.coerce.boolean().default(false),
+    }),
+  });
+}
 
 // Parse and validate configuration
 function createConfig() {
+  const configSchema = createConfigSchema();
+
   const rawConfig = {
     server: {
       port: process.env.PORT,
