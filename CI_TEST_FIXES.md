@@ -40,38 +40,71 @@ import { startServer } from '../dist/src/index.js'; // All tests
 
 ### 2. Enhanced Vitest Mocking
 
-Implemented robust mocking patterns for OpenAI and Gemini APIs:
+Implemented robust mocking patterns at multiple levels for maximum reliability:
 
 ```javascript
-// Enhanced OpenAI mocking
-vi.mock('openai', () => ({
-  OpenAI: vi.fn().mockImplementation(() => ({
+// Primary strategy: Mock the @prompt-lab/api module directly
+vi.mock('@prompt-lab/api', async (importOriginal) => {
+  const mod = await importOriginal() as any;
+  return {
+    ...mod,
+    // Mock the evaluation function to return fake results
+    evaluateWithOpenAI: vi.fn().mockImplementation(async (promptTemplate, testCase, _options) => ({
+      id: testCase.id,
+      prediction: 'mock completion',
+      reference: testCase.expected,
+      latencyMs: 100,
+      tokens: 5,
+    })),
+    evaluateWithGemini: vi.fn().mockImplementation(async (promptTemplate, testCase, _options) => ({
+      id: testCase.id,
+      prediction: 'gem',
+      reference: testCase.expected,
+      latencyMs: 100,
+      tokens: 5,
+    })),
+  };
+});
+
+// Fallback strategy: Also mock OpenAI and Gemini modules for direct usage
+vi.mock('openai', () => {
+  const mockOpenAI = vi.fn().mockImplementation(() => ({
     chat: {
       completions: {
-        create: vi.fn().mockImplementation(async ({ stream }) => {
-          if (stream) {
-            return mockOpenAIStreamResponse();
-          }
-          return mockOpenAIResponse();
+        create: vi.fn().mockResolvedValue({
+          choices: [{ message: { content: 'mock completion' } }],
+          usage: { total_tokens: 5 },
         }),
       },
     },
-  })),
-}));
+    embeddings: {
+      create: vi.fn().mockResolvedValue({
+        data: [{ embedding: [1, 0] }],
+      }),
+    },
+  }));
+  return {
+    default: mockOpenAI,
+  };
+});
 
-// Enhanced Gemini mocking
 vi.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
-    getGenerativeModel: vi.fn().mockImplementation(() => ({
-      generateContentStream: vi.fn().mockImplementation(async function* () {
-        yield mockGeminiChunk1();
-        yield mockGeminiChunk2();
+    getGenerativeModel: vi.fn().mockReturnValue({
+      generateContent: vi.fn().mockResolvedValue({
+        response: { text: () => 'gem' },
       }),
-      generateContent: vi.fn().mockResolvedValue(mockGeminiResponse()),
-    })),
+    }),
   })),
 }));
 ```
+
+**Key improvements:**
+
+- **Two-layer mocking**: Mocks both the high-level API functions and the underlying libraries
+- **importOriginal pattern**: Preserves all non-mocked exports while replacing specific functions
+- **Consistent mock responses**: All mocked evaluation functions return deterministic test data
+- **CI compatibility**: This approach works regardless of Node.js module resolution differences
 
 ### 3. Build Dependencies
 
@@ -104,7 +137,9 @@ This ensures that CI and local environments behave consistently.
 1. **Import consistency matters**: Mixing source and compiled imports can break mocking
 2. **Build-dependent tests**: Tests that import from `dist` require a build step first
 3. **Environment parity**: CI and local environments need similar mocking strategies when API keys aren't available
-4. **Mock robustness**: Using `vi.fn().mockImplementation()` is more reliable than simple mock returns for complex API interactions
+4. **Multi-layer mocking**: Using both high-level API mocks and low-level library mocks ensures compatibility across environments
+5. **Module resolution differences**: CI and local environments may resolve modules differently, requiring comprehensive mocking strategies
+6. **Mock robustness**: Using `vi.fn().mockImplementation()` with `importOriginal` is more reliable than simple mock returns for complex API interactions
 
 ## Files Modified
 
