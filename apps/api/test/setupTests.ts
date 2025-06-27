@@ -8,6 +8,7 @@ import { vi, beforeAll, afterEach } from 'vitest';
 export const mockEvaluateWithOpenAI = vi.fn();
 export const mockEvaluateWithGemini = vi.fn();
 export const mockGetProvider = vi.fn();
+export const mockGetEvaluator = vi.fn();
 export const mockCreateJob = vi.fn();
 export const mockGetJob = vi.fn();
 export const mockUpdateJob = vi.fn();
@@ -144,6 +145,16 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
       latencyMs: 120,
       tokens: 7,
       score: 0.85,
+    }),
+
+    getEvaluator: mockGetEvaluator.mockImplementation((model: string) => {
+      if (model.startsWith('gpt-')) {
+        return mockEvaluateWithOpenAI;
+      }
+      if (model === 'gemini-2.5-flash' || model.startsWith('gemini-')) {
+        return mockEvaluateWithGemini;
+      }
+      throw new Error(`Unsupported model: ${model}`);
     }),
 
     // Mock job service functions
@@ -329,6 +340,8 @@ vi.mock('@google/generative-ai', () => {
 beforeAll(() => {
   process.env.DATABASE_URL = ':memory:';
   process.env.NODE_ENV = 'test';
+  process.env.OPENAI_API_KEY = 'test-openai-key';
+  process.env.GEMINI_API_KEY = 'test-gemini-key';
 });
 
 /**
@@ -346,6 +359,8 @@ afterEach(() => {
   mockConfig.openai.apiKey = 'sk-test-key-from-ci-fix';
   mockConfig.gemini.apiKey = 'gemini-test-key-from-ci-fix';
   mockConfig.server.env = 'test';
+  process.env.OPENAI_API_KEY = 'test-openai-key';
+  process.env.GEMINI_API_KEY = 'test-gemini-key';
 
   // Reset evaluator mocks to success state
   mockEvaluateWithOpenAI.mockResolvedValue({
@@ -421,5 +436,15 @@ afterEach(() => {
         return;
       },
     };
+  });
+
+  mockGetEvaluator.mockImplementation((model: string) => {
+    if (model.startsWith('gpt-')) {
+      return mockEvaluateWithOpenAI;
+    }
+    if (model === 'gemini-2.5-flash' || model.startsWith('gemini-')) {
+      return mockEvaluateWithGemini;
+    }
+    throw new Error(`Unsupported model: ${model}`);
   });
 });
