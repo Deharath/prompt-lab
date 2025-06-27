@@ -4,8 +4,8 @@ import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
 // Mock the evaluation providers directly at the source file level
 // Note: We mock the source path because Vitest alias points directly to src files
-vi.mock('../../packages/api/src/evaluation/providers.js', () => ({
-  evaluateWithOpenAI: vi
+vi.mock('../../packages/api/src/evaluation/providers.js', () => {
+  const mockEvaluateWithOpenAI = vi
     .fn()
     .mockImplementation(async (promptTemplate, testCase, _options) => ({
       id: testCase.id,
@@ -13,8 +13,9 @@ vi.mock('../../packages/api/src/evaluation/providers.js', () => ({
       reference: testCase.expected,
       latencyMs: 100,
       tokens: 5,
-    })),
-  evaluateWithGemini: vi
+    }));
+
+  const mockEvaluateWithGemini = vi
     .fn()
     .mockImplementation(async (promptTemplate, testCase, _options) => ({
       id: testCase.id,
@@ -22,14 +23,28 @@ vi.mock('../../packages/api/src/evaluation/providers.js', () => ({
       reference: testCase.expected,
       latencyMs: 100,
       tokens: 5,
-    })),
-  ServiceUnavailableError: class extends Error {
-    constructor(message: string) {
-      super(message);
-      this.name = 'ServiceUnavailableError';
-    }
-  },
-}));
+    }));
+
+  return {
+    evaluateWithOpenAI: mockEvaluateWithOpenAI,
+    evaluateWithGemini: mockEvaluateWithGemini,
+    getEvaluator: vi.fn().mockImplementation((model: string) => {
+      if (model.startsWith('gpt-')) {
+        return mockEvaluateWithOpenAI;
+      } else if (model === 'gemini-2.5-flash' || model.startsWith('gemini-')) {
+        return mockEvaluateWithGemini;
+      } else {
+        throw new Error(`Unsupported model: ${model}`);
+      }
+    }),
+    ServiceUnavailableError: class extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'ServiceUnavailableError';
+      }
+    },
+  };
+});
 
 // Also mock the OpenAI and Gemini modules for any direct usage
 vi.mock('openai', () => {
