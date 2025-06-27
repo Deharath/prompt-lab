@@ -61,7 +61,10 @@ describe('POST /eval integration', () => {
     const res = await request('http://localhost:3002').post('/eval').send({});
 
     expect(res.status).toBe(500);
-    expect(JSON.parse(res.text)).toEqual({ error: 'Internal Server Error' });
+    expect(JSON.parse(res.text)).toEqual({
+      error: 'Internal Server Error',
+      code: 'INTERNAL_SERVER_ERROR',
+    });
   });
 
   it('evaluates prompt over dataset with key', async () => {
