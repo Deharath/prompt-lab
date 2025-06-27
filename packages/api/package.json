@@ -8,7 +8,7 @@
     "dev": "ts-node src/index.ts",
     "build": "tsc",
     "clean": "node -e \"const fs = require('fs'); const path = require('path'); function rmSync(p) { try { fs.rmSync(p, {recursive: true, force: true}); } catch {} } function findAndRemove(dir, exts) { if (!fs.existsSync(dir)) return; fs.readdirSync(dir, {withFileTypes: true}).forEach(dirent => { const fullPath = path.join(dir, dirent.name); if (dirent.isDirectory()) findAndRemove(fullPath, exts); else if (exts.some(ext => fullPath.endsWith(ext))) rmSync(fullPath); }); } findAndRemove('src', ['.js', '.d.ts']); rmSync('dist');\"",
-    "test": "vitest run"
+    "test": "echo 'No tests in shared library package - tests are in apps/api'"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
