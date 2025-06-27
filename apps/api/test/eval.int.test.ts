@@ -4,7 +4,7 @@ import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
 // Mock the evaluation providers directly at the source file level
 // Note: We mock the source path because Vitest alias points directly to src files
-vi.mock('../../packages/api/src/evaluation/providers.js', () => {
+vi.mock('../../packages/api/src/evaluation/providers.ts', () => {
   const mockEvaluateWithOpenAI = vi
     .fn()
     .mockImplementation(async (promptTemplate, testCase, _options) => ({

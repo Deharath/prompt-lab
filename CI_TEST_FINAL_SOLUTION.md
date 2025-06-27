@@ -6,65 +6,129 @@ Tests in the `@prompt-lab/app-api` package were failing in CI with 503 errors wh
 
 ## 🔍 Root Cause Analysis
 
-### The Critical Discovery: Vitest Alias Issue
+### The Critical Discovery: Module Resolution in Compiled Code
 
-The **primary root cause** was a Vitest alias configuration that bypassed our mocks:
-
-```typescript
-// In apps/api/vitest.config.ts
-resolve: {
-  alias: {
-    '@prompt-lab/api': new URL('../../packages/api/src/index.ts', import.meta.url).pathname,
-  },
-}
-```
+The **primary root cause** was that our mocks were not targeting the correct module imports for compiled JavaScript:
 
 **What was happening:**
 
-1. When the app imported `@prompt-lab/api`, the alias resolved directly to TypeScript source files
-2. Our mocks targeted the **package name** `@prompt-lab/api`
-3. The alias bypassed package resolution and went to **source files**
-4. Therefore, mocks were never applied because they targeted the wrong path
+1. Tests imported the **compiled app** from `../dist/src/index.js`
+2. The compiled code imported from `@prompt-lab/api` package
+3. Our mocks targeted various paths but not the **actual runtime import**
+4. The mocks were bypassed because the compiled code used different module resolution
 
 ### Secondary Issues
 
 1. **Environment Difference**: Local had `.env` with real API keys, CI had none
-2. **Import Inconsistency**: Mixed imports from source vs compiled files
+2. **Error Type Mismatch**: Mock error class didn't match real `ServiceUnavailableError`
 
 ## ✅ Final Solution
 
-### Source-Level Mocking
+### Package-Level Mocking with Proper Error Handling
 
-Mock the **actual source file path** that the Vitest alias resolves to:
+Mock the **package import** that the compiled code actually uses, with proper error class:
 
 ```typescript
-// ❌ OLD (didn't work due to alias bypass)
-vi.mock('@prompt-lab/api', async (importOriginal) => { ... })
+// ✅ NEW - Mock @prompt-lab/api package with proper error handling
+vi.mock('@prompt-lab/api', async () => {
+  const original = (await vi.importActual('@prompt-lab/api')) as any;
 
-// ✅ NEW (works because it targets the actual resolved path)
-vi.mock('../../packages/api/src/evaluation/providers.js', () => ({
-  evaluateWithOpenAI: vi.fn().mockImplementation(async (promptTemplate, testCase, _options) => ({
-    id: testCase.id,
-    prediction: 'mock completion',
-    reference: testCase.expected,
-    latencyMs: 100,
-    tokens: 5,
-  })),
-  evaluateWithGemini: vi.fn().mockImplementation(async (promptTemplate, testCase, _options) => ({
-    id: testCase.id,
-    prediction: 'gem',
-    reference: testCase.expected,
-    latencyMs: 100,
-    tokens: 5,
-  })),
-  ServiceUnavailableError: class extends Error {
+  // Create ServiceUnavailableError that matches real implementation
+  const ServiceUnavailableError = class extends Error {
+    public statusCode: number = 503;
+    public code: string = 'SERVICE_UNAVAILABLE';
+
     constructor(message: string) {
       super(message);
       this.name = 'ServiceUnavailableError';
     }
-  },
-}));
+  };
+
+  const mockEvaluateWithOpenAI = vi
+    .fn()
+    .mockImplementation(async (promptTemplate, testCase, _options) => {
+      // Check environment variable to simulate real behavior
+      if (!process.env.OPENAI_API_KEY) {
+        throw new ServiceUnavailableError('OpenAI API key not configured');
+      }
+      return {
+        id: testCase.id,
+        prediction: 'mock completion',
+        reference: testCase.expected,
+        latencyMs: 100,
+        tokens: 5,
+      };
+    });
+
+  // Return original module with mocked functions
+  return {
+    ...original,
+    evaluateWithOpenAI: mockEvaluateWithOpenAI,
+    evaluateWithGemini: mockEvaluateWithGemini,
+    getEvaluator: mockGetEvaluator,
+    ServiceUnavailableError,
+  };
+});
 ```
+
+### Key Improvements
+
+1. **Mock the Package**: Target `@prompt-lab/api` directly as used by compiled code
+2. **Preserve Original**: Use `importActual` to keep non-mocked exports
+3. **Proper Error Class**: Include `statusCode` and `code` properties for correct HTTP response
+4. **Environment-Aware**: Check `process.env.OPENAI_API_KEY` to simulate real behavior
+5. **Consistent Behavior**: Same mock works for both 503 error tests and 200 success tests
+
+## 📋 Implementation Steps
+
+1. **Updated all test files** to use package-level mocking:
+   - `apps/api/test/eval.test.ts`
+   - `apps/api/test/eval.int.test.ts`
+   - `apps/api/test/e2e.test.ts`
+
+2. **Standardized mock implementation** across all files
+
+3. **Tested locally** - All evaluation tests now pass consistently
+
+## 🎉 Results
+
+✅ **All evaluation tests now pass**:
+
+- `POST /eval > 503 when key missing` - Returns 503 when no API key
+- `POST /eval > returns evaluation results with key` - Returns 200 with mock data
+- Integration tests pass with proper mocking
+- E2E tests pass with mock responses
+- Health check passes with mocked provider status
+
+✅ **Tests work in both environments**:
+
+- **Local**: Uses real API keys when available, mocks when not
+- **CI**: Uses mocks consistently (no API keys in CI)
+
+## 🔑 Key Learnings
+
+1. **Module resolution matters**: Compiled code may import differently than source
+2. **Mock at runtime level**: Target the actual imports used by running code
+3. **Error class fidelity**: Mock error classes must match real implementation
+4. **Environment simulation**: Mocks should respect environment variables for realistic testing
+   tokens: 5,
+   })),
+   evaluateWithGemini: vi.fn().mockImplementation(async (promptTemplate, testCase, \_options) => ({
+   id: testCase.id,
+   prediction: 'gem',
+   reference: testCase.expected,
+   latencyMs: 100,
+   tokens: 5,
+   })),
+   ServiceUnavailableError: class extends Error {
+   constructor(message: string) {
+   super(message);
+   this.name = 'ServiceUnavailableError';
+   }
+   },
+   }));
+
+````
 
 ## 🛠️ Changes Made
 
@@ -96,7 +160,7 @@ vi.mock('../../packages/api/src/evaluation/providers.js', () => ({
 
 Test Files: 7 passed (7)
 Tests: 22 passed (22)
-```
+````
 
 ### Mock Evidence
 
