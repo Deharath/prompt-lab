@@ -43,7 +43,7 @@ jobs:
         run: pnpm lint:data
 
       - name: Build
-        run: pnpm -r build
+        run: pnpm build
 
       - name: Lint
         run: pnpm -r lint

@@ -7,6 +7,7 @@ import { runBatch } from '@prompt-lab/evaluator';
 import {
   getEvaluator,
   type EvaluationCase,
+  type EvaluationResult,
   log,
   config,
   ALLOWED_DATASETS,
@@ -100,7 +101,7 @@ router.post('/', async (req, res, next) => {
 
     const scores = await runBatch(
       openai,
-      perItem.map((p) => ({
+      perItem.map((p: EvaluationResult) => ({
         prediction: p.prediction,
         reference: p.reference,
       })),
