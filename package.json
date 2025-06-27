@@ -36,7 +36,6 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/supertest": "^2.0.16",
-    "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
     "@vitejs/plugin-react": "^4.6.0",
@@ -61,7 +60,7 @@
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.1",
     "rimraf": "^6.0.1",
-    "supertest": "^6.3.4",
+    "supertest": "^7.1.1",
     "tsx": "^4.20.3",
     "typescript": "5.8.3",
     "vite": "7.0.0",
@@ -86,10 +85,26 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3"
+      "@tailwindcss/oxide",
+      "better-sqlite3",
+      "es5-ext",
+      "esbuild",
+      "unrs-resolver"
     ],
     "overrides": {
       "esbuild": "^0.25.0"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "eslint"
+      ],
+      "allowedVersions": {
+        "eslint": "9",
+        "@typescript-eslint/eslint-plugin": "8",
+        "@typescript-eslint/parser": "8"
+      }
     }
   }
 }
