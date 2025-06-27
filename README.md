@@ -13,14 +13,14 @@
 
 ## ✨ Features
 
-- **Multi-model**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash.
-- **Automated eval**: embedding-cosine, exact-match & length heuristics; DeepEval/BERTScore pluggable.
-- **Cost & latency tracking** baked into every run.
-- **React UI** with history pane — no backend refresh.
-- **CI gate** fails if your latest prompt degrades benchmark.
-- **Coverage gate**: `@prompt-lab/evaluator` must keep ≥90% test coverage;
-  any ESLint warning fails CI.
-- **Monorepo** (`pnpm`) with strict TypeScript and project references.
+- **Multi-model streaming**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash with real-time execution
+- **Job-based architecture**: Persistent job tracking with SQLite and Server-Sent Events
+- **Advanced evaluation**: Cosine similarity, exact-match metrics with pluggable evaluator system
+- **Cost & token tracking**: Built-in usage monitoring (ready for implementation)
+- **React UI**: Modern interface with streaming job execution and progress monitoring
+- **CI/CD ready**: Comprehensive test suite (40+ tests) with automated quality gates
+- **Production-grade**: Rate limiting, validation, Docker containerization, monorepo architecture
+- **Enterprise testing**: 100% evaluator coverage, E2E tests, proper test isolation
 
 ---
 
@@ -28,25 +28,68 @@
 
 ```
 apps/
-  api/         # Express API backend
-  web/         # React frontend
+  api/         # Express API server (routes, middleware)
+  web/         # React frontend with streaming UI
 packages/
-  evaluator/   # Core evaluation logic
-  test-cases/  # Test data and helpers
+  api/         # Shared business logic (providers, jobs, database)
+  evaluator/   # Core evaluation metrics and scoring
+  test-cases/  # JSONL test datasets and helpers
 ```
 
-- All packages use TypeScript project references for fast, reliable builds.
-- Unified scripts: `build`, `test`, `lint`, `clean` in every package.
-- All `.d.ts` files are ignored by ESLint.
+- **Unified architecture**: `packages/api` provides shared business logic used by `apps/api`
+- **Real-time execution**: Job-based processing with Server-Sent Events streaming
+- **TypeScript project references**: Fast, reliable builds across all packages
+- **Comprehensive testing**: 40+ tests with proper isolation and 100% evaluator coverage
 
 ---
 
-## 🛠️ Scripts
+## � Quick Start
 
+1. **Install dependencies:**
+
+   ```sh
+   pnpm install
+   ```
+
+2. **Set up environment:**
+
+   ```sh
+   cp .env.example .env
+   # Edit .env with your API keys:
+   # OPENAI_API_KEY=your_openai_key_here
+   # GEMINI_API_KEY=your_gemini_key_here (optional)
+   ```
+
+3. **Build and start:**
+
+   ```sh
+   pnpm -r build
+   pnpm dev
+   ```
+
+4. **Open your browser:**
+   - Frontend: http://localhost:5173
+   - API: http://localhost:3000
+
+### **Environment Variables**
+
+| Variable         | Required    | Description                               |
+| ---------------- | ----------- | ----------------------------------------- |
+| `OPENAI_API_KEY` | ✅ Yes      | OpenAI API key for GPT models             |
+| `GEMINI_API_KEY` | ❌ Optional | Google Gemini API key (graceful fallback) |
+| `PORT`           | ❌ Optional | API server port (default: 3000)           |
+| `DATABASE_URL`   | ❌ Optional | SQLite database path (default: sqlite.db) |
+
+---
+
+## 🛠️ Development Scripts
+
+- `pnpm dev` — Start both API and web dev servers
 - `pnpm -r build` — Build all packages using TypeScript project references
-- `pnpm -r test` — Run all tests
-- `pnpm -r lint` — Lint all code
+- `pnpm -r test` — Run comprehensive test suite (40+ tests)
+- `pnpm -r lint` — Lint all code with zero warnings policy
 - `pnpm -r clean` — Clean all build artifacts
+- `pnpm docker:run` — Build and run Docker container locally
 
 ---
 
