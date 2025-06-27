@@ -46,7 +46,7 @@ vi.mock('fs', async () => {
   return {
     ...actual,
     promises: {
-      ...((actual as any).promises || {}),
+      ...((actual as typeof import('fs')).promises || {}),
       readFile: vi.fn().mockImplementation(async (filePath: string) => {
         // Mock the news-summaries dataset
         if (filePath.includes('news-summaries.jsonl')) {
@@ -194,7 +194,7 @@ vi.mock('../../packages/api/src/config/index', () => ({
 
 // Also mock the @prompt-lab/api package to ensure config is properly mocked
 vi.mock('@prompt-lab/api', async (importOriginal) => {
-  const originalModule = (await importOriginal()) as any;
+  const originalModule = (await importOriginal()) as Record<string, unknown>;
 
   // Set up the job store and mock implementations
   let jobIdCounter = 1;
