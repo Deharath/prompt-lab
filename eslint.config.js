@@ -104,10 +104,10 @@ module.exports = [
       'packages/*/test/**/*.tsx',
       'apps/*/test/**/*.ts',
       'apps/*/test/**/*.tsx',
-      'packages/*/*.config.ts',
-      'apps/*/*.config.ts',
-      'packages/*/*.config.js',
-      'apps/*/*.config.js',
+      'packages/*/tsconfig*.ts',
+      'apps/*/tsconfig*.ts',
+      'packages/*/drizzle.config.ts',
+      'apps/*/drizzle.config.ts',
     ],
     languageOptions: {
       parserOptions: {
