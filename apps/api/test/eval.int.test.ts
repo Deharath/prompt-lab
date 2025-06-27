@@ -1,52 +1,77 @@
 import request from 'supertest';
-
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 
-// Mock the evaluation providers directly at the source file level
-// Note: We mock the source path because Vitest alias points directly to src files
-vi.mock('../../packages/api/src/evaluation/providers.ts', () => {
+// Mock @prompt-lab/api package BEFORE importing the app
+// This ensures the mock is applied when the compiled code imports from the package
+vi.mock('@prompt-lab/api', async () => {
+  // Import the original module to preserve other exports
+  const original = (await vi.importActual('@prompt-lab/api')) as any;
+
+  // Create the ServiceUnavailableError class that matches the real implementation
+  const ServiceUnavailableError = class extends Error {
+    public statusCode: number = 503;
+    public code: string = 'SERVICE_UNAVAILABLE';
+
+    constructor(message: string) {
+      super(message);
+      this.name = 'ServiceUnavailableError';
+    }
+  };
+
+  // Create mock functions for the evaluation providers
   const mockEvaluateWithOpenAI = vi
     .fn()
-    .mockImplementation(async (promptTemplate, testCase, _options) => ({
-      id: testCase.id,
-      prediction: 'mock completion',
-      reference: testCase.expected,
-      latencyMs: 100,
-      tokens: 5,
-    }));
+    .mockImplementation(async (promptTemplate, testCase, _options) => {
+      // Check if API key is missing to simulate real behavior
+      if (!process.env.OPENAI_API_KEY) {
+        throw new ServiceUnavailableError('OpenAI API key not configured');
+      }
+      return {
+        id: testCase.id,
+        prediction: 'mock completion',
+        reference: testCase.expected,
+        latencyMs: 100,
+        tokens: 5,
+      };
+    });
 
   const mockEvaluateWithGemini = vi
     .fn()
-    .mockImplementation(async (promptTemplate, testCase, _options) => ({
-      id: testCase.id,
-      prediction: 'gem',
-      reference: testCase.expected,
-      latencyMs: 100,
-      tokens: 5,
-    }));
+    .mockImplementation(async (promptTemplate, testCase, _options) => {
+      // Check if API key is missing to simulate real behavior
+      if (!process.env.GEMINI_API_KEY) {
+        throw new ServiceUnavailableError('Gemini API key not configured');
+      }
+      return {
+        id: testCase.id,
+        prediction: 'gem',
+        reference: testCase.expected,
+        latencyMs: 100,
+        tokens: 5,
+      };
+    });
 
+  const mockGetEvaluator = vi.fn().mockImplementation((model: string) => {
+    if (model.startsWith('gpt-')) {
+      return mockEvaluateWithOpenAI;
+    } else if (model === 'gemini-2.5-flash' || model.startsWith('gemini-')) {
+      return mockEvaluateWithGemini;
+    } else {
+      throw new Error(`Unsupported model: ${model}`);
+    }
+  });
+
+  // Return the original module with mocked evaluation functions
   return {
+    ...original,
     evaluateWithOpenAI: mockEvaluateWithOpenAI,
     evaluateWithGemini: mockEvaluateWithGemini,
-    getEvaluator: vi.fn().mockImplementation((model: string) => {
-      if (model.startsWith('gpt-')) {
-        return mockEvaluateWithOpenAI;
-      } else if (model === 'gemini-2.5-flash' || model.startsWith('gemini-')) {
-        return mockEvaluateWithGemini;
-      } else {
-        throw new Error(`Unsupported model: ${model}`);
-      }
-    }),
-    ServiceUnavailableError: class extends Error {
-      constructor(message: string) {
-        super(message);
-        this.name = 'ServiceUnavailableError';
-      }
-    },
+    getEvaluator: mockGetEvaluator,
+    ServiceUnavailableError,
   };
 });
 
-// Also mock the OpenAI and Gemini modules for any direct usage
+// Fallback mocks for direct library usage
 vi.mock('openai', () => {
   const mockOpenAI = vi.fn().mockImplementation(() => ({
     chat: {

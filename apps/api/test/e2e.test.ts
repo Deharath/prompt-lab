@@ -10,6 +10,9 @@ vi.mock('@prompt-lab/api', async () => {
 
   // Create the ServiceUnavailableError class that matches the real implementation
   const ServiceUnavailableError = class extends Error {
+    public statusCode: number = 503;
+    public code: string = 'SERVICE_UNAVAILABLE';
+
     constructor(message: string) {
       super(message);
       this.name = 'ServiceUnavailableError';
