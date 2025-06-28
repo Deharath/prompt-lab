@@ -1,38 +1,6 @@
-# PromptLab MVP — Codex Agent Guide
+# PromptLab MVP — Agent Contributor Guide
 
-\_This file is for autonomous agents (OpenAI C## 8. Pitfalls & Gotchas (Updated v0.1.0)
-
-### **Architecture & Imports**
-
-- **Shared package usage**: Always import from `@prompt-lab/api`, never from `packages/api/src/*` directly
-- **Circular dependencies**: `apps/api` imports from `packages/api`, but never vice versa
-- **Provider interface**: Use the unified interface in `packages/api/src/providers/index.ts`
-
-### **Build & Development**
-
-- **Alias hygiene**: If `@prompt-lab/evaluator` or `@prompt-lab/api` fails to resolve, verify `paths` in `tsconfig.json`
-- **Lockfile updates**: Run `pnpm install` at repo root and commit `pnpm-lock.yaml`; CI uses `--frozen-lockfile`
-- **Composite builds**: Ensure packages set `"composite": true` and proper `references` - run `pnpm tsc` after changes
-- **Cross-platform**: Use Node.js path utilities, avoid shell-specific commands
-
-### **Database & Jobs**
-
-- **SQLite auto-creation**: Database and tables auto-initialize on first run
-- **Job status flow**: pending → running → completed/failed (track via job.status)
-- **SSE streaming**: Use EventSource for frontend, proper error handling for connection drops
-
-### **Testing & CI**
-
-- **Test isolation**: Tests use in-memory SQLite databases (no shared state)
-- **Coverage gates**: Evaluator must maintain ≥90% coverage, web tests are optional
-- **Provider mocking**: Always mock OpenAI/Gemini APIs in tests (never hit real endpoints)
-- **Docker entrypoint**: Path is `apps/api/dist/src/index.js` (not `apps/api/dist/index.js`)
-
-### **Migration from Legacy**
-
-- **Frontend migration**: Web app still uses `/eval` endpoint (needs `/jobs` migration)
-- **Cost tracking**: Not yet implemented (planned for v0.2.0)
-- **Job cancellation**: AbortController not yet in provider interfacec.) collaborating in this repo.\_
+_This file guides autonomous agents (OpenAI Codex, Claude, etc.) working in this repository._
 
 ---
 
@@ -40,7 +8,7 @@
 
 PromptLab is a **scientific method for LLM prompting** with real-time streaming execution against:
 
-- **OpenAI GPT-4.1** (plus `gpt-4.1-mini` / `gpt-4.1-nano`)
+- **OpenAI GPT-4** (plus variants)
 - **Google Gemini 2.5 Flash**
 
 **Current Status (v0.1.0):**
@@ -48,109 +16,149 @@ PromptLab is a **scientific method for LLM prompting** with real-time streaming 
 - ✅ Enterprise-grade backend with job-based execution
 - ✅ Real-time streaming via Server-Sent Events
 - ✅ 40+ tests passing with 100% evaluator coverage
+- ✅ TypeScript monorepo with project references
 - 🟡 Frontend uses legacy `/eval` API (modernization planned for v0.2.0)
 
 ---
 
-## 2. Folder Map
+## 2. Repository Structure
 
 | Path                  | Purpose                                                         |
 | --------------------- | --------------------------------------------------------------- |
 | `apps/api`            | Express server (routes, middleware) - imports from packages/api |
 | `apps/web`            | React 19 + Vite frontend with streaming UI                      |
-| `packages/api`        | **NEW**: Shared business logic (providers, jobs, database)      |
+| `packages/api`        | **Core**: Shared business logic (providers, jobs, database)     |
 | `packages/evaluator`  | Pure-TS metrics library (exactMatch, cosineSim)                 |
 | `packages/test-cases` | JSONL fixtures used in evaluation                               |
+| `packages/jobs`       | Legacy job utilities (being consolidated)                       |
+| `packages/providers`  | Legacy provider code (being consolidated)                       |
 | `scripts`             | Utility scripts (e.g., JSONL lint)                              |
 | `.github/workflows`   | GitHub Actions CI configs                                       |
-| `tsconfig.json`       | Base TS config with project references                          |
 
-_Agents must update this table before adding new top-level dirs._
-
----
-
-## 3. Canonical Dev Commands
-
-| Intent                  | Command                    |
-| ----------------------- | -------------------------- |
-| Dev servers (API + Web) | `pnpm dev`                 |
-| Unit tests              | `pnpm test`                |
-| Prompt E2E              | `pnpm test:e2e`            |
-| Type-check              | `pnpm tsc`                 |
-| Lint / Format           | `pnpm lint && pnpm format` |
+**Note**: `packages/jobs` and `packages/providers` are legacy folders being consolidated into `packages/api`.
 
 ---
 
-## 4. Style Guardrails
+## 3. Development Commands
 
-- **Strict TS**, ESLint (Airbnb+TS) & Prettier
-- **Vitest** for unit / integration
-- React hooks-only
-
-Agents must run the full command suite above before opening PRs.
-
----
-
-## 5. Merge Policy
-
-1. PR-only, never push straight to `main`.
-2. CI green on Node 18 & 22, evaluator coverage ≥90%, zero ESLint warnings.
-3. Human reviewer may require changes; agent amends the PR.
-
----
-
-## 6. Dependency Boundaries
-
-- **OpenAI SDK** for GPT-4.1 endpoints with streaming support.
-- **Google Generative AI SDK** (or REST) for Gemini 2.5 Flash.
-- **SQLite + Drizzle ORM** for job persistence and database operations.
-- **Server-Sent Events (SSE)** for real-time streaming completions.
-- No heavy frameworks; lean Express with pluggable provider architecture.
-- Secrets via `.env`; never commit keys.
+| Intent                    | Command                        | Notes                           |
+| ------------------------- | ------------------------------ | ------------------------------- |
+| Install dependencies     | `pnpm install`                 | Run from repository root        |
+| Dev servers (API + Web)   | `pnpm dev`                     | Starts both API and web         |
+| Dev API only             | `pnpm dev:api`                 | Express server on port 3000    |
+| Dev Web only             | `pnpm dev:web`                 | React app on port 5173         |
+| Run all tests            | `pnpm test`                    | Unit + integration tests       |
+| Run API E2E tests        | `pnpm test:e2e`                | End-to-end API tests           |
+| Type-check all packages  | `pnpm tsc`                     | TypeScript compilation check   |
+| Lint all packages       | `pnpm lint`                    | ESLint checks                  |
+| Format all files        | `pnpm format`                  | Prettier formatting            |
+| Build all packages      | `pnpm build`                   | Production builds              |
+| Clean build artifacts   | `pnpm clean`                   | Remove dist/, node_modules     |
 
 ---
 
-## 7. Key API Architecture (Updated v0.1.0)
+## 4. Code Quality Standards
 
-### **Shared Business Logic** (`packages/api`)
+- **TypeScript**: Strict mode enabled, no `any` types allowed
+- **ESLint**: Airbnb + TypeScript rules, zero warnings required
+- **Prettier**: Auto-formatting enforced
+- **Testing**: Vitest for unit/integration, ≥90% coverage for evaluator
+- **Architecture**: Clean separation between apps and packages
 
-- **LLMProvider interface**: `complete(prompt, options): AsyncGenerator<string>`
-- **OpenAIProvider**: Full streaming implementation for GPT-4.1 series
-- **GeminiProvider**: Full streaming implementation for Gemini 2.5 Flash
-- **Job Service**: CRUD operations with SQLite persistence
-- **Database**: Drizzle ORM with auto-initializing schema
+**Pre-commit requirements**: All commands below must pass:
+```bash
+pnpm tsc && pnpm lint && pnpm test
+```
 
-### **Express Server** (`apps/api`)
+---
 
-- **Routes**: `/jobs` (POST, GET, SSE streaming), `/eval` (legacy)
-- **Middleware**: Rate limiting, validation, CORS, error handling
-- **Imports**: All business logic from `@prompt-lab/api` package
+## 5. Architecture Guidelines
 
-### **Job-Based Execution**
+### **Import Rules**
+- ✅ Import from workspace aliases: `@prompt-lab/api`, `@prompt-lab/evaluator`
+- ❌ Never import directly from `packages/*/src/*`
+- ✅ `apps/api` can import from `packages/api`
+- ❌ Packages should never import from apps
 
-- POST `/jobs` → Creates job → Returns job ID
-- GET `/jobs/:id/stream` → Server-Sent Events with real-time tokens
-- SQLite persistence with status tracking (pending → running → completed)
+### **TypeScript Configuration**
+- Each package has independent `tsconfig.json` with full compiler options
+- Maintains `"composite": true` for project references
+- Clean builds required: remove `tsconfig.tsbuildinfo` if builds fail
 
-### **Recent Refactoring (v0.1.0)**
+### **Database & Jobs**
+- SQLite with Drizzle ORM, auto-initializing schema
+- Job flow: `pending` → `running` → `completed`/`failed`
+- Server-Sent Events for real-time streaming
 
-- ✅ Eliminated code duplication between `apps/api` and `packages/api`
-- ✅ Unified provider implementations under single interface
-- ✅ Consolidated database logic into shared package
-- ✅ All tests updated to use shared implementations
-- **Extensible**: Add new providers by implementing the interface
+---
 
-### Job System & Database
+## 6. Testing Instructions
 
-- **Job table**: `id`, `prompt`, `provider`, `model`, `status`, `result`, `metrics`, `createdAt`, `updatedAt`
-- **SQLite + Drizzle ORM**: Automatic schema creation and migrations
-- **Job statuses**: `pending`, `running`, `completed`, `failed`
+### **Running Tests**
+```bash
+# All tests with coverage
+pnpm test
 
-### Streaming Endpoints
+# Specific package tests
+pnpm --filter @prompt-lab/evaluator test
+pnpm --filter web test
 
-- `POST /jobs` - Create job, returns job metadata
-- `GET /jobs/:id/stream` - SSE stream with real-time tokens and final metrics
-- `POST /eval` - Run evaluation against test datasets
+# E2E tests
+pnpm test:e2e
+```
+
+### **Test Requirements**
+- Use in-memory SQLite for database tests
+- Mock all external APIs (OpenAI, Gemini)
+- Maintain ≥90% coverage for evaluator package
+- All tests must pass before merging
+
+### **Common Test Issues**
+- Build failures: Run `pnpm clean && pnpm build`
+- Import errors: Check workspace aliases in `tsconfig.json`
+- Database issues: Tests use in-memory SQLite, no shared state
+
+---
+
+## 7. Docker & CI
+
+### **Docker Commands**
+```bash
+# Build and run container
+pnpm docker:run
+
+# Manual Docker build
+docker build -t promptlab:latest .
+docker run -p 3000:3000 promptlab:latest
+```
+
+### **CI Pipeline**
+- Runs on Node 18 & 22
+- All tests must pass
+- Zero ESLint warnings
+- Docker smoke test included
+- Entry point: `apps/api/dist/src/index.js`
+
+---
+
+## 8. Pull Request Guidelines
+
+### **Title Format**
+```
+<type>: <description>
+
+Examples:
+fix: resolve TypeScript build configuration issues
+feat: add streaming support for Gemini provider
+docs: update API documentation
+```
+
+### **PR Requirements**
+- Create PR, never push directly to `main`
+- All CI checks must pass
+- Include tests for new functionality
+- Update documentation if needed
+- Follow PR template in `.github/pull_request_template.md`
 
 ---
 
