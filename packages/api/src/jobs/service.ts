@@ -128,7 +128,8 @@ export async function listJobs(
     conditions.push(gt(jobs.createdAt, since));
   }
 
-  let query = db
+  // Build query in one chain to avoid TypeScript issues with reassignment
+  const baseQuery = db
     .select({
       id: jobs.id,
       createdAt: jobs.createdAt,
@@ -139,13 +140,14 @@ export async function listJobs(
     })
     .from(jobs);
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions));
-  }
+  const finalQuery =
+    conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
-  query = query.orderBy(desc(jobs.createdAt)).limit(limit).offset(offset);
+  const rows = await finalQuery
+    .orderBy(desc(jobs.createdAt))
+    .limit(limit)
+    .offset(offset);
 
-  const rows = await query;
   return rows.map((row) => ({
     id: row.id,
     createdAt: row.createdAt,
