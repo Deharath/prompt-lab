@@ -28,6 +28,11 @@ test/**/*.d.ts
 !**/vitest.config.js
 !**/vite.config.js
 
+# Ignore compiled artifacts in package source directories
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts.map
+
 # Environment variables
 .env
 .env.*
