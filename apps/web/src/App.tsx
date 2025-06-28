@@ -6,6 +6,7 @@ import LiveOutputPanel from './components/LiveOutputPanel.js';
 import ResultsPanel from './components/ResultsPanel.js';
 import DebugPanel from './components/DebugPanel.js';
 import ErrorAlert from './components/ErrorAlert.js';
+import HistoryDrawer from './components/HistoryDrawer.js';
 
 const App = () => {
   const [template, setTemplate] = useState('');
@@ -13,6 +14,7 @@ const App = () => {
   const [model, setModel] = useState('gpt-4o-mini');
   const [error, setError] = useState('');
   const { log, metrics, running, start, append, finish, reset } = useJobStore();
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const handleRun = async () => {
     console.log('🚀 Run button clicked!');
@@ -69,11 +71,20 @@ const App = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="mx-auto max-w-4xl px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Prompt Lab</h1>
-          <p className="text-gray-600 mt-1">
-            Evaluate and test your prompts with real-time streaming
-          </p>
+        <div className="mx-auto max-w-4xl px-4 py-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Prompt Lab</h1>
+            <p className="text-gray-600 mt-1">
+              Evaluate and test your prompts with real-time streaming
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            History
+          </button>
         </div>
       </div>
 
@@ -105,6 +116,12 @@ const App = () => {
 
         <ResultsPanel metrics={metrics} />
       </div>
+      {historyOpen && (
+        <HistoryDrawer
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
     </div>
   );
 };
