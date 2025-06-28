@@ -1,13 +1,18 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "composite": true,
+    "target": "ES2019",
+    "module": "Node16",
+    "strict": true,
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist"
   },
-  "include": ["src/**/*", "src/*.d.ts"],
-  "exclude": ["dist", "dist/*", "dist/src", "node_modules", "test"],
-  "references": []
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "test"]
 }

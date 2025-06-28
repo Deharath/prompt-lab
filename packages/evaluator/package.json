@@ -5,8 +5,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "tsc -b",
+    "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
+    "build": "tsc",
     "test": "vitest run",
     "lint": "eslint . --max-warnings 0",
     "tsc": "tsc -p tsconfig.lint.json --noEmit"
