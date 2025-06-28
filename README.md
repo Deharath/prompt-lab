@@ -6,17 +6,17 @@
 [![pnpm](https://img.shields.io/badge/pnpm-10.x-orange.svg)](https://pnpm.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **LLM prompt sandbox** with live metrics on _GPT-4.1 (+ mini / nano)_ and _Gemini 2.5 Flash_.  
-> Built to show real Node + TS chops, not slide-deck vapourware.
+> **LLM prompt sandbox** with live metrics on _GPT-4.1 (+ mini / nano)_ and _Gemini 2.5 Flash_.
+> Built to show real Node + TS chops, not slide-deck vapourware. Track token usage and cost for each run via the `/jobs` endpoint.
 
 ---
 
 ## ✨ Features
 
 - **Multi-model streaming**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash with real-time execution
-- **Job-based architecture**: Persistent job tracking with SQLite and Server-Sent Events
+- **Job-based architecture**: Persistent job tracking with SQLite, Server-Sent Events, and a `/jobs` endpoint for retrieving results
 - **Advanced evaluation**: Cosine similarity, exact-match metrics with pluggable evaluator system
-- **Cost & token tracking**: Built-in usage monitoring (ready for implementation)
+- **Cost & token tracking**: Detailed per-job totals exposed through the `/jobs` endpoint
 - **React UI**: Modern interface with streaming job execution and progress monitoring
 - **CI/CD ready**: Comprehensive test suite (40+ tests) with automated quality gates
 - **Production-grade**: Rate limiting, validation, Docker containerization, monorepo architecture
@@ -31,7 +31,7 @@ apps/
   api/         # Express API server (routes, middleware)
   web/         # React frontend with streaming UI
 packages/
-  api/         # Shared business logic (providers, jobs, database)
+  api/         # Shared business logic (providers, jobs, database, cost tracking)
   evaluator/   # Core evaluation metrics and scoring
   test-cases/  # JSONL test datasets and helpers
 ```
@@ -131,6 +131,7 @@ prompt-lab/
 │  ├─ api/            # Express + Zod
 │  └─ web/            # React + shadcn/ui
 ├─ packages/
+│  ├─ api/            # Shared logic and cost tracking
 │  ├─ evaluator/      # Metrics lib
 │  └─ test-cases/     # JSONL fixtures
 ```

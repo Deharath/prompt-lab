@@ -90,7 +90,7 @@ export interface JobSummary {
   createdAt: Date;
   provider: string;
   model: string;
-  cost_usd: number | null;
+  costUsd: number | null;
   avgScore: number | null;
 }
 
@@ -118,7 +118,7 @@ export async function listJobs(
       createdAt: jobs.createdAt,
       provider: jobs.provider,
       model: jobs.model,
-      cost_usd: jobs.costUsd,
+      costUsd: jobs.costUsd,
       metrics: jobs.metrics,
     })
     .from(jobs);
@@ -138,7 +138,7 @@ export async function listJobs(
       createdAt: row.createdAt,
       provider: row.provider,
       model: row.model,
-      cost_usd: row.cost_usd,
+      costUsd: row.costUsd,
       avgScore: metrics?.avgScore ?? null,
     };
   });

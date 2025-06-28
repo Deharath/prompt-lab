@@ -38,7 +38,7 @@ describe('GET /jobs', () => {
     expect(job).toHaveProperty('createdAt');
     expect(job).toHaveProperty('provider');
     expect(job).toHaveProperty('model');
-    expect(job).toHaveProperty('cost_usd');
+    expect(job).toHaveProperty('costUsd');
     expect(job).toHaveProperty('avgScore');
   });
 

@@ -4,7 +4,7 @@ export interface JobMetrics {
   totalTokens: number;
   avgCosSim: number;
   meanLatencyMs: number;
-  costUSD: number;
+  costUsd: number;
   evaluationCases: number;
   startTime: number;
   endTime: number;

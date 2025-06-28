@@ -111,7 +111,7 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
       createdAt: j.createdAt,
       provider: j.provider,
       model: j.model,
-      cost_usd: j.costUsd ?? null,
+      costUsd: j.costUsd ?? null,
       avgScore: j.metrics?.avgScore ?? null,
     }));
   });
@@ -439,7 +439,7 @@ afterEach(() => {
       createdAt: j.createdAt,
       provider: j.provider,
       model: j.model,
-      cost_usd: j.costUsd ?? null,
+      costUsd: j.costUsd ?? null,
       avgScore: j.metrics?.avgScore ?? null,
     }));
   });

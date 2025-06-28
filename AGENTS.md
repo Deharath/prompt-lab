@@ -17,21 +17,21 @@ PromptLab is a **scientific method for LLM prompting** with real-time streaming 
 - ✅ Real-time streaming via Server-Sent Events
 - ✅ 40+ tests passing with 100% evaluator coverage
 - ✅ TypeScript monorepo with project references
-- 🟡 Frontend uses legacy `/eval` API (modernization planned for v0.2.0)
+- 🟢 `/jobs` endpoint is the primary way to view past runs and cost stats
 
 ---
 
 ## 2. Repository Structure
 
-| Path                  | Purpose                                                     |
-| --------------------- | ----------------------------------------------------------- |
+| Path                  | Purpose                                                           |
+| --------------------- | ----------------------------------------------------------------- |
 | `apps/api`            | Express server (routes, middleware) - imports from `packages/api` |
-| `apps/web`            | React 19 + Vite frontend with streaming UI                  |
-| `packages/api`        | **Core**: Shared business logic (providers, jobs, database) |
-| `packages/evaluator`  | Pure-TS metrics library (exactMatch, cosineSim)             |
-| `packages/test-cases` | JSONL fixtures used in evaluation                           |
-| `scripts`             | Utility scripts (e.g., JSONL lint)                          |
-| `.github/workflows`   | GitHub Actions CI configs                                   |
+| `apps/web`            | React 19 + Vite frontend with streaming UI                        |
+| `packages/api`        | **Core**: Shared business logic (providers, jobs, database)       |
+| `packages/evaluator`  | Pure-TS metrics library (exactMatch, cosineSim)                   |
+| `packages/test-cases` | JSONL fixtures used in evaluation                                 |
+| `scripts`             | Utility scripts (e.g., JSONL lint)                                |
+| `.github/workflows`   | GitHub Actions CI configs                                         |
 
 ---
 

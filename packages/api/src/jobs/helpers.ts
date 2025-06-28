@@ -31,7 +31,7 @@ export function withAverageScore(metrics: JobMetrics): JobMetricsWithAvg {
 export function usageFromMetrics(metrics: JobMetrics) {
   return {
     tokensUsed: metrics.totalTokens,
-    costUsd: metrics.costUSD,
+    costUsd: metrics.costUsd,
   };
 }
 
