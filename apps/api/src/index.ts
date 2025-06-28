@@ -5,7 +5,6 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import { log, config } from '@prompt-lab/api';
 import { ApiError } from '@prompt-lab/api';
-import evalRouter from './routes/eval.js';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
 
@@ -50,7 +49,6 @@ app.get('/health', (_req, res) => {
   res.redirect('/health/');
 });
 
-app.use('/eval', evalRouter);
 app.use('/jobs', jobsRateLimit, jobsRouter);
 
 // Serve built web UI from /public when present

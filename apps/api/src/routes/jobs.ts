@@ -1,6 +1,12 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
-import { getProvider, createJob, getJob, updateJob } from '@prompt-lab/api';
+import {
+  getProvider,
+  createJob,
+  getJob,
+  updateJob,
+  listJobs,
+} from '@prompt-lab/api';
 import {
   ValidationError,
   NotFoundError,
@@ -71,6 +77,42 @@ jobsRouter.post(
     }
   },
 );
+
+// GET /jobs - List jobs with optional filters
+jobsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {
+      limit = '20',
+      offset = '0',
+      provider,
+      status,
+      since,
+    } = req.query as Record<string, string>;
+
+    const options: import('@prompt-lab/api').ListJobsOptions = {
+      limit: Number(limit) || 20,
+      offset: Number(offset) || 0,
+    };
+
+    if (provider) {
+      options.provider = provider;
+    }
+    if (status) {
+      options.status = status as import('@prompt-lab/api').JobStatus;
+    }
+    if (since) {
+      const date = new Date(since);
+      if (!Number.isNaN(date.getTime())) {
+        options.since = date;
+      }
+    }
+
+    const results = await listJobs(options);
+    res.json(results);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // GET /jobs/:id - Get job status
 jobsRouter.get(
