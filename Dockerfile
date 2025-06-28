@@ -38,6 +38,9 @@ COPY --from=builder /app/packages/test-cases/src ./packages/test-cases/src
 # install all dependencies for CI/dev (including devDependencies for lint/test)
 RUN pnpm install --frozen-lockfile
 
+# apply pending database migrations
+RUN pnpm run migrate
+
 ENV NODE_ENV=production
 EXPOSE 3000
 
