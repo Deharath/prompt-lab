@@ -30,30 +30,30 @@ PromptLab is a **scientific method for LLM prompting** with real-time streaming 
 | `packages/api`        | **Core**: Shared business logic (providers, jobs, database)     |
 | `packages/evaluator`  | Pure-TS metrics library (exactMatch, cosineSim)                 |
 | `packages/test-cases` | JSONL fixtures used in evaluation                               |
-| `packages/jobs`       | Legacy job utilities (being consolidated)                       |
-| `packages/providers`  | Legacy provider code (being consolidated)                       |
+| `packages/jobs`       | **(removed)** legacy job utilities now in `packages/api`        |
+| `packages/providers`  | **(removed)** legacy provider code now in `packages/api`        |
 | `scripts`             | Utility scripts (e.g., JSONL lint)                              |
 | `.github/workflows`   | GitHub Actions CI configs                                       |
 
-**Note**: `packages/jobs` and `packages/providers` are legacy folders being consolidated into `packages/api`.
+**Note**: `packages/jobs` and `packages/providers` were consolidated into `packages/api`.
 
 ---
 
 ## 3. Development Commands
 
-| Intent                    | Command                        | Notes                           |
-| ------------------------- | ------------------------------ | ------------------------------- |
-| Install dependencies     | `pnpm install`                 | Run from repository root        |
-| Dev servers (API + Web)   | `pnpm dev`                     | Starts both API and web         |
-| Dev API only             | `pnpm dev:api`                 | Express server on port 3000    |
-| Dev Web only             | `pnpm dev:web`                 | React app on port 5173         |
-| Run all tests            | `pnpm test`                    | Unit + integration tests       |
-| Run API E2E tests        | `pnpm test:e2e`                | End-to-end API tests           |
-| Type-check all packages  | `pnpm tsc`                     | TypeScript compilation check   |
-| Lint all packages       | `pnpm lint`                    | ESLint checks                  |
-| Format all files        | `pnpm format`                  | Prettier formatting            |
-| Build all packages      | `pnpm build`                   | Production builds              |
-| Clean build artifacts   | `pnpm clean`                   | Remove dist/, node_modules     |
+| Intent                  | Command         | Notes                        |
+| ----------------------- | --------------- | ---------------------------- |
+| Install dependencies    | `pnpm install`  | Run from repository root     |
+| Dev servers (API + Web) | `pnpm dev`      | Starts both API and web      |
+| Dev API only            | `pnpm dev:api`  | Express server on port 3000  |
+| Dev Web only            | `pnpm dev:web`  | React app on port 5173       |
+| Run all tests           | `pnpm test`     | Unit + integration tests     |
+| Run API E2E tests       | `pnpm test:e2e` | End-to-end API tests         |
+| Type-check all packages | `pnpm tsc`      | TypeScript compilation check |
+| Lint all packages       | `pnpm lint`     | ESLint checks                |
+| Format all files        | `pnpm format`   | Prettier formatting          |
+| Build all packages      | `pnpm build`    | Production builds            |
+| Clean build artifacts   | `pnpm clean`    | Remove dist/, node_modules   |
 
 ---
 
@@ -66,6 +66,7 @@ PromptLab is a **scientific method for LLM prompting** with real-time streaming 
 - **Architecture**: Clean separation between apps and packages
 
 **Pre-commit requirements**: All commands below must pass:
+
 ```bash
 pnpm tsc && pnpm lint && pnpm test
 ```
@@ -75,17 +76,20 @@ pnpm tsc && pnpm lint && pnpm test
 ## 5. Architecture Guidelines
 
 ### **Import Rules**
+
 - ✅ Import from workspace aliases: `@prompt-lab/api`, `@prompt-lab/evaluator`
 - ❌ Never import directly from `packages/*/src/*`
 - ✅ `apps/api` can import from `packages/api`
 - ❌ Packages should never import from apps
 
 ### **TypeScript Configuration**
+
 - Each package has independent `tsconfig.json` with full compiler options
 - Maintains `"composite": true` for project references
 - Clean builds required: remove `tsconfig.tsbuildinfo` if builds fail
 
 ### **Database & Jobs**
+
 - SQLite with Drizzle ORM, auto-initializing schema
 - Job flow: `pending` → `running` → `completed`/`failed`
 - Server-Sent Events for real-time streaming
@@ -95,6 +99,7 @@ pnpm tsc && pnpm lint && pnpm test
 ## 6. Testing Instructions
 
 ### **Running Tests**
+
 ```bash
 # All tests with coverage
 pnpm test
@@ -108,12 +113,14 @@ pnpm test:e2e
 ```
 
 ### **Test Requirements**
+
 - Use in-memory SQLite for database tests
 - Mock all external APIs (OpenAI, Gemini)
 - Maintain ≥90% coverage for evaluator package
 - All tests must pass before merging
 
 ### **Common Test Issues**
+
 - Build failures: Run `pnpm clean && pnpm build`
 - Import errors: Check workspace aliases in `tsconfig.json`
 - Database issues: Tests use in-memory SQLite, no shared state
@@ -123,6 +130,7 @@ pnpm test:e2e
 ## 7. Docker & CI
 
 ### **Docker Commands**
+
 ```bash
 # Build and run container
 pnpm docker:run
@@ -133,6 +141,7 @@ docker run -p 3000:3000 promptlab:latest
 ```
 
 ### **CI Pipeline**
+
 - Runs on Node 18 & 22
 - All tests must pass
 - Zero ESLint warnings
@@ -144,6 +153,7 @@ docker run -p 3000:3000 promptlab:latest
 ## 8. Pull Request Guidelines
 
 ### **Title Format**
+
 ```
 <type>: <description>
 
@@ -154,6 +164,7 @@ docs: update API documentation
 ```
 
 ### **PR Requirements**
+
 - Create PR, never push directly to `main`
 - All CI checks must pass
 - Include tests for new functionality
