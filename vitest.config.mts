@@ -15,6 +15,11 @@ export default defineConfig({
     exclude: ['node_modules/**', '**/dist/**', 'apps/web/**'],
     coverage: {
       exclude: ['**/dist/**'],
+      thresholds: {
+        'apps/web': {
+          lines: 30,
+        },
+      },
     },
     // Vitest will automatically look for workspace configs
     // and run them appropriately.
