@@ -1,39 +1,8 @@
 import request from 'supertest';
-
-import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
+import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import getPort from 'get-port';
-
-vi.mock('openai', () => ({
-  default: class {
-    chat = {
-      completions: {
-        create: vi.fn(async () => ({
-          choices: [{ message: { content: 'mock completion' } }],
-          usage: { total_tokens: 5 },
-        })),
-      },
-    };
-    embeddings = {
-      create: vi.fn(async () => ({ data: [{ embedding: [1, 0] }] })),
-    };
-  },
-}));
-
-if (!process.env.GEMINI_API_KEY) {
-  vi.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: class {
-      getGenerativeModel() {
-        return {
-          generateContent: vi.fn(async () => ({
-            response: { text: () => 'gem' },
-          })),
-        };
-      }
-    },
-  }));
-}
-
-import { app } from '../dist/src/index.js';
+import { mockConfig } from './setupTests';
+import { app } from '../src/index';
 
 let server: ReturnType<typeof app.listen>;
 let port: number;
@@ -49,12 +18,16 @@ afterAll(() => {
 
 describe('E2E /eval', () => {
   it('runs evaluation and checks avgCosSim', async () => {
-    process.env.OPENAI_API_KEY = 'test';
+    // ARRANGE: Ensure API key is available (default state)
+    mockConfig.openai.apiKey = 'sk-test-mock-openai-key';
+
     const res = await request(`http://localhost:${port}`).post('/eval').send({
       promptTemplate: '{{input}}',
-      model: 'gpt-4.1-mini',
+      model: 'gpt-4o-mini',
       testSetId: 'news-summaries',
     });
+
+    // ASSERT: Should return successful evaluation with aggregates
     expect(res.status).toBe(200);
     expect(res.body.aggregates.avgCosSim).toBeGreaterThanOrEqual(0.7);
   });

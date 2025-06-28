@@ -13,7 +13,7 @@
     "types": ["vite/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@prompt-lab/api": ["packages/api/dist/index.d.ts"],
+      "@prompt-lab/api": ["packages/api/src/index.ts"],
       "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"]
     }
   },

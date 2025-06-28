@@ -43,7 +43,7 @@ jobs:
         run: pnpm lint:data
 
       - name: Build
-        run: pnpm -r build
+        run: pnpm build
 
       - name: Lint
         run: pnpm -r lint
@@ -56,6 +56,8 @@ jobs:
 
       - name: Test
         run: pnpm -r test
+        env:
+          NODE_ENV: test
 
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker:
@@ -74,7 +76,7 @@ jobs:
           load: true
 
       - name: Start container
-        run: docker run -d --name promptlab -p 3000:3000 promptlab:test
+        run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
 
       - name: Wait for API /health
         run: |
@@ -84,7 +86,7 @@ jobs:
               docker logs promptlab || true
               exit 1
             fi
-            if curl -sf http://localhost:3000/health > /dev/null ; then
+            if curl -sf http://localhost:3000/health/ready > /dev/null ; then
               echo "API is up 🎉"
               exit 0
             fi

@@ -1,43 +1,12 @@
 import request from 'supertest';
-
-import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
-
-vi.mock('openai', () => ({
-  default: class {
-    chat = {
-      completions: {
-        create: vi.fn(async () => ({
-          choices: [{ message: { content: 'mock completion' } }],
-          usage: { total_tokens: 5 },
-        })),
-      },
-    };
-    embeddings = {
-      create: vi.fn(async () => ({ data: [{ embedding: [1, 0] }] })),
-    };
-  },
-}));
-
-if (!process.env.GEMINI_API_KEY) {
-  vi.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: class {
-      getGenerativeModel() {
-        return {
-          generateContent: vi.fn(async () => ({
-            response: { text: () => 'gem' },
-          })),
-        };
-      }
-    },
-  }));
-}
-
-import { app } from '../dist/src/index.js';
+import { beforeAll, afterAll, describe, it, expect } from 'vitest';
+import { mockConfig } from './setupTests';
+import { app } from '../src/index';
 
 let server: ReturnType<typeof app.listen>;
 
 beforeAll(() => {
-  server = app.listen(3002);
+  server = app.listen(0); // Use port 0 for automatic port assignment
 });
 
 afterAll(() => {
@@ -46,35 +15,39 @@ afterAll(() => {
 
 describe('POST /eval integration', () => {
   it('503 when key missing', async () => {
-    delete process.env.OPENAI_API_KEY;
-    const res = await request('http://localhost:3002').post('/eval').send({
+    // ARRANGE: Simulate a missing API key
+    mockConfig.openai.apiKey = undefined as any;
+
+    const res = await request(server).post('/eval').send({
       promptTemplate: '{{input}}',
-      model: 'gpt-4.1-mini',
+      model: 'gpt-4o-mini',
       testSetId: 'news-summaries',
     });
 
+    // ASSERT: Should return 503 when API key is missing
     expect(res.status).toBe(503);
   });
 
   it('500 with JSON when validation fails', async () => {
-    process.env.OPENAI_API_KEY = 'test';
-    const res = await request('http://localhost:3002').post('/eval').send({});
+    // ARRANGE: Send invalid request (missing required fields)
+    const res = await request(server).post('/eval').send({});
 
-    expect(res.status).toBe(500);
-    expect(JSON.parse(res.text)).toEqual({
-      error: 'Internal Server Error',
-      code: 'INTERNAL_SERVER_ERROR',
-    });
+    // ASSERT: Should return 400 for validation errors
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
   });
 
   it('evaluates prompt over dataset with key', async () => {
-    process.env.OPENAI_API_KEY = 'test';
-    const res = await request('http://localhost:3002').post('/eval').send({
+    // ARRANGE: Ensure API key is available (default state)
+    mockConfig.openai.apiKey = 'sk-test-mock-openai-key';
+
+    const res = await request(server).post('/eval').send({
       promptTemplate: '{{input}}',
-      model: 'gpt-4.1-mini',
+      model: 'gpt-4o-mini',
       testSetId: 'news-summaries',
     });
 
+    // ASSERT: Should return successful evaluation results
     expect(res.status).toBe(200);
     expect(res.body.perItem.length).toBe(15);
     expect(Number.isFinite(res.body.aggregates.avgCosSim)).toBe(true);

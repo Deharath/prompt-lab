@@ -6,16 +6,17 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -b",
+    "build": "tsc",
     "lint": "eslint . --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('fs'); const path = require('path'); function rmSync(p) { try { fs.rmSync(p, {recursive: true, force: true}); } catch {} } function findAndRemove(dir, exts) { if (!fs.existsSync(dir)) return; fs.readdirSync(dir, {withFileTypes: true}).forEach(dirent => { const fullPath = path.join(dir, dirent.name); if (dirent.isDirectory()) findAndRemove(fullPath, exts); else if (exts.some(ext => fullPath.endsWith(ext))) rmSync(fullPath); }); } findAndRemove('src', ['.js', '.d.ts']); rmSync('dist');\"",
-    "test": "vitest run"
+    "test": "node --require ./test/load-test-env.ts ../../node_modules/vitest/vitest.mjs run"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prompt-lab/api": "workspace:*",
     "@prompt-lab/evaluator": "workspace:*",
+    "compression": "^1.8.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.1",
@@ -24,6 +25,7 @@
     "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/express": "^4.17.21",
     "get-port": "^7.1.0",
     "supertest": "^6.3.3",

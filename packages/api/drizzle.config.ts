@@ -1,11 +1,12 @@
 import type { Config } from 'drizzle-kit';
-import 'dotenv/config';
 
 export default {
   schema: './src/db/schema.ts',
-  out: './drizzle',
+  out: './drizzle/migrations',
   driver: 'better-sqlite',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'sqlite.db',
+    url: process.env.DATABASE_URL || './data/prompt-lab.db',
   },
+  verbose: true,
+  strict: true,
 } satisfies Config;

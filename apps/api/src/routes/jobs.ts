@@ -137,9 +137,14 @@ jobsRouter.get(
         }
 
         const endTime = Date.now();
-        const metrics = {
-          durationMs: endTime - startTime,
-          tokenCount: fullResponse.split(/\s+/).filter(Boolean).length,
+        const metrics: import('@prompt-lab/api').JobMetrics = {
+          totalTokens: fullResponse.split(/\s+/).filter(Boolean).length,
+          avgCosSim: 0, // Not applicable for streaming jobs
+          meanLatencyMs: endTime - startTime,
+          costUSD: 0, // To be calculated based on actual usage
+          evaluationCases: 0, // Not applicable for streaming jobs
+          startTime,
+          endTime,
         };
 
         await updateJob(id, {

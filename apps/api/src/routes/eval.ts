@@ -4,7 +4,15 @@ import fs from 'fs/promises';
 import OpenAI from 'openai';
 import pLimit from 'p-limit';
 import { runBatch } from '@prompt-lab/evaluator';
-import { getEvaluator, type EvaluationCase } from '@prompt-lab/api';
+import {
+  getEvaluator,
+  type EvaluationCase,
+  type EvaluationResult,
+  log,
+  config,
+  ALLOWED_DATASETS,
+  EVALUATION,
+} from '@prompt-lab/api';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -24,8 +32,7 @@ const bodySchema = z.object({
 // Absolute path to repo root, regardless of where the process starts
 const repoRoot = fileURLToPath(new URL('../../../../..', import.meta.url));
 
-// Security: Define allowed dataset IDs to prevent path traversal attacks
-const ALLOWED_DATASETS = ['news-summaries'] as const;
+// Define allowed dataset types
 type AllowedDataset = (typeof ALLOWED_DATASETS)[number];
 
 function validateDatasetId(id: string): id is AllowedDataset {
@@ -37,8 +44,25 @@ function datasetPath(id: AllowedDataset) {
 }
 
 router.post('/', async (req, res, next) => {
+  const startTime = Date.now();
   try {
-    const { promptTemplate, model, testSetId } = bodySchema.parse(req.body);
+    // Parse and validate request body - convert ZodError to ValidationError
+    let parsedBody;
+    try {
+      parsedBody = bodySchema.parse(req.body);
+    } catch (_zodError) {
+      throw new ValidationError(
+        'Invalid request body. Required fields: promptTemplate, model, testSetId',
+      );
+    }
+
+    const { promptTemplate, model, testSetId } = parsedBody;
+
+    log.info('Evaluation request started', {
+      model,
+      testSetId,
+      promptLength: promptTemplate.length,
+    });
 
     // Security: Validate testSetId to prevent path traversal attacks
     if (!validateDatasetId(testSetId)) {
@@ -47,7 +71,7 @@ router.post('/', async (req, res, next) => {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!config.openai.apiKey) {
       throw new ServiceUnavailableError('OpenAI key not configured');
     }
 
@@ -65,35 +89,29 @@ router.post('/', async (req, res, next) => {
       .split('\n')
       .map((line) => JSON.parse(line));
 
-    const limit = pLimit(5);
+    const limit = pLimit(config.evaluation.concurrency);
     const evaluator = getEvaluator(model);
-
-    // Get timeout from environment or use default
-    const timeout = process.env.EVALUATION_TIMEOUT_MS
-      ? parseInt(process.env.EVALUATION_TIMEOUT_MS, 10)
-      : 15000;
 
     const perItem = await Promise.all(
       cases.map((c) =>
-        limit(() => evaluator(promptTemplate, c, { model, timeout })),
+        limit(() =>
+          evaluator(promptTemplate, c, {
+            model,
+            timeout: config.evaluation.timeout,
+          }),
+        ),
       ),
     );
 
     // Create OpenAI client for scoring (still needed for runBatch)
-    if (!process.env.OPENAI_API_KEY) {
-      throw new ServiceUnavailableError(
-        'OpenAI API key required for evaluation scoring',
-      );
-    }
-
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      timeout,
+      apiKey: config.openai.apiKey,
+      timeout: config.openai.timeout,
     });
 
     const scores = await runBatch(
       openai,
-      perItem.map((p) => ({
+      perItem.map((p: EvaluationResult) => ({
         prediction: p.prediction,
         reference: p.reference,
       })),
@@ -110,7 +128,19 @@ router.post('/', async (req, res, next) => {
     });
     avgCosSim /= scores.length;
     const meanLatencyMs = totalLatency / scores.length;
-    const costUSD = totalTokens * 0.00001;
+    const costUSD = totalTokens * EVALUATION.COST_PER_TOKEN;
+    const duration = Date.now() - startTime;
+
+    log.info('Evaluation completed successfully', {
+      model,
+      testSetId,
+      caseCount: cases.length,
+      avgCosSim,
+      totalTokens,
+      meanLatencyMs,
+      costUSD,
+      duration,
+    });
 
     res.json({
       perItem,
@@ -118,6 +148,12 @@ router.post('/', async (req, res, next) => {
       aggregates: { avgCosSim, totalTokens, meanLatencyMs, costUSD },
     });
   } catch (err) {
+    const duration = Date.now() - startTime;
+    log.error(
+      'Evaluation failed',
+      { duration },
+      err instanceof Error ? err : new Error(String(err)),
+    );
     next(err);
   }
 });

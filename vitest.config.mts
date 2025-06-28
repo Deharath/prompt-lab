@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   resolve: {
     alias: {
-      '@prompt-lab/api': resolve('packages/api/dist/index.js'),
+      '@prompt-lab/api': resolve('packages/api/src/index.ts'),
       '@prompt-lab/evaluator': resolve('packages/evaluator/src/index.ts'),
     },
   },
