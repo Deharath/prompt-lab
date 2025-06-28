@@ -23,19 +23,15 @@ PromptLab is a **scientific method for LLM prompting** with real-time streaming 
 
 ## 2. Repository Structure
 
-| Path                  | Purpose                                                         |
-| --------------------- | --------------------------------------------------------------- |
-| `apps/api`            | Express server (routes, middleware) - imports from packages/api |
-| `apps/web`            | React 19 + Vite frontend with streaming UI                      |
-| `packages/api`        | **Core**: Shared business logic (providers, jobs, database)     |
-| `packages/evaluator`  | Pure-TS metrics library (exactMatch, cosineSim)                 |
-| `packages/test-cases` | JSONL fixtures used in evaluation                               |
-| `packages/jobs`       | **(removed)** legacy job utilities now in `packages/api`        |
-| `packages/providers`  | **(removed)** legacy provider code now in `packages/api`        |
-| `scripts`             | Utility scripts (e.g., JSONL lint)                              |
-| `.github/workflows`   | GitHub Actions CI configs                                       |
-
-**Note**: `packages/jobs` and `packages/providers` were consolidated into `packages/api`.
+| Path                  | Purpose                                                     |
+| --------------------- | ----------------------------------------------------------- |
+| `apps/api`            | Express server (routes, middleware) - imports from `packages/api` |
+| `apps/web`            | React 19 + Vite frontend with streaming UI                  |
+| `packages/api`        | **Core**: Shared business logic (providers, jobs, database) |
+| `packages/evaluator`  | Pure-TS metrics library (exactMatch, cosineSim)             |
+| `packages/test-cases` | JSONL fixtures used in evaluation                           |
+| `scripts`             | Utility scripts (e.g., JSONL lint)                          |
+| `.github/workflows`   | GitHub Actions CI configs                                   |
 
 ---
 
@@ -173,7 +169,7 @@ docs: update API documentation
 
 ---
 
-## 8. Forbidden Actions
+## 9. Forbidden Actions
 
 - Publishing Docker images publicly
 - Creating cloud resources automatically
@@ -182,13 +178,11 @@ docs: update API documentation
 
 ---
 
-## 9. Pitfalls & Gotchas
+## 10. Pitfalls & Gotchas
 
 - **Alias hygiene:** if `@prompt-lab/evaluator` fails to resolve, verify the `paths` entry in `tsconfig.json` and the `imports` section in each package’s `package.json`.
 - **Lockfile updates:** run `pnpm install` at repo root and commit the updated `pnpm-lock.yaml`; CI uses `--frozen-lockfile` so mismatches fail.
 - **Composite TypeScript builds:** ensure packages set `"composite": true` and include proper `references`—run `pnpm tsc` after changes to catch stray build info.
 - **Coverage blockers & workflow quirks:** coverage thresholds live in `vitest.config.mts`; the Docker smoke test may hide failing services. Keep an eye on Node 18 vs. 22 runs.
-
-workspace alias @prompt-lab/evaluator
 
 _End of AGENTS.md_
