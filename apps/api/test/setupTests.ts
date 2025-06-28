@@ -13,6 +13,7 @@ export const mockCreateJob = vi.fn();
 export const mockGetJob = vi.fn();
 export const mockUpdateJob = vi.fn();
 export const mockJobStore = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+export const mockListJobs = vi.fn();
 
 /**
  * Exported mock config object - the control panel for all tests
@@ -101,6 +102,20 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
     return updatedJob;
   });
 
+  mockListJobs.mockImplementation(async (opts = {}) => {
+    const { limit = 20, offset = 0 } = opts as Record<string, number>;
+    let items = Array.from(mockJobStore.values());
+    items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return items.slice(offset, offset + limit).map((j) => ({
+      id: j.id,
+      createdAt: j.createdAt,
+      provider: j.provider,
+      model: j.model,
+      cost_usd: j.costUsd ?? null,
+      avgScore: j.metrics?.avgScore ?? null,
+    }));
+  });
+
   // Return a new module object that mocks specific exports
   return {
     ...originalModule, // Keep any original exports we don't need to touch
@@ -161,6 +176,7 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
     createJob: mockCreateJob,
     getJob: mockGetJob,
     updateJob: mockUpdateJob,
+    listJobs: mockListJobs,
 
     // Mock config
     config: mockConfig,
@@ -413,6 +429,19 @@ afterEach(() => {
     };
     mockJobStore.set(id, updatedJob);
     return updatedJob;
+  });
+  mockListJobs.mockImplementation(async (opts = {}) => {
+    const { limit = 20, offset = 0 } = opts as Record<string, number>;
+    let items = Array.from(mockJobStore.values());
+    items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return items.slice(offset, offset + limit).map((j) => ({
+      id: j.id,
+      createdAt: j.createdAt,
+      provider: j.provider,
+      model: j.model,
+      cost_usd: j.costUsd ?? null,
+      avgScore: j.metrics?.avgScore ?? null,
+    }));
   });
 
   // Reset provider mock
