@@ -26,10 +26,14 @@ export async function runMigrations() {
     const db = drizzle(sqlite);
 
     const migrationPath = join(__dirname, '../../drizzle/migrations');
+    const fallbackPath = join(__dirname, '../../../drizzle/migrations');
 
-    if (existsSync(migrationPath)) {
-      log.info('Running database migrations', { migrationPath });
-      await migrate(db, { migrationsFolder: migrationPath });
+    const resolvedPath = existsSync(migrationPath)
+      ? migrationPath
+      : fallbackPath;
+    if (existsSync(resolvedPath)) {
+      log.info('Running database migrations', { migrationPath: resolvedPath });
+      await migrate(db, { migrationsFolder: resolvedPath });
       log.info('Database migrations completed successfully');
     } else {
       log.info('No migrations folder found, creating tables manually');
@@ -41,16 +45,18 @@ export async function runMigrations() {
           model TEXT NOT NULL,
           provider TEXT NOT NULL,
           status TEXT NOT NULL DEFAULT 'pending',
-          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-          completed_at INTEGER,
           result TEXT,
-          error TEXT
+          metrics TEXT,
+          error_message TEXT,
+          tokens_used INTEGER,
+          cost_usd REAL,
+          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
         );
-        
+
         CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs(status);
         CREATE INDEX IF NOT EXISTS jobs_created_at_idx ON jobs(created_at);
-        CREATE INDEX IF NOT EXISTS jobs_provider_idx ON jobs(provider);
-        CREATE INDEX IF NOT EXISTS jobs_model_idx ON jobs(model);
+        CREATE INDEX IF NOT EXISTS jobs_provider_model_idx ON jobs(provider, model);
       `);
       log.info('Tables created successfully');
     }

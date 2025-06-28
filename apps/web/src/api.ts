@@ -14,6 +14,8 @@ export interface JobResult {
   status: 'pending' | 'running' | 'completed' | 'failed';
   result?: string;
   metrics?: Record<string, unknown>;
+  tokensUsed?: number;
+  costUsd?: number;
 }
 
 export interface ApiError {
