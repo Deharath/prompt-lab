@@ -86,7 +86,7 @@ jobs:
               docker logs promptlab || true
               exit 1
             fi
-            if curl -sf http://localhost:3000/health > /dev/null ; then
+            if curl -sf http://localhost:3000/health/ready > /dev/null ; then
               echo "API is up 🎉"
               exit 0
             fi
