@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import {
+  sqliteTable,
+  text,
+  integer,
+  index,
+  real,
+} from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 export const jobs = sqliteTable(
@@ -16,6 +22,8 @@ export const jobs = sqliteTable(
     result: text('result'),
     metrics: text('metrics', { mode: 'json' }),
     errorMessage: text('error_message'), // New field for error details
+    tokensUsed: integer('tokens_used'),
+    costUsd: real('cost_usd'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
       .default(sql`(strftime('%s', 'now'))`),

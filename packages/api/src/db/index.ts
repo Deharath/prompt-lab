@@ -30,8 +30,11 @@ async function initializeDb() {
 
       const __dirname = fileURLToPath(new URL('.', import.meta.url));
       const migrationPath = join(__dirname, '../../drizzle/migrations');
+      const fallbackPath = join(__dirname, '../../../drizzle/migrations');
+      const hasMigrations =
+        existsSync(migrationPath) || existsSync(fallbackPath);
 
-      if (existsSync(migrationPath)) {
+      if (hasMigrations && config.database.url !== ':memory:') {
         await runMigrations();
       } else {
         log.info('No migrations folder found, creating tables manually');
@@ -46,6 +49,8 @@ async function initializeDb() {
             result TEXT,
             metrics TEXT,
             error_message TEXT,
+            tokens_used INTEGER,
+            cost_usd REAL,
             created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
             updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
           );

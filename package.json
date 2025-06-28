@@ -24,7 +24,8 @@
     "audit:fix": "pnpm audit --fix",
     "deps:check": "depcheck --ignores='@types/*,@testing-library/*,@vitejs/*,@vitest/*,eslint-*,@eslint/*,typescript,react-dom,better-sqlite3,get-port,rimraf,supertest' --ignore-patterns='scripts/**/*'",
     "deps:update": "pnpm update --recursive --latest",
-    "prepare": "husky"
+    "prepare": "husky",
+    "migrate": "pnpm exec tsx scripts/migrate.ts"
   },
   "devDependencies": {
     "@eslint/compat": "^1.3.1",

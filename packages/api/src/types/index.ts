@@ -73,6 +73,8 @@ export interface JobWithTypedMetrics {
   result: string | null;
   metrics: JobMetrics | null;
   errorMessage: string | null;
+  tokensUsed: number | null;
+  costUsd: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
