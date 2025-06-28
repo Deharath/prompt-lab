@@ -2,6 +2,7 @@ import type { Server } from 'http';
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import supertest from 'supertest';
 import getPort from 'get-port';
+import { mockGetProvider, mockJobStore } from './setupTests';
 import { app } from '../src/index.ts';
 
 let server: Server;
@@ -237,5 +238,33 @@ describe('Jobs API', () => {
 
     expect(response.headers['content-type']).toBe('text/event-stream');
     expect(response.text).toContain('data:');
+  });
+
+  it('updates job to failed and emits error event on stream failure', async () => {
+    const createResponse = await request
+      .post('/jobs')
+      .send({
+        prompt: 'fail test',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+      })
+      .expect(202);
+
+    const jobId = createResponse.body.id;
+
+    mockGetProvider.mockImplementationOnce(() => ({
+      name: 'openai',
+      models: ['gpt-4o-mini'],
+      complete() {
+        throw new Error('stream failure');
+      },
+    }));
+
+    const response = await request.get(`/jobs/${jobId}/stream`).expect(200);
+
+    expect(response.headers['content-type']).toBe('text/event-stream');
+    expect(response.text).toContain('event: error');
+
+    expect(mockJobStore.get(jobId)?.status).toBe('failed');
   });
 });
