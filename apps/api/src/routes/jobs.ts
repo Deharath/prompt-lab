@@ -189,7 +189,7 @@ jobsRouter.get(
           totalTokens: tokens,
           avgCosSim: 0, // Not applicable for streaming jobs
           meanLatencyMs: endTime - startTime,
-          costUSD: cost,
+          costUsd: cost,
           evaluationCases: 0, // Not applicable for streaming jobs
           startTime,
           endTime,

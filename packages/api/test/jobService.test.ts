@@ -27,7 +27,7 @@ function sampleMetrics(): JobMetrics {
     totalTokens: 10,
     avgCosSim: 0.9,
     meanLatencyMs: 100,
-    costUSD: 0.05,
+    costUsd: 0.05,
     evaluationCases: 2,
     startTime: 0,
     endTime: 10,
@@ -69,7 +69,7 @@ describe('job service', () => {
     expect(typeof updated.metrics).toBe('object');
     expect(updated.metrics?.avgScore).toBeCloseTo(expectedAvg);
     expect(updated.tokensUsed).toBe(metrics.totalTokens);
-    expect(updated.costUsd).toBeCloseTo(metrics.costUSD);
+    expect(updated.costUsd).toBeCloseTo(metrics.costUsd);
 
     const storedMetrics = updated.metrics as JobMetrics & { avgScore: number };
     expect(storedMetrics.avgScore).toBeCloseTo(expectedAvg);
@@ -79,6 +79,6 @@ describe('job service', () => {
     expect(typeof fetched?.metrics).toBe('object');
     expect((fetched?.metrics as any).avgScore).toBeCloseTo(expectedAvg);
     expect(fetched?.tokensUsed).toBe(metrics.totalTokens);
-    expect(fetched?.costUsd).toBeCloseTo(metrics.costUSD);
+    expect(fetched?.costUsd).toBeCloseTo(metrics.costUsd);
   });
 });
