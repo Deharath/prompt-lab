@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { listJobs } from '../api.js';
 import type { JobSummary } from '../api.js';
 
 interface LogLine {
@@ -9,16 +10,19 @@ interface LogLine {
 interface JobState {
   current?: JobSummary;
   log: LogLine[];
+  history: JobSummary[];
   metrics?: Record<string, number>;
   running: boolean;
   start(job: JobSummary): void;
   append(text: string): void;
   finish(metrics: Record<string, number>): void;
   reset(): void;
+  loadHistory(): Promise<void>;
 }
 
 export const useJobStore = create<JobState>((set) => ({
   log: [],
+  history: [],
   running: false,
   start: (job) => {
     console.log('🏁 Store: Starting job', job);
@@ -35,5 +39,14 @@ export const useJobStore = create<JobState>((set) => ({
   reset: () => {
     console.log('🔄 Store: Resetting');
     set({ current: undefined, log: [], metrics: undefined, running: false });
+  },
+  loadHistory: async () => {
+    console.log('📜 Store: Loading history');
+    try {
+      const history = await listJobs();
+      set({ history });
+    } catch (err) {
+      console.error('Failed to load history', err);
+    }
   },
 }));

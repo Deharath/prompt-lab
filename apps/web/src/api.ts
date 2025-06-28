@@ -132,9 +132,17 @@ export class ApiClient {
 
     return es;
   }
+
+  static async listJobs(): Promise<JobSummary[]> {
+    console.log('📜 Fetching job history');
+    const result = await this.makeRequest<JobSummary[]>('/jobs');
+    console.log('✅ Job history fetched:', result);
+    return result;
+  }
 }
 
 // Legacy exports for backward compatibility
 export const createJob = ApiClient.createJob.bind(ApiClient);
 export const fetchJob = ApiClient.fetchJob.bind(ApiClient);
 export const streamJob = ApiClient.streamJob.bind(ApiClient);
+export const listJobs = ApiClient.listJobs.bind(ApiClient);
