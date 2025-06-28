@@ -24,13 +24,13 @@ beforeEach(async () => {
 
 function sampleMetrics(): JobMetrics {
   return {
-    totalTokens: 1,
+    totalTokens: 10,
     avgCosSim: 0.9,
     meanLatencyMs: 100,
-    costUSD: 0.001,
-    evaluationCases: 1,
-    startTime: Date.now(),
-    endTime: Date.now(),
+    costUSD: 0.05,
+    evaluationCases: 2,
+    startTime: 0,
+    endTime: 10,
   };
 }
 
@@ -55,6 +55,9 @@ describe('job service', () => {
       model: 'gpt-4o-mini',
     });
     const metrics = sampleMetrics();
+    const expectedAvg =
+      Object.values(metrics).reduce((a, b) => a + (b as number), 0) /
+      Object.values(metrics).length;
     const updated = await updateJob(job.id, {
       status: 'completed',
       result: 'done',
@@ -64,11 +67,18 @@ describe('job service', () => {
     expect(updated.status).toBe('completed');
     expect(updated.result).toBe('done');
     expect(typeof updated.metrics).toBe('object');
-    expect(updated.metrics).toEqual(metrics);
+    expect(updated.metrics?.avgScore).toBeCloseTo(expectedAvg);
+    expect(updated.tokensUsed).toBe(metrics.totalTokens);
+    expect(updated.costUsd).toBeCloseTo(metrics.costUSD);
+
+    const storedMetrics = updated.metrics as JobMetrics & { avgScore: number };
+    expect(storedMetrics.avgScore).toBeCloseTo(expectedAvg);
 
     const fetched = await getJob(job.id);
     expect(fetched?.status).toBe('completed');
     expect(typeof fetched?.metrics).toBe('object');
-    expect(fetched?.metrics).toEqual(metrics);
+    expect((fetched?.metrics as any).avgScore).toBeCloseTo(expectedAvg);
+    expect(fetched?.tokensUsed).toBe(metrics.totalTokens);
+    expect(fetched?.costUsd).toBeCloseTo(metrics.costUSD);
   });
 });

@@ -37,11 +37,34 @@ export async function updateJob(
 ): Promise<Job> {
   await getDb(); // Ensure database is initialized
 
-  const updateData = {
+  let metrics = data.metrics;
+  if (data.status === 'completed' && metrics) {
+    const m = metrics as unknown as Record<string, number>;
+    const values = Object.values(m).filter(
+      (v): v is number => typeof v === 'number',
+    );
+    if (values.length > 0) {
+      const avgScore = values.reduce((a, b) => a + b, 0) / values.length;
+      (m as Record<string, unknown>).avgScore = avgScore;
+      metrics = m as unknown as JobMetrics;
+    }
+  }
+
+  const updateData: Record<string, unknown> = {
     ...data,
     updatedAt: new Date(),
-    ...(data.metrics && { metrics: data.metrics }),
+    ...(metrics && { metrics }),
   };
+
+  if (data.status === 'completed' && metrics) {
+    const m = metrics as unknown as Record<string, number>;
+    if (typeof m.totalTokens === 'number') {
+      updateData.tokensUsed = m.totalTokens;
+    }
+    if (typeof m.costUSD === 'number') {
+      updateData.costUsd = m.costUSD;
+    }
+  }
 
   const result = await db
     .update(jobs)
