@@ -241,6 +241,9 @@ importers:
       better-sqlite3:
         specifier: ^12.1.1
         version: 12.1.1
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.0
       drizzle-orm:
         specifier: ^0.30.10
         version: 0.30.10(@types/better-sqlite3@7.6.13)(@types/react@19.1.8)(better-sqlite3@12.1.1)(react@19.1.0)
@@ -253,6 +256,9 @@ importers:
       winston:
         specifier: ^3.17.0
         version: 3.17.0
+      zod:
+        specifier: ^3.22.2
+        version: 3.25.67
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
