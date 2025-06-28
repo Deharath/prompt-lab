@@ -20,6 +20,8 @@ dotenv.config({ path: join(rootDir, '.env') });
 // Create configuration schema dynamically based on environment
 function createConfigSchema() {
   const isTestEnv = process.env.NODE_ENV === 'test';
+  const isCIEnv =
+    process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 
   return z.object({
     // Server configuration
@@ -46,9 +48,10 @@ function createConfigSchema() {
 
     // OpenAI configuration
     openai: z.object({
-      apiKey: isTestEnv
-        ? z.string().optional().default('')
-        : z.string().min(1, 'OpenAI API key is required'),
+      apiKey:
+        isTestEnv || isCIEnv
+          ? z.string().optional().default('dummy-key-for-testing')
+          : z.string().min(1, 'OpenAI API key is required'),
       timeout: z.coerce.number().min(1000).default(TIMEOUTS.OPENAI_DEFAULT),
       maxRetries: z.coerce.number().min(0).default(SECURITY.MAX_RETRIES),
       defaultModel: z.string().default(PROVIDERS.OPENAI.DEFAULT_MODEL),

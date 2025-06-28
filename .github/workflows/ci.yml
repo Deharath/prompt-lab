@@ -76,7 +76,7 @@ jobs:
           load: true
 
       - name: Start container
-        run: docker run -d --name promptlab -p 3000:3000 promptlab:test
+        run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
 
       - name: Wait for API /health
         run: |
