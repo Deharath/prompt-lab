@@ -119,7 +119,6 @@ jobsRouter.get(
       await updateJob(id, { status: 'running' });
 
       const startTime = Date.now();
-      let fullResponse = '';
 
       const sendEvent = (data: object, event?: string) => {
         if (event) {
@@ -129,19 +128,16 @@ jobsRouter.get(
       };
 
       try {
-        const stream = provider.complete(job.prompt, { model: job.model });
-
-        for await (const token of stream) {
-          fullResponse += token;
-          sendEvent({ token });
-        }
+        const { output, tokens, cost } = await provider.complete(job.prompt, {
+          model: job.model,
+        });
 
         const endTime = Date.now();
         const metrics: import('@prompt-lab/api').JobMetrics = {
-          totalTokens: fullResponse.split(/\s+/).filter(Boolean).length,
+          totalTokens: tokens,
           avgCosSim: 0, // Not applicable for streaming jobs
           meanLatencyMs: endTime - startTime,
-          costUSD: 0, // To be calculated based on actual usage
+          costUSD: cost,
           evaluationCases: 0, // Not applicable for streaming jobs
           startTime,
           endTime,
@@ -149,9 +145,10 @@ jobsRouter.get(
 
         await updateJob(id, {
           status: 'completed',
-          result: fullResponse,
+          result: output,
           metrics,
         });
+        sendEvent({ token: output });
         sendEvent(metrics, 'metrics');
       } catch (error) {
         console.error(`Job ${id} failed:`, error);

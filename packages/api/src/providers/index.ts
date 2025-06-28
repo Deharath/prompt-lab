@@ -9,7 +9,10 @@ export interface ProviderOptions {
 export interface LLMProvider {
   name: string;
   models: string[];
-  complete(prompt: string, options: ProviderOptions): AsyncGenerator<string>;
+  complete(
+    prompt: string,
+    options: ProviderOptions,
+  ): Promise<{ output: string; tokens: number; cost: number }>;
 }
 
 const providers: Record<string, LLMProvider> = {

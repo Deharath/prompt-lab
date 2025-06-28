@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { LLMProvider, ProviderOptions } from './index.js';
+import { PRICING } from './pricing.js';
 
 function getGeminiClient(): GoogleGenerativeAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -9,10 +10,10 @@ function getGeminiClient(): GoogleGenerativeAI | null {
   return new GoogleGenerativeAI(apiKey);
 }
 
-async function* complete(
+async function complete(
   prompt: string,
   options: ProviderOptions,
-): AsyncGenerator<string> {
+): Promise<{ output: string; tokens: number; cost: number }> {
   const genAI = getGeminiClient();
   if (!genAI) {
     throw new Error('Gemini API key not configured. Cannot process request.');
@@ -20,22 +21,17 @@ async function* complete(
 
   const model = genAI.getGenerativeModel({
     model: options.model,
-    generationConfig: {
-      // Disable thinking for faster responses and lower costs
-      // Note: This is conceptual - actual implementation may vary
-    },
   });
 
   try {
-    const result = await model.generateContentStream(prompt);
+    const resp = await model.generateContent(prompt);
+    const output = resp.response.text();
+    const tokens = (resp as any).usageStats?.totalTokens || 0;
+    const pricePerK =
+      PRICING.gemini[options.model as keyof typeof PRICING.gemini] ?? 0;
+    const cost = (tokens / 1000) * pricePerK;
 
-    // eslint-disable-next-line no-restricted-syntax
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      if (chunkText) {
-        yield chunkText;
-      }
-    }
+    return { output, tokens, cost };
   } catch (error) {
     throw new Error(
       `Gemini API error: ${

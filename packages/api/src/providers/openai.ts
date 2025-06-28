@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import type { LLMProvider, ProviderOptions } from './index.js';
+import { PRICING } from './pricing.js';
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -9,28 +10,27 @@ function getOpenAIClient(): OpenAI | null {
   return new OpenAI({ apiKey });
 }
 
-async function* complete(
+async function complete(
   prompt: string,
   options: ProviderOptions,
-): AsyncGenerator<string> {
+): Promise<{ output: string; tokens: number; cost: number }> {
   const openai = getOpenAIClient();
   if (!openai) {
     throw new Error('OpenAI API key not configured. Cannot process request.');
   }
 
-  const stream = await openai.chat.completions.create({
+  const resp = await openai.chat.completions.create({
     model: options.model,
     messages: [{ role: 'user', content: prompt }],
-    stream: true,
   });
 
-  // eslint-disable-next-line no-restricted-syntax
-  for await (const chunk of stream) {
-    const content = chunk.choices[0]?.delta?.content;
-    if (content) {
-      yield content;
-    }
-  }
+  const output = resp.choices[0]?.message?.content ?? '';
+  const tokens = resp.usage?.total_tokens ?? 0;
+  const pricePerK =
+    PRICING.openai[options.model as keyof typeof PRICING.openai] ?? 0;
+  const cost = (tokens / 1000) * pricePerK;
+
+  return { output, tokens, cost };
 }
 
 export const OpenAIProvider: LLMProvider = {
