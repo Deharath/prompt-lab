@@ -4,6 +4,12 @@ import { jobs, Job, NewJob } from '../db/schema.js';
 import { eq, and, gt, desc } from 'drizzle-orm';
 import { log } from '../utils/logger.js';
 import type { JobMetrics, JobStatus } from '../types/index.js';
+import {
+  withAverageScore,
+  usageFromMetrics,
+  logStatusChange,
+} from './helpers.js';
+import type { JobMetricsWithAvg } from './helpers.js';
 
 export async function createJob(
   data: Omit<NewJob, 'id' | 'status'>,
@@ -37,32 +43,24 @@ export async function updateJob(
 ): Promise<Job> {
   await getDb(); // Ensure database is initialized
 
-  let metrics = data.metrics;
-  if (data.status === 'completed' && metrics) {
-    const m = metrics as unknown as Record<string, number>;
-    const values = Object.values(m).filter(
-      (v): v is number => typeof v === 'number',
-    );
-    if (values.length > 0) {
-      const avgScore = values.reduce((a, b) => a + b, 0) / values.length;
-      (m as Record<string, unknown>).avgScore = avgScore;
-      metrics = m as unknown as JobMetrics;
-    }
-  }
+  const metricsWithAvg =
+    data.status === 'completed' && data.metrics
+      ? withAverageScore(data.metrics)
+      : data.metrics;
 
   const updateData: Record<string, unknown> = {
     ...data,
     updatedAt: new Date(),
-    ...(metrics && { metrics }),
+    ...(metricsWithAvg && { metrics: metricsWithAvg }),
   };
 
-  if (data.status === 'completed' && metrics) {
-    const m = metrics as unknown as Record<string, number>;
-    if (typeof m.totalTokens === 'number') {
-      updateData.tokensUsed = m.totalTokens;
+  if (data.status === 'completed' && data.metrics) {
+    const usage = usageFromMetrics(data.metrics);
+    if (usage.tokensUsed !== undefined) {
+      updateData.tokensUsed = usage.tokensUsed;
     }
-    if (typeof m.costUSD === 'number') {
-      updateData.costUsd = m.costUSD;
+    if (usage.costUsd !== undefined) {
+      updateData.costUsd = usage.costUsd;
     }
   }
 
@@ -74,22 +72,7 @@ export async function updateJob(
 
   const job = result[0];
 
-  if (data.status) {
-    if (data.status === 'completed') {
-      const duration = job.updatedAt.getTime() - job.createdAt.getTime();
-      log.jobCompleted(id, duration, {
-        provider: job.provider,
-        model: job.model,
-      });
-    } else if (data.status === 'failed') {
-      log.jobFailed(id, new Error(data.errorMessage || 'Unknown error'), {
-        provider: job.provider,
-        model: job.model,
-      });
-    } else if (data.status === 'running') {
-      log.jobStarted(id, { provider: job.provider, model: job.model });
-    }
-  }
+  logStatusChange(job, data.status, data.errorMessage);
 
   return job;
 }
@@ -148,16 +131,15 @@ export async function listJobs(
     .limit(limit)
     .offset(offset);
 
-  return rows.map((row) => ({
-    id: row.id,
-    createdAt: row.createdAt,
-    provider: row.provider,
-    model: row.model,
-    cost_usd: row.cost_usd,
-    avgScore:
-      row.metrics &&
-      typeof (row.metrics as Record<string, any>).avgScore === 'number'
-        ? (row.metrics as Record<string, number>).avgScore
-        : null,
-  }));
+  return rows.map((row) => {
+    const metrics = row.metrics as JobMetricsWithAvg | null;
+    return {
+      id: row.id,
+      createdAt: row.createdAt,
+      provider: row.provider,
+      model: row.model,
+      cost_usd: row.cost_usd,
+      avgScore: metrics?.avgScore ?? null,
+    };
+  });
 }

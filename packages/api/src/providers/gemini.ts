@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { LLMProvider, ProviderOptions } from './index.js';
 import { PRICING } from './pricing.js';
 
+import { getGeminiTokenCount } from '../jobs/helpers.js';
 function getGeminiClient(): GoogleGenerativeAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -26,7 +27,7 @@ async function complete(
   try {
     const resp = await model.generateContent(prompt);
     const output = resp.response.text();
-    const tokens = (resp as any).usageStats?.totalTokens || 0;
+    const tokens = getGeminiTokenCount(resp);
     const pricePerK =
       PRICING.gemini[options.model as keyof typeof PRICING.gemini] ?? 0;
     const cost = (tokens / 1000) * pricePerK;
