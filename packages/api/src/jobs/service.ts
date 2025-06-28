@@ -40,8 +40,7 @@ export async function updateJob(
   const updateData = {
     ...data,
     updatedAt: new Date(),
-    // Ensure metrics is properly serialized
-    ...(data.metrics && { metrics: JSON.stringify(data.metrics) }),
+    ...(data.metrics && { metrics: data.metrics }),
   };
 
   const result = await db

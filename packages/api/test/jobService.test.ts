@@ -63,18 +63,12 @@ describe('job service', () => {
 
     expect(updated.status).toBe('completed');
     expect(updated.result).toBe('done');
-    const stored =
-      typeof updated.metrics === 'string'
-        ? JSON.parse(updated.metrics)
-        : updated.metrics;
-    expect(stored).toEqual(metrics);
+    expect(typeof updated.metrics).toBe('object');
+    expect(updated.metrics).toEqual(metrics);
 
     const fetched = await getJob(job.id);
     expect(fetched?.status).toBe('completed');
-    const fetchedMetrics =
-      typeof fetched?.metrics === 'string'
-        ? JSON.parse(fetched.metrics as string)
-        : fetched?.metrics;
-    expect(fetchedMetrics).toEqual(metrics);
+    expect(typeof fetched?.metrics).toBe('object');
+    expect(fetched?.metrics).toEqual(metrics);
   });
 });
