@@ -89,9 +89,19 @@ jobsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
       since,
     } = req.query as Record<string, string>;
 
+    const limitNum = Number(limit);
+    if (!Number.isInteger(limitNum) || limitNum < 1 || limitNum > 100) {
+      throw new ValidationError('limit must be an integer between 1 and 100.');
+    }
+
+    const offsetNum = Number(offset);
+    if (!Number.isInteger(offsetNum) || offsetNum < 0) {
+      throw new ValidationError('offset must be a non-negative integer.');
+    }
+
     const options: import('@prompt-lab/api').ListJobsOptions = {
-      limit: Number(limit) || 20,
-      offset: Number(offset) || 0,
+      limit: limitNum,
+      offset: offsetNum,
     };
 
     if (provider) {

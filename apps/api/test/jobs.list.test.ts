@@ -41,4 +41,16 @@ describe('GET /jobs', () => {
     expect(job).toHaveProperty('cost_usd');
     expect(job).toHaveProperty('avgScore');
   });
+
+  it('rejects invalid limit parameter', async () => {
+    const res = await request(server).get('/jobs?limit=0');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('limit must be an integer between 1 and 100.');
+  });
+
+  it('rejects invalid offset parameter', async () => {
+    const res = await request(server).get('/jobs?offset=-5');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('offset must be a non-negative integer.');
+  });
 });
