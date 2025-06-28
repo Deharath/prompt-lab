@@ -17,6 +17,8 @@ The `.github/workflows/ci.yml` file now provides dummy environment variables whe
   run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
 ```
 
+The CI also uses the `/health/ready` endpoint instead of `/health` for faster, more reliable health checks that only validate database connectivity.
+
 ### 2. Enhanced Configuration
 
 The `packages/api/src/config/index.ts` file now detects CI environments and allows dummy API keys:
@@ -25,7 +27,15 @@ The `packages/api/src/config/index.ts` file now detects CI environments and allo
 - Provides default dummy values for API keys in test/CI environments
 - Still requires real API keys in production
 
-### 3. CI Environment Template
+### 3. Improved Health Checks
+
+The `apps/api/src/routes/health.ts` file now handles CI environments better:
+
+- Skips OpenAI API validation when using dummy keys in test/CI environments
+- Returns 'healthy' status for OpenAI service when using dummy keys
+- Provides separate endpoints: `/health` (full check), `/health/ready` (database only), `/health/live` (basic liveness)
+
+### 4. CI Environment Template
 
 Created `.env.ci` file with all the necessary environment variables for CI/testing purposes.
 
@@ -47,6 +57,16 @@ The CI environment automatically uses dummy values, no additional setup required
 ```bash
 docker-compose up  # Uses development environment with dummy values
 ```
+
+## Health Check Endpoints
+
+The API provides three health check endpoints for different use cases:
+
+- `/health` - Full health check including external services (OpenAI, database)
+- `/health/ready` - Readiness check (database only) - used by CI
+- `/health/live` - Basic liveness check (process health only)
+
+In CI/test environments, the health checks are optimized to avoid real API calls to external services.
 
 ## Environment Detection
 
