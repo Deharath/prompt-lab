@@ -109,7 +109,7 @@ app.use(
 
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  app.listen(config.server.port, () => {
+  app.listen(config.server.port, config.server.host, () => {
     log.info(`API server started`, {
       port: config.server.port,
       env: config.server.env,
