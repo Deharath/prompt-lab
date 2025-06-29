@@ -1,9 +1,39 @@
+# Dependencies
 node_modules
 **/node_modules
 .pnpm
+
+# Build outputs that will be rebuilt in Docker
 dist
+**/dist
+
+# Test and development files
 coverage
-.DS_Store
-.git
-*.log
+**/coverage
 **/test
+**/*.test.*
+**/*.spec.*
+
+# Git and version control
+.git
+.gitignore
+
+# Logs and temporary files
+*.log
+**/*.log
+.DS_Store
+.env
+.env.local
+
+# TypeScript build info
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# CI/CD files (not needed in container)
+.github
