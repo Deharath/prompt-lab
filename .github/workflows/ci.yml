@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -6,53 +5,105 @@ on:
   pull_request:
 
 jobs:
-  # ───────────────────────── Check Windows Runner Availability ─────────────────────────
-  check-windows:
-    runs-on: [self-hosted, windows, primary]
-    timeout-minutes: 0.5
-    continue-on-error: true
-    outputs:
-      available: ${{ steps.check.outputs.available }}
+  # ───────────────────────── Build & Test ─────────────────────────
+  build-and-test:
+    runs-on: ['self-hosted', 'linux']
     steps:
-      - id: check
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'pnpm'
+
+      - name: Install native build tools
         run: |
-          Write-Output "Windows runner is available"
-          Write-Output "available=true" >> $env:GITHUB_OUTPUT
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential python3 python3-dev
+          sudo apt-get install -y pkg-config libsqlite3-dev
 
-  # ───────────────────────── Primary Build (Windows) ─────────────────────────
-  build-windows:
-    needs: [check-windows]
-    if: always() && needs.check-windows.result == 'success'
-    uses: ./.github/workflows/reusable-build-test.yml
-    with:
-      os: windows
-      labels: '["self-hosted", "windows", "primary"]'
-      node-version: '18.x'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
 
-  # ───────────────────────── Fallback Build (Linux) ─────────────────────────
-  build-linux:
-    needs: [check-windows]
-    if: always() && needs.check-windows.result != 'success'
-    uses: ./.github/workflows/reusable-build-test.yml
-    with:
-      os: linux
-      labels: '["self-hosted", "linux", "backup"]'
-      node-version: '18.x'
+      - name: Build all packages
+        run: pnpm build
 
-  # ───────────────────────── Docker smoke test (Windows) ────────────────────────────
-  docker-windows:
-    needs: [check-windows, build-windows]
-    if: needs.check-windows.result == 'success' && needs.build-windows.result == 'success'
-    uses: ./.github/workflows/reusable-docker-smoke-test.yml
-    with:
-      os: windows
-      labels: '["self-hosted", "windows", "primary"]'
+      - name: Run lint checks
+        run: |
+          pnpm -r lint
+          pnpm lint:data
+          pnpm audit --audit-level moderate
+          pnpm deps:check
 
-  # ───────────────────────── Docker smoke test (Linux) ────────────────────────────
-  docker-linux:
-    needs: [check-windows, build-linux]
-    if: needs.check-windows.result != 'success' && needs.build-linux.result == 'success'
-    uses: ./.github/workflows/reusable-docker-smoke-test.yml
-    with:
-      os: linux
-      labels: '["self-hosted", "linux", "backup"]'
+      - name: Run tests
+        run: pnpm -r test
+
+  # ───────────────────────── Docker smoke test ────────────────────────────
+  docker-smoke-test:
+    needs: build-and-test
+    runs-on: ['self-hosted', 'linux']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Clean up any existing containers
+        run: |
+          containers=$(docker ps -a --filter "name=promptlab" --format "{{.ID}}")
+          if [ ! -z "$containers" ]; then
+            echo "Removing existing containers: $containers"
+            docker rm -f $containers
+          else
+            echo "No existing containers to remove"
+          fi
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: promptlab:test
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start container
+        run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
+
+      - name: Wait for API health check
+        run: |
+          for i in {1..20}; do
+            if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
+              echo "Container exited early 😭"
+              docker logs promptlab || true
+              exit 1
+            fi
+            if curl -sf http://localhost:3000/health/ready > /dev/null ; then
+              echo "API is up 🎉"
+              exit 0
+            fi
+            echo "API not up yet… retrying ($i/20)"
+            sleep 2
+          done
+          echo "Gave up waiting for API"
+          docker logs promptlab || true
+          exit 1
+
+      - name: Clean up containers
+        if: always()
+        run: |
+          containers=$(docker ps -a --filter "name=promptlab" --format "{{.ID}}")
+          if [ ! -z "$containers" ]; then
+            echo "Cleaning up containers: $containers"
+            docker rm -f $containers
+          else
+            echo "No containers to clean up"
+          fi
