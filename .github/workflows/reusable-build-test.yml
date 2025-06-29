@@ -19,6 +19,10 @@ jobs:
   build:
     runs-on: ${{ fromJson(inputs.labels) }}
     steps:
+      - name: Add git safe.directory (Windows)
+        if: inputs.os == 'windows'
+        run: git config --global --add safe.directory ${{ github.workspace }}
+
       - uses: actions/checkout@v4
 
       - name: Set up pnpm
