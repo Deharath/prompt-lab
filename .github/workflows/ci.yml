@@ -9,7 +9,7 @@ jobs:
   # ───────────────────────── Check Windows Runner Availability ─────────────────────────
   check-windows:
     runs-on: [self-hosted, windows, primary]
-    timeout-minutes: 2
+    timeout-minutes: 0.5
     continue-on-error: true
     outputs:
       available: ${{ steps.check.outputs.available }}
@@ -21,8 +21,8 @@ jobs:
 
   # ───────────────────────── Primary Build (Windows) ─────────────────────────
   build-windows:
-    needs: check-windows
-    if: needs.check-windows.result == 'success'
+    needs: [check-windows]
+    if: always() && needs.check-windows.result == 'success'
     uses: ./.github/workflows/reusable-build-test.yml
     with:
       os: windows
@@ -31,8 +31,8 @@ jobs:
 
   # ───────────────────────── Fallback Build (Linux) ─────────────────────────
   build-linux:
-    needs: check-windows
-    if: needs.check-windows.result != 'success'
+    needs: [check-windows]
+    if: always() && needs.check-windows.result != 'success'
     uses: ./.github/workflows/reusable-build-test.yml
     with:
       os: linux
