@@ -166,7 +166,12 @@ jobs:
 
       - name: Stop container
         if: always()
-        run: docker rm -f promptlab || true
+        run: |
+          try {
+            docker rm -f promptlab
+          } catch {
+            Write-Output "Container already removed or not found."
+          }
 
   # ───────────────────────── Docker smoke test (Linux) ────────────────────────────
   docker-linux:
