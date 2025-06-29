@@ -5,15 +5,10 @@ on:
   pull_request:
 
 jobs:
-  # ───────────────────────── Build & Test ─────────────────────────
-  build-and-test:
+  # ───────────────────────── Build Dependencies & Packages ─────────────────────────
+  build:
     runs-on: ['self-hosted', 'linux']
     steps:
-      - name: Install essential tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y tar gzip curl wget git
-
       - uses: actions/checkout@v4
 
       - name: Set up pnpm
@@ -42,6 +37,43 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
+      - name: Upload built workspace
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-workspace-${{ github.sha }}
+          path: .
+          exclude: |
+            node_modules/
+            **/node_modules/
+            .pnpm-store/
+
+  # ───────────────────────── Lint Checks ─────────────────────────
+  lint:
+    needs: build
+    runs-on: ['self-hosted', 'linux']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download built workspace
+        uses: actions/download-artifact@v4
+        with:
+          name: built-workspace-${{ github.sha }}
+          path: .
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Run lint checks
         run: |
           pnpm -r lint
@@ -49,19 +81,41 @@ jobs:
           pnpm audit --audit-level moderate
           pnpm deps:check
 
+  # ───────────────────────── Unit Tests ─────────────────────────
+  test:
+    needs: build
+    runs-on: ['self-hosted', 'linux']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download built workspace
+        uses: actions/download-artifact@v4
+        with:
+          name: built-workspace-${{ github.sha }}
+          path: .
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Run tests
         run: pnpm -r test
 
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker-smoke-test:
-    needs: build-and-test
+    needs: [build, lint, test]
     runs-on: ['self-hosted', 'linux']
     steps:
-      - name: Install essential tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y tar gzip curl wget git
-
       - uses: actions/checkout@v4
 
       - uses: docker/setup-buildx-action@v3
@@ -69,7 +123,7 @@ jobs:
       - name: Clean up any existing containers
         run: |
           containers=$(docker ps -a --filter "name=promptlab" --format "{{.ID}}")
-          if [ ! -z "$containers" ]; then
+          if [ -n "$containers" ]; then
             echo "Removing existing containers: $containers"
             docker rm -f $containers
           else
@@ -90,28 +144,36 @@ jobs:
 
       - name: Wait for API health check
         run: |
-          for i in {1..20}; do
+          echo "Waiting for API to become ready..."
+          for i in $(seq 1 20); do
+            # Check if container is still running
             if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
-              echo "Container exited early 😭"
-              docker logs promptlab || true
+              echo "❌ Container exited early"
+              echo "Container logs:"
+              docker logs promptlab 2>&1 || true
               exit 1
             fi
-            if curl -sf http://localhost:3000/health/ready > /dev/null ; then
-              echo "API is up 🎉"
+            
+            # Check if API is ready
+            if curl -sf http://localhost:3000/health/ready >/dev/null 2>&1; then
+              echo "✅ API is ready!"
               exit 0
             fi
-            echo "API not up yet… retrying ($i/20)"
-            sleep 2
+            
+            echo "⏳ API not ready yet... attempt $i/20"
+            sleep 3
           done
-          echo "Gave up waiting for API"
-          docker logs promptlab || true
+
+          echo "❌ Gave up waiting for API after 60 seconds"
+          echo "Final container logs:"
+          docker logs promptlab 2>&1 || true
           exit 1
 
       - name: Clean up containers
         if: always()
         run: |
           containers=$(docker ps -a --filter "name=promptlab" --format "{{.ID}}")
-          if [ ! -z "$containers" ]; then
+          if [ -n "$containers" ]; then
             echo "Cleaning up containers: $containers"
             docker rm -f $containers
           else

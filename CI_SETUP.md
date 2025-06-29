@@ -8,27 +8,44 @@ The CI pipeline runs on Linux containers with Docker, providing a consistent and
 
 ## CI Architecture
 
-The CI pipeline consists of two main jobs:
+The CI pipeline consists of four main jobs with optimal parallelization:
 
-1. **Build & Test** - Builds all packages, runs linting, and executes tests
-2. **Docker Smoke Test** - Builds and tests the Docker container
+1. **Build** - Installs dependencies and builds all packages, uploads artifacts
+2. **Lint** (parallel after build) - Runs all linting and code quality checks
+3. **Test** (parallel after build) - Executes all unit and integration tests
+4. **Docker Smoke Test** (after all pass) - Builds and tests the Docker container
 
-### Build & Test Job
+### Build Job
 
 This job runs on `["self-hosted", "linux"]` runners and performs:
 
 - Dependency installation with native build tools
 - Package building using `pnpm build`
-- Linting with `pnpm -r lint`, `pnpm lint:data`, and dependency checks
-- Test execution with `pnpm -r test`
+- Uploads built workspace as artifact for parallel jobs
+
+### Lint Job (Parallel)
+
+Runs in parallel after build completion:
+
+- Downloads built workspace artifact
+- Runs `pnpm -r lint`, `pnpm lint:data`, and dependency checks
+- Performs security audit with `pnpm audit`
+
+### Test Job (Parallel)
+
+Runs in parallel after build completion:
+
+- Downloads built workspace artifact
+- Executes all tests with `pnpm -r test`
 
 ### Docker Smoke Test Job
 
-This job validates the Docker container:
+Runs after all other jobs complete successfully:
 
 - Builds the Docker image with caching
-- Starts the container with dummy environment variables
-- Performs health checks using the `/health/ready` endpoint
+- Starts container with dummy environment variables
+- Performs robust health checks using `/health/ready` endpoint
+- Enhanced error handling and logging
 - Cleans up containers after testing
 
 ## Environment Variables
@@ -76,8 +93,10 @@ The application detects the environment in this order:
 
 ## Simplified Architecture Benefits
 
+- **Optimal parallelization**: Lint and test jobs run in parallel after build
 - **Single runner type**: Only Linux containers, no Windows complexity
-- **Inline jobs**: All steps in main workflow, no reusable workflow complexity
+- **Artifact sharing**: Built workspace shared between jobs for efficiency
 - **Consistent environment**: Docker ensures identical behavior across local and CI
-- **Faster execution**: Fewer job dependencies and simplified logic
-- **Easier maintenance**: Single workflow file with clear, linear steps
+- **Robust health checks**: Enhanced error handling with better logging
+- **Faster execution**: Parallel jobs reduce total CI time
+- **Easier maintenance**: Clear job separation with logical dependencies
