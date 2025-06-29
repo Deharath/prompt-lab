@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { db, getDb } from '../db/index.js';
 import { jobs, Job, NewJob } from '../db/schema.js';
-import { eq, and, gt, desc } from 'drizzle-orm';
+import { eq, and, gt, lt, desc } from 'drizzle-orm';
 import { log } from '../utils/logger.js';
 import type { JobMetrics, JobStatus } from '../types/index.js';
 import {
@@ -37,24 +37,29 @@ export async function getPreviousJob(
 ): Promise<Job | undefined> {
   await getDb(); // Ensure database is initialized
 
-  // Get all jobs ordered by creation time, then by id to ensure consistent ordering
-  // Find the job that comes immediately before the current job in this ordering
-  const allJobs = await db
-    .select()
+  // First, get the current job to know its creation time
+  const currentJob = await db
+    .select({ createdAt: jobs.createdAt })
     .from(jobs)
-    .orderBy(desc(jobs.createdAt), desc(jobs.id));
+    .where(eq(jobs.id, currentJobId))
+    .limit(1);
 
-  // Find the index of the current job
-  const currentJobIndex = allJobs.findIndex((job) => job.id === currentJobId);
-
-  if (currentJobIndex === -1 || currentJobIndex >= allJobs.length - 1) {
-    // Current job not found, or it's the last (oldest) job
+  if (currentJob.length === 0) {
+    // Current job not found
     return undefined;
   }
 
-  // Return the job that comes after the current job in the desc-ordered list
-  // (which means it was created before the current job)
-  return allJobs[currentJobIndex + 1];
+  const currentCreatedAt = currentJob[0].createdAt;
+
+  // Find the most recent job that was created before the current job
+  const previousJob = await db
+    .select()
+    .from(jobs)
+    .where(lt(jobs.createdAt, currentCreatedAt))
+    .orderBy(desc(jobs.createdAt), desc(jobs.id))
+    .limit(1);
+
+  return previousJob[0];
 }
 
 export async function updateJob(
