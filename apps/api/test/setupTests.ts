@@ -1,6 +1,6 @@
 import { vi, beforeAll, afterEach } from 'vitest';
 
-// ================================================================================================
+// =================================================================  mockGetPreviousJob.mockImplementation(getPreviousJobImpl);usJob.mockImplementation(getPreviousJobImpl);================
 // CRITICAL CI FIX: PACKAGE-LEVEL MOCKING STRATEGY
 // ================================================================================================
 
@@ -117,7 +117,8 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
     }));
   });
 
-  mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
+  // Helper function to find the previous job
+  const getPreviousJobImpl = async (currentJobId: string) => {
     // Get all jobs from the mock store and sort them by creation time (oldest first)
     const allJobs = Array.from(mockJobStore.values());
     allJobs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -131,6 +132,10 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
     // Return the previous job (the one created immediately before the current job)
     // If the current job is at index 0, there's no previous job
     return currentJobIndex > 0 ? allJobs[currentJobIndex - 1] : undefined;
+  };
+
+  mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
+    return getPreviousJobImpl(currentJobId);
   });
 
   // Return a new module object that mocks specific exports
@@ -462,7 +467,8 @@ afterEach(() => {
     }));
   });
 
-  mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
+  // Helper function to find the previous job
+  const getPreviousJobImpl = async (currentJobId: string) => {
     // Get all jobs from the mock store and sort them by creation time (oldest first)
     const allJobs = Array.from(mockJobStore.values());
     allJobs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -476,6 +482,10 @@ afterEach(() => {
     // Return the previous job (the one created immediately before the current job)
     // If the current job is at index 0, there's no previous job
     return currentJobIndex > 0 ? allJobs[currentJobIndex - 1] : undefined;
+  };
+
+  mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
+    return getPreviousJobImpl(currentJobId);
   });
 
   // Reset provider mock

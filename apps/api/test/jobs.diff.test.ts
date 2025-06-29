@@ -118,17 +118,43 @@ describe('Jobs Diff API', () => {
     expect(diffResponse.body.compareJob.prompt).toBe('First test prompt');
   });
 
+  it('should return 404 when job has no predecessor and otherId is not provided', async () => {
+    // ARRANGE: Create only one job (the first job, with no predecessor)
+    const [firstJob] = await seedJobs([
+      {
+        id: 'first-job',
+        prompt: 'First job prompt',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        createdAt: new Date('2024-01-01T10:00:00Z'),
+      },
+    ]);
+
+    mockJobStore.set(firstJob.id, firstJob);
+
+    // ACT: Try to get diff for the first job without specifying otherId
+    const response = await supertest(app).get(`/jobs/${firstJob.id}/diff`);
+
+    // ASSERT: Should return 404 since there's no previous job to compare with
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe('No previous job found to compare with');
+  });
+
   it('should compare with the previous job when otherId is not provided', async () => {
     // ARRANGE: Seed the database directly with two jobs in a known order.
     const [previousJob, baseJob] = await seedJobs([
       {
         id: 'job-1',
         prompt: 'prompt 1',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
         createdAt: new Date('2024-01-01T10:00:00Z'),
       },
       {
         id: 'job-2',
         prompt: 'prompt 2',
+        provider: 'gemini',
+        model: 'gemini-2.5-flash',
         createdAt: new Date('2024-01-01T10:05:00Z'),
       },
     ]);
