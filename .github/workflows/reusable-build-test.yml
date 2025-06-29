@@ -26,11 +26,29 @@ jobs:
         with:
           version: 10
 
-      - name: Set up Node.js
+      - name: Set up Node.js (Linux with pnpm cache)
+        if: inputs.os == 'linux'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: 'pnpm'
+
+      - name: Set up Node.js (Windows without cache)
+        if: inputs.os == 'windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Cache pnpm store (Windows)
+        if: inputs.os == 'windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            ~/AppData/Local/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       # == OS-Specific Steps ==
       - name: Install native build tools (Linux)
@@ -73,11 +91,29 @@ jobs:
         with:
           version: 10
 
-      - name: Set up Node.js
+      - name: Set up Node.js (Linux with pnpm cache)
+        if: inputs.os == 'linux'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: 'pnpm'
+
+      - name: Set up Node.js (Windows without cache)
+        if: inputs.os == 'windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Cache pnpm store (Windows)
+        if: inputs.os == 'windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            ~/AppData/Local/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install native build tools (Linux)
         if: inputs.os == 'linux'
@@ -123,11 +159,29 @@ jobs:
         with:
           version: 10
 
-      - name: Set up Node.js
+      - name: Set up Node.js (Linux with pnpm cache)
+        if: inputs.os == 'linux'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: 'pnpm'
+
+      - name: Set up Node.js (Windows without cache)
+        if: inputs.os == 'windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Cache pnpm store (Windows)
+        if: inputs.os == 'windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            ~/AppData/Local/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install native build tools (Linux)
         if: inputs.os == 'linux'
