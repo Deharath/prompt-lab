@@ -1,9 +1,5 @@
+# .github/workflows/ci.yml
 name: CI
-
-# Automated Runner Fallback Strategy:
-# 1. Tries Windows runner first (preferred for speed)
-# 2. If Windows runner is unavailable/offline, automatically runs on Linux
-# 3. Uses conditional jobs to ensure only one actually runs
 
 on:
   push:
@@ -27,203 +23,36 @@ jobs:
   build-windows:
     needs: check-windows
     if: needs.check-windows.result == 'success'
-    runs-on: [self-hosted, windows, primary]
-    strategy:
-      matrix:
-        node-version: [18.x]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate datasets
-        run: pnpm lint:data
-
-      - name: Build
-        run: pnpm build
-
-      - name: Lint
-        run: pnpm -r lint
-
-      - name: Security audit
-        run: pnpm audit --audit-level moderate
-
-      - name: Check for unused dependencies
-        run: pnpm deps:check
-
-      - name: Test
-        run: pnpm -r test
-        env:
-          NODE_ENV: test
+    uses: ./.github/workflows/reusable-build-test.yml
+    with:
+      os: windows
+      labels: '[self-hosted, windows, primary]'
+      node-version: '18.x'
 
   # ───────────────────────── Fallback Build (Linux) ─────────────────────────
   build-linux:
     needs: check-windows
     if: needs.check-windows.result != 'success'
-    runs-on: [self-hosted, linux, backup]
-    strategy:
-      matrix:
-        node-version: [18.x]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install native build tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y build-essential python3 python3-dev
-          sudo apt-get install -y pkg-config libsqlite3-dev
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          npm_config_build_from_source: true
-          SQLITE3_FORCE_COMPILE: true
-
-      - name: Validate datasets
-        run: pnpm lint:data
-
-      - name: Build
-        run: pnpm build
-
-      - name: Lint
-        run: pnpm -r lint
-
-      - name: Security audit
-        run: pnpm audit --audit-level moderate
-
-      - name: Check for unused dependencies
-        run: pnpm deps:check
-
-      - name: Test
-        run: pnpm -r test
-        env:
-          NODE_ENV: test
+    uses: ./.github/workflows/reusable-build-test.yml
+    with:
+      os: linux
+      labels: '[self-hosted, linux, backup]'
+      node-version: '18.x'
 
   # ───────────────────────── Docker smoke test (Windows) ────────────────────────────
   docker-windows:
     needs: [check-windows, build-windows]
     if: needs.check-windows.result == 'success' && needs.build-windows.result == 'success'
-    runs-on: [self-hosted, windows, primary]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Clean up any existing container
-        run: |
-          try {
-            docker rm -f promptlab
-            Write-Output "Removed existing container"
-          } catch {
-            Write-Output "No existing container to remove"
-          }
-
-      - name: Build image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          tags: promptlab:test
-          load: true
-
-      - name: Start container
-        run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
-
-      - name: Wait for API /health
-        run: |
-          for ($i = 1; $i -le 20; $i++) {
-            $containerStatus = docker ps --filter name=promptlab --format '{{.Status}}'
-            if (-not ($containerStatus -like '*Up*')) {
-              Write-Output "Container exited early 😭"
-              docker logs promptlab
-              exit 1
-            }
-            try {
-              $response = Invoke-WebRequest -Uri "http://localhost:3000/health/ready" -UseBasicParsing -TimeoutSec 5
-              if ($response.StatusCode -eq 200) {
-                Write-Output "API is up 🎉"
-                exit 0
-              }
-            } catch {
-              Write-Output "API not up yet… retrying ($i/20)"
-            }
-            Start-Sleep -Seconds 2
-          }
-          Write-Output "Gave up waiting for API"
-          docker logs promptlab
-          exit 1
-
-      - name: Stop container
-        if: always()
-        run: |
-          try {
-            docker rm -f promptlab
-          } catch {
-            Write-Output "Container already removed or not found."
-          }
+    uses: ./.github/workflows/reusable-docker-smoke-test.yml
+    with:
+      os: windows
+      labels: '[self-hosted, windows, primary]'
 
   # ───────────────────────── Docker smoke test (Linux) ────────────────────────────
   docker-linux:
     needs: [check-windows, build-linux]
     if: needs.check-windows.result != 'success' && needs.build-linux.result == 'success'
-    runs-on: [self-hosted, linux, backup]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Clean up any existing container
-        run: docker rm -f promptlab || true
-
-      - name: Build image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          tags: promptlab:test
-          load: true
-
-      - name: Start container
-        run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
-
-      - name: Wait for API /health
-        run: |
-          for i in {1..20}; do
-            if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
-              echo "Container exited early 😭"
-              docker logs promptlab || true
-              exit 1
-            fi
-            if curl -sf http://localhost:3000/health/ready > /dev/null ; then
-              echo "API is up 🎉"
-              exit 0
-            fi
-            echo "API not up yet… retrying ($i/20)"
-            sleep 2
-          done
-          echo "Gave up waiting for API"
-          docker logs promptlab || true
-          exit 1
-
-      - name: Stop container
-        if: always()
-        run: docker rm -f promptlab || true
+    uses: ./.github/workflows/reusable-docker-smoke-test.yml
+    with:
+      os: linux
+      labels: '[self-hosted, linux, backup]'
