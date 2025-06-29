@@ -71,13 +71,11 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
-      - name: Upload build artifacts
+      - name: Upload built workspace
         uses: actions/upload-artifact@v4
         with:
-          name: dist-files
-          path: |
-            apps/**/dist
-            packages/**/dist
+          name: built-workspace
+          path: .
 
   lint:
     needs: build
@@ -85,66 +83,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - name: Download built workspace
+        uses: actions/download-artifact@v4
         with:
-          version: 10
+          name: built-workspace
+          path: .
 
-      - name: Set up Node.js (Linux with pnpm cache)
-        if: inputs.os == 'linux'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'pnpm'
-
-      - name: Set up Node.js (Windows without cache)
-        if: inputs.os == 'windows'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-
-      - name: Cache pnpm store (Windows)
-        if: inputs.os == 'windows'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/AppData/Local/pnpm/store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Install native build tools (Linux)
-        if: inputs.os == 'linux'
+      - name: Run lint checks
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y build-essential python3 python3-dev
-          sudo apt-get install -y pkg-config libsqlite3-dev
-
-      - name: Install dependencies (Linux)
-        if: inputs.os == 'linux'
-        run: pnpm install --frozen-lockfile
-        env:
-          npm_config_build_from_source: true
-          SQLITE3_FORCE_COMPILE: true
-
-      - name: Install dependencies (Windows)
-        if: inputs.os == 'windows'
-        run: pnpm install --frozen-lockfile
-
-      # No need to download artifacts for linting, it works on source code.
-      # The security checks also work on source definitions.
-
-      - name: Lint source code
-        run: pnpm -r lint
-
-      - name: Validate datasets
-        run: pnpm lint:data
-
-      - name: Security audit
-        run: pnpm audit --audit-level moderate
-
-      - name: Check for unused dependencies
-        run: pnpm deps:check
+          pnpm -r lint
+          pnpm lint:data
+          pnpm audit --audit-level moderate
+          pnpm deps:check
 
   test:
     needs: build
@@ -152,56 +102,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - name: Download built workspace
+        uses: actions/download-artifact@v4
         with:
-          version: 10
-
-      - name: Set up Node.js (Linux with pnpm cache)
-        if: inputs.os == 'linux'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'pnpm'
-
-      - name: Set up Node.js (Windows without cache)
-        if: inputs.os == 'windows'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-
-      - name: Cache pnpm store (Windows)
-        if: inputs.os == 'windows'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/AppData/Local/pnpm/store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Install native build tools (Linux)
-        if: inputs.os == 'linux'
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y build-essential python3 python3-dev
-          sudo apt-get install -y pkg-config libsqlite3-dev
-
-      - name: Install dependencies (Linux)
-        if: inputs.os == 'linux'
-        run: pnpm install --frozen-lockfile
-        env:
-          npm_config_build_from_source: true
-          SQLITE3_FORCE_COMPILE: true
-
-      - name: Install dependencies (Windows)
-        if: inputs.os == 'windows'
-        run: pnpm install --frozen-lockfile
-
-      # Tests work on source code via TypeScript aliases, not compiled dist files
-      # No need to download build artifacts for testing
+          name: built-workspace
+          path: .
 
       - name: Run tests
         run: pnpm -r test
-        env:
-          NODE_ENV: test
