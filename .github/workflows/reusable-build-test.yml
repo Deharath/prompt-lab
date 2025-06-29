@@ -76,6 +76,10 @@ jobs:
         with:
           name: built-workspace
           path: .
+          exclude: |
+            node_modules/
+            **/node_modules/
+            .pnpm-store/
 
   lint:
     needs: build
@@ -88,6 +92,20 @@ jobs:
         with:
           name: built-workspace
           path: .
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Run lint checks
         run: |
@@ -107,6 +125,20 @@ jobs:
         with:
           name: built-workspace
           path: .
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Run tests
         run: pnpm -r test
