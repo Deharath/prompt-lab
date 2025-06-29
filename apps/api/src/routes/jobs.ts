@@ -6,12 +6,16 @@ import {
   getJob,
   updateJob,
   listJobs,
+  db,
+  jobs,
+  getDb,
 } from '@prompt-lab/api';
 import {
   ValidationError,
   NotFoundError,
   ServiceUnavailableError,
 } from '../errors/ApiError.js';
+import { lt, desc, or, and, eq } from 'drizzle-orm';
 
 const jobsRouter = createRouter();
 
@@ -137,6 +141,56 @@ jobsRouter.get(
       }
 
       res.json(job);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// GET /jobs/:id/diff - Compare two jobs
+jobsRouter.get(
+  '/:id/diff',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { otherId } = req.query as { otherId?: string };
+
+      const baseJob = await getJob(id);
+      if (!baseJob) {
+        throw new NotFoundError('Job not found');
+      }
+
+      let compareJob: import('@prompt-lab/api').Job | undefined;
+
+      if (otherId) {
+        compareJob = await getJob(otherId);
+        if (!compareJob) {
+          throw new NotFoundError('Compare job not found');
+        }
+      } else {
+        await getDb();
+        const previous = await db
+          .select()
+          .from(jobs)
+          .where(
+            or(
+              lt(jobs.createdAt, baseJob.createdAt),
+              and(
+                eq(jobs.createdAt, baseJob.createdAt),
+                lt(jobs.id, baseJob.id),
+              ),
+            ),
+          )
+          .orderBy(desc(jobs.createdAt), desc(jobs.id))
+          .limit(1);
+
+        compareJob = previous[0];
+        if (!compareJob) {
+          throw new NotFoundError('No previous job found');
+        }
+      }
+
+      res.json({ baseJob, compareJob });
     } catch (error) {
       next(error);
     }
