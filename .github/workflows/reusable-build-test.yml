@@ -51,14 +51,16 @@ jobs:
         if: inputs.os == 'windows'
         run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: Build all packages
         run: pnpm build
 
-      - name: Upload built app
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: built-app
-          path: .
+          name: dist-files
+          path: |
+            apps/**/dist
+            packages/**/dist
 
   lint:
     needs: build
@@ -77,12 +79,6 @@ jobs:
           node-version: ${{ inputs.node-version }}
           cache: 'pnpm'
 
-      - name: Download built app
-        uses: actions/download-artifact@v4
-        with:
-          name: built-app
-          path: .
-
       - name: Install native build tools (Linux)
         if: inputs.os == 'linux'
         run: |
@@ -90,7 +86,21 @@ jobs:
           sudo apt-get install -y build-essential python3 python3-dev
           sudo apt-get install -y pkg-config libsqlite3-dev
 
-      - name: Lint
+      - name: Install dependencies (Linux)
+        if: inputs.os == 'linux'
+        run: pnpm install --frozen-lockfile
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+
+      - name: Install dependencies (Windows)
+        if: inputs.os == 'windows'
+        run: pnpm install --frozen-lockfile
+
+      # No need to download artifacts for linting, it works on source code.
+      # The security checks also work on source definitions.
+
+      - name: Lint source code
         run: pnpm -r lint
 
       - name: Validate datasets
@@ -119,12 +129,6 @@ jobs:
           node-version: ${{ inputs.node-version }}
           cache: 'pnpm'
 
-      - name: Download built app
-        uses: actions/download-artifact@v4
-        with:
-          name: built-app
-          path: .
-
       - name: Install native build tools (Linux)
         if: inputs.os == 'linux'
         run: |
@@ -132,7 +136,21 @@ jobs:
           sudo apt-get install -y build-essential python3 python3-dev
           sudo apt-get install -y pkg-config libsqlite3-dev
 
-      - name: Test
+      - name: Install dependencies (Linux)
+        if: inputs.os == 'linux'
+        run: pnpm install --frozen-lockfile
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+
+      - name: Install dependencies (Windows)
+        if: inputs.os == 'windows'
+        run: pnpm install --frozen-lockfile
+
+      # Tests work on source code via TypeScript aliases, not compiled dist files
+      # No need to download build artifacts for testing
+
+      - name: Run tests
         run: pnpm -r test
         env:
           NODE_ENV: test
