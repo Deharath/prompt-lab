@@ -115,7 +115,7 @@ jobs:
           pnpm deps:check
 
   test:
-    needs: build
+    needs: [build, lint]
     runs-on: ${{ fromJson(inputs.labels) }}
     steps:
       - uses: actions/checkout@v4
