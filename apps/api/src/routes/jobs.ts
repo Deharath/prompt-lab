@@ -6,6 +6,8 @@ import {
   getJob,
   updateJob,
   listJobs,
+  getPreviousJob,
+  type Job,
 } from '@prompt-lab/api';
 import {
   ValidationError,
@@ -215,6 +217,43 @@ jobsRouter.get(
       } finally {
         res.end();
       }
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// GET /jobs/:id/diff - Compare two jobs
+jobsRouter.get(
+  '/:id/diff',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { otherId } = req.query as { otherId?: string };
+
+      // Get the base job
+      const baseJob = await getJob(id);
+      if (!baseJob) {
+        throw new NotFoundError('Base job not found');
+      }
+
+      let compareJob: Job | undefined;
+
+      if (otherId) {
+        // Get the specific job to compare with
+        compareJob = await getJob(otherId);
+        if (!compareJob) {
+          throw new NotFoundError('Compare job not found');
+        }
+      } else {
+        // Get the previous job by creation time
+        compareJob = await getPreviousJob(id);
+        if (!compareJob) {
+          throw new NotFoundError('No previous job found to compare with');
+        }
+      }
+
+      res.json({ baseJob, compareJob });
     } catch (error) {
       next(error);
     }

@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { db, getDb } from '../db/index.js';
 import { jobs, Job, NewJob } from '../db/schema.js';
-import { eq, and, gt, desc } from 'drizzle-orm';
+import { eq, and, gt, lt, desc } from 'drizzle-orm';
 import { log } from '../utils/logger.js';
 import type { JobMetrics, JobStatus } from '../types/index.js';
 import {
@@ -30,6 +30,36 @@ export async function getJob(id: string): Promise<Job | undefined> {
 
   const result = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
   return result[0];
+}
+
+export async function getPreviousJob(
+  currentJobId: string,
+): Promise<Job | undefined> {
+  await getDb(); // Ensure database is initialized
+
+  // First, get the current job to know its creation time
+  const currentJob = await db
+    .select({ createdAt: jobs.createdAt })
+    .from(jobs)
+    .where(eq(jobs.id, currentJobId))
+    .limit(1);
+
+  if (currentJob.length === 0) {
+    // Current job not found
+    return undefined;
+  }
+
+  const currentCreatedAt = currentJob[0].createdAt;
+
+  // Find the most recent job that was created before the current job
+  const previousJob = await db
+    .select()
+    .from(jobs)
+    .where(lt(jobs.createdAt, currentCreatedAt))
+    .orderBy(desc(jobs.createdAt), desc(jobs.id))
+    .limit(1);
+
+  return previousJob[0];
 }
 
 export async function updateJob(
