@@ -32,6 +32,31 @@ export async function getJob(id: string): Promise<Job | undefined> {
   return result[0];
 }
 
+export async function getPreviousJob(
+  currentJobId: string,
+): Promise<Job | undefined> {
+  await getDb(); // Ensure database is initialized
+
+  // Get all jobs ordered by creation time, then by id to ensure consistent ordering
+  // Find the job that comes immediately before the current job in this ordering
+  const allJobs = await db
+    .select()
+    .from(jobs)
+    .orderBy(desc(jobs.createdAt), desc(jobs.id));
+
+  // Find the index of the current job
+  const currentJobIndex = allJobs.findIndex((job) => job.id === currentJobId);
+
+  if (currentJobIndex === -1 || currentJobIndex >= allJobs.length - 1) {
+    // Current job not found, or it's the last (oldest) job
+    return undefined;
+  }
+
+  // Return the job that comes after the current job in the desc-ordered list
+  // (which means it was created before the current job)
+  return allJobs[currentJobIndex + 1];
+}
+
 export async function updateJob(
   id: string,
   data: Partial<{
