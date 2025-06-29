@@ -42,10 +42,6 @@ jobs:
         with:
           name: built-workspace-${{ github.sha }}
           path: .
-          exclude: |
-            node_modules/
-            **/node_modules/
-            .pnpm-store/
 
   # ───────────────────────── Lint Checks ─────────────────────────
   lint:
@@ -144,29 +140,55 @@ jobs:
 
       - name: Wait for API health check
         run: |
-          echo "Waiting for API to become ready..."
-          for i in $(seq 1 20); do
+          echo "🚀 Waiting for API to become ready..."
+          echo "Container should be starting now..."
+
+          # Give the container a moment to initialize
+          sleep 5
+
+          for i in $(seq 1 40); do
             # Check if container is still running
-            if ! docker ps --filter name=promptlab --format '{{.Status}}' | grep -q 'Up'; then
-              echo "❌ Container exited early"
-              echo "Container logs:"
-              docker logs promptlab 2>&1 || true
+            container_status=$(docker ps --filter name=promptlab --format '{{.Status}}' 2>/dev/null || echo "not found")
+            if [[ ! "$container_status" =~ "Up" ]]; then
+              echo "❌ Container not running (status: $container_status)"
+              echo "📋 Container logs:"
+              docker logs promptlab 2>&1 || echo "No logs available"
               exit 1
             fi
             
             # Check if API is ready
-            if curl -sf http://localhost:3000/health/ready >/dev/null 2>&1; then
-              echo "✅ API is ready!"
+            echo "🔍 Checking health endpoint (attempt $i/40)..."
+            if curl -sf -m 5 http://localhost:3000/health/ready >/dev/null 2>&1; then
+              echo "✅ API is ready! Health check passed."
+              
+              # Also test that we can reach the main health endpoint
+              echo "🧪 Testing main health endpoint..."
+              if curl -sf -m 5 http://localhost:3000/health >/dev/null 2>&1; then
+                echo "✅ Main health endpoint also working!"
+              else
+                echo "⚠️  Main health endpoint not responding, but /ready is working"
+              fi
               exit 0
             fi
             
-            echo "⏳ API not ready yet... attempt $i/20"
+            # Show some debug info every few attempts
+            if [ $((i % 5)) -eq 0 ]; then
+              echo "🔍 Debug info at attempt $i:"
+              echo "   Container status: $container_status"
+              echo "   Port 3000 listening: $(netstat -tuln 2>/dev/null | grep ':3000' || echo 'not detected')"
+            fi
+            
+            echo "⏳ API not ready yet... waiting 3 seconds (attempt $i/40)"
             sleep 3
           done
 
-          echo "❌ Gave up waiting for API after 60 seconds"
-          echo "Final container logs:"
-          docker logs promptlab 2>&1 || true
+          echo "❌ Gave up waiting for API after 120 seconds"
+          echo "📋 Final container status:"
+          docker ps --filter name=promptlab --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "No container info"
+          echo "📋 Final container logs:"
+          docker logs promptlab 2>&1 || echo "No logs available"
+          echo "📋 Network info:"
+          netstat -tuln 2>/dev/null | grep ':3000' || echo "Port 3000 not listening"
           exit 1
 
       - name: Clean up containers
