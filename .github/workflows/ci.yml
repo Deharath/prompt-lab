@@ -26,7 +26,7 @@ jobs:
     uses: ./.github/workflows/reusable-build-test.yml
     with:
       os: windows
-      labels: '[self-hosted, windows, primary]'
+      labels: '["self-hosted", "windows", "primary"]'
       node-version: '18.x'
 
   # ───────────────────────── Fallback Build (Linux) ─────────────────────────
@@ -36,7 +36,7 @@ jobs:
     uses: ./.github/workflows/reusable-build-test.yml
     with:
       os: linux
-      labels: '[self-hosted, linux, backup]'
+      labels: '["self-hosted", "linux", "backup"]'
       node-version: '18.x'
 
   # ───────────────────────── Docker smoke test (Windows) ────────────────────────────
@@ -46,7 +46,7 @@ jobs:
     uses: ./.github/workflows/reusable-docker-smoke-test.yml
     with:
       os: windows
-      labels: '[self-hosted, windows, primary]'
+      labels: '["self-hosted", "windows", "primary"]'
 
   # ───────────────────────── Docker smoke test (Linux) ────────────────────────────
   docker-linux:
@@ -55,4 +55,4 @@ jobs:
     uses: ./.github/workflows/reusable-docker-smoke-test.yml
     with:
       os: linux
-      labels: '[self-hosted, linux, backup]'
+      labels: '["self-hosted", "linux", "backup"]'
