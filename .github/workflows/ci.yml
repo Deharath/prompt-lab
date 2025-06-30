@@ -87,6 +87,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run tests
         run: pnpm -r test
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: coverage
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker-smoke-test:
     needs: [build, lint, test]
@@ -115,7 +121,7 @@ jobs:
         run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test -e HOST=0.0.0.0 promptlab:test
       - name: Wait for API health check
         run: |
-          echo "��� Waiting for API to become ready..."
+          echo "��� Waiting for API to become ready..."
           echo "Container should be starting now..."
           # Give the container a moment to initialize
           sleep 5
@@ -124,13 +130,13 @@ jobs:
             container_status=$(docker ps --filter name=promptlab --format '{{.Status}}' 2>/dev/null || echo "not found")
             if [[ ! "$container_status" =~ "Up" ]]; then
               echo "❌ Container not running (status: $container_status)"
-              echo "��� Container logs:"
+              echo "��� Container logs:"
               docker logs promptlab 2>&1 || echo "No logs available"
               exit 1
             fi
 
             # Check if API is ready
-            echo "��� Checking health endpoint (attempt $i/40)..."
+            echo "��� Checking health endpoint (attempt $i/40)..."
             if curl -sf -m 5 http://localhost:3000/health/ping >/dev/null 2>&1; then
               echo "✅ Basic ping endpoint working! Checking ready endpoint..."
 
@@ -139,13 +145,13 @@ jobs:
                 echo "✅ Ready endpoint working! Health check passed."
               else
                 echo "⚠️  Ready endpoint not responding, but ping works. Checking logs..."
-                echo "��� Recent container logs:"
+                echo "��� Recent container logs:"
                 docker logs --tail 20 promptlab 2>&1 || echo "No recent logs available"
                 exit 1
               fi
 
               # Also test that we can reach the main health endpoint
-              echo "��� Testing main health endpoint..."
+              echo "��� Testing main health endpoint..."
               if curl -sf -m 5 http://localhost:3000/health >/dev/null 2>&1; then
                 echo "✅ Main health endpoint also working!"
               else
@@ -156,7 +162,7 @@ jobs:
 
             # Show some debug info every few attempts
             if [ $((i % 5)) -eq 0 ]; then
-              echo "��� Debug info at attempt $i:"
+              echo "��� Debug info at attempt $i:"
               echo "   Container status: $container_status"
               echo "   Port 3000 listening: $(netstat -tuln 2>/dev/null | grep ':3000' || echo 'not detected')" 
             fi
@@ -165,11 +171,11 @@ jobs:
             sleep 3
           done
           echo "❌ Gave up waiting for API after 120 seconds"
-          echo "��� Final container status:"
+          echo "��� Final container status:"
           docker ps --filter name=promptlab --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "No container info"
-          echo "��� Final container logs:"
+          echo "��� Final container logs:"
           docker logs promptlab 2>&1 || echo "No logs available"
-          echo "��� Network info:"
+          echo "��� Network info:"
           netstat -tuln 2>/dev/null | grep ':3000' || echo "Port 3000 not listening"
           exit 1
       - name: Clean up containers
