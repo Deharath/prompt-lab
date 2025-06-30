@@ -91,7 +91,8 @@ describe('HistoryDrawer', () => {
         setCompareJob(id);
       },
       clearComparison: () => {
-        state.comparison = {};
+        state.comparison.baseJobId = undefined;
+        state.comparison.compareJobId = undefined;
         clearComparison();
       },
       start: vi.fn(),
@@ -111,5 +112,9 @@ describe('HistoryDrawer', () => {
     expect(setBaseJob).toHaveBeenCalledWith('job1');
 
     fireEvent.click(screen.getByText('job2'));
+    await waitFor(() => {
+      expect(setCompareJob).toHaveBeenCalledWith('job2');
+      expect(mockNavigate).toHaveBeenCalledWith('/diff');
+    });
   });
 });
