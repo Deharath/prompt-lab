@@ -1,132 +1,99 @@
 name: CI
-
 on:
-  workflow_dispatch:
   push:
   pull_request:
-
+  workflow_dispatch:
 jobs:
   # ───────────────────────── Build Dependencies & Packages ─────────────────────────
   build:
-    runs-on:
-  workflow_dispatch: ['self-hosted', 'linux']
+    runs-on: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version:
-  workflow_dispatch: 10
-
+          version: 10
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version:
-  workflow_dispatch: '18.x'
+          node-version: '18.x'
           cache: 'pnpm'
-
       - name: Install native build tools
         run: |
           sudo apt-get update -y
           sudo apt-get install -y build-essential python3 python3-dev
           sudo apt-get install -y pkg-config libsqlite3-dev
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         env:
           npm_config_build_from_source: true
           SQLITE3_FORCE_COMPILE: true
-
       - name: Build all packages
         run: pnpm build
-
       - name: Upload built workspace
         uses: actions/upload-artifact@v4
         with:
           name: built-workspace-${{ github.sha }}
           path: .
-
   # ───────────────────────── Lint Checks ─────────────────────────
   lint:
     needs: build
-    runs-on:
-  workflow_dispatch: ['self-hosted', 'linux']
+    runs-on: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
-
       - name: Download built workspace
         uses: actions/download-artifact@v4
         with:
           name: built-workspace-${{ github.sha }}
           path: .
-
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version:
-  workflow_dispatch: 10
-
+          version: 10
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version:
-  workflow_dispatch: '18.x'
+          node-version: '18.x'
           cache: 'pnpm'
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Run lint checks
         run: |
           pnpm -r lint
           pnpm lint:data
           pnpm audit --audit-level moderate
           pnpm deps:check
-
   # ───────────────────────── Unit Tests ─────────────────────────
   test:
     needs: build
-    runs-on:
-  workflow_dispatch: ['self-hosted', 'linux']
+    runs-on: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
-
       - name: Download built workspace
         uses: actions/download-artifact@v4
         with:
           name: built-workspace-${{ github.sha }}
           path: .
-
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version:
-  workflow_dispatch: 10
-
+          version: 10
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version:
-  workflow_dispatch: '18.x'
+          node-version: '18.x'
           cache: 'pnpm'
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Run tests
         run: pnpm -r test
-
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker-smoke-test:
     needs: [build, lint, test]
-    runs-on:
-  workflow_dispatch: ['self-hosted', 'linux']
+    runs-on: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
-
       - uses: docker/setup-buildx-action@v3
-
       - name: Clean up any existing containers
         run: |
           containers=$(docker ps -a --filter "name=promptlab" --format "{{.ID}}")
@@ -136,7 +103,6 @@ jobs:
           else
             echo "No existing containers to remove"
           fi
-
       - name: Build image
         uses: docker/build-push-action@v5
         with:
@@ -145,45 +111,41 @@ jobs:
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
       - name: Start container
         run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test -e HOST=0.0.0.0 promptlab:test
-
       - name: Wait for API health check
         run: |
-          echo "🚀 Waiting for API to become ready..."
+          echo "��� Waiting for API to become ready..."
           echo "Container should be starting now..."
-
           # Give the container a moment to initialize
           sleep 5
-
           for i in $(seq 1 40); do
             # Check if container is still running
             container_status=$(docker ps --filter name=promptlab --format '{{.Status}}' 2>/dev/null || echo "not found")
             if [[ ! "$container_status" =~ "Up" ]]; then
               echo "❌ Container not running (status: $container_status)"
-              echo "📋 Container logs:"
+              echo "��� Container logs:"
               docker logs promptlab 2>&1 || echo "No logs available"
               exit 1
             fi
-            
+
             # Check if API is ready
-            echo "🔍 Checking health endpoint (attempt $i/40)..."
+            echo "��� Checking health endpoint (attempt $i/40)..."
             if curl -sf -m 5 http://localhost:3000/health/ping >/dev/null 2>&1; then
               echo "✅ Basic ping endpoint working! Checking ready endpoint..."
-              
+
               # Now check the actual ready endpoint
               if curl -sf -m 5 http://localhost:3000/health/ready >/dev/null 2>&1; then
                 echo "✅ Ready endpoint working! Health check passed."
               else
                 echo "⚠️  Ready endpoint not responding, but ping works. Checking logs..."
-                echo "📋 Recent container logs:"
+                echo "��� Recent container logs:"
                 docker logs --tail 20 promptlab 2>&1 || echo "No recent logs available"
                 exit 1
               fi
-              
+
               # Also test that we can reach the main health endpoint
-              echo "🧪 Testing main health endpoint..."
+              echo "��� Testing main health endpoint..."
               if curl -sf -m 5 http://localhost:3000/health >/dev/null 2>&1; then
                 echo "✅ Main health endpoint also working!"
               else
@@ -191,27 +153,25 @@ jobs:
               fi
               exit 0
             fi
-            
+
             # Show some debug info every few attempts
             if [ $((i % 5)) -eq 0 ]; then
-              echo "🔍 Debug info at attempt $i:"
+              echo "��� Debug info at attempt $i:"
               echo "   Container status: $container_status"
-              echo "   Port 3000 listening: $(netstat -tuln 2>/dev/null | grep ':3000' || echo 'not detected')"
+              echo "   Port 3000 listening: $(netstat -tuln 2>/dev/null | grep ':3000' || echo 'not detected')" 
             fi
-            
+
             echo "⏳ API not ready yet... waiting 3 seconds (attempt $i/40)"
             sleep 3
           done
-
           echo "❌ Gave up waiting for API after 120 seconds"
-          echo "📋 Final container status:"
+          echo "��� Final container status:"
           docker ps --filter name=promptlab --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "No container info"
-          echo "📋 Final container logs:"
+          echo "��� Final container logs:"
           docker logs promptlab 2>&1 || echo "No logs available"
-          echo "📋 Network info:"
+          echo "��� Network info:"
           netstat -tuln 2>/dev/null | grep ':3000' || echo "Port 3000 not listening"
           exit 1
-
       - name: Clean up containers
         if: always()
         run: |
