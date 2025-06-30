@@ -81,6 +81,18 @@ packages/
 | `PORT`           | ❌ Optional | API server port (default: 3000)           |
 | `DATABASE_URL`   | ❌ Optional | SQLite database path (default: sqlite.db) |
 
+## Comparing Two Runs
+
+Use the **History** drawer's Compare mode to select any two completed runs.
+After picking a pair the app navigates to `/diff` where the text output and
+metric deltas are displayed side by side.
+
+You can also retrieve this information through the API:
+
+```bash
+curl "http://localhost:3000/jobs/<baseJobId>/diff?otherId=<compareJobId>"
+```
+
 ---
 
 ## 🛠️ Development Scripts
