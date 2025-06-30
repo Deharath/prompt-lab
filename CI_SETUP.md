@@ -1,45 +1,63 @@
 # CI Environment Setup
 
-This document explains how to handle environment variables in CI/CD pipelines.
+This document explains the simplified CI/CD pipeline setup for PromptLab.
 
-## Problem
+## Overview
 
-The GitHub CI was failing because the Docker container required the `OPENAI_API_KEY` environment variable, but it wasn't provided in the CI environment.
+The CI pipeline runs on Linux containers with Docker, providing a consistent and reliable build environment. All complexity related to Windows compatibility has been removed to keep the CI simple and maintainable.
 
-## Solutions Implemented
+## CI Architecture
 
-### 1. Updated CI Workflow
+The CI pipeline consists of four main jobs with optimal parallelization:
 
-The `.github/workflows/ci.yml` file now provides dummy environment variables when starting the Docker container:
+1. **Build** - Installs dependencies and builds all packages, uploads artifacts
+2. **Lint** (parallel after build) - Runs all linting and code quality checks
+3. **Test** (parallel after build) - Executes all unit and integration tests
+4. **Docker Smoke Test** (after all pass) - Builds and tests the Docker container
 
-```yaml
-- name: Start container
-  run: docker run -d --name promptlab -p 3000:3000 -e OPENAI_API_KEY=dummy-key-for-ci -e NODE_ENV=test promptlab:test
+### Build Job
+
+This job runs on `["self-hosted", "linux"]` runners and performs:
+
+- Dependency installation with native build tools
+- Package building using `pnpm build`
+- Uploads built workspace as artifact for parallel jobs
+
+### Lint Job (Parallel)
+
+Runs in parallel after build completion:
+
+- Downloads built workspace artifact
+- Runs `pnpm -r lint`, `pnpm lint:data`, and dependency checks
+- Performs security audit with `pnpm audit`
+
+### Test Job (Parallel)
+
+Runs in parallel after build completion:
+
+- Downloads built workspace artifact
+- Executes all tests with `pnpm -r test`
+
+### Docker Smoke Test Job
+
+Runs after all other jobs complete successfully:
+
+- Builds the Docker image with caching
+- Starts container with dummy environment variables
+- Performs robust health checks using `/health/ready` endpoint
+- Enhanced error handling and logging
+- Cleans up containers after testing
+
+## Environment Variables
+
+### CI Environment
+
+The CI automatically provides dummy environment variables for testing:
+
+```bash
+OPENAI_API_KEY=dummy-key-for-ci
+NODE_ENV=test
 ```
-
-The CI also uses the `/health/ready` endpoint instead of `/health` for faster, more reliable health checks that only validate database connectivity.
-
-### 2. Enhanced Configuration
-
-The `packages/api/src/config/index.ts` file now detects CI environments and allows dummy API keys:
-
-- Detects CI environments using `CI=true` or `GITHUB_ACTIONS=true`
-- Provides default dummy values for API keys in test/CI environments
-- Still requires real API keys in production
-
-### 3. Improved Health Checks
-
-The `apps/api/src/routes/health.ts` file now handles CI environments better:
-
-- Skips OpenAI API validation when using dummy keys in test/CI environments
-- Returns 'healthy' status for OpenAI service when using dummy keys
-- Provides separate endpoints: `/health` (full check), `/health/ready` (database only), `/health/live` (basic liveness)
-
-### 4. CI Environment Template
-
-Created `.env.ci` file with all the necessary environment variables for CI/testing purposes.
-
-## Usage
 
 ### Local Development
 
@@ -47,10 +65,6 @@ Created `.env.ci` file with all the necessary environment variables for CI/testi
 cp .env.example .env
 # Edit .env with your actual API keys
 ```
-
-### CI/Testing
-
-The CI environment automatically uses dummy values, no additional setup required.
 
 ### Docker Development
 
@@ -60,13 +74,13 @@ docker-compose up  # Uses development environment with dummy values
 
 ## Health Check Endpoints
 
-The API provides three health check endpoints for different use cases:
+The API provides three health check endpoints:
 
 - `/health` - Full health check including external services (OpenAI, database)
-- `/health/ready` - Readiness check (database only) - used by CI
+- `/health/ready` - Readiness check (database only) - **used by CI**
 - `/health/live` - Basic liveness check (process health only)
 
-In CI/test environments, the health checks are optimized to avoid real API calls to external services.
+In CI/test environments, health checks are optimized to avoid real API calls to external services.
 
 ## Environment Detection
 
@@ -76,3 +90,13 @@ The application detects the environment in this order:
 2. `CI=true` or `GITHUB_ACTIONS=true` - CI environment (allows dummy API keys)
 3. `NODE_ENV=production` - Production environment (requires real API keys)
 4. Default - Development environment (allows dummy API keys)
+
+## Simplified Architecture Benefits
+
+- **Optimal parallelization**: Lint and test jobs run in parallel after build
+- **Single runner type**: Only Linux containers, no Windows complexity
+- **Artifact sharing**: Built workspace shared between jobs for efficiency
+- **Consistent environment**: Docker ensures identical behavior across local and CI
+- **Robust health checks**: Enhanced error handling with better logging
+- **Faster execution**: Parallel jobs reduce total CI time
+- **Easier maintenance**: Clear job separation with logical dependencies

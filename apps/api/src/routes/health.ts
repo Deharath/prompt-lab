@@ -158,20 +158,35 @@ router.get('/', async (req, res) => {
 // Readiness probe - simpler check for container orchestration
 router.get('/ready', async (req, res) => {
   try {
+    log.info('Health check /ready endpoint called');
     await getDb();
+    log.info('Database connection successful for /ready');
     res.status(200).json({ status: 'ready' });
-  } catch {
-    res.status(503).json({ status: 'not ready' });
+  } catch (error) {
+    log.error('Database connection failed for /ready', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(503).json({
+      status: 'not ready',
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
 // Liveness probe - basic process health
 router.get('/live', (req, res) => {
+  log.info('Health check /live endpoint called');
   res.status(200).json({
     status: 'alive',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
+});
+
+// Simple health check without database dependency for debugging
+router.get('/ping', (req, res) => {
+  log.info('Health check /ping endpoint called');
+  res.status(200).json({ status: 'pong', timestamp: new Date().toISOString() });
 });
 
 export default router;

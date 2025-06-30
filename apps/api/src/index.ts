@@ -109,12 +109,19 @@ app.use(
 
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  app.listen(config.server.port, () => {
+  const server = app.listen(config.server.port, config.server.host, () => {
     log.info(`API server started`, {
       port: config.server.port,
       env: config.server.env,
       host: config.server.host,
     });
+    log.info(
+      `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
+    );
+  });
+
+  server.on('error', (error) => {
+    log.error('Server failed to start', { error: error.message });
   });
 }
 
