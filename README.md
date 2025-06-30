@@ -21,6 +21,7 @@
 - **CI/CD ready**: Comprehensive test suite (40+ tests) with automated quality gates
 - **Production-grade**: Rate limiting, validation, Docker containerization, monorepo architecture
 - **Enterprise testing**: 100% evaluator coverage, E2E tests, proper test isolation
+- **Job comparison**: Use the History drawer to pick two runs and view differences at `/diff`
 
 ---
 
