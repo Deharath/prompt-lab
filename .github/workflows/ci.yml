@@ -1,25 +1,29 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
   pull_request:
 
 jobs:
   # ───────────────────────── Build Dependencies & Packages ─────────────────────────
   build:
-    runs-on: ['self-hosted', 'linux']
+    runs-on:
+  workflow_dispatch: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version:
+  workflow_dispatch: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version:
+  workflow_dispatch: '18.x'
           cache: 'pnpm'
 
       - name: Install native build tools
@@ -46,7 +50,8 @@ jobs:
   # ───────────────────────── Lint Checks ─────────────────────────
   lint:
     needs: build
-    runs-on: ['self-hosted', 'linux']
+    runs-on:
+  workflow_dispatch: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
 
@@ -59,12 +64,14 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version:
+  workflow_dispatch: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version:
+  workflow_dispatch: '18.x'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -80,7 +87,8 @@ jobs:
   # ───────────────────────── Unit Tests ─────────────────────────
   test:
     needs: build
-    runs-on: ['self-hosted', 'linux']
+    runs-on:
+  workflow_dispatch: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
 
@@ -93,12 +101,14 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version:
+  workflow_dispatch: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version:
+  workflow_dispatch: '18.x'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -110,7 +120,8 @@ jobs:
   # ───────────────────────── Docker smoke test ────────────────────────────
   docker-smoke-test:
     needs: [build, lint, test]
-    runs-on: ['self-hosted', 'linux']
+    runs-on:
+  workflow_dispatch: ['self-hosted', 'linux']
     steps:
       - uses: actions/checkout@v4
 
