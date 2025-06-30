@@ -18,6 +18,12 @@ export interface JobResult {
   costUsd?: number;
 }
 
+export interface JobDetails extends JobResult {
+  prompt: string;
+  provider: string;
+  model: string;
+}
+
 export interface ApiError {
   error: string;
   code?: string;
@@ -139,6 +145,20 @@ export class ApiClient {
     console.log('✅ Job history fetched:', result);
     return result;
   }
+
+  static async diffJobs(
+    baseId: string,
+    compareId: string,
+  ): Promise<{ baseJob: JobDetails; compareJob: JobDetails }> {
+    console.log('📊 Diffing jobs:', baseId, compareId);
+    const endpoint = `/jobs/${baseId}/diff?otherId=${compareId}`;
+    const result = await this.makeRequest<{
+      baseJob: JobDetails;
+      compareJob: JobDetails;
+    }>(endpoint);
+    console.log('✅ Jobs diff fetched:', result);
+    return result;
+  }
 }
 
 // Legacy exports for backward compatibility
@@ -146,3 +166,4 @@ export const createJob = ApiClient.createJob.bind(ApiClient);
 export const fetchJob = ApiClient.fetchJob.bind(ApiClient);
 export const streamJob = ApiClient.streamJob.bind(ApiClient);
 export const listJobs = ApiClient.listJobs.bind(ApiClient);
+export const diffJobs = ApiClient.diffJobs.bind(ApiClient);
