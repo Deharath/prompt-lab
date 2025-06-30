@@ -158,8 +158,18 @@ jobs:
             
             # Check if API is ready
             echo "🔍 Checking health endpoint (attempt $i/40)..."
-            if curl -sf -m 5 http://localhost:3000/health/ready >/dev/null 2>&1; then
-              echo "✅ API is ready! Health check passed."
+            if curl -sf -m 5 http://localhost:3000/health/ping >/dev/null 2>&1; then
+              echo "✅ Basic ping endpoint working! Checking ready endpoint..."
+              
+              # Now check the actual ready endpoint
+              if curl -sf -m 5 http://localhost:3000/health/ready >/dev/null 2>&1; then
+                echo "✅ Ready endpoint working! Health check passed."
+              else
+                echo "⚠️  Ready endpoint not responding, but ping works. Checking logs..."
+                echo "📋 Recent container logs:"
+                docker logs --tail 20 promptlab 2>&1 || echo "No recent logs available"
+                exit 1
+              fi
               
               # Also test that we can reach the main health endpoint
               echo "🧪 Testing main health endpoint..."
