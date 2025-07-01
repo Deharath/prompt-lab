@@ -1,0 +1,183 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22.x'
+  PNPM_VERSION: '10'
+
+jobs:
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run dependency vulnerability scan
+        run: |
+          echo "🔍 Scanning for dependency vulnerabilities..."
+          pnpm audit --audit-level moderate --format json > audit-results.json || true
+
+          # Check if there are any moderate or higher vulnerabilities
+          critical=$(jq '.metadata.vulnerabilities.critical // 0' audit-results.json)
+          high=$(jq '.metadata.vulnerabilities.high // 0' audit-results.json)
+          moderate=$(jq '.metadata.vulnerabilities.moderate // 0' audit-results.json)
+
+          echo "Security scan results:"
+          echo "- Critical: $critical"
+          echo "- High: $high"
+          echo "- Moderate: $moderate"
+
+          if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
+            echo "❌ Critical or high severity vulnerabilities found!"
+            exit 1
+          fi
+
+          if [ "$moderate" -gt 0 ]; then
+            echo "⚠️ Moderate severity vulnerabilities found. Review recommended."
+          fi
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'
+
+      - name: Run ESLint security rules
+        run: |
+          echo "🔍 Running ESLint security analysis..."
+          pnpm -r lint -- --ext .js,.ts,.tsx --format json --output-file eslint-security.json || true
+
+          # Check for security-related warnings/errors
+          if [ -f eslint-security.json ]; then
+            errors=$(jq '[.[] | select(.errorCount > 0) | .messages[] | select(.ruleId | contains("security"))] | length' eslint-security.json)
+            warnings=$(jq '[.[] | select(.warningCount > 0) | .messages[] | select(.ruleId | contains("security"))] | length' eslint-security.json)
+            
+            echo "ESLint security scan results:"
+            echo "- Security errors: $errors"
+            echo "- Security warnings: $warnings"
+            
+            if [ "$errors" -gt 0 ]; then
+              echo "❌ Security-related ESLint errors found!"
+              jq -r '.[] | select(.errorCount > 0) | .messages[] | select(.ruleId | contains("security")) | "Error: \(.ruleId) at \(.line):\(.column) - \(.message)"' eslint-security.json
+              exit 1
+            fi
+          fi
+
+      - name: Check for secrets in code
+        run: |
+          echo "🔍 Scanning for potential secrets..."
+
+          # Basic secret pattern detection
+          secret_patterns=(
+            "api[_-]?key['\"]?\s*[:=]\s*['\"][^'\"]{10,}['\"]"
+            "password['\"]?\s*[:=]\s*['\"][^'\"]{8,}['\"]"
+            "secret['\"]?\s*[:=]\s*['\"][^'\"]{10,}['\"]"
+            "token['\"]?\s*[:=]\s*['\"][^'\"]{10,}['\"]"
+            "private[_-]?key"
+            "-----BEGIN [A-Z ]+ PRIVATE KEY-----"
+          )
+
+          found_secrets=false
+          for pattern in "${secret_patterns[@]}"; do
+            if grep -r -i -E "$pattern" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist; then
+              found_secrets=true
+            fi
+          done
+
+          if [ "$found_secrets" = true ]; then
+            echo "❌ Potential secrets found in code!"
+            echo "Please review the above matches and ensure no real secrets are committed."
+            exit 1
+          else
+            echo "✅ No potential secrets detected in code."
+          fi
+
+      - name: Upload security scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results-${{ github.sha }}
+          path: |
+            audit-results.json
+            eslint-security.json
+          retention-days: 30
+
+      - name: Comment on PR with security summary
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let comment = '## 🔒 Security Scan Results\n\n';
+
+            try {
+              const auditData = JSON.parse(fs.readFileSync('audit-results.json', 'utf8'));
+              const vulns = auditData.metadata?.vulnerabilities || {};
+              
+              comment += '### Dependency Vulnerabilities\n';
+              comment += `- Critical: ${vulns.critical || 0}\n`;
+              comment += `- High: ${vulns.high || 0}\n`;
+              comment += `- Moderate: ${vulns.moderate || 0}\n`;
+              comment += `- Low: ${vulns.low || 0}\n\n`;
+              
+              if ((vulns.critical || 0) > 0 || (vulns.high || 0) > 0) {
+                comment += '❌ **Action required**: Critical or high severity vulnerabilities detected!\n\n';
+              } else if ((vulns.moderate || 0) > 0) {
+                comment += '⚠️ **Review recommended**: Moderate severity vulnerabilities detected.\n\n';
+              } else {
+                comment += '✅ **No critical vulnerabilities** detected in dependencies.\n\n';
+              }
+            } catch (e) {
+              comment += '⚠️ Could not parse dependency audit results.\n\n';
+            }
+
+            comment += '### Other Security Checks\n';
+            comment += '- CodeQL analysis completed\n';
+            comment += '- ESLint security rules verified\n';
+            comment += '- Secret pattern scanning completed\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

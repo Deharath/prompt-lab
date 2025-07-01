@@ -1,0 +1,226 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run performance tests weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.x'
+  PNPM_VERSION: '10'
+
+jobs:
+  performance-test:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch more history for better comparison
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install native build tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential python3 python3-dev pkg-config libsqlite3-dev
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Start API server for performance testing
+        run: |
+          cd apps/api
+          pnpm start &
+          echo $! > api-server.pid
+
+          # Wait for server to start
+          timeout=30
+          while [ $timeout -gt 0 ]; do
+            if curl -f http://localhost:3000/health/ready 2>/dev/null; then
+              echo "✅ API server is ready"
+              break
+            fi
+            sleep 1
+            timeout=$((timeout - 1))
+          done
+
+          if [ $timeout -eq 0 ]; then
+            echo "❌ API server failed to start within 30 seconds"
+            exit 1
+          fi
+        env:
+          NODE_ENV: test
+          OPENAI_API_KEY: dummy-key-for-ci
+          GEMINI_API_KEY: dummy-key-for-ci
+
+      - name: Install Apache Bench for load testing
+        run: sudo apt-get install -y apache2-utils
+
+      - name: Run performance benchmarks
+        run: |
+          echo "🚀 Running performance benchmarks..."
+
+          # Create results directory
+          mkdir -p performance-results
+
+          # Test 1: Health endpoint performance
+          echo "Testing health endpoint performance..."
+          ab -n 1000 -c 10 -g health-plot.tsv http://localhost:3000/health/ready > performance-results/health-benchmark.txt
+
+          # Test 2: Jobs listing performance
+          echo "Testing jobs listing performance..."
+          ab -n 500 -c 5 -g jobs-plot.tsv http://localhost:3000/jobs > performance-results/jobs-benchmark.txt
+
+          # Test 3: Concurrent requests
+          echo "Testing concurrent request handling..."
+          ab -n 100 -c 20 -g concurrent-plot.tsv http://localhost:3000/health > performance-results/concurrent-benchmark.txt
+
+          # Extract key metrics
+          echo "## Performance Test Results" > performance-results/summary.md
+          echo "" >> performance-results/summary.md
+
+          # Health endpoint metrics
+          echo "### Health Endpoint (/health/ready)" >> performance-results/summary.md
+          grep "Requests per second" performance-results/health-benchmark.txt >> performance-results/summary.md
+          grep "Time per request" performance-results/health-benchmark.txt | head -1 >> performance-results/summary.md
+          echo "" >> performance-results/summary.md
+
+          # Jobs endpoint metrics
+          echo "### Jobs Listing (/jobs)" >> performance-results/summary.md
+          grep "Requests per second" performance-results/jobs-benchmark.txt >> performance-results/summary.md
+          grep "Time per request" performance-results/jobs-benchmark.txt | head -1 >> performance-results/summary.md
+          echo "" >> performance-results/summary.md
+
+          # Concurrent requests metrics
+          echo "### Concurrent Requests (/health)" >> performance-results/summary.md
+          grep "Requests per second" performance-results/concurrent-benchmark.txt >> performance-results/summary.md
+          grep "Time per request" performance-results/concurrent-benchmark.txt | head -1 >> performance-results/summary.md
+          echo "" >> performance-results/summary.md
+
+          echo "✅ Performance benchmarks completed"
+
+      - name: Run memory usage analysis
+        run: |
+          echo "🧠 Analyzing memory usage..."
+
+          # Get process info
+          api_pid=$(cat api-server.pid)
+
+          # Memory usage snapshot
+          ps -p $api_pid -o pid,rss,vsz,pmem,comm > performance-results/memory-usage.txt
+
+          echo "Memory usage analysis completed"
+
+      - name: Run build performance test
+        run: |
+          echo "🏗️ Testing build performance..."
+
+          # Clean and time the build
+          pnpm clean || true
+          time pnpm install --frozen-lockfile 2>&1 | tee performance-results/install-time.log
+          time pnpm build 2>&1 | tee performance-results/build-time.log
+
+          echo "Build performance test completed"
+
+      - name: Generate performance report
+        run: |
+          echo "📊 Generating performance report..."
+
+          cat > performance-results/report.md << 'EOF'
+          # Performance Test Report
+
+          Generated on: $(date -u)
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref_name }}
+
+          ## Summary
+
+          This report contains performance benchmarks for the PromptLab API server.
+
+          EOF
+
+          cat performance-results/summary.md >> performance-results/report.md
+
+          echo "" >> performance-results/report.md
+          echo "## Build Performance" >> performance-results/report.md
+          echo "" >> performance-results/report.md
+          echo "### Installation Time" >> performance-results/report.md
+          echo "\`\`\`" >> performance-results/report.md
+          tail -3 performance-results/install-time.log >> performance-results/report.md
+          echo "\`\`\`" >> performance-results/report.md
+          echo "" >> performance-results/report.md
+          echo "### Build Time" >> performance-results/report.md
+          echo "\`\`\`" >> performance-results/report.md
+          tail -3 performance-results/build-time.log >> performance-results/report.md
+          echo "\`\`\`" >> performance-results/report.md
+          echo "" >> performance-results/report.md
+          echo "## Memory Usage" >> performance-results/report.md
+          echo "\`\`\`" >> performance-results/report.md
+          cat performance-results/memory-usage.txt >> performance-results/report.md
+          echo "\`\`\`" >> performance-results/report.md
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results-${{ github.sha }}
+          path: performance-results/
+          retention-days: 30
+
+      - name: Comment on PR with performance summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              const report = fs.readFileSync('performance-results/report.md', 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🚀 Performance Test Results\n\n${report}`
+              });
+            } catch (error) {
+              console.log('Could not post performance results:', error);
+            }
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Stop the API server
+          if [ -f api-server.pid ]; then
+            api_pid=$(cat api-server.pid)
+            kill $api_pid 2>/dev/null || true
+            rm api-server.pid
+          fi
+
+          # Kill any remaining node processes
+          pkill -f "node.*apps/api" || true
