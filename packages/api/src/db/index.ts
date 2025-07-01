@@ -131,4 +131,13 @@ export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   },
 });
 
+/**
+ * Reset the database connection - useful for testing
+ * This will force the next call to getDb() to create a new connection
+ */
+export function resetDb() {
+  _db = null;
+  dbInitPromise = null;
+}
+
 export { getDb };
