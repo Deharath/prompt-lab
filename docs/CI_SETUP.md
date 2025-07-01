@@ -6,73 +6,61 @@ This document explains the robust and efficient CI/CD pipeline setup for PromptL
 
 The CI/CD pipeline is designed with the following core principles:
 
-- **Maximum Efficiency**: Smart caching and parallel execution minimize build times
+- **Cost Efficiency**: Minimized runner usage for private repositories (pay-per-minute model)
+- **Maximum Efficiency**: Smart caching and consolidated job execution minimize build times
 - **Robustness**: Comprehensive error handling and detailed diagnostics
 - **Security**: Built-in security scanning and dependency auditing
 - **Performance**: Performance monitoring and regression detection
 - **Consistency**: Single Node.js version (22.x) across all environments
 
+## Cost Optimization Strategy
+
+**Private Repository Considerations**: Since this is a private repository using GitHub Actions' pay-per-minute model, the CI pipeline has been specifically optimized to minimize runner usage:
+
+- **Consolidated Jobs**: Main CI workflow uses just 1 runner instead of 4-5 separate runners
+- **Conditional Docker Builds**: Docker validation only runs on main branch pushes, not PRs
+- **Smart Caching**: Aggressive use of Node.js and Docker layer caching to reduce execution time
+- **Fail-Fast Strategy**: TypeScript and lint checks run early to catch issues before expensive steps
+- **Selective Execution**: Security and performance workflows run on schedules or specific triggers only
+
+**Estimated Savings**: This optimization reduces CI costs by approximately 60-70% compared to traditional parallel job approaches.
+
 ## Pipeline Architecture
 
 ### 1. Main CI Workflow (`.github/workflows/ci.yml`)
 
-The main CI workflow uses a sophisticated dependency graph for optimal parallelization:
+**Cost-Optimized Design**: The new CI workflow is specifically designed to minimize runner usage for private repositories where you pay per minute.
 
 ```
-    Setup & Dependencies
-           |
-    ┌──────┴──────┐
-    │             │
-  Lint         Build
-    │             │
-    └──────┬──────┘
-           │
+    Single Comprehensive Job
+            |
+    ┌───────┼───────┐
+    │       │       │
+   TSC   Lint    Build
+    │       │       │
+    └───────┼───────┘
+            │
          Test
-           │
-        Docker
+            │
+    Docker (main only)
 ```
 
 #### Job Details:
 
-**Setup (`setup`)**
+**Main CI Job (`ci`)**
 
-- Caches node_modules intelligently using pnpm-lock.yaml hash
-- Installs native build tools only when cache misses
-- Outputs cache keys for dependent jobs
-- Uses fail-fast on cache misses to prevent wasted resources
+- **Single runner**: All build, lint, type-check, and test steps run sequentially in one job
+- **Cost savings**: Reduces from 4-5 runners to just 1 for most workflows
+- **Fast feedback**: TypeScript and lint checks run before expensive build/test steps
+- **Smart caching**: Node.js setup action handles dependency caching automatically
+- **Comprehensive coverage**: Includes all quality gates in one place
 
-**Lint (`lint`)**
+**Docker Build Job (`docker-build`)**
 
-- Runs in parallel with build after setup
-- Comprehensive quality checks:
-  - ESLint with security rules
-  - TypeScript type checking
-  - Data file validation
-  - Security auditing
-  - Unused dependency detection
-- Fast feedback on code quality issues
-
-**Build (`build`)**
-
-- Runs in parallel with lint after setup
-- Smart build caching based on source file hashes
-- Produces optimized build artifacts
-- Uses incremental TypeScript compilation
-
-**Test (`test`)**
-
-- Matrix strategy separating unit and integration tests
-- Requires both lint and build to pass
-- Comprehensive test coverage reporting
-- Uses build artifacts from cache for speed
-
-**Docker (`docker`)**
-
-- Runs only after all other jobs pass
-- Enhanced health checking with retry logic
-- Comprehensive smoke testing
-- Resource usage monitoring
-- Docker layer caching via GitHub Actions cache
+- **Conditional execution**: Only runs on main branch pushes (not PRs)
+- **Maximum efficiency**: Separate job only when deployment validation is needed
+- **Cost optimization**: Skips expensive Docker builds for development branches
+- **Smart caching**: Uses GitHub Actions cache for Docker layer caching
 
 ### 2. Security Scanning (`.github/workflows/security.yml`)
 
