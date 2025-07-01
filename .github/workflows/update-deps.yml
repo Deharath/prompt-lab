@@ -6,52 +6,200 @@ on:
     - cron: '0 9 * * 1'
   workflow_dispatch: # Allow manual triggering
 
+# Ensure only one dependency update runs at a time
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22.x'
+  PNPM_VERSION: '10'
+
 jobs:
   update-dependencies:
-    runs-on: ['self-hosted', 'linux']
+    name: Automated Dependency Updates
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      security-events: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Use a PAT with appropriate permissions for creating PRs
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install dependencies
+      - name: Install native build tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential python3 python3-dev pkg-config libsqlite3-dev
+
+      - name: Install current dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+
+      - name: Audit current dependencies for security issues
+        run: |
+          echo "## Current Security Audit" >> audit-report.md
+          pnpm audit --audit-level low --format json > current-audit.json || true
+
+          # Count vulnerabilities
+          critical=$(jq '.metadata.vulnerabilities.critical // 0' current-audit.json)
+          high=$(jq '.metadata.vulnerabilities.high // 0' current-audit.json)
+          moderate=$(jq '.metadata.vulnerabilities.moderate // 0' current-audit.json)
+          low=$(jq '.metadata.vulnerabilities.low // 0' current-audit.json)
+
+          echo "- Critical: $critical" >> audit-report.md
+          echo "- High: $high" >> audit-report.md
+          echo "- Moderate: $moderate" >> audit-report.md
+          echo "- Low: $low" >> audit-report.md
+          echo "" >> audit-report.md
 
       - name: Update dependencies
-        run: pnpm deps:update
+        run: |
+          echo "📦 Updating dependencies..."
+          pnpm deps:update
 
-      - name: Run tests
-        run: pnpm test
+          # Capture what changed
+          git diff --name-only > changed-files.txt
+          if [ -s changed-files.txt ]; then
+            echo "📝 Files changed during update:"
+            cat changed-files.txt
+          else
+            echo "📝 No dependency changes detected"
+            exit 0
+          fi
+
+      - name: Build after updates
+        run: pnpm build
+        env:
+          npm_config_build_from_source: true
+          SQLITE3_FORCE_COMPILE: true
+
+      - name: Run comprehensive tests
+        run: |
+          echo "🧪 Running tests with updated dependencies..."
+          pnpm test
+          pnpm lint
+          pnpm tsc
+
+      - name: Audit updated dependencies
+        run: |
+          echo "## Updated Security Audit" >> audit-report.md
+          pnpm audit --audit-level low --format json > updated-audit.json || true
+
+          # Count vulnerabilities after update
+          critical=$(jq '.metadata.vulnerabilities.critical // 0' updated-audit.json)
+          high=$(jq '.metadata.vulnerabilities.high // 0' updated-audit.json)
+          moderate=$(jq '.metadata.vulnerabilities.moderate // 0' updated-audit.json)
+          low=$(jq '.metadata.vulnerabilities.low // 0' updated-audit.json)
+
+          echo "- Critical: $critical" >> audit-report.md
+          echo "- High: $high" >> audit-report.md
+          echo "- Moderate: $moderate" >> audit-report.md
+          echo "- Low: $low" >> audit-report.md
+          echo "" >> audit-report.md
+
+      - name: Generate detailed update report
+        run: |
+          echo "# Automated Dependency Update Report" > update-report.md
+          echo "" >> update-report.md
+          echo "## 📋 Summary" >> update-report.md
+          echo "" >> update-report.md
+
+          # Check if there are any changes
+          if git diff --quiet; then
+            echo "✅ No dependency updates available." >> update-report.md
+            echo "All dependencies are already up to date." >> update-report.md
+          else
+            echo "📦 The following dependencies were updated:" >> update-report.md
+            echo "" >> update-report.md
+            
+            # Show package.json changes
+            echo "### Package Updates" >> update-report.md
+            echo "\`\`\`diff" >> update-report.md
+            git diff package.json >> update-report.md || echo "No root package.json changes" >> update-report.md
+            echo "\`\`\`" >> update-report.md
+            echo "" >> update-report.md
+            
+            # Show lockfile stats
+            if [ -f pnpm-lock.yaml ]; then
+              added=$(git diff pnpm-lock.yaml | grep '^+' | grep -v '^+++' | wc -l)
+              removed=$(git diff pnpm-lock.yaml | grep '^-' | grep -v '^---' | wc -l)
+              echo "### Lockfile Changes" >> update-report.md
+              echo "- Lines added: $added" >> update-report.md
+              echo "- Lines removed: $removed" >> update-report.md
+              echo "" >> update-report.md
+            fi
+          fi
+
+          echo "## 🔒 Security Analysis" >> update-report.md
+          cat audit-report.md >> update-report.md
+          echo "" >> update-report.md
+
+          echo "## ✅ Verification" >> update-report.md
+          echo "- [x] All packages build successfully" >> update-report.md
+          echo "- [x] All tests pass" >> update-report.md
+          echo "- [x] Linting passes" >> update-report.md
+          echo "- [x] TypeScript compilation successful" >> update-report.md
+          echo "" >> update-report.md
+
+          echo "## 🤖 Automation Info" >> update-report.md
+          echo "- Node.js version: ${{ env.NODE_VERSION }}" >> update-report.md
+          echo "- pnpm version: ${{ env.PNPM_VERSION }}" >> update-report.md
+          echo "- Workflow run: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> update-report.md
 
       - name: Create Pull Request
+        # Only create PR in actual GitHub Actions, not in local testing environments
+        if: github.event_name != 'workflow_dispatch' || github.actor != 'nektos/act'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update dependencies'
-          title: 'chore: update dependencies'
-          body: |
-            ## Automated dependency update
+          commit-message: |
+            chore: automated dependency updates
 
-            This PR updates all dependencies to their latest versions.
+            - Updated all packages to latest versions
+            - All tests pass
+            - Security audit completed
 
-            ### Changes
-            - Updated all package dependencies to latest versions
-            - All tests still pass after updates
-
-            Please review the changes and merge if everything looks good.
-          branch: update-dependencies
+            Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          title: '🤖 chore: automated dependency updates'
+          body-path: update-report.md
+          branch: automated-dependency-updates
           delete-branch: true
+          labels: |
+            dependencies
+            automated
+            maintenance
+          reviewers: |
+            # Add your team reviewers here
+          assignees: |
+            # Add assignees here if needed
+          draft: false
+
+      - name: Upload security audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-${{ github.run_id }}
+          path: |
+            current-audit.json
+            updated-audit.json
+            audit-report.md
+            update-report.md
+          retention-days: 30

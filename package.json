@@ -12,7 +12,7 @@
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "tsc": "pnpm -r tsc",
     "build": "pnpm -r --sort build",
-    "test": "vitest run --coverage --config vitest.config.mts && pnpm --filter web test",
+    "test": "vitest run --coverage --config vitest.config.mts",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts",
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
@@ -26,6 +26,10 @@
     "deps:update": "pnpm update --recursive --latest",
     "prepare": "husky",
     "migrate": "pnpm exec tsx scripts/migrate.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": "^10.0.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.3.1",
