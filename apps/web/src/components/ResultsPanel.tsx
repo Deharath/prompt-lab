@@ -10,8 +10,13 @@ const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
     return null;
   }
 
-  const metricEntries = Object.entries(metrics);
-  const maxScore = Math.max(...metricEntries.map(([, score]) => score));
+  // Only use valid, finite numbers for metrics
+  const metricEntries = Object.entries(metrics).filter(
+    ([, value]) => typeof value === 'number' && Number.isFinite(value),
+  );
+  if (metricEntries.length === 0) return null;
+  const validScores = metricEntries.map(([, score]) => score);
+  const maxScore = validScores.length ? Math.max(...validScores) : 0;
 
   return (
     <Card gradient="purple">
@@ -238,9 +243,6 @@ const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
             <div>
               <div className="text-2xl font-bold transition-colors duration-300 text-gray-900 dark:text-gray-100">
                 {(() => {
-                  const validScores = metricEntries
-                    .filter(([, score]) => typeof score === 'number')
-                    .map(([, score]) => score as number);
                   if (validScores.length === 0) return 'N/A';
                   const avg =
                     validScores.reduce((sum, score) => sum + score, 0) /

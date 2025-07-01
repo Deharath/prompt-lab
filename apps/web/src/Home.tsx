@@ -107,14 +107,14 @@ const Home = () => {
         (streamError) => {
           console.error('❌ Stream error:', streamError);
           setError(`Stream error: ${streamError.message}`);
-          reset();
+          // Do not reset here, so error is visible
         },
       );
     } catch (err) {
       console.error('❌ Job creation failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to run';
       setError(errorMessage);
-      reset();
+      // Do not reset here, so error is visible
     }
   };
 
