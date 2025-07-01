@@ -1,4 +1,5 @@
 import { vi, beforeAll, afterEach } from 'vitest';
+import type { LLMProvider } from '@prompt-lab/api';
 
 // =================================================================  mockGetPreviousJob.mockImplementation(getPreviousJobImpl);usJob.mockImplementation(getPreviousJobImpl);================
 // CRITICAL CI FIX: PACKAGE-LEVEL MOCKING STRATEGY
@@ -15,6 +16,11 @@ export const mockUpdateJob = vi.fn();
 export const mockJobStore = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
 export const mockListJobs = vi.fn();
 export const mockGetPreviousJob = vi.fn();
+export const mockSetProvider = vi.fn();
+export const mockResetProviders = vi.fn();
+
+// Mock provider registry for tests
+export const mockProviderRegistry = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 /**
  * Exported mock config object - the control panel for all tests
@@ -144,6 +150,11 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
 
     // Override the functions that cause failures
     getProvider: mockGetProvider.mockImplementation((providerName) => {
+      // First check if there's a custom provider set via setProvider
+      if (mockProviderRegistry.has(providerName)) {
+        return mockProviderRegistry.get(providerName);
+      }
+
       // Return undefined for unknown providers to match real behavior
       if (providerName !== 'openai' && providerName !== 'gemini') {
         return undefined;
@@ -156,14 +167,26 @@ vi.mock('@prompt-lab/api', async (importOriginal) => {
           providerName === 'openai'
             ? ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini']
             : ['gemini-2.5-flash'],
-        complete: async function* () {
-          yield 'mock ';
-          yield 'stream ';
-          yield 'chunk';
-          // Properly terminate the generator
-          return;
+        complete: async () => ({
+          output: 'mock stream chunk',
+          tokens: 3,
+          cost: 0.00001,
+        }),
+        async *stream() {
+          yield { content: 'mock chunk' };
+          yield { content: ' from ' + providerName };
         },
       };
+    }),
+
+    setProvider: mockSetProvider.mockImplementation(
+      (name: string, provider: LLMProvider) => {
+        mockProviderRegistry.set(name, provider);
+      },
+    ),
+
+    resetProviders: mockResetProviders.mockImplementation(() => {
+      mockProviderRegistry.clear();
     }),
 
     evaluateWithOpenAI: mockEvaluateWithOpenAI.mockResolvedValue({

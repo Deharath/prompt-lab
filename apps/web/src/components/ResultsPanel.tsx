@@ -15,8 +15,19 @@ const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
     ([, value]) => typeof value === 'number' && Number.isFinite(value),
   );
   if (metricEntries.length === 0) return null;
-  const validScores = metricEntries.map(([, score]) => score);
-  const maxScore = validScores.length ? Math.max(...validScores) : 0;
+
+  // Only use score-like metrics for summary stats
+  const scoreEntries = metricEntries.filter(([name, value]) => {
+    const lower = name.toLowerCase();
+    return (
+      (lower.includes('score') || lower.includes('sim')) &&
+      typeof value === 'number' &&
+      value >= 0 &&
+      value <= 1
+    );
+  });
+  const scoreValues = scoreEntries.map(([, value]) => value);
+  const maxScore = scoreValues.length ? Math.max(...scoreValues) : undefined;
 
   return (
     <Card gradient="purple">
@@ -230,10 +241,13 @@ const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
             </div>
             <div>
               <div className="text-2xl font-bold transition-colors duration-300 text-gray-900 dark:text-gray-100">
-                {typeof maxScore === 'number'
-                  ? maxScore >= 0 && maxScore <= 1
+                {typeof scoreValues.length !== 'undefined' &&
+                scoreValues.length > 0
+                  ? maxScore !== undefined && maxScore >= 0 && maxScore <= 1
                     ? `${(maxScore * 100).toFixed(1)}%`
-                    : maxScore.toFixed(3)
+                    : maxScore !== undefined
+                      ? maxScore.toFixed(3)
+                      : 'N/A'
                   : 'N/A'}
               </div>
               <div className="text-sm transition-colors duration-300 text-gray-600 dark:text-gray-400">
@@ -243,10 +257,10 @@ const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
             <div>
               <div className="text-2xl font-bold transition-colors duration-300 text-gray-900 dark:text-gray-100">
                 {(() => {
-                  if (validScores.length === 0) return 'N/A';
+                  if (scoreValues.length === 0) return 'N/A';
                   const avg =
-                    validScores.reduce((sum, score) => sum + score, 0) /
-                    validScores.length;
+                    scoreValues.reduce((sum, score) => sum + score, 0) /
+                    scoreValues.length;
                   return avg >= 0 && avg <= 1
                     ? `${(avg * 100).toFixed(1)}%`
                     : avg.toFixed(3);

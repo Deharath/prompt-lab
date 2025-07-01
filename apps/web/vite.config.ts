@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/jobs': 'http://localhost:3000',
+      '/health': 'http://localhost:3000',
     },
   },
 });

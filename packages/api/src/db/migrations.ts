@@ -1,7 +1,7 @@
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
-import { join } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync, mkdirSync } from 'node:fs';
 import { config } from '../config/index.js';
@@ -11,18 +11,27 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export async function runMigrations() {
   try {
-    // Ensure data directory exists for file-based databases
-    if (
-      config.database.url !== ':memory:' &&
-      !config.database.url.startsWith('file:')
-    ) {
-      const dbDir = join(__dirname, '../../data');
+    // Parse and resolve database path as in index.ts
+    let dbPath = config.database.url;
+    if (dbPath.startsWith('sqlite://')) {
+      dbPath = dbPath.replace('sqlite://', '');
+    }
+    // Always resolve relative to monorepo root
+    const monorepoRoot = fileURLToPath(new URL('../../..', import.meta.url));
+    if (dbPath !== ':memory:') {
+      dbPath = resolve(monorepoRoot, dbPath);
+    }
+
+    // Ensure parent directory of the database file exists for file-based databases
+    if (dbPath !== ':memory:') {
+      const dbDir = dirname(dbPath);
       if (!existsSync(dbDir)) {
         mkdirSync(dbDir, { recursive: true });
+        log.info('Created parent directory for DB (migrations):', { dbDir });
       }
     }
 
-    const sqlite = new Database(config.database.url);
+    const sqlite = new Database(dbPath);
     const db = drizzle(sqlite);
 
     const migrationPath = join(__dirname, '../../drizzle/migrations');

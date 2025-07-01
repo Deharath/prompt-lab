@@ -13,9 +13,11 @@
     "tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.16",
     "react": "^19.1.0",
     "react-diff-viewer-continued": "^3.4.0",
     "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.3",
     "zustand": "^5.0.6"
   },
@@ -23,6 +25,7 @@
     "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
     "eventsource-polyfill": "^0.9.6",

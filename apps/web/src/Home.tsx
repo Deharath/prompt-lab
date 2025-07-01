@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ApiClient } from './api.js';
 import { useJobStore } from './store/jobStore.js';
 import ConfigurationPanel from './components/ConfigurationPanel.js';
-import LiveOutputPanel from './components/LiveOutputPanel.js';
+import LiveOutput from './components/LiveOutput.js';
 import ResultsPanel from './components/ResultsPanel.js';
 import DebugPanel from './components/DebugPanel.js';
 import ErrorAlert from './components/ErrorAlert.js';
@@ -23,7 +23,6 @@ const Home = () => {
     running,
     hasUserData,
     start,
-    append,
     finish,
     reset,
     setUserData,
@@ -35,6 +34,30 @@ const Home = () => {
     const saved = localStorage.getItem('prompt-lab-dark-mode');
     return saved ? JSON.parse(saved) : false;
   });
+  // New state for output panel
+  const [outputText, setOutputText] = useState('');
+  const [streamStatus, setStreamStatus] = useState<
+    'streaming' | 'complete' | 'error'
+  >('complete');
+
+  // Track the current EventSource to allow cancellation
+  const currentEventSourceRef = useRef<EventSource | null>(null);
+
+  // Cleanup function to close any active EventSource
+  const closeCurrentStream = () => {
+    if (currentEventSourceRef.current) {
+      console.log('🔌 Closing existing EventSource');
+      currentEventSourceRef.current.close();
+      currentEventSourceRef.current = null;
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      closeCurrentStream();
+    };
+  }, []);
 
   // Show quick start guide for new users (no template and no history)
   useEffect(() => {
@@ -65,7 +88,13 @@ const Home = () => {
     localStorage.setItem('prompt-lab-used', 'true');
 
     console.log('🚀 Run button clicked!');
+
+    // Close any existing stream before starting a new one
+    closeCurrentStream();
+
     setError('');
+    setOutputText('');
+    setStreamStatus('streaming');
 
     // Build the final prompt by replacing {{input}} with actual input data
     const finalPrompt = template.replace(/\{\{\s*input\s*\}\}/g, inputData);
@@ -86,31 +115,45 @@ const Home = () => {
 
       console.log('✅ Job created:', job);
       start(job);
+      let fullText = '';
 
-      ApiClient.streamJob(
+      // Store the new EventSource reference for future cancellation
+      const eventSource = ApiClient.streamJob(
         job.id,
-        (line) => {
-          console.log('📨 Stream message:', line);
-          append(line);
+        (token) => {
+          // token is already the string content from SSE events
+          console.log('🔤 Received token:', JSON.stringify(token));
+          console.log('📝 Full text before:', JSON.stringify(fullText));
+          fullText += token;
+          console.log('📝 Full text after:', JSON.stringify(fullText));
+          setOutputText(fullText);
         },
         async () => {
-          console.log('🏁 Stream ended, fetching final results');
+          setStreamStatus('complete');
+          currentEventSourceRef.current = null; // Clear reference when done
           try {
             const final = await ApiClient.fetchJob(job.id);
             console.log('📊 Final results:', final);
             finish((final.metrics as Record<string, number>) || {});
-          } catch (err) {
-            console.error('Failed to fetch final job result:', err);
+          } catch (_err) {
             finish({});
           }
         },
         (streamError) => {
-          console.error('❌ Stream error:', streamError);
+          setStreamStatus('error');
+          currentEventSourceRef.current = null; // Clear reference on error
           setError(`Stream error: ${streamError.message}`);
-          // Do not reset here, so error is visible
+        },
+        (metrics) => {
+          // Update metrics in store as they arrive
+          finish((metrics as Record<string, number>) || {});
         },
       );
+
+      // Store the EventSource reference
+      currentEventSourceRef.current = eventSource;
     } catch (err) {
+      setStreamStatus('error');
       console.error('❌ Job creation failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to run';
       setError(errorMessage);
@@ -394,12 +437,12 @@ Please structure your response with:
           )}
 
           {/* Live Output Section */}
-          {(log.length > 0 || running) && (
+          {(outputText.length > 0 || streamStatus === 'streaming') && (
             <div
               className="animate-slide-up"
               style={{ animationDelay: '200ms' }}
             >
-              <LiveOutputPanel log={log} running={running} />
+              <LiveOutput outputText={outputText} status={streamStatus} />
             </div>
           )}
 

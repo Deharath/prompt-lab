@@ -4,12 +4,12 @@ interface LogEntry {
   text: string;
 }
 
-interface LiveOutputPanelProps {
+interface LiveOutputProps {
   log: LogEntry[];
   running: boolean;
 }
 
-const LiveOutputPanel = ({ log, running }: LiveOutputPanelProps) => {
+const LiveOutput = ({ log, running }: LiveOutputProps) => {
   if (log.length === 0 && !running) {
     return null;
   }
@@ -115,4 +115,4 @@ const LiveOutputPanel = ({ log, running }: LiveOutputPanelProps) => {
   );
 };
 
-export default LiveOutputPanel;
+export default LiveOutput;

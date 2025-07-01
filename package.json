@@ -69,8 +69,10 @@
     "vitest": "3.2.4"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.16",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

@@ -56,6 +56,7 @@ export const useJobStore = create<JobState>((set) => ({
   reset: () => {
     console.log('🔄 Store: Resetting');
     set({ current: undefined, log: [], metrics: undefined, running: false });
+    // Note: We intentionally do NOT reset hasUserData here to preserve the user's input between evaluations
   },
   setUserData: (hasData) => {
     set({ hasUserData: hasData });

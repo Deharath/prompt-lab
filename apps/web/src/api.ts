@@ -98,42 +98,81 @@ export class ApiClient {
 
   static streamJob(
     id: string,
-    onMessage: (line: string) => void,
+    onMessage: (token: string) => void,
     onDone: () => void,
     onError?: (error: Error) => void,
+    onMetrics?: (metrics: Record<string, unknown>) => void,
   ): EventSource {
     console.log('🌊 Starting EventSource for job:', id);
     const es = new EventSource(`/jobs/${id}/stream`);
+    let done = false;
 
     es.onopen = () => {
       console.log('🔗 EventSource connection opened');
     };
 
     es.onmessage = (e) => {
-      console.log('📡 EventSource message:', e.data);
-      if (e.data === '[DONE]') {
-        console.log('✅ Received [DONE], closing stream');
-        onDone();
-        es.close();
-      } else {
-        onMessage(e.data);
+      try {
+        const data = JSON.parse(e.data);
+        console.log('📡 SSE event received:', { type: e.type, data });
+
+        if (data.token) {
+          onMessage(data.token);
+        }
+        if (data.error && onError) {
+          console.log('❌ Stream error:', data.error);
+          onError(new Error(data.error));
+        }
+      } catch (_err) {
+        console.warn('Non-JSON SSE event:', e.data);
       }
     };
 
-    es.onerror = (e) => {
-      console.error('❌ EventSource error:', e);
-      const error = new Error('Stream connection failed');
+    // Handle specific event types
+    es.addEventListener('metrics', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        console.log('📊 Metrics received:', data);
+        if (onMetrics) {
+          onMetrics(data);
+        }
+      } catch (_err) {
+        console.warn('Failed to parse metrics event:', e.data);
+      }
+    });
 
-      if (onError) {
+    es.addEventListener('done', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        console.log('✅ Done event received:', data);
+        done = true;
+        onDone();
+        es.close();
+      } catch (_err) {
+        console.warn('Failed to parse done event:', e.data);
+      }
+    });
+
+    es.addEventListener('error', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        console.log('❌ Error event received:', data);
+        if (onError) {
+          onError(new Error(data.error || 'Stream error'));
+        }
+      } catch (_err) {
+        console.warn('Failed to parse error event:', e.data);
+      }
+    });
+
+    es.onerror = (e) => {
+      console.error('❌ EventSource connection error:', e);
+      // Only call onError if the stream didn't complete normally
+      if (!done && onError) {
+        const error = new Error('Stream connection failed');
         onError(error);
       }
-
       es.close();
-
-      // Only call onDone if it's a real error, not just a normal close
-      if (es.readyState === EventSource.CLOSED) {
-        onDone();
-      }
     };
 
     return es;
