@@ -2,12 +2,12 @@
 
 [![CI](https://github.com/Deharath/prompt-lab/workflows/CI/badge.svg)](https://github.com/Deharath/prompt-lab/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18%20%7C%2022-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-10.x-orange.svg)](https://pnpm.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **LLM prompt sandbox** with live metrics on _GPT-4.1 (+ mini / nano)_ and _Gemini 2.5 Flash_.
-> Built to show real Node + TS chops, not slide-deck vapourware. Track token usage and cost for each run via the `/jobs` endpoint.
+> An LLM prompt evaluation sandbox with live metrics for GPT-4.1 and Gemini 2.5 Flash.
+> This project is a robust, test-driven application designed to showcase modern TypeScript and Node.js best practices.
 
 ---
 
@@ -15,13 +15,13 @@
 
 - **Multi-model streaming**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash with real-time execution
 - **Job-based architecture**: Persistent job tracking with SQLite, Server-Sent Events, and a `/jobs` endpoint for retrieving results
-- **Advanced evaluation**: Cosine similarity, exact-match metrics with pluggable evaluator system
+- **Advanced evaluation**: Cosine similarity and exact-match metrics via a modular evaluation package.
 - **Cost & token tracking**: Detailed per-job totals exposed through the `/jobs` endpoint
 - **React UI**: Modern interface with streaming job execution and progress monitoring
 - **CI/CD ready**: Comprehensive test suite (40+ tests) with automated quality gates
 - **Production-grade**: Rate limiting, validation, Docker containerization, monorepo architecture
 - **Enterprise testing**: 100% evaluator coverage, E2E tests, proper test isolation
-- **Job comparison**: Use the History drawer to pick two runs and view differences at `/diff`
+- **Job comparison**: Use the History drawer to pick two runs and view differences at `/jobs/:id/diff`
 
 ---
 
@@ -99,7 +99,7 @@ curl "http://localhost:3000/jobs/<baseJobId>/diff?otherId=<compareJobId>"
 
 - `pnpm dev` — Start both API and web dev servers
 - `pnpm -r build` — Build all packages using TypeScript project references
-- `pnpm -r test` — Run comprehensive test suite (40+ tests)
+- `pnpm test` — Run comprehensive test suite (includes all unit and integration tests)
 - `pnpm -r lint` — Lint all code with zero warnings policy
 - `pnpm -r clean` — Clean all build artifacts
 - `pnpm docker:run` — Build and run Docker container locally
@@ -287,5 +287,3 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 - After any dependency change, run `pnpm install` at the root and commit `pnpm-lock.yaml`.
 
 ---
-
-![CI](https://img.shields.io/badge/CI-pending-lightgrey) ![Coverage](https://img.shields.io/badge/coverage-0%25-red)
