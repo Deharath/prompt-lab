@@ -25,6 +25,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
     "eventsource-polyfill": "^0.9.6",
     "tailwindcss": "^4.1.11",
     "vite": "^5.2.0",
