@@ -58,3 +58,16 @@ Thumbs.db
 *.db
 sqlite.db
 **/sqlite.db
+
+# Local database directories
+apps/api/db/
+packages/db/
+
+# Temporary commit message
+COMMIT_MSG.tmp
+
+# Ignore GitHub specific instruction files
+.github/instructions/
+.github/copilot_instructions.md
+.github/old_copilot-instructions.md
+.github/potential_new.md

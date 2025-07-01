@@ -143,7 +143,8 @@ function createConfig() {
     },
     security: {
       requestSizeLimit: process.env.REQUEST_SIZE_LIMIT,
-      enableTrustProxy: process.env.TRUST_PROXY,
+      enableTrustProxy:
+        String(process.env.TRUST_PROXY).toLowerCase() === 'true',
     },
   };
 

@@ -4,17 +4,46 @@ import { config } from '../config/index.js';
 import { log } from '../utils/logger.js';
 import { runMigrations } from './migrations.js';
 import * as schema from './schema.js';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 async function initializeDb() {
   if (!_db) {
     try {
+      // Parse database URL to get file path
+      let dbPath = config.database.url;
+      if (dbPath.startsWith('sqlite://')) {
+        dbPath = dbPath.replace('sqlite://', '');
+      }
+
+      // Always resolve relative to monorepo root
+      const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
+      if (dbPath !== ':memory:') {
+        dbPath = resolve(rootDir, dbPath);
+      }
+
+      console.log('🗃️ Database path:', dbPath);
+      console.log('🗂️ Current working directory:', process.cwd());
+
+      // Ensure directory exists for file-based databases
+      if (dbPath !== ':memory:') {
+        const dir = dirname(dbPath);
+        const { mkdirSync, existsSync } = await import('node:fs');
+        if (!existsSync(dir)) {
+          console.log('📁 Creating directory:', dir);
+          mkdirSync(dir, { recursive: true });
+        } else {
+          console.log('✅ Directory already exists:', dir);
+        }
+      }
+
       // Initialize database connection first
-      const sqlite = new Database(config.database.url);
+      const sqlite = new Database(dbPath);
 
       // Enable WAL mode for better performance
-      if (config.database.url !== ':memory:') {
+      if (dbPath !== ':memory:' && typeof sqlite.pragma === 'function') {
         sqlite.pragma('journal_mode = WAL');
         sqlite.pragma('synchronous = NORMAL');
         sqlite.pragma('cache_size = 1000');
@@ -25,7 +54,6 @@ async function initializeDb() {
 
       // Run migrations if available, otherwise create tables manually
       const { join } = await import('node:path');
-      const { fileURLToPath } = await import('node:url');
       const { existsSync } = await import('node:fs');
 
       const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -34,7 +62,7 @@ async function initializeDb() {
       const hasMigrations =
         existsSync(migrationPath) || existsSync(fallbackPath);
 
-      if (hasMigrations && config.database.url !== ':memory:') {
+      if (hasMigrations && dbPath !== ':memory:') {
         await runMigrations();
       } else {
         log.info('No migrations folder found, creating tables manually');
@@ -69,8 +97,8 @@ async function initializeDb() {
       });
 
       log.info('Database initialized successfully', {
-        url: config.database.url,
-        mode: config.database.url === ':memory:' ? 'memory' : 'file',
+        url: dbPath,
+        mode: dbPath === ':memory:' ? 'memory' : 'file',
       });
     } catch (error) {
       log.error(

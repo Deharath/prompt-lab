@@ -1,12 +1,12 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
 import {
-  getProvider,
   createJob,
   getJob,
   updateJob,
   listJobs,
   getPreviousJob,
+  getProvider,
   type Job,
 } from '@prompt-lab/api';
 import {
@@ -148,7 +148,6 @@ jobsRouter.get(
 // GET /jobs/:id/stream - Stream job results via SSE
 jobsRouter.get(
   '/:id/stream',
-
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -161,6 +160,8 @@ jobsRouter.get(
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
       res.flushHeaders();
 
       const provider = getProvider(job.provider);
@@ -171,22 +172,124 @@ jobsRouter.get(
       }
 
       await updateJob(id, { status: 'running' });
-
       const startTime = Date.now();
 
       const sendEvent = (data: object, event?: string) => {
-        if (event) {
-          res.write(`event: ${event}\n`);
+        try {
+          const jsonData = JSON.stringify(data);
+          let sseString = '';
+          if (event) {
+            sseString += `event: ${event}\n`;
+          }
+          sseString += `data: ${jsonData}\n\n`;
+          console.log('SSE WRITE:', JSON.stringify(sseString)); // TEMP DEBUG
+          res.write(sseString);
+          if (typeof res.flush === 'function') res.flush(); // Ensure immediate delivery
+        } catch (error) {
+          console.error('Failed to send SSE event:', error);
         }
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
       };
 
       try {
-        const { output, tokens, cost } = await provider.complete(job.prompt, {
-          model: job.model,
-        });
+        let output = '';
+        let tokens = 0;
+        let cost = 0;
+        if (provider.stream) {
+          const streamIterator = provider.stream(job.prompt, {
+            model: job.model,
+          });
+          try {
+            while (true) {
+              let result;
+              try {
+                result = await streamIterator.next();
+              } catch (streamError) {
+                const errorMessage =
+                  streamError instanceof Error
+                    ? streamError.message
+                    : 'An unknown error occurred during streaming.';
+                await updateJob(id, {
+                  status: 'failed',
+                  result: errorMessage,
+                });
+                sendEvent({ error: errorMessage }, 'error');
+                sendEvent({ done: true }, 'done');
+                if (!res.writableEnded) {
+                  if (typeof res.flush === 'function') res.flush();
+                  await new Promise((r) => setTimeout(r, 10));
+                  if (!res.writableEnded) res.end();
+                }
+                return;
+              }
+              if (result.done) break;
+              if (result.value && result.value.content) {
+                output += result.value.content;
+                sendEvent({ token: result.value.content });
+              }
+            }
+            sendEvent({ done: true }, 'done');
+            // Only send metrics if streaming completed without error
+            const endTime = Date.now();
+            tokens = Math.floor(output.length / 4);
+            const pricePerK = 0.002;
+            cost = (tokens / 1000) * pricePerK;
+            const metrics: import('@prompt-lab/api').JobMetrics = {
+              totalTokens: tokens,
+              avgCosSim: 0,
+              meanLatencyMs: endTime - startTime,
+              costUsd: cost,
+              evaluationCases: 0,
+              startTime,
+              endTime,
+            };
+            await updateJob(id, {
+              status: 'completed',
+              result: output,
+              metrics,
+            });
+            sendEvent(metrics, 'metrics');
+            return;
+          } catch (streamError) {
+            // Defensive: should never reach here, but just in case
+            const errorMessage =
+              streamError instanceof Error
+                ? streamError.message
+                : 'An unknown error occurred during streaming.';
+            await updateJob(id, {
+              status: 'failed',
+              result: errorMessage,
+            });
+            sendEvent({ error: errorMessage }, 'error');
+            sendEvent({ done: true }, 'done');
+            if (!res.writableEnded) {
+              if (typeof res.flush === 'function') res.flush();
+              await new Promise((r) => setTimeout(r, 10));
+              if (!res.writableEnded) res.end();
+            }
+            return;
+          }
+        } else {
+          // Fallback to non-streaming
+          const result = await provider.complete(job.prompt, {
+            model: job.model,
+          });
+          output = result.output;
+          tokens = result.tokens;
+          cost = result.cost;
+          sendEvent({ token: output });
+          sendEvent({ done: true }, 'done');
+        }
 
         const endTime = Date.now();
+
+        // For streaming, we need to get final metrics from the completed job
+        if (provider.stream) {
+          // Try to estimate tokens for streaming (rough approximation)
+          tokens = Math.floor(output.length / 4); // Rough token estimation
+          const pricePerK = 0.002; // Default pricing, should be provider-specific
+          cost = (tokens / 1000) * pricePerK;
+        }
+
         const metrics: import('@prompt-lab/api').JobMetrics = {
           totalTokens: tokens,
           avgCosSim: 0, // Not applicable for streaming jobs
@@ -202,20 +305,22 @@ jobsRouter.get(
           result: output,
           metrics,
         });
-        sendEvent({ token: output });
         sendEvent(metrics, 'metrics');
       } catch (error) {
-        console.error(`Job ${id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
-
         await updateJob(id, {
           status: 'failed',
           result: errorMessage,
         });
+        // Always use sendEvent for error event
         sendEvent({ error: errorMessage }, 'error');
+        sendEvent({ done: true }, 'done');
       } finally {
-        res.end();
+        // Only end the response if not already ended
+        if (!res.writableEnded) {
+          res.end();
+        }
       }
     } catch (error) {
       next(error);

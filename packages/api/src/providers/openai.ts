@@ -33,8 +33,38 @@ async function complete(
   return { output, tokens, cost };
 }
 
+async function* stream(
+  prompt: string,
+  options: ProviderOptions,
+): AsyncGenerator<{ content: string; isFinal?: boolean }, void, unknown> {
+  const openai = getOpenAIClient();
+  if (!openai) {
+    throw new Error('OpenAI API key not configured. Cannot process request.');
+  }
+
+  let _output = '';
+  let _tokens = 0;
+  let _cost = 0;
+
+  const stream = await openai.chat.completions.create({
+    model: options.model,
+    messages: [{ role: 'user', content: prompt }],
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content ?? '';
+    if (delta) {
+      _output += delta;
+      yield { content: delta };
+    }
+    // Optionally, accumulate tokens/cost here if available
+  }
+}
+
 export const OpenAIProvider: LLMProvider = {
   name: 'openai',
   models: ['gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini'],
   complete,
+  stream,
 };

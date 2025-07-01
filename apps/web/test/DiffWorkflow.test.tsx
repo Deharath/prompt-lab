@@ -79,17 +79,48 @@ describe('Diff workflow', () => {
     );
 
     fireEvent.click(screen.getByText('Compare'));
-    fireEvent.click(screen.getByText('job1'));
-    fireEvent.click(screen.getByText('job2'));
+
+    // Look for job buttons specifically
+    const jobButtons = screen
+      .getAllByRole('button')
+      .filter(
+        (button) =>
+          button.textContent?.includes('Job #job1') ||
+          button.textContent?.includes('Job #job2'),
+      );
+
+    const job1Element = jobButtons.find((button) =>
+      button.textContent?.includes('job1'),
+    );
+    const job2Element = jobButtons.find((button) =>
+      button.textContent?.includes('job2'),
+    );
+
+    expect(job1Element).toBeTruthy();
+    expect(job2Element).toBeTruthy();
+
+    fireEvent.click(job1Element!);
+    fireEvent.click(job2Element!);
 
     await waitFor(() => {
-      expect(screen.getByText('Job Diff')).toBeInTheDocument();
+      expect(screen.getByText('Job Comparison')).toBeInTheDocument();
     });
 
     expect(screen.getAllByText('hello').length).toBeGreaterThan(0);
     expect(screen.getByText('score')).toBeInTheDocument();
-    expect(screen.getByText('0.200')).toBeInTheDocument();
-    expect(screen.getByText('0.010')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
+    // Look for the specific delta value in the score row
+    const scoreRow = screen.getByText('score').closest('tr')!;
+    expect(scoreRow).toBeInTheDocument();
+    expect(scoreRow.textContent).toContain('0.200');
+
+    // Check the Cost row delta specifically - find the Cost row and check its delta column
+    const costRow = screen.getByText('Cost (USD)').closest('tr')!;
+    expect(costRow).toBeInTheDocument();
+    expect(costRow.textContent).toContain('0.010');
+
+    // Check the Tokens row delta
+    const tokensRow = screen.getByText('Tokens Used').closest('tr')!;
+    expect(tokensRow).toBeInTheDocument();
+    expect(tokensRow.textContent).toContain('2');
   });
 });

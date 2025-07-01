@@ -13,16 +13,33 @@ const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
 
 export const app: Express = express();
 
+// Enable trust proxy setting FIRST (before rate limiters)
+if (config.security.enableTrustProxy) {
+  app.set('trust proxy', true);
+} else {
+  app.set('trust proxy', false);
+}
+
 // Performance middleware
 app.use(compression()); // Enable gzip compression
 
+// CORS for development
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control',
+  );
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 // Security middleware
 app.use(express.json({ limit: config.security.requestSizeLimit })); // Limit request size
-
-// Enable trust proxy if configured
-if (config.security.enableTrustProxy) {
-  app.set('trust proxy', true);
-}
 
 // Rate limiting for jobs API
 const jobsRateLimit = rateLimit({

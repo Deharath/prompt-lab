@@ -4,6 +4,7 @@ import supertest from 'supertest';
 import getPort from 'get-port';
 import { mockGetProvider, mockJobStore } from './setupTests';
 import { app } from '../src/index.ts';
+import { resetProviders } from '@prompt-lab/api';
 
 let server: Server;
 let request: supertest.SuperTest<supertest.Test>;
@@ -26,6 +27,10 @@ afterEach(async () => {
 });
 
 describe('Jobs API', () => {
+  beforeEach(() => {
+    resetProviders();
+  });
+
   it('should reject job creation when provider is missing', async () => {
     const response = await request
       .post('/jobs')
@@ -255,6 +260,10 @@ describe('Jobs API', () => {
     mockGetProvider.mockImplementationOnce(() => ({
       name: 'openai',
       models: ['gpt-4o-mini'],
+      async *stream() {
+        yield { content: 'mock chunk' };
+        throw new Error('Simulated stream failure');
+      },
       complete() {
         throw new Error('stream failure');
       },
@@ -266,5 +275,44 @@ describe('Jobs API', () => {
     expect(response.text).toContain('event: error');
 
     expect(mockJobStore.get(jobId)?.status).toBe('failed');
+  });
+
+  it('should stream tokens incrementally (mocked)', async () => {
+    // Set the mock provider BEFORE creating the job
+    let streamCalled = false;
+
+    // Create job first
+    const createResponse = await request
+      .post('/jobs')
+      .send({
+        prompt: 'Say hello',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+      })
+      .expect(202);
+
+    // Then mock the provider for the streaming call
+    mockGetProvider.mockImplementationOnce(() => ({
+      name: 'openai',
+      models: ['gpt-4o-mini'],
+      async *stream() {
+        streamCalled = true;
+        yield { content: 'Hello' };
+        await new Promise((r) => setTimeout(r, 10));
+        yield { content: ' ' };
+        await new Promise((r) => setTimeout(r, 10));
+        yield { content: 'world!' };
+      },
+      complete: async () => ({ output: 'Hello world!', tokens: 3, cost: 0 }),
+    }));
+
+    const jobId = createResponse.body.id;
+    const response = await request.get(`/jobs/${jobId}/stream`).expect(200);
+    expect(streamCalled).toBe(true);
+    // Should see at least three data events, one per token
+    const dataEvents = response.text.match(/data:/g) || [];
+    expect(dataEvents.length).toBeGreaterThanOrEqual(3);
+    expect(response.text).toContain('Hello');
+    expect(response.text).toContain('world!');
   });
 });

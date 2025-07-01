@@ -42,10 +42,27 @@ async function complete(
   }
 }
 
+async function* stream(
+  prompt: string,
+  options: ProviderOptions,
+): AsyncGenerator<{ content: string; isFinal?: boolean }, void, unknown> {
+  // For better streaming, let's stream word by word instead of sentence by sentence
+  const { output } = await complete(prompt, options);
+  const words = output.split(/(\s+)/); // Split by whitespace, preserving spaces
+  for (const word of words) {
+    if (word) {
+      yield { content: word };
+      // Simulate delay for realism (remove or adjust as needed)
+      await new Promise((r) => setTimeout(r, 20));
+    }
+  }
+}
+
 export const GeminiProvider: LLMProvider = {
   name: 'gemini',
   models: [
     'gemini-2.5-flash', // Latest and most cost-effective flash model
   ],
   complete,
+  stream,
 };

@@ -13,6 +13,7 @@ interface JobState {
   history: JobSummary[];
   metrics?: Record<string, number>;
   running: boolean;
+  hasUserData: boolean; // Track if user has any prompt/input data
   comparison: {
     baseJobId?: string;
     compareJobId?: string;
@@ -21,6 +22,7 @@ interface JobState {
   append(text: string): void;
   finish(metrics: Record<string, number>): void;
   reset(): void;
+  setUserData(hasData: boolean): void;
   setBaseJob(id: string): void;
   setCompareJob(id: string): void;
   clearComparison(): void;
@@ -31,10 +33,17 @@ export const useJobStore = create<JobState>((set) => ({
   log: [],
   history: [],
   running: false,
+  hasUserData: false,
   comparison: {},
   start: (job) => {
     console.log('🏁 Store: Starting job', job);
-    set({ current: job, log: [], metrics: undefined, running: true });
+    set({
+      current: job,
+      log: [],
+      metrics: undefined,
+      running: true,
+      hasUserData: true,
+    });
   },
   append: (text) => {
     console.log('📝 Store: Appending text', text);
@@ -47,6 +56,10 @@ export const useJobStore = create<JobState>((set) => ({
   reset: () => {
     console.log('🔄 Store: Resetting');
     set({ current: undefined, log: [], metrics: undefined, running: false });
+    // Note: We intentionally do NOT reset hasUserData here to preserve the user's input between evaluations
+  },
+  setUserData: (hasData) => {
+    set({ hasUserData: hasData });
   },
   setBaseJob: (id) => {
     set((s) => ({ comparison: { ...s.comparison, baseJobId: id } }));
