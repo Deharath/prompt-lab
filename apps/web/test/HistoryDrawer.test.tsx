@@ -58,7 +58,15 @@ describe('HistoryDrawer', () => {
 
     expect(loadHistory).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText('job1'));
+    // Look for the button containing "job1" text - use getAllByText and click the first button
+    const job1Buttons = screen.getAllByText((content, element) => {
+      return (
+        (element?.tagName === 'BUTTON' &&
+          element?.textContent?.includes('job1')) ||
+        false
+      );
+    });
+    fireEvent.click(job1Buttons[0]);
 
     await waitFor(() => {
       expect(apiModule.fetchJob).toHaveBeenCalledWith('job1');
@@ -108,10 +116,26 @@ describe('HistoryDrawer', () => {
     );
 
     fireEvent.click(screen.getByText('Compare'));
-    fireEvent.click(screen.getByText('job1'));
+
+    // Look for the buttons containing "job1" and "job2" text
+    const job1Buttons = screen.getAllByText((content, element) => {
+      return (
+        (element?.tagName === 'BUTTON' &&
+          element?.textContent?.includes('job1')) ||
+        false
+      );
+    });
+    fireEvent.click(job1Buttons[0]);
     expect(setBaseJob).toHaveBeenCalledWith('job1');
 
-    fireEvent.click(screen.getByText('job2'));
+    const job2Buttons = screen.getAllByText((content, element) => {
+      return (
+        (element?.tagName === 'BUTTON' &&
+          element?.textContent?.includes('job2')) ||
+        false
+      );
+    });
+    fireEvent.click(job2Buttons[0]);
     await waitFor(() => {
       expect(setCompareJob).toHaveBeenCalledWith('job2');
       expect(mockNavigate).toHaveBeenCalledWith('/diff');
