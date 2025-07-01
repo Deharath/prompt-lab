@@ -83,7 +83,7 @@ jobs:
         run: pnpm build
 
       - name: Run tests
-        run: pnpm -r test
+        run: pnpm test
 
       - name: Upload coverage report
         if: always()
@@ -120,10 +120,8 @@ jobs:
           context: .
           tags: promptlab:test
           load: true
-          cache-from:
-            - type=gha,ref=refs/heads/main
-          cache-to:
-            - type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Start container
         run: |
