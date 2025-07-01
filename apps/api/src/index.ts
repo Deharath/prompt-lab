@@ -7,6 +7,7 @@ import { log, config } from '@prompt-lab/api';
 import { ApiError } from '@prompt-lab/api';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
+import dashboardRouter from './routes/dashboard.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
@@ -67,6 +68,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/jobs', jobsRateLimit, jobsRouter);
+app.use('/dashboard', dashboardRouter);
 
 // Serve built web UI from /public when present
 app.use(express.static(join(rootDir, 'public')));
