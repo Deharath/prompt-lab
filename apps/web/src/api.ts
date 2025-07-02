@@ -1,3 +1,5 @@
+import type { DashboardStats } from './types/dashboard.js';
+
 export interface JobRequest {
   prompt: string;
   provider: string;
@@ -198,6 +200,14 @@ export class ApiClient {
     console.log('✅ Jobs diff fetched:', result);
     return result;
   }
+
+  static async fetchDashboardStats(days: number = 30): Promise<DashboardStats> {
+    console.log('📊 Fetching dashboard stats for days:', days);
+    const endpoint = `/dashboard/stats?days=${days}`;
+    const result = await this.makeRequest<DashboardStats>(endpoint);
+    console.log('✅ Dashboard stats fetched:', result);
+    return result;
+  }
 }
 
 // Legacy exports for backward compatibility
@@ -206,3 +216,5 @@ export const fetchJob = ApiClient.fetchJob.bind(ApiClient);
 export const streamJob = ApiClient.streamJob.bind(ApiClient);
 export const listJobs = ApiClient.listJobs.bind(ApiClient);
 export const diffJobs = ApiClient.diffJobs.bind(ApiClient);
+export const fetchDashboardStats =
+  ApiClient.fetchDashboardStats.bind(ApiClient);
