@@ -20,6 +20,7 @@ const Home = () => {
   const [model, setModel] = useState('gpt-4o-mini');
   const [error, setError] = useState('');
   const {
+    current,
     log,
     metrics,
     running,
@@ -477,7 +478,7 @@ Please structure your response with:
               className="animate-scale-in"
               style={{ animationDelay: '300ms' }}
             >
-              <ResultsPanel metrics={metrics} />
+              <ResultsPanel metrics={metrics} jobId={current?.id} />
             </div>
           )}
         </div>

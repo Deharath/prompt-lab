@@ -1,5 +1,6 @@
 import 'eventsource-polyfill';
 import '@testing-library/jest-dom/vitest';
+import { vi } from 'vitest';
 
 // Mock EventSource for tests
 class MockEventSource extends EventTarget {
@@ -35,3 +36,9 @@ class MockResizeObserver {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).ResizeObserver = MockResizeObserver;
+
+// Mock window.scrollTo for JSDOM
+Object.defineProperty(window, 'scrollTo', {
+  value: vi.fn(),
+  writable: true,
+});

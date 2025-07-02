@@ -1,11 +1,13 @@
 import Card from './ui/Card.js';
 import StatCard from './ui/StatCard.js';
+import ShareRunButton from './ShareRunButton.js';
 
 interface ResultsPanelProps {
   metrics: Record<string, number> | undefined;
+  jobId?: string;
 }
 
-const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
+const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
   if (!metrics || Object.keys(metrics).length === 0) {
     return null;
   }
@@ -33,25 +35,28 @@ const ResultsPanel = ({ metrics }: ResultsPanelProps) => {
     <Card gradient="purple">
       <div className="p-8 space-y-6">
         {/* Header */}
-        <div className="flex items-center space-x-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-pink-600 text-white shadow-md">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-pink-600 text-white shadow-md">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold transition-colors duration-300 text-gray-900 dark:text-gray-100">
+              Evaluation Results
+            </h2>
           </div>
-          <h2 className="text-2xl font-bold transition-colors duration-300 text-gray-900 dark:text-gray-100">
-            Evaluation Results
-          </h2>
+          {jobId && <ShareRunButton jobId={jobId} />}
         </div>
 
         {/* Metrics Grid */}

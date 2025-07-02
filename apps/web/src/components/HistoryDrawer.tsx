@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchJob } from '../api.js';
 import { useJobStore } from '../store/jobStore.js';
 import { useNavigate } from 'react-router-dom';
+import ShareRunButton from './ShareRunButton.js';
 
 interface HistoryDrawerProps {
   open: boolean;
@@ -266,7 +267,10 @@ const HistoryDrawer = ({ open, onClose }: HistoryDrawerProps) => {
                           )}
                         </div>
 
-                        <div className="ml-2 flex items-center">
+                        <div className="ml-2 flex items-center space-x-2">
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <ShareRunButton jobId={job.id} />
+                          </div>
                           <svg
                             className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors"
                             fill="none"
