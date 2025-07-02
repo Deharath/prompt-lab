@@ -1,4 +1,4 @@
-# PromptLab MVP
+# PromptLab
 
 [![CI](https://github.com/Deharath/prompt-lab/workflows/CI/badge.svg)](https://github.com/Deharath/prompt-lab/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
@@ -23,7 +23,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/prompt-lab.git
+git clone https://github.com/Deharath/prompt-lab.git
 cd prompt-lab
 
 # Install dependencies
@@ -51,10 +51,10 @@ pnpm dev
 
 - **Multi-model streaming**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash with real-time execution
 - **Job-based architecture**: Persistent job tracking with SQLite, Server-Sent Events, and a `/jobs` endpoint for retrieving results
-- **Advanced evaluation**: Cosine similarity and exact-match metrics via a modular evaluation package.
+- **Advanced evaluation**: Cosine similarity and exact-match metrics via a modular evaluation package
 - **Cost & token tracking**: Detailed per-job totals exposed through the `/jobs` endpoint
 - **React UI**: Modern interface with streaming job execution and progress monitoring
-- **CI/CD ready**: Comprehensive test suite (40+ tests) with automated quality gates
+- **CI/CD ready**: Comprehensive test suite (79+ tests) with automated quality gates
 - **Production-grade**: Rate limiting, validation, Docker containerization, monorepo architecture
 - **Enterprise testing**: 100% evaluator coverage, E2E tests, proper test isolation
 - **Job comparison**: Use the History drawer to pick two runs and view differences at `/jobs/:id/diff`
@@ -93,13 +93,16 @@ apps/
 packages/
   api/         # Shared business logic (providers, jobs, database, cost tracking)
   evaluator/   # Core evaluation metrics and scoring
+  jobs/        # Job helpers and types
+  providers/   # Model provider integrations
   test-cases/  # JSONL test datasets and helpers
+db/            # SQLite database files
 ```
 
 - **Unified architecture**: `packages/api` provides shared business logic used by `apps/api`
 - **Real-time execution**: Job-based processing with Server-Sent Events streaming
 - **TypeScript project references**: Fast, reliable builds across all packages
-- **Comprehensive testing**: 40+ tests with proper isolation and 100% evaluator coverage
+- **Comprehensive testing**: 79+ tests with proper isolation and 100% evaluator coverage
 
 ---
 
@@ -171,6 +174,11 @@ This project is licensed under the [MIT License](LICENSE).
 - `pnpm -r lint` — Lint all code with zero warnings policy
 - `pnpm -r clean` — Clean all build artifacts
 - `pnpm docker:run` — Build and run Docker container locally
+- `pnpm migrate` — Run database migrations
+- `pnpm deps:check` — Check for unused dependencies
+- `pnpm deps:update` — Update all dependencies to latest
+- `pnpm audit` — Check for security vulnerabilities
+- `pnpm format` — Format all code with Prettier
 
 ---
 
@@ -198,8 +206,10 @@ prompt-lab/
 ├─ packages/
 │  ├─ api/            # Shared business logic, cost tracking, DB
 │  ├─ evaluator/      # Metrics and evaluation logic
+│  ├─ jobs/           # Job helpers and types
+│  ├─ providers/      # Model provider integrations
 │  ├─ test-cases/     # JSONL fixtures and helpers
-│  └─ providers/      # (if present) Model provider integrations
+├─ db/                # SQLite database files
 ```
 
 ---
@@ -230,6 +240,8 @@ prompt-lab/
 - `pnpm format` - Format all code with Prettier
 - `pnpm audit` - Check for security vulnerabilities
 - `pnpm deps:check` - Check for unused dependencies
+- `pnpm deps:update` - Update all dependencies to latest
+- `pnpm migrate` - Run database migrations
 - `pnpm clean` - Clean all build artifacts
 
 ### Testing
