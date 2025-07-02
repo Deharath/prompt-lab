@@ -3,8 +3,11 @@ const LoadingSpinner = () => {
     <div
       className="flex items-center justify-center py-8"
       data-testid="loading-spinner"
+      role="status"
+      aria-label="Loading content"
     >
-      <div className="flex space-x-2">
+      <span className="sr-only">Loading...</span>
+      <div className="flex space-x-2" aria-hidden="true">
         <div
           className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"
           style={{ animationDelay: '0ms' }}

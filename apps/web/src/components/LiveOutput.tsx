@@ -156,11 +156,18 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
   }, []);
 
   return (
-    <div className="p-8 space-y-6">
+    <div
+      className="p-8 space-y-6"
+      role="region"
+      aria-labelledby="output-stream-heading"
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-blue-600 text-white shadow-md">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-blue-600 text-white shadow-md"
+            aria-hidden="true"
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -181,32 +188,41 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
           >
             Output Stream
           </h2>
-          <div className="ml-4">{statusIndicator()}</div>
+          <div className="ml-4" aria-live="polite" aria-label="Output status">
+            {statusIndicator()}
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           {/* View toggle */}
-          <div className="flex bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700">
+          <div
+            className="flex bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700"
+            role="group"
+            aria-label="Output view mode"
+          >
             <button
-              className={`px-3 py-1 text-sm font-medium transition-colors ${viewMode === 'rendered' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-3 py-1 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${viewMode === 'rendered' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
               onClick={() => setViewMode('rendered')}
               aria-pressed={viewMode === 'rendered'}
+              aria-label="View as rendered markdown"
             >
               Rendered
             </button>
             <button
-              className={`px-3 py-1 text-sm font-medium transition-colors ${viewMode === 'raw' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-3 py-1 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${viewMode === 'raw' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
               onClick={() => setViewMode('raw')}
               aria-pressed={viewMode === 'raw'}
+              aria-label="View as raw text"
             >
               Raw
             </button>
           </div>
           {/* Copy button */}
           <button
-            className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-blue-600 text-white text-sm flex items-center transition-colors"
+            className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-blue-600 text-white text-sm flex items-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             onClick={handleCopy}
-            title="Copy output"
-            aria-label="Copy output"
+            aria-label={
+              copied ? 'Output copied to clipboard' : 'Copy output to clipboard'
+            }
           >
             {copied ? (
               <span className="flex items-center">
@@ -252,7 +268,9 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
           ref={outputRef}
           className="rounded-xl p-6 min-h-[300px] max-h-[500px] overflow-auto shadow-inner transition-colors duration-300 bg-linear-to-br from-gray-900 via-gray-800 to-black dark:from-black dark:via-gray-900 dark:to-gray-800 custom-scrollbar"
           aria-live="polite"
-          aria-label="Live output stream"
+          aria-label={`Live output stream in ${viewMode} mode`}
+          role="log"
+          tabIndex={0}
         >
           {viewMode === 'rendered' ? (
             <div className="prose prose-invert max-w-none">

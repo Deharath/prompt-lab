@@ -1,6 +1,30 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Design System Color Palette - Tailwind v4.1 CSS-first configuration */
+@theme {
+  --color-background: #111827;
+  --color-foreground: #f3f4f6;
+  --color-primary: #818cf8;
+  --color-card: #1f2937;
+  --color-border: #374151;
+  --color-success: #4ade80;
+  --color-error: #f87171;
+  --color-muted: #6b7280;
+  --color-accent: #a855f7;
+}
+
+/* Light mode color palette - outside @theme block */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-background: #f9fafb;
+    --color-foreground: #111827;
+    --color-card: #ffffff;
+    --color-border: #e5e7eb;
+    --color-muted: #9ca3af;
+  }
+}
+
 /* Custom animations and styles */
 @layer base {
   html {
@@ -75,6 +99,19 @@
       black 80%,
       transparent
     );
+  }
+
+  /* Screen reader only text */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }
 

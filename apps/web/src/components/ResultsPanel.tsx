@@ -32,7 +32,7 @@ const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
   const maxScore = scoreValues.length ? Math.max(...scoreValues) : undefined;
 
   return (
-    <Card gradient="purple">
+    <Card title="Evaluation Results">
       <div className="p-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -134,9 +134,9 @@ const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
               name,
               typeof score === 'number' ? score : 0,
             );
-            const isHighScore =
+            const _isHighScore =
               display.category === 'score' && (score as number) >= 0.8;
-            const progress =
+            const _progress =
               display.showBar && typeof score === 'number'
                 ? score * 100
                 : undefined;
@@ -222,12 +222,8 @@ const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
               <StatCard
                 key={name}
                 title={name}
-                value={display.displayValue}
-                unit={display.unit}
+                value={`${display.displayValue}${display.unit ? ` ${display.unit}` : ''}`}
                 icon={getIcon(display.category)}
-                progress={progress}
-                category={display.category}
-                isHighlight={isHighScore}
               />
             );
           })}

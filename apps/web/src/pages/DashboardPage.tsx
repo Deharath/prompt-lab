@@ -85,7 +85,7 @@ const DashboardPage = () => {
         {data && !isLoading && !error && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Average Score Over Time Chart */}
-            <Card gradient="blue" className="p-6">
+            <Card title="Average Score Over Time" className="p-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Average Score Over Time
               </h3>
@@ -127,7 +127,7 @@ const DashboardPage = () => {
             </Card>
 
             {/* Total Cost by Model Chart */}
-            <Card gradient="purple" className="p-6">
+            <Card title="Total Cost by Model" className="p-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Total Cost by Model
               </h3>

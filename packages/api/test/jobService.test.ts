@@ -67,17 +67,18 @@ describe('job service', () => {
     expect(updated.status).toBe('completed');
     expect(updated.result).toBe('done');
     expect(typeof updated.metrics).toBe('object');
-    expect(updated.metrics?.avgScore).toBeCloseTo(expectedAvg);
+    const updatedMetrics = updated.metrics as JobMetrics & { avgScore: number };
+    expect(updatedMetrics.avgScore).toBeCloseTo(expectedAvg);
     expect(updated.tokensUsed).toBe(metrics.totalTokens);
     expect(updated.costUsd).toBeCloseTo(metrics.costUsd);
-
-    const storedMetrics = updated.metrics as JobMetrics & { avgScore: number };
-    expect(storedMetrics.avgScore).toBeCloseTo(expectedAvg);
 
     const fetched = await getJob(job.id);
     expect(fetched?.status).toBe('completed');
     expect(typeof fetched?.metrics).toBe('object');
-    expect((fetched?.metrics as any).avgScore).toBeCloseTo(expectedAvg);
+    const fetchedMetrics = fetched?.metrics as JobMetrics & {
+      avgScore: number;
+    };
+    expect(fetchedMetrics.avgScore).toBeCloseTo(expectedAvg);
     expect(fetched?.tokensUsed).toBe(metrics.totalTokens);
     expect(fetched?.costUsd).toBeCloseTo(metrics.costUsd);
   });

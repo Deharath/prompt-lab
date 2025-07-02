@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface FloatingActionButtonProps {
   onHistoryClick: () => void;
@@ -23,6 +23,7 @@ const FloatingActionButton = ({
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -36,6 +37,7 @@ const FloatingActionButton = ({
       onClick: onHistoryClick,
       color: 'from-blue-500 to-purple-600',
       show: true,
+      ariaLabel: 'View evaluation history',
     },
     {
       icon: (
@@ -44,6 +46,7 @@ const FloatingActionButton = ({
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -57,8 +60,28 @@ const FloatingActionButton = ({
       onClick: onQuickStart,
       color: 'from-green-500 to-emerald-600',
       show: !hasContent, // Only show when user hasn't started
+      ariaLabel: 'Start with a guided example',
     },
   ].filter((action) => action.show);
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+      setIsOpen(false);
+    }
+  };
+
+  const handleMainKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsOpen(!isOpen);
+    }
+    if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-40">
@@ -69,6 +92,8 @@ const FloatingActionButton = ({
             ? 'opacity-100 scale-100'
             : 'opacity-0 scale-95 pointer-events-none'
         }`}
+        role={isOpen ? 'menu' : undefined}
+        aria-label="Quick actions menu"
       >
         {actions.map((action, index) => (
           <div
@@ -86,7 +111,11 @@ const FloatingActionButton = ({
                 action.onClick();
                 setIsOpen(false);
               }}
-              className={`group flex items-center space-x-3 bg-linear-to-r ${action.color} text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}
+              onKeyDown={(e) => handleKeyDown(e, action.onClick)}
+              aria-label={action.ariaLabel}
+              role="menuitem"
+              tabIndex={isOpen ? 0 : -1}
+              className={`group flex items-center space-x-3 bg-linear-to-r ${action.color} text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`}
             >
               <div className="flex h-8 w-8 items-center justify-center">
                 {action.icon}
@@ -100,9 +129,16 @@ const FloatingActionButton = ({
       {/* Main FAB */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={handleMainKeyDown}
         disabled={running}
-        title="Quick Actions"
-        className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all duration-300 transform hover:scale-110 ${
+        aria-label={
+          running
+            ? 'Quick actions (disabled while running)'
+            : 'Open quick actions menu'
+        }
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all duration-300 transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
           running
             ? 'bg-linear-to-r from-gray-400 to-gray-500 cursor-not-allowed'
             : 'bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800'
@@ -111,20 +147,23 @@ const FloatingActionButton = ({
         <div className="absolute inset-0 bg-linear-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
 
         {running ? (
-          <div className="flex space-x-0.5">
-            <div
-              className="w-1 h-1 bg-white rounded-full animate-bounce"
-              style={{ animationDelay: '0ms' }}
-            ></div>
-            <div
-              className="w-1 h-1 bg-white rounded-full animate-bounce"
-              style={{ animationDelay: '150ms' }}
-            ></div>
-            <div
-              className="w-1 h-1 bg-white rounded-full animate-bounce"
-              style={{ animationDelay: '300ms' }}
-            ></div>
-          </div>
+          <>
+            <span className="sr-only">Processing evaluation...</span>
+            <div className="flex space-x-0.5" aria-hidden="true">
+              <div
+                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                style={{ animationDelay: '0ms' }}
+              ></div>
+              <div
+                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                style={{ animationDelay: '150ms' }}
+              ></div>
+              <div
+                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                style={{ animationDelay: '300ms' }}
+              ></div>
+            </div>
+          </>
         ) : (
           <svg
             className={`h-6 w-6 text-white transition-transform duration-300 ${
@@ -133,6 +172,7 @@ const FloatingActionButton = ({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

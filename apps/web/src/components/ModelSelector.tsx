@@ -69,13 +69,17 @@ const ModelSelector = ({
             }
           }}
           className="w-full appearance-none px-4 py-3 border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
+          aria-describedby="provider-help"
         >
           <option value="openai">OpenAI</option>
           <option value="gemini">Gemini</option>
         </select>
 
         {/* Custom dropdown arrow */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <div
+          className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+          aria-hidden="true"
+        >
           <svg
             className="h-4 w-4 transition-colors duration-300 text-gray-400 dark:text-gray-500"
             fill="none"
@@ -91,12 +95,19 @@ const ModelSelector = ({
           </svg>
         </div>
       </div>
+      <p id="provider-help" className="sr-only">
+        Choose an AI provider. Model options will update automatically based on
+        your selection.
+      </p>
     </div>
 
     {/* Model Selection */}
     <div className="space-y-3">
       <div className="flex items-center space-x-2">
-        <div className="transition-colors duration-300 text-gray-600 dark:text-gray-400">
+        <div
+          className="transition-colors duration-300 text-gray-600 dark:text-gray-400"
+          aria-hidden="true"
+        >
           {providerIcons[provider as keyof typeof providerIcons]}
         </div>
         <label
@@ -114,6 +125,7 @@ const ModelSelector = ({
           value={model}
           onChange={(e) => onModelChange(e.target.value)}
           className="w-full appearance-none px-4 py-3 border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
+          aria-describedby="model-help"
         >
           {modelsByProvider[provider as keyof typeof modelsByProvider]?.map(
             (m) => (
@@ -125,7 +137,10 @@ const ModelSelector = ({
         </select>
 
         {/* Custom dropdown arrow */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <div
+          className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+          aria-hidden="true"
+        >
           <svg
             className="h-4 w-4 transition-colors duration-300 text-gray-400 dark:text-gray-500"
             fill="none"
@@ -141,6 +156,11 @@ const ModelSelector = ({
           </svg>
         </div>
       </div>
+      <p id="model-help" className="sr-only">
+        Select a specific model from the{' '}
+        {provider === 'openai' ? 'OpenAI' : 'Google'} provider for your
+        evaluation.
+      </p>
     </div>
 
     {/* Model Info */}

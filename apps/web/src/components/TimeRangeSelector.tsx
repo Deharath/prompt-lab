@@ -18,7 +18,11 @@ const TimeRangeSelector = ({
   isLoading = false,
 }: TimeRangeSelectorProps) => {
   return (
-    <div className="flex space-x-2">
+    <div
+      role="group"
+      aria-label="Select time range for data"
+      className="flex space-x-2"
+    >
       {TIME_RANGES.map((range) => (
         <Button
           key={range.value}
@@ -26,6 +30,8 @@ const TimeRangeSelector = ({
           size="sm"
           onClick={() => onDaysChange(range.value)}
           disabled={isLoading}
+          aria-pressed={selectedDays === range.value}
+          aria-label={`Show data from last ${range.label.toLowerCase()}`}
         >
           {range.label}
         </Button>
