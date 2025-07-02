@@ -190,19 +190,19 @@ Please structure your response with:
 
   return (
     <div
-      className={`min-h-screen animate-fade-in transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-slate-900 to-black' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
+      className={`min-h-screen animate-fade-in transition-colors duration-300 ${darkMode ? 'dark bg-linear-to-br from-gray-900 via-slate-900 to-black' : 'bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
     >
       {/* Enhanced Header */}
       <div
         className={`relative shadow-lg border-b transition-colors duration-300 animate-slide-up ${darkMode ? 'bg-gray-800/90 backdrop-blur-sm border-gray-700/50' : 'bg-white/80 backdrop-blur-sm border-white/20'}`}
       >
         <div
-          className={`absolute inset-0 transition-colors duration-300 ${darkMode ? 'bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10' : 'bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5'}`}
+          className={`absolute inset-0 transition-colors duration-300 ${darkMode ? 'bg-linear-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10' : 'bg-linear-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5'}`}
         ></div>
         <div className="relative mx-auto max-w-7xl px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg animate-float">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-lg animate-float">
                 <svg
                   className="h-6 w-6"
                   fill="none"
@@ -219,7 +219,7 @@ Please structure your response with:
               </div>
               <div>
                 <h1
-                  className={`text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent text-shadow transition-colors duration-300 ${darkMode ? 'from-gray-100 via-blue-300 to-purple-300' : 'from-gray-900 via-blue-800 to-purple-800'}`}
+                  className={`text-3xl font-bold bg-linear-to-r bg-clip-text text-transparent text-shadow transition-colors duration-300 ${darkMode ? 'from-gray-100 via-blue-300 to-purple-300' : 'from-gray-900 via-blue-800 to-purple-800'}`}
                 >
                   Prompt Lab
                 </h1>

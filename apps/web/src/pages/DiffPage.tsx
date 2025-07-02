@@ -65,7 +65,7 @@ const DiffPage = () => {
   if (!diff) {
     return (
       <div
-        className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-slate-900 to-black' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
+        className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-linear-to-br from-gray-900 via-slate-900 to-black' : 'bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
       >
         <div
           className={`p-8 transition-colors duration-300 ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}
@@ -88,7 +88,7 @@ const DiffPage = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-slate-900 to-black' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
+      className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-linear-to-br from-gray-900 via-slate-900 to-black' : 'bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
     >
       {/* Header */}
       <div

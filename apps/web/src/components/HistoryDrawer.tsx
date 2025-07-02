@@ -88,8 +88,8 @@ const HistoryDrawer = ({ open, onClose }: HistoryDrawerProps) => {
         }`}
       >
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 p-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+        <div className="relative bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 p-6">
+          <div className="absolute inset-0 bg-linear-to-r from-white/10 to-transparent"></div>
           <div className="relative flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">

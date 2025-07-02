@@ -13,7 +13,7 @@ const ErrorAlert = ({ error }: ErrorAlertProps) => {
       data-testid="error-toast"
       className="relative overflow-hidden rounded-xl bg-red-50/80 backdrop-blur-sm border-2 border-red-200/60 shadow-lg ring-1 ring-red-200/20"
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-pink-500/5"></div>
+      <div className="absolute inset-0 bg-linear-to-r from-red-500/5 to-pink-500/5"></div>
       <div className="relative flex items-center space-x-4 p-6">
         {/* Icon */}
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 shadow-sm">

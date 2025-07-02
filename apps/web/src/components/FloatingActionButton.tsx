@@ -86,7 +86,7 @@ const FloatingActionButton = ({
                 action.onClick();
                 setIsOpen(false);
               }}
-              className={`group flex items-center space-x-3 bg-gradient-to-r ${action.color} text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}
+              className={`group flex items-center space-x-3 bg-linear-to-r ${action.color} text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}
             >
               <div className="flex h-8 w-8 items-center justify-center">
                 {action.icon}
@@ -104,11 +104,11 @@ const FloatingActionButton = ({
         title="Quick Actions"
         className={`group relative flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all duration-300 transform hover:scale-110 ${
           running
-            ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800'
+            ? 'bg-linear-to-r from-gray-400 to-gray-500 cursor-not-allowed'
+            : 'bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800'
         }`}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
 
         {running ? (
           <div className="flex space-x-0.5">

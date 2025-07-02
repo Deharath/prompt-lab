@@ -36,7 +36,7 @@ const ConfigurationPanel = ({
         <div className="p-8 space-y-6">
           {/* Header */}
           <div className="flex items-center space-x-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-md">
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -70,7 +70,7 @@ const ConfigurationPanel = ({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-emerald-600 text-white shadow-md">
                 <svg
                   className="h-4 w-4"
                   fill="none"
