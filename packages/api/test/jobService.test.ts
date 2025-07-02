@@ -67,10 +67,6 @@ describe('job service', () => {
     expect(updated.status).toBe('completed');
     expect(updated.result).toBe('done');
     expect(typeof updated.metrics).toBe('object');
-    expect(updated.metrics?.avgScore).toBeCloseTo(expectedAvg);
-    expect(updated.tokensUsed).toBe(metrics.totalTokens);
-    expect(updated.costUsd).toBeCloseTo(metrics.costUsd);
-
     const updatedMetrics = updated.metrics as JobMetrics & { avgScore: number };
     expect(updatedMetrics.avgScore).toBeCloseTo(expectedAvg);
     expect(updated.tokensUsed).toBe(metrics.totalTokens);
