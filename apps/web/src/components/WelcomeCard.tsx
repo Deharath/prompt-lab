@@ -10,7 +10,7 @@ const WelcomeCard = ({ onGetStarted }: WelcomeCardProps) => {
     <Card gradient="blue" className="animate-scale-in">
       <div className="p-12 text-center space-y-8">
         {/* Icon */}
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg animate-float">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-lg animate-float">
           <svg
             className="h-10 w-10"
             fill="none"
@@ -28,7 +28,7 @@ const WelcomeCard = ({ onGetStarted }: WelcomeCardProps) => {
 
         {/* Content */}
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent transition-colors duration-300 from-gray-900 via-blue-800 to-purple-800 dark:from-gray-100 dark:via-blue-300 dark:to-purple-300">
+          <h2 className="text-3xl font-bold bg-linear-to-r bg-clip-text text-transparent transition-colors duration-300 from-gray-900 via-blue-800 to-purple-800 dark:from-gray-100 dark:via-blue-300 dark:to-purple-300">
             Welcome to Prompt Lab
           </h2>
           <p className="text-lg max-w-2xl mx-auto leading-relaxed transition-colors duration-300 text-gray-600 dark:text-gray-300">

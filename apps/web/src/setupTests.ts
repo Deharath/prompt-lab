@@ -25,3 +25,13 @@ class MockEventSource extends EventTarget {
 // Replace global EventSource in test environment
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).EventSource = MockEventSource;
+
+// Mock ResizeObserver for Recharts
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).ResizeObserver = MockResizeObserver;

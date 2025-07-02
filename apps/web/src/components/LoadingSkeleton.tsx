@@ -1,9 +1,9 @@
 const LoadingSkeleton = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header Skeleton */}
       <div className="relative bg-white/80 backdrop-blur-sm shadow-lg border-b border-white/20">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5"></div>
         <div className="relative mx-auto max-w-7xl px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">

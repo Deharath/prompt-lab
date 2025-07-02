@@ -31,7 +31,7 @@ const Card = ({
       className={`relative overflow-hidden rounded-2xl backdrop-blur-sm shadow-xl ring-1 transition-colors duration-300 bg-white/80 dark:bg-gray-800/80 ring-gray-200/50 dark:ring-gray-700/50 ${className}`}
     >
       <div
-        className={`absolute inset-0 transition-colors duration-300 bg-gradient-to-br ${gradientClasses[gradient]}`}
+        className={`absolute inset-0 transition-colors duration-300 bg-linear-to-br ${gradientClasses[gradient]}`}
       ></div>
       <div className="relative">{children}</div>
     </div>

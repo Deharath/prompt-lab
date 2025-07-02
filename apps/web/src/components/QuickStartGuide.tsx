@@ -92,7 +92,7 @@ Please be constructive and specific in your feedback.`,
 
       <div className="relative max-w-2xl w-full mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 p-6">
+        <div className="bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
@@ -170,7 +170,7 @@ Please be constructive and specific in your feedback.`,
               <div className="flex space-x-3">
                 <button
                   onClick={() => setCurrentStep(currentStep + 1)}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+                  className="flex-1 bg-linear-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
                 >
                   {steps[currentStep].action}
                 </button>
@@ -205,7 +205,7 @@ Please be constructive and specific in your feedback.`,
                     className="group p-6 text-left border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                   >
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
                         {index + 1}
                       </div>
                       <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
@@ -225,7 +225,7 @@ Please be constructive and specific in your feedback.`,
                     localStorage.setItem('prompt-lab-used', 'true');
                     onClose();
                   }}
-                  className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200"
+                  className="flex-1 bg-linear-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200"
                 >
                   Create My Own
                 </button>

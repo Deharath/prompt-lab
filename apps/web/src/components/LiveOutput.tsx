@@ -160,7 +160,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-blue-600 text-white shadow-md">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-blue-600 text-white shadow-md">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -250,7 +250,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
       <div className="relative">
         <div
           ref={outputRef}
-          className="rounded-xl p-6 min-h-[300px] max-h-[500px] overflow-auto shadow-inner transition-colors duration-300 bg-gradient-to-br from-gray-900 via-gray-800 to-black dark:from-black dark:via-gray-900 dark:to-gray-800 custom-scrollbar"
+          className="rounded-xl p-6 min-h-[300px] max-h-[500px] overflow-auto shadow-inner transition-colors duration-300 bg-linear-to-br from-gray-900 via-gray-800 to-black dark:from-black dark:via-gray-900 dark:to-gray-800 custom-scrollbar"
           aria-live="polite"
           aria-label="Live output stream"
         >
@@ -404,7 +404,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
           )}
         </div>
         {/* Gradient overlay for readability */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none transition-colors duration-300 bg-gradient-to-t from-gray-900 to-transparent dark:from-black"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none transition-colors duration-300 bg-linear-to-t from-gray-900 to-transparent dark:from-black"></div>
       </div>
     </div>
   );

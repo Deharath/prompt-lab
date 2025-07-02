@@ -31,8 +31,8 @@ const Button = ({
 
   const variantClasses = {
     primary: isDisabled
-      ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed opacity-50'
-      : 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg',
+      ? 'bg-linear-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed opacity-50'
+      : 'bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 text-white hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg',
     secondary: isDisabled
       ? 'border-2 border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
       : 'border-2 border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:bg-gray-700',
@@ -41,7 +41,7 @@ const Button = ({
       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800',
     danger: isDisabled
       ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
-      : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95',
+      : 'bg-linear-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95',
     ghost: isDisabled
       ? 'text-gray-400 cursor-not-allowed'
       : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
@@ -85,7 +85,7 @@ const Button = ({
         </>
       ) : (
         <>
-          {icon && <span className="flex-shrink-0">{icon}</span>}
+          {icon && <span className="shrink-0">{icon}</span>}
           <span>{children}</span>
         </>
       )}

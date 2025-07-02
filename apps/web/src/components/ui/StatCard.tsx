@@ -59,7 +59,7 @@ const StatCard = ({
           )}
           {icon && (
             <div
-              className={`flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br ${getCategoryColor()} text-white shadow-sm`}
+              className={`flex h-6 w-6 items-center justify-center rounded-lg bg-linear-to-br ${getCategoryColor()} text-white shadow-sm`}
             >
               {icon}
             </div>
@@ -82,7 +82,7 @@ const StatCard = ({
         {progress !== undefined && (
           <div className="relative h-2 rounded-full overflow-hidden transition-colors duration-300 bg-gray-200 dark:bg-gray-700">
             <div
-              className={`absolute top-0 left-0 h-full bg-gradient-to-r ${getCategoryColor()} rounded-full transition-all duration-1000 ease-out`}
+              className={`absolute top-0 left-0 h-full bg-linear-to-r ${getCategoryColor()} rounded-full transition-all duration-1000 ease-out`}
               style={{ width: `${Math.min(progress, 100)}%` }}
             />
           </div>
@@ -90,7 +90,7 @@ const StatCard = ({
       </div>
 
       {/* Hover Effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-purple-500/5 to-pink-500/5 dark:from-purple-400/10 dark:to-pink-400/10"></div>
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-linear-to-br from-purple-500/5 to-pink-500/5 dark:from-purple-400/10 dark:to-pink-400/10"></div>
     </div>
   );
 };
