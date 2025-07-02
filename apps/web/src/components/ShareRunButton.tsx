@@ -3,9 +3,10 @@ import Button from './ui/Button.js';
 
 interface ShareRunButtonProps {
   jobId: string;
+  as?: 'button' | 'span'; // Allow rendering as different elements
 }
 
-const ShareRunButton = ({ jobId }: ShareRunButtonProps) => {
+const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
   const [showToast, setShowToast] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -41,11 +42,46 @@ const ShareRunButton = ({ jobId }: ShareRunButtonProps) => {
 
   return (
     <>
-      <Button
-        onClick={handleShare}
-        variant="secondary"
-        size="sm"
-        icon={
+      {as === 'button' ? (
+        <Button
+          onClick={handleShare}
+          variant="secondary"
+          size="sm"
+          icon={
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+              />
+            </svg>
+          }
+          title="Share this run (Alt+C)"
+          aria-label="Share this run"
+        >
+          Share
+        </Button>
+      ) : (
+        <span
+          onClick={handleShare}
+          className="inline-flex items-center justify-center p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-200 cursor-pointer"
+          title="Share this run (Alt+C)"
+          aria-label="Share this run"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleShare();
+            }
+          }}
+        >
           <svg
             className="h-4 w-4"
             fill="none"
@@ -59,12 +95,8 @@ const ShareRunButton = ({ jobId }: ShareRunButtonProps) => {
               d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
             />
           </svg>
-        }
-        title="Share this run (Alt+C)"
-        aria-label="Share this run"
-      >
-        Share
-      </Button>
+        </span>
+      )}
 
       {/* Success Toast */}
       {showToast && (

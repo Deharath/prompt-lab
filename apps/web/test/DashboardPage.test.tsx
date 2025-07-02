@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import DashboardPage from '../src/pages/DashboardPage.js';
 import * as api from '../src/api.js';
@@ -57,12 +58,16 @@ describe('DashboardPage', () => {
     cleanup();
   });
 
+  const renderWithRouter = (ui: any) => {
+    return render(<BrowserRouter>{ui}</BrowserRouter>);
+  };
+
   it('shows loading indicator initially and renders charts after successful data fetch', async () => {
     // Mock successful API response
     const mockFetchDashboardStats = vi.mocked(api.fetchDashboardStats);
     mockFetchDashboardStats.mockResolvedValue(mockDashboardData);
 
-    render(<DashboardPage />);
+    renderWithRouter(<DashboardPage />);
 
     // Should show loading initially
     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
@@ -83,7 +88,7 @@ describe('DashboardPage', () => {
       new Error('Failed to fetch data'),
     );
 
-    render(<DashboardPage />);
+    renderWithRouter(<DashboardPage />);
 
     // Wait for error to be displayed
     await waitFor(() => {

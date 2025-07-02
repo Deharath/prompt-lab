@@ -269,7 +269,7 @@ const HistoryDrawer = ({ open, onClose }: HistoryDrawerProps) => {
 
                         <div className="ml-2 flex items-center space-x-2">
                           <div onClick={(e) => e.stopPropagation()}>
-                            <ShareRunButton jobId={job.id} />
+                            <ShareRunButton jobId={job.id} as="span" />
                           </div>
                           <svg
                             className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors"

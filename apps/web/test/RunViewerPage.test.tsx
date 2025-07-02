@@ -38,11 +38,31 @@ vi.mock('../src/components/ui/Card.js', () => ({
 }));
 
 vi.mock('../src/components/ui/Button.js', () => ({
-  default: ({ children, onClick, ...props }: any) => (
-    <button onClick={onClick} {...props}>
-      {children}
-    </button>
-  ),
+  default: (props: any) => {
+    const {
+      children,
+      onClick,
+      fullWidth,
+      icon,
+      variant,
+      size,
+      loading,
+      ...restProps
+    } = props;
+    return (
+      <button
+        onClick={onClick}
+        className={fullWidth ? 'w-full' : ''}
+        data-variant={variant}
+        data-size={size}
+        data-loading={loading}
+        {...restProps}
+      >
+        {icon && <span>{icon}</span>}
+        {children}
+      </button>
+    );
+  },
 }));
 
 vi.mock('../src/components/LoadingSpinner.js', () => ({
