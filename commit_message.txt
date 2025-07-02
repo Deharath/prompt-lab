@@ -1,7 +1,0 @@
-feat(ci): improve CI configuration and package scripts
-
-This commit introduces several improvements to the CI workflow and package scripts:
-
--   **Enforce Node.js & pnpm versions:** Adds an `engines` field to `package.json` to ensure a consistent development and CI environment.
--   **Update pnpm in CI:** Aligns the pnpm version in `ci.yml` with the version specified in `package.json`.
--   **Eliminate Redundant Tests:** Corrects the root `test` script in `package.json` to prevent duplicate test runs, which speeds up the local and CI test execution.
