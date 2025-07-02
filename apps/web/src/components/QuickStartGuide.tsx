@@ -84,10 +84,16 @@ Please be constructive and specific in your feedback.`,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="guide-title"
+    >
       <div
         className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       <div className="relative max-w-2xl w-full mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
@@ -95,12 +101,16 @@ Please be constructive and specific in your feedback.`,
         <div className="bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm"
+                aria-hidden="true"
+              >
                 <svg
                   className="h-5 w-5 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -110,19 +120,21 @@ Please be constructive and specific in your feedback.`,
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 id="guide-title" className="text-2xl font-bold text-white">
                 Quick Start Guide
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/90 hover:bg-white/20 transition-all duration-200"
+              aria-label="Close quick start guide"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/90 hover:bg-white/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             >
               <svg
                 className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -148,7 +160,14 @@ Please be constructive and specific in your feedback.`,
                   <h3 className="text-xl font-bold text-gray-900">
                     {steps[currentStep].title}
                   </h3>
-                  <div className="mt-2 flex space-x-1">
+                  <div
+                    className="mt-2 flex space-x-1"
+                    role="progressbar"
+                    aria-valuenow={currentStep + 1}
+                    aria-valuemin={1}
+                    aria-valuemax={steps.length}
+                    aria-label={`Step ${currentStep + 1} of ${steps.length}`}
+                  >
                     {steps.map((_, index) => (
                       <div
                         key={index}
@@ -157,6 +176,7 @@ Please be constructive and specific in your feedback.`,
                             ? 'bg-blue-500 w-8'
                             : 'bg-gray-200 w-4'
                         }`}
+                        aria-hidden="true"
                       />
                     ))}
                   </div>
@@ -170,14 +190,16 @@ Please be constructive and specific in your feedback.`,
               <div className="flex space-x-3">
                 <button
                   onClick={() => setCurrentStep(currentStep + 1)}
-                  className="flex-1 bg-linear-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+                  aria-label={`Continue to ${currentStep + 2 < steps.length ? steps[currentStep + 1].title : 'examples'}`}
+                  className="flex-1 bg-linear-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                 >
                   {steps[currentStep].action}
                 </button>
                 {currentStep > 0 && (
                   <button
                     onClick={() => setCurrentStep(currentStep - 1)}
-                    className="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:border-gray-300 hover:text-gray-700 transition-all duration-200"
+                    aria-label={`Go back to ${steps[currentStep - 1].title}`}
+                    className="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:border-gray-300 hover:text-gray-700 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500/50"
                   >
                     Back
                   </button>
@@ -197,15 +219,23 @@ Please be constructive and specific in your feedback.`,
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                role="group"
+                aria-label="Template examples"
+              >
                 {examples.map((example, index) => (
                   <button
                     key={example.title}
                     onClick={() => handleExampleSelect(example.template)}
-                    className="group p-6 text-left border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                    aria-label={`Select ${example.title} template: ${example.description}`}
+                    className="group p-6 text-left border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                   >
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-white text-sm font-bold"
+                        aria-hidden="true"
+                      >
                         {index + 1}
                       </div>
                       <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
@@ -225,13 +255,15 @@ Please be constructive and specific in your feedback.`,
                     localStorage.setItem('prompt-lab-used', 'true');
                     onClose();
                   }}
-                  className="flex-1 bg-linear-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200"
+                  aria-label="Skip examples and create your own template"
+                  className="flex-1 bg-linear-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500/50"
                 >
                   Create My Own
                 </button>
                 <button
                   onClick={() => setCurrentStep(currentStep - 1)}
-                  className="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:border-gray-300 hover:text-gray-700 transition-all duration-200"
+                  aria-label="Go back to previous step"
+                  className="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:border-gray-300 hover:text-gray-700 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500/50"
                 >
                   Back
                 </button>

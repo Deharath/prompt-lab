@@ -53,7 +53,11 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs px-2 py-1 rounded-md transition-colors duration-300 bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
+            aria-label={
+              isExpanded ? 'Collapse input editor' : 'Expand input editor'
+            }
+            aria-expanded={isExpanded}
+            className="text-xs px-2 py-1 rounded-md transition-colors duration-300 bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
           >
             {isExpanded ? 'Collapse' : 'Expand'}
           </button>
@@ -107,6 +111,7 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -119,7 +124,11 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
               Quick samples:
             </span>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div
+            className="flex flex-wrap gap-3"
+            role="group"
+            aria-label="Sample input data options"
+          >
             <button
               type="button"
               onClick={() =>
@@ -127,9 +136,10 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
                   'This is a sample news article about recent developments in artificial intelligence technology. AI continues to advance rapidly across various industries, bringing both opportunities and challenges. Researchers are working on making AI systems more reliable, interpretable, and beneficial for society.',
                 )
               }
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 dark:border-blue-700 dark:hover:border-blue-600"
+              aria-label="Insert sample news article text"
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 dark:border-blue-700 dark:hover:border-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
             >
-              <span>📰</span>
+              <span aria-hidden="true">📰</span>
               <span>Sample News</span>
             </button>
             <button
@@ -139,9 +149,10 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
                   'function calculateSum(a, b) {\n  return a + b;\n}\n\n// Usage example\nconst result = calculateSum(5, 3);\nconsole.log(result); // Output: 8',
                 )
               }
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 hover:border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 dark:border-purple-700 dark:hover:border-purple-600"
+              aria-label="Insert sample code snippet"
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 hover:border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 dark:border-purple-700 dark:hover:border-purple-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
             >
-              <span>💻</span>
+              <span aria-hidden="true">💻</span>
               <span>Sample Code</span>
             </button>
             <button
@@ -151,9 +162,10 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
                   'I love this product! The quality is amazing and the customer service was exceptional. Highly recommend to anyone looking for a reliable solution. The delivery was fast and the packaging was perfect.',
                 )
               }
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 hover:border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 dark:border-green-700 dark:hover:border-green-600"
+              aria-label="Insert sample product review text"
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 hover:border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 dark:border-green-700 dark:hover:border-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50"
             >
-              <span>💬</span>
+              <span aria-hidden="true">💬</span>
               <span>Sample Review</span>
             </button>
           </div>

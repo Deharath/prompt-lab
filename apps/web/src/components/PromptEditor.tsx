@@ -11,6 +11,7 @@ const PromptEditor = ({ value, onChange }: Props) => (
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -42,11 +43,17 @@ Analyze the following text and provide a summary:
 Please focus on the key points and main themes."
         rows={8}
         className="w-full px-4 py-3 border-2 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm backdrop-blur-sm transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 text-gray-900 placeholder-gray-500 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400"
+        aria-describedby="prompt-help"
       />
       <div className="absolute bottom-3 right-3 text-xs px-2 py-1 rounded-md transition-colors duration-300 text-gray-400 bg-white/80 dark:text-gray-500 dark:bg-gray-700/80">
         {value.length} characters
       </div>
     </div>
+
+    <p id="prompt-help" className="text-xs text-muted">
+      Use <code className="bg-muted px-1 py-0.5 rounded">{'{{input}}'}</code> as
+      a placeholder for data that will be replaced during evaluation.
+    </p>
   </div>
 );
 

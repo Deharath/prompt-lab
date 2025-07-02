@@ -32,7 +32,7 @@ const ConfigurationPanel = ({
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-6">
       {/* Prompt Card */}
-      <Card gradient="blue">
+      <Card title="Prompt Template">
         <div className="p-8 space-y-6">
           {/* Header */}
           <div className="flex items-center space-x-3">
@@ -65,7 +65,7 @@ const ConfigurationPanel = ({
       </Card>
 
       {/* Run Configuration Card */}
-      <Card gradient="green">
+      <Card title="Run Configuration">
         <div className="p-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

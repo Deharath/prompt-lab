@@ -7,7 +7,7 @@ interface WelcomeCardProps {
 
 const WelcomeCard = ({ onGetStarted }: WelcomeCardProps) => {
   return (
-    <Card gradient="blue" className="animate-scale-in">
+    <Card title="Welcome to Prompt Lab" className="animate-scale-in">
       <div className="p-12 text-center space-y-8">
         {/* Icon */}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-lg animate-float">

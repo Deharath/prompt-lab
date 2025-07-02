@@ -2,15 +2,27 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiClient } from './api.js';
 import { useJobStore } from './store/jobStore.js';
-import ConfigurationPanel from './components/ConfigurationPanel.js';
-import LiveOutput from './components/LiveOutput.js';
-import ResultsPanel from './components/ResultsPanel.js';
-import DebugPanel from './components/DebugPanel.js';
-import ErrorAlert from './components/ErrorAlert.js';
-import HistoryDrawer from './components/HistoryDrawer.js';
-import QuickStartGuide from './components/QuickStartGuide.js';
-import WelcomeCard from './components/WelcomeCard.js';
+import Card from './components/ui/Card.js';
 import Button from './components/ui/Button.js';
+import StatCard from './components/ui/StatCard.js';
+import PromptEditor from './components/PromptEditor.js';
+import InputEditor from './components/InputEditor.js';
+import ModelSelector from './components/ModelSelector.js';
+import LiveOutput from './components/LiveOutput.js';
+import ErrorAlert from './components/ErrorAlert.js';
+import HistorySidebar from './components/HistorySidebar.js';
+import DiffView from './components/DiffView.js';
+
+const SAMPLE_PROMPT = `Analyze the following text and provide a summary focusing on the key points and main themes:
+
+{{input}}
+
+Please structure your response with:
+1. Main topic
+2. Key points (3-5 bullet points)
+3. Overall conclusion or implications`;
+
+const SAMPLE_INPUT = `This is a sample news article about recent developments in artificial intelligence technology. AI continues to advance rapidly across various industries, bringing both opportunities and challenges. Researchers are working on making AI systems more reliable, interpretable, and beneficial for society.`;
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,8 +32,8 @@ const Home = () => {
   const [model, setModel] = useState('gpt-4o-mini');
   const [error, setError] = useState('');
   const {
-    current,
-    log,
+    current: _current,
+    log: _log,
     metrics,
     running,
     hasUserData,
@@ -29,15 +41,9 @@ const Home = () => {
     finish,
     reset,
     setUserData,
+    comparison,
   } = useJobStore();
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [showQuickStart, setShowQuickStart] = useState(false);
-  const [debugOpen, setDebugOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('prompt-lab-dark-mode');
-    return saved ? JSON.parse(saved) : false;
-  });
-  // New state for output panel
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [outputText, setOutputText] = useState('');
   const [streamStatus, setStreamStatus] = useState<
     'streaming' | 'complete' | 'error'
@@ -62,34 +68,12 @@ const Home = () => {
     };
   }, []);
 
-  // Show quick start guide for new users (no template and no history)
+  // Update user data state
   useEffect(() => {
-    const hasUsedBefore = localStorage.getItem('prompt-lab-used');
-    if (!hasUsedBefore && !template) {
-      setShowQuickStart(true);
-    }
-    // Update user data state
     setUserData(!!(template || inputData));
   }, [template, inputData, setUserData]);
 
-  // Apply dark mode to document
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('prompt-lab-dark-mode', JSON.stringify(darkMode));
-  }, [darkMode]);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
   const handleRun = async () => {
-    // Mark as used
-    localStorage.setItem('prompt-lab-used', 'true');
-
     console.log('🚀 Run button clicked!');
 
     // Close any existing stream before starting a new one
@@ -124,16 +108,13 @@ const Home = () => {
       const eventSource = ApiClient.streamJob(
         job.id,
         (token) => {
-          // token is already the string content from SSE events
           console.log('🔤 Received token:', JSON.stringify(token));
-          console.log('📝 Full text before:', JSON.stringify(fullText));
           fullText += token;
-          console.log('📝 Full text after:', JSON.stringify(fullText));
           setOutputText(fullText);
         },
         async () => {
           setStreamStatus('complete');
-          currentEventSourceRef.current = null; // Clear reference when done
+          currentEventSourceRef.current = null;
           try {
             const final = await ApiClient.fetchJob(job.id);
             console.log('📊 Final results:', final);
@@ -144,185 +125,147 @@ const Home = () => {
         },
         (streamError) => {
           setStreamStatus('error');
-          currentEventSourceRef.current = null; // Clear reference on error
+          currentEventSourceRef.current = null;
           setError(`Stream error: ${streamError.message}`);
         },
         (metrics) => {
-          // Update metrics in store as they arrive
           finish((metrics as Record<string, number>) || {});
         },
       );
 
-      // Store the EventSource reference
       currentEventSourceRef.current = eventSource;
     } catch (err) {
       setStreamStatus('error');
       console.error('❌ Job creation failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to run';
       setError(errorMessage);
-      // Do not reset here, so error is visible
     }
   };
 
-  const handleGetStarted = () => {
-    // Pre-populate with sample prompt and data
-    setTemplate(`Analyze the following text and provide a summary focusing on the key points and main themes:
-
-{{input}}
-
-Please structure your response with:
-1. Main topic
-2. Key points (3-5 bullet points)
-3. Overall conclusion or implications`);
-
-    setInputData(
-      'This is a sample news article about recent developments in artificial intelligence technology. AI continues to advance rapidly across various industries, bringing both opportunities and challenges. Researchers are working on making AI systems more reliable, interpretable, and beneficial for society.',
-    );
-
-    localStorage.setItem('prompt-lab-used', 'true');
-    setShowQuickStart(false);
+  const handleStartWithExample = () => {
+    setTemplate(SAMPLE_PROMPT);
+    setInputData(SAMPLE_INPUT);
   };
 
-  const handleQuickStartTemplate = (newTemplate: string) => {
-    setTemplate(newTemplate);
-    localStorage.setItem('prompt-lab-used', 'true');
-    setShowQuickStart(false);
+  const isEmptyState = !template && !inputData && !hasUserData;
+  const showComparison = comparison.baseJobId && comparison.compareJobId;
+
+  const handleJobSelect = (_jobId: string) => {
+    // Job loading is handled by the sidebar
+  };
+
+  const handleCompareJobs = (_baseId: string, _compareId: string) => {
+    // Comparison state is managed by the store, we just need to react to it
   };
 
   return (
-    <div
-      className={`min-h-screen animate-fade-in transition-colors duration-300 ${darkMode ? 'dark bg-linear-to-br from-gray-900 via-slate-900 to-black' : 'bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
-    >
-      {/* Enhanced Header */}
+    <div className="min-h-screen bg-background flex">
+      {/* History Sidebar - Hidden on mobile, shows as overlay when needed */}
       <div
-        className={`relative shadow-lg border-b transition-colors duration-300 animate-slide-up ${darkMode ? 'bg-gray-800/90 backdrop-blur-sm border-gray-700/50' : 'bg-white/80 backdrop-blur-sm border-white/20'}`}
+        className={`
+        fixed lg:relative inset-y-0 left-0 z-30 
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarCollapsed ? 'lg:w-0' : 'lg:w-80'} 
+        ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
+      `}
       >
+        <HistorySidebar
+          isCollapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onSelectJob={handleJobSelect}
+          onCompareJobs={handleCompareJobs}
+        />
+      </div>
+
+      {/* Mobile overlay */}
+      {!sidebarCollapsed && (
         <div
-          className={`absolute inset-0 transition-colors duration-300 ${darkMode ? 'bg-linear-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10' : 'bg-linear-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5'}`}
-        ></div>
-        <div className="relative mx-auto max-w-7xl px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-lg animate-float">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h1
-                  className={`text-3xl font-bold bg-linear-to-r bg-clip-text text-transparent text-shadow transition-colors duration-300 ${darkMode ? 'from-gray-100 via-blue-300 to-purple-300' : 'from-gray-900 via-blue-800 to-purple-800'}`}
-                >
-                  Prompt Lab
-                </h1>
-                <p
-                  className={`font-medium transition-colors duration-300 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
-                >
-                  Evaluate and test your prompts with real-time streaming
-                </p>
-              </div>
-            </div>
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setSidebarCollapsed(true)}
+          aria-label="Close sidebar"
+        />
+      )}
 
-            <div className="flex items-center space-x-3">
-              {/* Header Actions Group */}
-              <div className="flex items-center space-x-2">
-                {/* Debug Panel Toggle (DEV only) */}
-                {process.env.NODE_ENV === 'development' && (
-                  <Button
-                    onClick={() => setDebugOpen(!debugOpen)}
-                    variant={debugOpen ? 'primary' : 'tertiary'}
-                    size="sm"
-                    icon={
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    }
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden min-w-0">
+        {/* Header */}
+        <header
+          className="border-b border-border bg-card/50 backdrop-blur-sm"
+          role="banner"
+        >
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {/* Mobile menu button */}
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="lg:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  aria-label="Toggle job history sidebar"
+                  aria-expanded={!sidebarCollapsed}
+                  aria-controls="history-sidebar"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
                   >
-                    Debug
-                  </Button>
-                )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
 
-                <Button
-                  onClick={() => setHistoryOpen(true)}
-                  variant="tertiary"
-                  size="sm"
-                  icon={
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  }
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white"
+                  aria-hidden="true"
                 >
-                  History
-                </Button>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+                    Prompt Lab
+                  </h1>
+                  <p className="text-sm text-muted hidden sm:block">
+                    Evaluate and test your prompts with real-time streaming
+                  </p>
+                </div>
+              </div>
 
-                <Button
-                  onClick={() => setShowQuickStart(true)}
-                  variant="tertiary"
-                  size="sm"
-                  icon={
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  }
-                >
-                  Guide
-                </Button>
-
+              <nav
+                className="flex items-center gap-2"
+                role="navigation"
+                aria-label="Main navigation"
+              >
                 <Button
                   onClick={() => navigate('/dashboard')}
-                  variant="tertiary"
+                  variant="ghost"
                   size="sm"
+                  aria-label="Go to analytics dashboard"
+                  className="hidden sm:inline-flex"
                   icon={
                     <svg
                       className="h-4 w-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -335,168 +278,235 @@ Please structure your response with:
                 >
                   Dashboard
                 </Button>
-              </div>
 
-              {/* Dark Mode Toggle */}
-              <button
-                type="button"
-                onClick={toggleDarkMode}
-                className={`group flex items-center justify-center w-10 h-10 rounded-xl shadow-md ring-1 transition-all focus-ring ${darkMode ? 'bg-gray-700/80 ring-gray-600/50 hover:bg-gray-700 hover:ring-blue-400/50' : 'bg-white/80 ring-gray-200/50 hover:bg-white hover:ring-blue-300/50'}`}
-                title={
-                  darkMode ? 'Switch to light mode' : 'Switch to dark mode'
-                }
-              >
-                {darkMode ? (
-                  <svg
-                    className="h-5 w-5 text-yellow-400 group-hover:text-yellow-300 transition-colors"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="h-5 w-5 text-gray-700 group-hover:text-blue-600 transition-colors"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Debug Panel Overlay */}
-        {debugOpen && process.env.NODE_ENV === 'development' && (
-          <div
-            className={`border-t transition-colors duration-300 ${darkMode ? 'border-gray-700/50 bg-gray-800/95' : 'border-gray-200/50 bg-white/95'}`}
-          >
-            <div className="mx-auto max-w-7xl px-6 py-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3
-                  className={`text-lg font-semibold transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}
-                >
-                  Debug Panel
-                </h3>
+                {/* Mobile dashboard button */}
                 <button
-                  type="button"
-                  onClick={() => setDebugOpen(false)}
-                  className={`rounded-lg p-1 transition-colors ${darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                  onClick={() => navigate('/dashboard')}
+                  className="sm:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  aria-label="Go to analytics dashboard"
                 >
                   <svg
                     className="h-5 w-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
                 </button>
-              </div>
-              <DebugPanel
-                running={running}
-                log={log}
-                metrics={metrics}
-                provider={provider}
-                model={model}
-                template={template}
+              </nav>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-auto" role="main">
+          {error && (
+            <div className="p-4 sm:p-6 pb-0" role="alert" aria-live="polite">
+              <ErrorAlert error={error} />
+            </div>
+          )}
+
+          {showComparison ? (
+            // Show comparison view when comparing jobs
+            <section className="p-4 sm:p-6" aria-label="Job comparison view">
+              <DiffView
+                baseJobId={comparison.baseJobId!}
+                compareJobId={comparison.compareJobId!}
+                onClose={() => {}}
               />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Main Content */}
-      <div className="mx-auto max-w-6xl px-6 py-8 space-y-8">
-        {error && (
-          <div className="animate-scale-in">
-            <ErrorAlert error={error} />
-          </div>
-        )}
-
-        <div className="space-y-8">
-          {/* Configuration Section */}
-          {!template && !inputData && !hasUserData ? (
-            <div
-              className="animate-slide-up"
-              style={{ animationDelay: '100ms' }}
-            >
-              <WelcomeCard onGetStarted={handleGetStarted} />
-            </div>
+            </section>
           ) : (
-            <div
-              className="animate-slide-up"
-              style={{ animationDelay: '100ms' }}
+            // Regular workspace view
+            <section
+              className="p-4 sm:p-6"
+              aria-label="Prompt evaluation workspace"
             >
-              <ConfigurationPanel
-                template={template}
-                inputData={inputData}
-                provider={provider}
-                model={model}
-                running={running}
-                onTemplateChange={setTemplate}
-                onInputDataChange={setInputData}
-                onProviderChange={setProvider}
-                onModelChange={setModel}
-                onRun={handleRun}
-              />
-            </div>
-          )}
+              {/* Responsive Layout */}
+              <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+                {/* Input Column - Full width on mobile, stacks first */}
+                <div className="xl:col-span-2 space-y-4 sm:space-y-6 order-1 xl:order-1">
+                  {/* Prompt Card */}
+                  <Card title="Prompt Template">
+                    {isEmptyState ? (
+                      <div className="text-center py-6 sm:py-8">
+                        <div className="text-muted mb-4" aria-hidden="true">
+                          <svg
+                            className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                          Create your first prompt
+                        </h3>
+                        <p className="text-sm sm:text-base text-muted mb-4 px-2">
+                          Write a prompt template with input placeholders like{' '}
+                          <code>{'{{input}}'}</code>
+                        </p>
+                        <Button
+                          onClick={handleStartWithExample}
+                          variant="primary"
+                          size="sm"
+                          aria-label="Load a sample prompt and input to get started"
+                          className="w-full sm:w-auto"
+                        >
+                          Start with a guided example
+                        </Button>
+                      </div>
+                    ) : (
+                      <PromptEditor value={template} onChange={setTemplate} />
+                    )}
+                  </Card>
 
-          {/* Live Output Section */}
-          {(outputText.length > 0 || streamStatus === 'streaming') && (
-            <div
-              className="animate-slide-up"
-              style={{ animationDelay: '200ms' }}
-            >
-              <LiveOutput outputText={outputText} status={streamStatus} />
-            </div>
-          )}
+                  {/* Input Data Card */}
+                  <Card title="Input Data">
+                    {isEmptyState ? (
+                      <div className="text-center py-4 sm:py-6">
+                        <div className="text-muted mb-4" aria-hidden="true">
+                          <svg
+                            className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-sm sm:text-base text-muted px-2">
+                          Add the data that will replace{' '}
+                          <code>{'{{input}}'}</code> in your prompt
+                        </p>
+                      </div>
+                    ) : (
+                      <InputEditor
+                        value={inputData}
+                        onChange={setInputData}
+                        placeholder="Enter your input data here..."
+                      />
+                    )}
+                  </Card>
 
-          {/* Results Section */}
-          {metrics && Object.keys(metrics).length > 0 && (
-            <div
-              className="animate-scale-in"
-              style={{ animationDelay: '300ms' }}
-            >
-              <ResultsPanel metrics={metrics} jobId={current?.id} />
-            </div>
+                  {/* Run Configuration Card */}
+                  <Card title="Run Configuration">
+                    <div className="space-y-4">
+                      <ModelSelector
+                        provider={provider}
+                        model={model}
+                        onProviderChange={setProvider}
+                        onModelChange={setModel}
+                      />
+
+                      <Button
+                        onClick={handleRun}
+                        variant="primary"
+                        fullWidth
+                        loading={running}
+                        disabled={!template || !inputData}
+                        aria-describedby={
+                          !template || !inputData
+                            ? 'run-button-help'
+                            : undefined
+                        }
+                      >
+                        {running ? 'Running Evaluation...' : 'Run Evaluation'}
+                      </Button>
+                      {(!template || !inputData) && (
+                        <p
+                          id="run-button-help"
+                          className="text-xs sm:text-sm text-muted text-center px-2"
+                          role="status"
+                        >
+                          Complete both prompt template and input data to run
+                          evaluation
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Output Column - Full width on mobile, stacks second */}
+                <div className="xl:col-span-3 space-y-4 sm:space-y-6 order-2 xl:order-2">
+                  {/* Live Output Card */}
+                  <Card title="Live Output">
+                    {outputText || streamStatus === 'streaming' ? (
+                      <LiveOutput
+                        outputText={outputText}
+                        status={streamStatus}
+                      />
+                    ) : (
+                      <div className="text-center py-8 sm:py-12">
+                        <div className="text-muted mb-4" aria-hidden="true">
+                          <svg
+                            className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1}
+                              d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4M7 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4H17M7 4H17"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                          Ready to stream
+                        </h3>
+                        <p className="text-sm sm:text-base text-muted px-2">
+                          Your prompt output will appear here in real-time when
+                          you run an evaluation
+                        </p>
+                      </div>
+                    )}
+                  </Card>
+
+                  {/* Evaluation Results Card */}
+                  {metrics && Object.keys(metrics).length > 0 && (
+                    <Card title="Evaluation Results">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {Object.entries(metrics).map(([name, value]) => (
+                          <StatCard
+                            key={name}
+                            title={name
+                              .replace(/([A-Z])/g, ' $1')
+                              .replace(/^./, (str) => str.toUpperCase())}
+                            value={
+                              typeof value === 'number'
+                                ? value.toFixed(3)
+                                : String(value)
+                            }
+                          />
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </section>
           )}
-        </div>
+        </main>
       </div>
-
-      {historyOpen && (
-        <HistoryDrawer
-          open={historyOpen}
-          onClose={() => setHistoryOpen(false)}
-        />
-      )}
-
-      {showQuickStart && (
-        <QuickStartGuide
-          onClose={() => setShowQuickStart(false)}
-          onExampleLoad={handleQuickStartTemplate}
-        />
-      )}
     </div>
   );
 };

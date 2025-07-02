@@ -1,6 +1,6 @@
 import { ReactNode, ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'danger' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps
@@ -27,30 +27,24 @@ const Button = ({
   const isDisabled = loading || disabled;
 
   const baseClasses =
-    'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50';
+    'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
   const variantClasses = {
     primary: isDisabled
-      ? 'bg-linear-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed opacity-50'
-      : 'bg-linear-to-r from-blue-600 via-purple-600 to-blue-700 text-white hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg',
+      ? 'bg-muted text-foreground/50 cursor-not-allowed'
+      : 'bg-primary text-white hover:bg-primary/90 active:bg-primary/95 shadow-md hover:shadow-lg',
     secondary: isDisabled
-      ? 'border-2 border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
-      : 'border-2 border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:bg-gray-700',
-    tertiary: isDisabled
-      ? 'text-gray-400 cursor-not-allowed'
-      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800',
-    danger: isDisabled
-      ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
-      : 'bg-linear-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-lg active:scale-95',
+      ? 'border border-border bg-card text-foreground/50 cursor-not-allowed'
+      : 'border border-primary bg-transparent text-primary hover:bg-primary/10 active:bg-primary/20',
     ghost: isDisabled
-      ? 'text-gray-400 cursor-not-allowed'
-      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+      ? 'text-foreground/50 cursor-not-allowed'
+      : 'text-foreground/70 hover:text-foreground hover:bg-muted/50 active:bg-muted/70',
   };
 
   const sizeClasses = {
-    sm: 'px-3 py-2 text-sm space-x-1',
-    md: 'px-4 py-3 text-base space-x-2',
-    lg: 'px-6 py-4 text-lg space-x-3',
+    sm: 'px-3 py-2 text-sm gap-1',
+    md: 'px-4 py-3 text-base gap-2',
+    lg: 'px-6 py-4 text-lg gap-3',
   };
 
   return (
@@ -67,19 +61,19 @@ const Button = ({
     >
       {loading ? (
         <>
-          <div className="flex space-x-1">
+          <div className="flex gap-1">
             <div
-              className="w-2 h-2 bg-current rounded-full animate-bounce"
+              className="w-2 h-2 bg-current rounded-full animate-pulse"
               style={{ animationDelay: '0ms' }}
-            ></div>
+            />
             <div
-              className="w-2 h-2 bg-current rounded-full animate-bounce"
+              className="w-2 h-2 bg-current rounded-full animate-pulse"
               style={{ animationDelay: '150ms' }}
-            ></div>
+            />
             <div
-              className="w-2 h-2 bg-current rounded-full"
+              className="w-2 h-2 bg-current rounded-full animate-pulse"
               style={{ animationDelay: '300ms' }}
-            ></div>
+            />
           </div>
           <span>Loading...</span>
         </>
