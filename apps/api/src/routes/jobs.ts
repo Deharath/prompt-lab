@@ -7,6 +7,7 @@ import {
   listJobs,
   getPreviousJob,
   getProvider,
+  deleteJob,
   type Job,
 } from '@prompt-lab/api';
 import {
@@ -486,6 +487,26 @@ jobsRouter.get(
       }
 
       res.json({ baseJob, compareJob });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// DELETE /jobs/:id - Delete a job
+jobsRouter.delete(
+  '/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const deleted = await deleteJob(id);
+
+      if (!deleted) {
+        throw new NotFoundError('Job not found');
+      }
+
+      res.status(204).send(); // 204 No Content for successful deletion
     } catch (error) {
       next(error);
     }

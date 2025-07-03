@@ -42,13 +42,24 @@ app.use((req, res, next) => {
 // Security middleware
 app.use(express.json({ limit: config.security.requestSizeLimit })); // Limit request size
 
-// Rate limiting for jobs API
-const jobsRateLimit = rateLimit({
+// Rate limiting for jobs API - stricter for writes, more permissive for reads
+const jobsWriteRateLimit = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.jobsMax,
   message: { error: 'Too many job requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'GET', // Skip rate limiting for GET requests (reading history)
+});
+
+// More permissive rate limiting for all jobs operations
+const jobsReadRateLimit = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.globalMax * 2, // Allow more reads than general global limit
+  message: { error: 'Too many job requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method !== 'GET', // Only apply to GET requests
 });
 
 // Global rate limiting (more permissive)
@@ -67,7 +78,7 @@ app.get('/health', (_req, res) => {
   res.redirect('/health/');
 });
 
-app.use('/jobs', jobsRateLimit, jobsRouter);
+app.use('/jobs', jobsReadRateLimit, jobsWriteRateLimit, jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
 
 // Serve built web UI from /public when present
@@ -128,20 +139,32 @@ app.use(
 
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  const server = app.listen(config.server.port, config.server.host, () => {
-    log.info(`API server started`, {
-      port: config.server.port,
-      env: config.server.env,
-      host: config.server.host,
+  try {
+    const server = app.listen(config.server.port, config.server.host, () => {
+      log.info(`API server started`, {
+        port: config.server.port,
+        env: config.server.env,
+        host: config.server.host,
+      });
+      log.info(
+        `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
+      );
     });
-    log.info(
-      `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
-    );
-  });
 
-  server.on('error', (error) => {
-    log.error('Server failed to start', { error: error.message });
-  });
+    server.on('error', (error) => {
+      log.error('Server failed to start', { error: error.message });
+      console.error('Full server error:', error);
+      process.exit(1);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    log.error(
+      'Startup error',
+      {},
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    process.exit(1);
+  }
 }
 
 export default app;

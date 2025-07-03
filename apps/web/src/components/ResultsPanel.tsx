@@ -1,6 +1,7 @@
 import Card from './ui/Card.js';
 import StatCard from './ui/StatCard.js';
 import ShareRunButton from './ShareRunButton.js';
+import { useState, useEffect } from 'react';
 
 interface ResultsPanelProps {
   metrics: Record<string, unknown> | undefined;
@@ -8,6 +9,24 @@ interface ResultsPanelProps {
 }
 
 const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
+  // Add collapsible state with localStorage persistence
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('evaluation-panel-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Persist collapse state to localStorage
+  useEffect(() => {
+    localStorage.setItem(
+      'evaluation-panel-collapsed',
+      JSON.stringify(isCollapsed),
+    );
+  }, [isCollapsed]);
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   if (!metrics || Object.keys(metrics).length === 0) {
     return null;
   }
@@ -224,12 +243,35 @@ const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
             <h2 className="text-2xl font-bold transition-colors duration-300 text-gray-900 dark:text-gray-100">
               Evaluation Results
             </h2>
+            <button
+              onClick={toggleCollapse}
+              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label={
+                isCollapsed
+                  ? 'Expand evaluation results'
+                  : 'Collapse evaluation results'
+              }
+            >
+              <svg
+                className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+            </button>
           </div>
           {jobId && <ShareRunButton jobId={jobId} />}
         </div>
 
         {/* Summary Statistics */}
-        {hasClassificationMetrics && (
+        {!isCollapsed && hasClassificationMetrics && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard
               title="Avg Classification Score"
@@ -252,43 +294,44 @@ const ResultsPanel = ({ metrics, jobId }: ResultsPanelProps) => {
         )}
 
         {/* Metrics by Category */}
-        {Object.entries(categorizedMetrics).map(
-          ([category, categoryMetrics]) => {
-            if (categoryMetrics.length === 0) return null;
+        {!isCollapsed &&
+          Object.entries(categorizedMetrics).map(
+            ([category, categoryMetrics]) => {
+              if (categoryMetrics.length === 0) return null;
 
-            return (
-              <div key={category} className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={`flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br ${getCategoryColor(category)} text-white shadow-sm`}
-                  >
-                    {getCategoryIcon(category)}
+              return (
+                <div key={category} className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br ${getCategoryColor(category)} text-white shadow-sm`}
+                    >
+                      {getCategoryIcon(category)}
+                    </div>
+                    <h3 className="text-lg font-semibold transition-colors duration-300 text-gray-900 dark:text-gray-100">
+                      {getCategoryTitle(category)}
+                    </h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      ({categoryMetrics.length} metric
+                      {categoryMetrics.length !== 1 ? 's' : ''})
+                    </span>
                   </div>
-                  <h3 className="text-lg font-semibold transition-colors duration-300 text-gray-900 dark:text-gray-100">
-                    {getCategoryTitle(category)}
-                  </h3>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    ({categoryMetrics.length} metric
-                    {categoryMetrics.length !== 1 ? 's' : ''})
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categoryMetrics.map(([name, value]) => (
-                    <StatCard
-                      key={name}
-                      title={name
-                        .replace(/([A-Z])/g, ' $1')
-                        .replace(/^./, (str) => str.toUpperCase())}
-                      value={formatMetricValue(name, value)}
-                      icon={getCategoryIcon(category)}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {categoryMetrics.map(([name, value]) => (
+                      <StatCard
+                        key={name}
+                        title={name
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, (str) => str.toUpperCase())}
+                        value={formatMetricValue(name, value)}
+                        icon={getCategoryIcon(category)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          },
-        )}
+              );
+            },
+          )}
       </div>
     </Card>
   );

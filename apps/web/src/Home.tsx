@@ -1,20 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiClient } from './api.js';
 import { useJobStore } from './store/jobStore.js';
+import { useDarkModeStore } from './store/darkModeStore.js';
 import Card from './components/ui/Card.js';
 import Button from './components/ui/Button.js';
 import StatCard from './components/ui/StatCard.js';
 import PromptEditor from './components/PromptEditor.js';
 import InputEditor from './components/InputEditor.js';
-import ModelSelector from './components/ModelSelector.js';
-import RunConfiguration from './components/RunConfiguration.js';
-import MetricSelector from './components/MetricSelector.js';
-import { AVAILABLE_METRICS } from './constants/metrics.js';
 import LiveOutput from './components/LiveOutput.js';
 import ErrorAlert from './components/ErrorAlert.js';
-import HistorySidebar from './components/HistorySidebar.js';
+import AppSidebar from './components/AppSidebar.js';
 import DiffView from './components/DiffView.js';
+import DarkModeToggle from './components/DarkModeToggle.js';
+import {
+  countTokens,
+  estimateCompletionTokens,
+  formatTokenCount,
+  estimateCost,
+} from './utils/tokenCounter.js';
 
 const SAMPLE_PROMPT = `Analyze the following text and provide a summary focusing on the key points and main themes:
 
@@ -36,7 +40,7 @@ const Home = () => {
   const [error, setError] = useState('');
   const {
     current: _current,
-    log: _log,
+    log,
     metrics,
     running,
     hasUserData,
@@ -45,21 +49,21 @@ const Home = () => {
     reset,
     setUserData,
     comparison,
-    // Model parameters
+    // Model parameters passed to sidebar
     temperature,
     topP,
     maxTokens,
     selectedMetrics,
-    setTemperature,
-    setTopP,
-    setMaxTokens,
-    setSelectedMetrics,
   } = useJobStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [outputText, setOutputText] = useState('');
   const [streamStatus, setStreamStatus] = useState<
     'streaming' | 'complete' | 'error'
   >('complete');
+
+  // Sync outputText with job store log for Bug #7 fix
+  const displayOutputText =
+    log.length > 0 ? log.map((l) => l.text).join('') : outputText;
 
   // Track the current EventSource to allow cancellation
   const currentEventSourceRef = useRef<EventSource | null>(null);
@@ -83,6 +87,29 @@ const Home = () => {
   useEffect(() => {
     setUserData(!!(template || inputData));
   }, [template, inputData, setUserData]);
+
+  // Get dark mode state (HTML class sync is handled by the store)
+  useDarkModeStore();
+
+  // Calculate live token counts and cost estimates
+  const promptTokens = useMemo(() => {
+    if (!template || !inputData) return 0;
+    // Build the final prompt by replacing {{input}} with actual input data
+    const finalPrompt = template.replace(/\{\{\s*input\s*\}\}/g, inputData);
+    return countTokens(finalPrompt, model);
+  }, [template, inputData, model]);
+
+  const estimatedCompletionTokens = useMemo(() => {
+    if (!template || !inputData) return 0;
+    const finalPrompt = template.replace(/\{\{\s*input\s*\}\}/g, inputData);
+    return estimateCompletionTokens(finalPrompt, model);
+  }, [template, inputData, model]);
+
+  const totalTokens = promptTokens + estimatedCompletionTokens;
+  const estimatedCost = useMemo(() => {
+    if (!promptTokens) return 0;
+    return estimateCost(promptTokens, estimatedCompletionTokens, model);
+  }, [promptTokens, estimatedCompletionTokens, model]);
 
   const handleRun = async () => {
     // Close any existing stream before starting a new one
@@ -167,20 +194,24 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* History Sidebar - Hidden on mobile, shows as overlay when needed */}
+      {/* History Sidebar - Bug #4 fix: Better responsive behavior */}
       <div
         className={`
         fixed lg:relative inset-y-0 left-0 z-30 
         transform transition-transform duration-300 ease-in-out
-        ${sidebarCollapsed ? 'lg:w-0' : 'lg:w-80'} 
+        ${sidebarCollapsed ? 'lg:w-12' : 'lg:w-80'} 
         ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
       `}
       >
-        <HistorySidebar
+        <AppSidebar
           isCollapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           onSelectJob={handleJobSelect}
           onCompareJobs={handleCompareJobs}
+          provider={provider}
+          model={model}
+          onProviderChange={setProvider}
+          onModelChange={setModel}
         />
       </div>
 
@@ -307,6 +338,9 @@ const Home = () => {
                     />
                   </svg>
                 </button>
+
+                {/* Dark Mode Toggle */}
+                <DarkModeToggle />
               </nav>
             </div>
           </div>
@@ -369,7 +403,9 @@ const Home = () => {
                         </h3>
                         <p className="text-sm sm:text-base text-muted mb-4 px-2">
                           Write a prompt template with input placeholders like{' '}
-                          <code>{'{{input}}'}</code>
+                          <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
+                            {'{{input}}'}
+                          </code>
                         </p>
                         <Button
                           onClick={handleStartWithExample}
@@ -382,7 +418,11 @@ const Home = () => {
                         </Button>
                       </div>
                     ) : (
-                      <PromptEditor value={template} onChange={setTemplate} />
+                      <PromptEditor
+                        value={template}
+                        onChange={setTemplate}
+                        model={model}
+                      />
                     )}
                   </Card>
 
@@ -407,7 +447,10 @@ const Home = () => {
                         </div>
                         <p className="text-sm sm:text-base text-muted px-2">
                           Add the data that will replace{' '}
-                          <code>{'{{input}}'}</code> in your prompt
+                          <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
+                            {'{{input}}'}
+                          </code>{' '}
+                          in your prompt
                         </p>
                       </div>
                     ) : (
@@ -415,38 +458,61 @@ const Home = () => {
                         value={inputData}
                         onChange={setInputData}
                         placeholder="Enter your input data here..."
+                        model={model}
                       />
                     )}
                   </Card>
 
-                  {/* Model Selector Card */}
-                  <Card title="Model Selection">
-                    <div className="space-y-4">
-                      <ModelSelector
-                        provider={provider}
-                        model={model}
-                        onProviderChange={setProvider}
-                        onModelChange={setModel}
-                      />
-                    </div>
-                  </Card>
-
-                  {/* Run Configuration Card */}
-                  <RunConfiguration
-                    temperature={temperature}
-                    topP={topP}
-                    maxTokens={maxTokens}
-                    onTemperatureChange={setTemperature}
-                    onTopPChange={setTopP}
-                    onMaxTokensChange={setMaxTokens}
-                  />
-
-                  {/* Metrics Selection Card */}
-                  <MetricSelector
-                    metrics={AVAILABLE_METRICS}
-                    selectedMetrics={selectedMetrics}
-                    onChange={setSelectedMetrics}
-                  />
+                  {/* Token Summary Card - Only show when both template and input exist */}
+                  {template && inputData && (
+                    <Card title="Token Summary">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted">
+                              Prompt Tokens:
+                            </span>
+                            <span className="text-sm font-mono">
+                              {formatTokenCount(promptTokens)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted">
+                              Est. Completion:
+                            </span>
+                            <span className="text-sm font-mono text-muted">
+                              {formatTokenCount(estimatedCompletionTokens)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-border">
+                            <span className="text-sm font-medium">
+                              Total Tokens:
+                            </span>
+                            <span className="text-sm font-mono font-medium">
+                              {formatTokenCount(totalTokens)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted">Model:</span>
+                            <span className="text-sm font-mono">{model}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-border">
+                            <span className="text-sm font-medium">
+                              Est. Cost:
+                            </span>
+                            <span className="text-sm font-mono font-medium">
+                              $
+                              {estimatedCost < 0.01
+                                ? '<$0.01'
+                                : `$${estimatedCost.toFixed(3)}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Sticky Run Button - Mobile */}
@@ -510,9 +576,9 @@ const Home = () => {
                 <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6">
                   {/* Live Output Card */}
                   <Card title="Live Output">
-                    {outputText || streamStatus === 'streaming' ? (
+                    {displayOutputText || streamStatus === 'streaming' ? (
                       <LiveOutput
-                        outputText={outputText}
+                        outputText={displayOutputText}
                         status={streamStatus}
                       />
                     ) : (

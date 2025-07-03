@@ -5,7 +5,10 @@
       "Bash(npx vitest run:*)",
       "Bash(npm test)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run tsc:*)",
+      "Bash(cd:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

@@ -43,6 +43,7 @@ export interface JobSummary {
   model: string;
   costUsd?: number | null;
   avgScore?: number | null;
+  resultSnippet?: string | null;
 }
 
 export interface JobResult {
@@ -225,6 +226,12 @@ export class ApiClient {
     const result = await this.makeRequest<DashboardStats>(endpoint);
     return result;
   }
+
+  static async deleteJob(id: string): Promise<void> {
+    await this.makeRequest(`/jobs/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Legacy exports for backward compatibility
@@ -235,3 +242,4 @@ export const listJobs = ApiClient.listJobs.bind(ApiClient);
 export const diffJobs = ApiClient.diffJobs.bind(ApiClient);
 export const fetchDashboardStats =
   ApiClient.fetchDashboardStats.bind(ApiClient);
+export const deleteJob = ApiClient.deleteJob.bind(ApiClient);

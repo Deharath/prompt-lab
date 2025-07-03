@@ -281,4 +281,56 @@ describe('Dashboard API', () => {
     // Score history should handle null metrics (averaging only valid scores)
     expect(Array.isArray(response.body.scoreHistory)).toBe(true);
   });
+
+  it('should correctly aggregate totalCost across multiple jobs', async () => {
+    // ARRANGE: Seed jobs with specific cost values
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const testId = Math.random().toString(36).substring(7);
+
+    await seedJobs([
+      {
+        id: `job-cost-1-${testId}`,
+        prompt: 'Cost test job 1',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        status: 'completed',
+        createdAt: yesterday,
+        costUsd: 1.0,
+      },
+      {
+        id: `job-cost-2-${testId}`,
+        prompt: 'Cost test job 2',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        status: 'completed',
+        createdAt: yesterday,
+        costUsd: 1.0,
+      },
+      {
+        id: `job-cost-3-${testId}`,
+        prompt: 'Cost test job 3',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        status: 'completed',
+        createdAt: yesterday,
+        costUsd: 1.0,
+      },
+    ]);
+
+    // ACT: Make a request to the dashboard stats endpoint
+    server = app.listen(await getPort());
+    const response = await request(server).get('/api/dashboard/stats?days=30');
+    server.close();
+
+    // ASSERT: Verify totalCost is correctly aggregated
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('costByModel');
+
+    const gptCost = response.body.costByModel.find(
+      (item: any) => item.model === 'gpt-4o-mini',
+    );
+
+    expect(gptCost).toBeDefined();
+    expect(gptCost.totalCost).toBe(3.0); // 1.0 + 1.0 + 1.0
+  });
 });

@@ -68,7 +68,7 @@ const ModelSelector = ({
               onModelChange(availableModels[0]);
             }
           }}
-          className="w-full appearance-none px-4 py-3 border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
+          className="w-full appearance-none px-4 py-3 border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400 dark:[color-scheme:dark]"
           aria-describedby="provider-help"
         >
           <option value="openai">OpenAI</option>
@@ -124,7 +124,7 @@ const ModelSelector = ({
           data-testid="model-select"
           value={model}
           onChange={(e) => onModelChange(e.target.value)}
-          className="w-full appearance-none px-4 py-3 border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
+          className="w-full appearance-none px-4 py-3 border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400 dark:[color-scheme:dark]"
           aria-describedby="model-help"
         >
           {modelsByProvider[provider as keyof typeof modelsByProvider]?.map(

@@ -157,15 +157,15 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
 
   return (
     <div
-      className="p-8 space-y-6"
+      className="space-y-4"
       role="region"
       aria-labelledby="output-stream-heading"
     >
-      {/* Header */}
+      {/* Header - Bug #10 fix */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-blue-600 text-white shadow-md"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"
             aria-hidden="true"
           >
             <svg
@@ -178,12 +178,12 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 3v11a2 2 0 002 2h8a2 2 0 002-2V7M9 7h6"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
           </div>
           <h2
-            className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+            className="text-lg font-semibold text-foreground"
             id="output-stream-heading"
           >
             Output Stream
@@ -195,12 +195,12 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
         <div className="flex items-center space-x-2">
           {/* View toggle */}
           <div
-            className="flex bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700"
+            className="flex bg-muted rounded-lg overflow-hidden border border-border"
             role="group"
             aria-label="Output view mode"
           >
             <button
-              className={`px-3 py-1 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${viewMode === 'rendered' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${viewMode === 'rendered' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setViewMode('rendered')}
               aria-pressed={viewMode === 'rendered'}
               aria-label="View as rendered markdown"
@@ -208,7 +208,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
               Rendered
             </button>
             <button
-              className={`px-3 py-1 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${viewMode === 'raw' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${viewMode === 'raw' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setViewMode('raw')}
               aria-pressed={viewMode === 'raw'}
               aria-label="View as raw text"
@@ -218,7 +218,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
           </div>
           {/* Copy button */}
           <button
-            className="ml-2 px-2 py-1 rounded bg-gray-700 hover:bg-blue-600 text-white text-sm flex items-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground text-sm flex items-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary border border-border"
             onClick={handleCopy}
             aria-label={
               copied ? 'Output copied to clipboard' : 'Copy output to clipboard'
@@ -262,28 +262,28 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
           </button>
         </div>
       </div>
-      {/* Output area */}
+      {/* Output area - Bug #10 fix */}
       <div className="relative">
         <div
           ref={outputRef}
-          className="rounded-xl p-6 min-h-[300px] max-h-[500px] overflow-auto shadow-inner transition-colors duration-300 bg-linear-to-br from-gray-900 via-gray-800 to-black dark:from-black dark:via-gray-900 dark:to-gray-800 custom-scrollbar"
+          className="rounded-lg p-6 min-h-[300px] max-h-[500px] overflow-auto border border-border bg-card transition-colors duration-200 scrollbar-thin scrollbar-track-muted scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40"
           aria-live="polite"
           aria-label={`Live output stream in ${viewMode} mode`}
           role="log"
           tabIndex={0}
         >
           {viewMode === 'rendered' ? (
-            <div className="prose prose-invert max-w-none">
+            <div className="prose prose-sm max-w-none text-foreground">
               {/* Only render well-formed markdown */}
               {(() => {
                 try {
                   return (
                     <ReactMarkdown
                       components={{
-                        // Custom styling for dark theme
+                        // Custom styling to match site theme
                         h1: ({ children, ...props }) => (
                           <h1
-                            className="text-green-100 text-2xl font-bold mb-4"
+                            className="text-foreground text-2xl font-bold mb-4 border-b border-border pb-2"
                             {...props}
                           >
                             {children}
@@ -291,7 +291,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         h2: ({ children, ...props }) => (
                           <h2
-                            className="text-green-100 text-xl font-bold mb-3"
+                            className="text-foreground text-xl font-semibold mb-3"
                             {...props}
                           >
                             {children}
@@ -299,7 +299,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         h3: ({ children, ...props }) => (
                           <h3
-                            className="text-green-100 text-lg font-bold mb-2"
+                            className="text-foreground text-lg font-semibold mb-2"
                             {...props}
                           >
                             {children}
@@ -307,7 +307,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         h4: ({ children, ...props }) => (
                           <h4
-                            className="text-green-100 text-base font-bold mb-2"
+                            className="text-foreground text-base font-semibold mb-2"
                             {...props}
                           >
                             {children}
@@ -315,7 +315,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         h5: ({ children, ...props }) => (
                           <h5
-                            className="text-green-100 text-sm font-bold mb-2"
+                            className="text-foreground text-sm font-semibold mb-2"
                             {...props}
                           >
                             {children}
@@ -323,7 +323,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         h6: ({ children, ...props }) => (
                           <h6
-                            className="text-green-100 text-xs font-bold mb-2"
+                            className="text-foreground text-xs font-semibold mb-2"
                             {...props}
                           >
                             {children}
@@ -331,7 +331,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         p: ({ children, ...props }) => (
                           <p
-                            className="text-green-100 mb-4 leading-relaxed"
+                            className="text-foreground mb-4 leading-relaxed"
                             {...props}
                           >
                             {children}
@@ -339,20 +339,20 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         strong: ({ children, ...props }) => (
                           <strong
-                            className="text-green-50 font-bold"
+                            className="text-foreground font-semibold"
                             {...props}
                           >
                             {children}
                           </strong>
                         ),
                         em: ({ children, ...props }) => (
-                          <em className="text-green-100 italic" {...props}>
+                          <em className="text-foreground italic" {...props}>
                             {children}
                           </em>
                         ),
                         code: ({ children, ...props }) => (
                           <code
-                            className="bg-gray-800 text-green-300 px-1 py-0.5 rounded text-sm"
+                            className="bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono border border-border"
                             {...props}
                           >
                             {children}
@@ -360,7 +360,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         pre: ({ children, ...props }) => (
                           <pre
-                            className="bg-gray-800 text-green-300 p-4 rounded-lg overflow-x-auto mb-4"
+                            className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto mb-4 border border-border"
                             {...props}
                           >
                             {children}
@@ -368,7 +368,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         blockquote: ({ children, ...props }) => (
                           <blockquote
-                            className="border-l-4 border-green-500 pl-4 italic text-green-200 mb-4"
+                            className="border-l-4 border-primary pl-4 italic text-muted-foreground mb-4"
                             {...props}
                           >
                             {children}
@@ -376,7 +376,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         ul: ({ children, ...props }) => (
                           <ul
-                            className="text-green-100 mb-4 ml-6 list-disc"
+                            className="text-foreground mb-4 ml-6 list-disc"
                             {...props}
                           >
                             {children}
@@ -384,7 +384,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         ol: ({ children, ...props }) => (
                           <ol
-                            className="text-green-100 mb-4 ml-6 list-decimal"
+                            className="text-foreground mb-4 ml-6 list-decimal"
                             {...props}
                           >
                             {children}
@@ -397,7 +397,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
                         ),
                         a: ({ children, ...props }) => (
                           <a
-                            className="text-green-400 hover:text-green-300 underline"
+                            className="text-primary hover:text-primary/80 underline"
                             {...props}
                           >
                             {children}

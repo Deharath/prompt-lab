@@ -1,25 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { countTokens, countTokensAsync } from '../utils/tokenCounter.js';
 
 interface InputEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  model?: string; // Add model prop for accurate token counting
 }
 
-const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const InputEditor = ({
+  value,
+  onChange,
+  placeholder,
+  model = 'gpt-4o-mini',
+}: InputEditorProps) => {
+  const [manualState, setManualState] = useState<boolean | null>(null); // null = auto, true = manually expanded, false = manually collapsed
+  const [tokenCount, setTokenCount] = useState(0);
 
-  // Auto-expand for large content
-  const shouldAutoExpand = value.length > 200;
-  const rows = isExpanded || shouldAutoExpand ? 12 : 6;
+  // Determine if should be expanded
+  const hasLargeContent = value.length > 200;
+  const shouldShowExpanded =
+    manualState !== null ? manualState : hasLargeContent;
+  const actualRows = shouldShowExpanded ? 12 : 6;
 
-  // Rough token approximation (1 token ≈ 4 chars for English)
-  const approximateTokens = Math.ceil(value.length / 4);
+  // Calculate tokens - try async first, fallback to sync
+  useEffect(() => {
+    const updateTokenCount = async () => {
+      try {
+        const count = await countTokensAsync(value, model);
+        setTokenCount(count);
+      } catch (_error) {
+        // Fallback to sync calculation
+        setTokenCount(countTokens(value, model));
+      }
+    };
+
+    updateTokenCount();
+  }, [value, model]);
 
   const handlePaste = (e: React.ClipboardEvent) => {
     const pastedText = e.clipboardData.getData('text');
     if (pastedText.length > 100) {
-      setIsExpanded(true);
+      setManualState(true);
     }
   };
 
@@ -40,26 +62,26 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <label
-            htmlFor="input-editor"
-            className="block text-sm font-semibold transition-colors duration-300 text-gray-800 dark:text-gray-200"
-          >
-            Input Data
-          </label>
         </div>
 
         <div className="flex items-center space-x-2">
           {/* Expand/Collapse Button */}
           <button
             type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setManualState(!shouldShowExpanded)}
             aria-label={
-              isExpanded ? 'Collapse input editor' : 'Expand input editor'
+              shouldShowExpanded
+                ? 'Collapse input editor'
+                : 'Expand input editor'
             }
-            aria-expanded={isExpanded}
-            className="text-xs px-2 py-1 rounded-md transition-colors duration-300 bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+            aria-expanded={shouldShowExpanded}
+            className={`text-xs px-2 py-1 rounded-md transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${
+              shouldShowExpanded
+                ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-300'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300'
+            }`}
           >
-            {isExpanded ? 'Collapse' : 'Expand'}
+            {shouldShowExpanded ? 'Collapse' : 'Expand'}
           </button>
 
           {/* Word count */}
@@ -80,7 +102,7 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
             placeholder ||
             'Enter the data you want to analyze or process...\n\nFor example:\n- News articles for summarization\n- Customer reviews for sentiment analysis\n- Code snippets for review\n- Any text content for your prompt template'
           }
-          rows={rows}
+          rows={actualRows}
           className="w-full px-4 py-3 border-2 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:border-transparent resize-none text-sm backdrop-blur-sm transition-all duration-200 leading-relaxed border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-green-500 text-gray-900 placeholder-gray-500 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-green-400"
         />
 
@@ -96,7 +118,7 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
           </div>
           {value.length > 0 && (
             <div className="text-xs px-2 py-1 rounded-md transition-colors duration-300 text-gray-500 bg-white/80 dark:text-gray-400 dark:bg-gray-700/80">
-              ~{approximateTokens} tokens
+              {tokenCount} tokens
             </div>
           )}
         </div>
@@ -177,7 +199,7 @@ const InputEditor = ({ value, onChange, placeholder }: InputEditorProps) => {
         <div className="text-xs p-3 rounded-lg transition-colors duration-300 text-gray-500 bg-gray-50 dark:text-gray-400 dark:bg-gray-800/50">
           💡 <strong>Tip:</strong> This is where you put the actual content that
           will replace{' '}
-          <code className="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700">{`{{input}}`}</code>{' '}
+          <code className="px-2 py-1 text-xs font-mono bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100">{`{{input}}`}</code>{' '}
           in your prompt template. Paste large articles, documents, or any text
           you want to analyze.
         </div>

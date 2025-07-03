@@ -117,11 +117,13 @@ export interface ListJobsOptions {
 
 export interface JobSummary {
   id: string;
+  status: JobStatus;
   createdAt: Date;
   provider: string;
   model: string;
   costUsd: number | null;
   avgScore: number | null;
+  resultSnippet: string | null; // First 100 chars of result for identification
 }
 
 export async function listJobs(
@@ -145,11 +147,13 @@ export async function listJobs(
   const baseQuery = db
     .select({
       id: jobs.id,
+      status: jobs.status,
       createdAt: jobs.createdAt,
       provider: jobs.provider,
       model: jobs.model,
       costUsd: jobs.costUsd,
       metrics: jobs.metrics,
+      result: jobs.result,
     })
     .from(jobs);
 
@@ -163,13 +167,34 @@ export async function listJobs(
 
   return rows.map((row) => {
     const metrics = row.metrics as JobMetricsWithAvg | null;
+    // Create a snippet from result (first 100 chars, cleaned up)
+    const resultSnippet = row.result
+      ? row.result.replace(/\s+/g, ' ').trim().substring(0, 100) +
+        (row.result.length > 100 ? '...' : '')
+      : null;
+
     return {
       id: row.id,
+      status: row.status as JobStatus,
       createdAt: row.createdAt,
       provider: row.provider,
       model: row.model,
       costUsd: row.costUsd,
       avgScore: metrics?.avgScore ?? null,
+      resultSnippet,
     };
   });
+}
+
+export async function deleteJob(id: string): Promise<boolean> {
+  await getDb(); // Ensure database is initialized
+
+  const result = await db.delete(jobs).where(eq(jobs.id, id)).returning();
+
+  if (result.length === 0) {
+    return false; // Job not found
+  }
+
+  log.info(`Job deleted: ${id}`);
+  return true;
 }
