@@ -1,20 +1,27 @@
 import React from 'react';
 import { useDarkModeStore } from '../store/darkModeStore.js';
 
-const DarkModeToggle = () => {
+interface DarkModeToggleProps {
+  compact?: boolean;
+}
+
+const DarkModeToggle = ({ compact = false }: DarkModeToggleProps) => {
   const { isDarkMode, toggleDarkMode } = useDarkModeStore();
+
+  const buttonSize = compact ? 'h-8 w-8' : 'h-10 w-10';
+  const iconSize = compact ? 'h-4 w-4' : 'h-5 w-5';
 
   return (
     <button
       onClick={toggleDarkMode}
-      className="group flex h-10 w-10 items-center justify-center rounded-xl shadow-md ring-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-card hover:bg-muted border-border hover:border-accent"
+      className={`group flex ${buttonSize} items-center justify-center rounded-xl shadow-md ring-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-card hover:bg-muted border-border hover:border-accent`}
       aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDarkMode ? (
         // Sun icon for switching to light mode
         <svg
-          className="h-5 w-5 text-amber-500 group-hover:text-amber-400 transition-colors duration-200"
+          className={`${iconSize} text-amber-500 group-hover:text-amber-400 transition-colors duration-200`}
           fill="currentColor"
           viewBox="0 0 24 24"
           aria-hidden="true"
@@ -28,7 +35,7 @@ const DarkModeToggle = () => {
       ) : (
         // Moon icon for switching to dark mode
         <svg
-          className="h-5 w-5 text-slate-700 group-hover:text-slate-600 transition-colors duration-200"
+          className={`${iconSize} text-slate-700 group-hover:text-slate-600 transition-colors duration-200`}
           fill="currentColor"
           viewBox="0 0 24 24"
           aria-hidden="true"

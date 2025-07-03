@@ -26,6 +26,7 @@ interface MetricSelectorProps {
   metrics: MetricOption[];
   selectedMetrics: SelectedMetric[];
   onChange: (metrics: SelectedMetric[]) => void;
+  compact?: boolean;
 }
 
 /**
@@ -37,6 +38,7 @@ const MetricSelector = ({
   metrics,
   selectedMetrics,
   onChange,
+  compact = false,
 }: MetricSelectorProps) => {
   const [userInputs, setUserInputs] = useState<Record<string, string>>({});
 
@@ -96,69 +98,144 @@ const MetricSelector = ({
   };
 
   return (
-    <Card title="Evaluation Metrics">
-      <div className="space-y-3">
-        {metrics.map((metric) => {
-          const isChecked = isSelected(metric.id);
-          return (
-            <div key={metric.id} className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id={`metric-${metric.id}`}
-                  checked={isChecked}
-                  onChange={() => handleToggleMetric(metric)}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label
-                  htmlFor={`metric-${metric.id}`}
-                  className="text-sm font-medium"
-                >
-                  {metric.name}
-                </label>
-                <Tooltip content={metric.description}>
-                  <span
-                    className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground"
-                    aria-hidden="true"
-                  >
-                    ?
-                  </span>
-                </Tooltip>
-              </div>
+    <>
+      {!compact ? (
+        <Card title="Evaluation Metrics">
+          <div className="space-y-3">
+            {metrics.map((metric) => {
+              const isChecked = isSelected(metric.id);
+              return (
+                <div key={metric.id} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`metric-${metric.id}`}
+                      checked={isChecked}
+                      onChange={() => handleToggleMetric(metric)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label
+                      htmlFor={`metric-${metric.id}`}
+                      className="text-sm font-medium"
+                    >
+                      {metric.name}
+                    </label>
+                    <Tooltip content={metric.description}>
+                      <span
+                        className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground"
+                        aria-hidden="true"
+                      >
+                        ?
+                      </span>
+                    </Tooltip>
+                  </div>
 
-              {/* Input field for metrics that require additional input */}
-              {metric.requiresInput && isChecked && (
-                <div className="ml-6">
-                  <label
-                    htmlFor={`metric-input-${metric.id}`}
-                    className="sr-only"
-                  >
-                    {metric.inputLabel || 'Input'}
-                  </label>
-                  <input
-                    type="text"
-                    id={`metric-input-${metric.id}`}
-                    data-testid={
-                      metric.id === 'keywords' ? 'keyword-input' : undefined
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-                    placeholder={metric.inputPlaceholder || ''}
-                    value={userInputs[metric.id] || ''}
-                    onChange={(e) =>
-                      handleInputChange(metric.id, e.target.value)
-                    }
-                  />
+                  {/* Input field for metrics that require additional input */}
+                  {metric.requiresInput && isChecked && (
+                    <div className="ml-6">
+                      <label
+                        htmlFor={`metric-input-${metric.id}`}
+                        className="sr-only"
+                      >
+                        {metric.inputLabel || 'Input'}
+                      </label>
+                      <input
+                        type="text"
+                        id={`metric-input-${metric.id}`}
+                        data-testid={
+                          metric.id === 'keywords' ? 'keyword-input' : undefined
+                        }
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                        placeholder={metric.inputPlaceholder || ''}
+                        value={userInputs[metric.id] || ''}
+                        onChange={(e) =>
+                          handleInputChange(metric.id, e.target.value)
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
 
-        {metrics.length === 0 && (
-          <p className="text-sm text-muted">No metrics available</p>
-        )}
-      </div>
-    </Card>
+            {metrics.length === 0 && (
+              <p className="text-sm text-muted">No metrics available</p>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {metrics.map((metric) => {
+            const isChecked = isSelected(metric.id);
+            return (
+              <div key={metric.id} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`metric-${metric.id}`}
+                    checked={isChecked}
+                    onChange={() => handleToggleMetric(metric)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label
+                    htmlFor={`metric-${metric.id}`}
+                    className="text-sm font-medium flex-1"
+                  >
+                    {metric.name}
+                  </label>
+                  <button
+                    type="button"
+                    className="group relative"
+                    aria-label={`Help for ${metric.name}`}
+                  >
+                    <svg
+                      className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 w-max max-w-[200px] text-left pointer-events-none break-words">
+                      {metric.description}
+                      <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Input field for metrics that require additional input */}
+                {metric.requiresInput && isChecked && (
+                  <div className="ml-4">
+                    <input
+                      type="text"
+                      id={`metric-input-${metric.id}`}
+                      data-testid={
+                        metric.id === 'keywords' ? 'keyword-input' : undefined
+                      }
+                      className="block w-full px-3 py-1.5 rounded border border-border text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary bg-background"
+                      placeholder={metric.inputPlaceholder || ''}
+                      value={userInputs[metric.id] || ''}
+                      onChange={(e) =>
+                        handleInputChange(metric.id, e.target.value)
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {metrics.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              No metrics available
+            </p>
+          )}
+        </div>
+      )}
+    </>
   );
 };
 

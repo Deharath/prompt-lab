@@ -1,4 +1,3 @@
-import Card from './ui/Card.js';
 import ParameterSlider from './ParameterSlider.js';
 
 interface RunConfigurationProps {
@@ -22,63 +21,60 @@ const RunConfiguration = ({
   onMaxTokensChange,
 }: RunConfigurationProps) => {
   return (
-    <Card title="Run Configuration">
-      <div className="space-y-6">
-        {/* Temperature Slider */}
-        <ParameterSlider
-          label="Temperature"
-          value={temperature}
-          onChange={onTemperatureChange}
-          min={0}
-          max={2.0}
-          step={0.01}
-          decimals={2}
-          description="Higher values make output more random, lower values make it more deterministic"
-        />
+    <div className="space-y-3">
+      {/* Temperature Slider */}
+      <ParameterSlider
+        label="Temperature"
+        value={temperature}
+        onChange={onTemperatureChange}
+        min={0}
+        max={2.0}
+        step={0.01}
+        decimals={2}
+        description="Higher values make output more random, lower values make it more deterministic"
+        compact={true}
+      />
 
-        {/* Top P Slider */}
-        <ParameterSlider
-          label="Top P"
-          value={topP}
-          onChange={onTopPChange}
-          min={0}
-          max={1.0}
-          step={0.01}
-          decimals={2}
-          description="Controls diversity by limiting the cumulative probability of token selection"
-        />
+      {/* Top P Slider */}
+      <ParameterSlider
+        label="Top P"
+        value={topP}
+        onChange={onTopPChange}
+        min={0}
+        max={1.0}
+        step={0.01}
+        decimals={2}
+        description="Controls diversity by limiting the cumulative probability of token selection"
+        compact={true}
+      />
 
-        {/* Max Tokens Input */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="max-tokens-input"
-              className="block text-sm font-medium"
-            >
-              Maximum Tokens
-            </label>
-            <input
-              type="number"
-              id="max-tokens-input"
-              className="w-24 rounded-md border-gray-300 text-right text-sm shadow-sm focus:border-primary focus:ring-primary"
-              value={maxTokens}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value >= 0) {
-                  onMaxTokensChange(value);
-                }
-              }}
-              min={0}
-              max={32768}
-              step={1}
-            />
-          </div>
-          <p className="text-xs text-muted mt-1">
-            Maximum number of tokens to generate (0 = model default)
-          </p>
+      {/* Max Tokens Input */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="max-tokens-input"
+            className="block text-xs font-medium text-muted-foreground"
+          >
+            Maximum Tokens
+          </label>
+          <input
+            type="number"
+            id="max-tokens-input"
+            className="w-20 px-2 py-1 rounded border border-border text-right text-xs shadow-sm focus:border-primary focus:ring-1 focus:ring-primary bg-background"
+            value={maxTokens}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (!isNaN(value) && value >= 0) {
+                onMaxTokensChange(value);
+              }
+            }}
+            min={0}
+            max={32768}
+            step={1}
+          />
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

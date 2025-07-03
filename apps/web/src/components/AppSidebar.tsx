@@ -38,6 +38,14 @@ interface HistorySidebarProps {
   onRunEvaluation?: () => void;
   canRunEvaluation?: boolean;
   isRunning?: boolean;
+  // Token summary props
+  promptTokens?: number;
+  estimatedCompletionTokens?: number;
+  totalTokens?: number;
+  estimatedCost?: number;
+  // Template and input data for showing token summary
+  template?: string;
+  inputData?: string;
 }
 
 const AppSidebar = ({
@@ -53,6 +61,12 @@ const AppSidebar = ({
   onRunEvaluation,
   canRunEvaluation = false,
   isRunning = false,
+  promptTokens = 0,
+  estimatedCompletionTokens = 0,
+  totalTokens = 0,
+  estimatedCost = 0,
+  template = '',
+  inputData = '',
 }: HistorySidebarProps) => {
   const {
     start,
@@ -360,12 +374,12 @@ const AppSidebar = ({
 
   return (
     <aside
-      className="w-80 bg-card border-r border-border flex flex-col h-screen sticky top-0"
+      className="w-80 bg-card border-r border-border flex flex-col h-screen sticky top-0 overflow-hidden"
       aria-label="Sidebar with history, configuration, and custom prompt tabs"
       id="sidebar"
     >
       {/* Tab Header */}
-      <header className="p-4 border-b border-border">
+      <header className="p-4 border-b border-border flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">PromptLab</h2>
           <button
@@ -444,7 +458,7 @@ const AppSidebar = ({
 
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-        <div className="flex-1 overflow-hidden min-h-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 relative">
           {activeTab === 'history' && (
             <div className="h-full flex flex-col">
               {/* History Header Controls */}
@@ -711,22 +725,23 @@ const AppSidebar = ({
           )}
 
           {activeTab === 'configuration' && (
-            <div className="h-full overflow-y-auto p-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    Model Configuration
+            <div className="h-full p-4 min-w-0 max-w-full">
+              <div className="space-y-4 min-w-0">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    Model
                   </h3>
                   <ModelSelector
                     provider={provider}
                     model={model}
                     onProviderChange={onProviderChange}
                     onModelChange={onModelChange}
+                    compact={true}
                   />
                 </div>
 
-                <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
                     Parameters
                   </h3>
                   <RunConfiguration
@@ -739,14 +754,15 @@ const AppSidebar = ({
                   />
                 </div>
 
-                <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
                     Metrics
                   </h3>
                   <MetricSelector
                     metrics={AVAILABLE_METRICS}
                     selectedMetrics={selectedMetrics}
                     onChange={setSelectedMetrics}
+                    compact={true}
                   />
                 </div>
               </div>
@@ -762,47 +778,83 @@ const AppSidebar = ({
 
         {/* Run Evaluation Button - Always at bottom */}
         {onRunEvaluation && (
-          <div className="border-t border-border bg-card p-4 flex-shrink-0">
-            <button
-              onClick={onRunEvaluation}
-              disabled={!canRunEvaluation || isRunning}
-              className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed ${
-                canRunEvaluation && !isRunning
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed'
-              }`}
-              aria-label={
-                isRunning
-                  ? 'Evaluation running...'
-                  : canRunEvaluation
-                    ? 'Start evaluation'
-                    : 'Complete prompt and input to run evaluation'
-              }
-            >
-              {isRunning ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                  <span>Running...</span>
+          <div className="border-t border-border bg-card flex-shrink-0">
+            {/* Token Summary */}
+            {(template || inputData) && (
+              <div className="p-3 border-b border-border/50">
+                <div className="text-xs text-muted-foreground mb-2 font-medium">
+                  Token Summary
                 </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m2-6v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2z"
-                    />
-                  </svg>
-                  <span>Run Evaluation</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Prompt:</span>
+                    <span className="font-mono">{promptTokens}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Est. Out:</span>
+                    <span className="font-mono">
+                      {estimatedCompletionTokens}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-border/30 pt-1">
+                    <span className="text-muted-foreground">Total:</span>
+                    <span className="font-mono font-medium">{totalTokens}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border/30 pt-1">
+                    <span className="text-muted-foreground">Cost:</span>
+                    <span className="font-mono font-medium">
+                      $
+                      {estimatedCost < 0.01
+                        ? '<$0.01'
+                        : `$${estimatedCost.toFixed(3)}`}
+                    </span>
+                  </div>
                 </div>
-              )}
-            </button>
+              </div>
+            )}
+
+            <div className="p-4">
+              <button
+                onClick={onRunEvaluation}
+                disabled={!canRunEvaluation || isRunning}
+                className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed ${
+                  canRunEvaluation && !isRunning
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                }`}
+                aria-label={
+                  isRunning
+                    ? 'Evaluation running...'
+                    : canRunEvaluation
+                      ? 'Start evaluation'
+                      : 'Complete prompt and input to run evaluation'
+                }
+              >
+                {isRunning ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                    <span>Running...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center space-x-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m2-6v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012 2z"
+                      />
+                    </svg>
+                    <span>Run Evaluation</span>
+                  </div>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ApiClient } from './api.js';
+import { ApiClient, fetchJob } from './api.js';
 import { useJobStore } from './store/jobStore.js';
 import { useDarkModeStore } from './store/darkModeStore.js';
 import Card from './components/ui/Card.js';
@@ -16,7 +16,6 @@ import DarkModeToggle from './components/DarkModeToggle.js';
 import {
   countTokens,
   estimateCompletionTokens,
-  formatTokenCount,
   estimateCost,
 } from './utils/tokenCounter.js';
 
@@ -130,6 +129,8 @@ const Home = () => {
 
       const job = await ApiClient.createJob({
         prompt: finalPrompt,
+        template,
+        inputData,
         provider,
         model,
         temperature,
@@ -184,8 +185,29 @@ const Home = () => {
   const isEmptyState = !template && !inputData && !hasUserData;
   const showComparison = comparison.baseJobId && comparison.compareJobId;
 
-  const handleJobSelect = (_jobId: string) => {
-    // Job loading is handled by the sidebar
+  const handleJobSelect = async (jobId: string) => {
+    try {
+      // Fetch the job details to get the template and input data
+      const jobDetails = await fetchJob(jobId);
+
+      // Load the job's template and input data if available
+      if (jobDetails.template && jobDetails.inputData) {
+        // Use the stored template and input data directly
+        setTemplate(jobDetails.template);
+        setInputData(jobDetails.inputData);
+      } else if (jobDetails.prompt) {
+        // Fallback: if template/input not stored, use the prompt as template
+        setTemplate(jobDetails.prompt);
+        setInputData('');
+      }
+
+      // Update the provider and model to match the job
+      setProvider(jobDetails.provider);
+      setModel(jobDetails.model);
+    } catch (error) {
+      console.error('Failed to load job details:', error);
+      setError('Failed to load job details');
+    }
   };
 
   const handleCompareJobs = (_baseId: string, _compareId: string) => {
@@ -193,15 +215,17 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* History Sidebar - Bug #4 fix: Better responsive behavior */}
+    <div className="h-screen bg-background flex overflow-hidden">
+      {/* History Sidebar - Properly sticky for desktop */}
       <div
         className={`
-        fixed lg:relative inset-y-0 left-0 z-30 
-        transform transition-transform duration-300 ease-in-out
-        ${sidebarCollapsed ? 'lg:w-12' : 'lg:w-80'} 
-        ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
-      `}
+          fixed inset-y-0 left-0 z-30 
+          lg:sticky lg:top-0 lg:h-full lg:z-auto lg:flex-shrink-0
+          transform transition-transform duration-300 ease-in-out
+          ${sidebarCollapsed ? 'lg:w-12' : 'lg:w-80'} 
+          ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
+          bg-background border-r border-border
+        `}
       >
         <AppSidebar
           isCollapsed={sidebarCollapsed}
@@ -216,6 +240,13 @@ const Home = () => {
           onRunEvaluation={handleRun}
           canRunEvaluation={!!(template && inputData)}
           isRunning={running}
+          // Token summary data
+          promptTokens={promptTokens}
+          estimatedCompletionTokens={estimatedCompletionTokens}
+          totalTokens={totalTokens}
+          estimatedCost={estimatedCost}
+          template={template}
+          inputData={inputData}
         />
       </div>
 
@@ -229,10 +260,10 @@ const Home = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden min-w-0">
+      <div className="flex-1 min-w-0 flex flex-col h-full">
         {/* Header */}
         <header
-          className="border-b border-border bg-card/50 backdrop-blur-sm"
+          className="border-b border-border bg-card/50 backdrop-blur-sm flex-shrink-0"
           role="banner"
         >
           <div className="px-4 sm:px-6 py-4">
@@ -351,10 +382,7 @@ const Home = () => {
         </header>
 
         {/* Main Content Area */}
-        <main
-          className="flex-1 overflow-hidden flex flex-col min-h-0"
-          role="main"
-        >
+        <main className="flex-1 overflow-y-auto" role="main">
           {error && (
             <div
               className="flex-shrink-0 p-4 sm:p-6 pb-0"
@@ -375,265 +403,155 @@ const Home = () => {
               />
             </section>
           ) : (
-            // Sticky Two-Column Workspace Layout
+            // Two-Column Workspace Layout
             <section
-              className="h-full flex flex-col xl:flex-row gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6"
+              className="flex flex-col xl:flex-row gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6"
               aria-label="Prompt evaluation workspace"
             >
-              {/* Left Column - Scrollable Configuration Panel */}
-              <div className="xl:w-2/5 flex flex-col min-h-0">
-                <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-24 xl:pb-4">
-                  {/* Prompt Card */}
-                  <Card title="Prompt Template">
-                    {isEmptyState ? (
-                      <div className="text-center py-6 sm:py-8">
-                        <div className="text-muted mb-4" aria-hidden="true">
-                          <svg
-                            className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1}
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                        </div>
-                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                          Create your first prompt
-                        </h3>
-                        <p className="text-sm sm:text-base text-muted mb-4 px-2">
-                          Write a prompt template with input placeholders like{' '}
-                          <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
-                            {'{{input}}'}
-                          </code>
-                        </p>
-                        <Button
-                          onClick={handleStartWithExample}
-                          variant="primary"
-                          size="sm"
-                          aria-label="Load a sample prompt and input to get started"
-                          className="w-full sm:w-auto"
+              {/* Left Column - Configuration Panel */}
+              <div className="xl:w-2/5 space-y-4 sm:space-y-6">
+                {/* Prompt Card */}
+                <Card title="Prompt Template">
+                  {isEmptyState ? (
+                    <div className="text-center py-6 sm:py-8">
+                      <div className="text-muted mb-4" aria-hidden="true">
+                        <svg
+                          className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
                         >
-                          Get Started!
-                        </Button>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
                       </div>
-                    ) : (
-                      <PromptEditor
-                        value={template}
-                        onChange={setTemplate}
-                        model={model}
-                      />
-                    )}
-                  </Card>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                        Create your first prompt
+                      </h3>
+                      <p className="text-sm sm:text-base text-muted mb-4 px-2">
+                        Write a prompt template with input placeholders like{' '}
+                        <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
+                          {'{{input}}'}
+                        </code>
+                      </p>
+                      <Button
+                        onClick={handleStartWithExample}
+                        variant="primary"
+                        size="sm"
+                        aria-label="Load a sample prompt and input to get started"
+                        className="w-full sm:w-auto"
+                      >
+                        Get Started!
+                      </Button>
+                    </div>
+                  ) : (
+                    <PromptEditor
+                      value={template}
+                      onChange={setTemplate}
+                      model={model}
+                    />
+                  )}
+                </Card>
 
-                  {/* Input Data Card */}
-                  <Card title="Input Data">
-                    {isEmptyState ? (
-                      <div className="text-center py-4 sm:py-6">
-                        <div className="text-muted mb-4" aria-hidden="true">
-                          <svg
-                            className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                        </div>
-                        <p className="text-sm sm:text-base text-muted px-2">
-                          Add the data that will replace{' '}
-                          <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
-                            {'{{input}}'}
-                          </code>{' '}
-                          in your prompt
-                        </p>
+                {/* Input Data Card */}
+                <Card title="Input Data">
+                  {isEmptyState ? (
+                    <div className="text-center py-4 sm:py-6">
+                      <div className="text-muted mb-4" aria-hidden="true">
+                        <svg
+                          className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
                       </div>
-                    ) : (
-                      <InputEditor
-                        value={inputData}
-                        onChange={setInputData}
-                        placeholder="Enter your input data here..."
-                        model={model}
-                      />
-                    )}
-                  </Card>
-
-                  {/* Token Summary Card - Only show when both template and input exist */}
-                  {template && inputData && (
-                    <Card title="Token Summary">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted">
-                              Prompt Tokens:
-                            </span>
-                            <span className="text-sm font-mono">
-                              {formatTokenCount(promptTokens)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted">
-                              Est. Completion:
-                            </span>
-                            <span className="text-sm font-mono text-muted">
-                              {formatTokenCount(estimatedCompletionTokens)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center pt-2 border-t border-border">
-                            <span className="text-sm font-medium">
-                              Total Tokens:
-                            </span>
-                            <span className="text-sm font-mono font-medium">
-                              {formatTokenCount(totalTokens)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted">Model:</span>
-                            <span className="text-sm font-mono">{model}</span>
-                          </div>
-                          <div className="flex justify-between items-center pt-2 border-t border-border">
-                            <span className="text-sm font-medium">
-                              Est. Cost:
-                            </span>
-                            <span className="text-sm font-mono font-medium">
-                              $
-                              {estimatedCost < 0.01
-                                ? '<$0.01'
-                                : `$${estimatedCost.toFixed(3)}`}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
+                      <p className="text-sm sm:text-base text-muted px-2">
+                        Add the data that will replace{' '}
+                        <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
+                          {'{{input}}'}
+                        </code>{' '}
+                        in your prompt
+                      </p>
+                    </div>
+                  ) : (
+                    <InputEditor
+                      value={inputData}
+                      onChange={setInputData}
+                      placeholder="Enter your input data here..."
+                      model={model}
+                    />
                   )}
-                </div>
-
-                {/* Sticky Run Button - Mobile */}
-                <div className="fixed bottom-0 left-0 right-0 xl:hidden bg-background/95 backdrop-blur-sm border-t border-border p-4 z-10">
-                  <Button
-                    onClick={handleRun}
-                    variant="primary"
-                    fullWidth
-                    loading={running}
-                    disabled={!template || !inputData}
-                    aria-describedby={
-                      !template || !inputData
-                        ? 'run-button-help-mobile'
-                        : undefined
-                    }
-                  >
-                    {running ? 'Running Evaluation...' : 'Run Evaluation'}
-                  </Button>
-                  {(!template || !inputData) && (
-                    <p
-                      id="run-button-help-mobile"
-                      className="text-xs text-muted text-center mt-2"
-                      role="status"
-                    >
-                      Complete both prompt template and input data
-                    </p>
-                  )}
-                </div>
-
-                {/* Sticky Run Button - Desktop */}
-                <div className="hidden xl:block sticky bottom-6 mt-6 z-10">
-                  <Button
-                    onClick={handleRun}
-                    variant="primary"
-                    fullWidth
-                    loading={running}
-                    disabled={!template || !inputData}
-                    aria-describedby={
-                      !template || !inputData
-                        ? 'run-button-help-desktop'
-                        : undefined
-                    }
-                  >
-                    {running ? 'Running Evaluation...' : 'Run Evaluation'}
-                  </Button>
-                  {(!template || !inputData) && (
-                    <p
-                      id="run-button-help-desktop"
-                      className="text-xs sm:text-sm text-muted text-center mt-2"
-                      role="status"
-                    >
-                      Complete both prompt template and input data to run
-                      evaluation
-                    </p>
-                  )}
-                </div>
+                </Card>
               </div>
 
               {/* Right Column - Output Panel */}
-              <div className="xl:w-3/5 flex flex-col min-h-0">
-                <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6">
-                  {/* Live Output Card */}
-                  <Card title="Live Output">
-                    {displayOutputText || streamStatus === 'streaming' ? (
-                      <LiveOutput
-                        outputText={displayOutputText}
-                        status={streamStatus}
-                      />
-                    ) : (
-                      <div className="text-center py-8 sm:py-12">
-                        <div className="text-muted mb-4" aria-hidden="true">
-                          <svg
-                            className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1}
-                              d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4M7 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4H17M7 4H17"
-                            />
-                          </svg>
-                        </div>
-                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                          Ready to stream
-                        </h3>
-                        <p className="text-sm sm:text-base text-muted px-2">
-                          Your prompt output will appear here in real-time when
-                          you run an evaluation
-                        </p>
-                      </div>
-                    )}
-                  </Card>
-
-                  {/* Evaluation Results Card */}
-                  {metrics && Object.keys(metrics).length > 0 && (
-                    <Card title="Evaluation Results">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {Object.entries(metrics).map(([name, value]) => (
-                          <StatCard
-                            key={name}
-                            title={name
-                              .replace(/([A-Z])/g, ' $1')
-                              .replace(/^./, (str) => str.toUpperCase())}
-                            value={
-                              typeof value === 'number'
-                                ? value.toFixed(3)
-                                : String(value)
-                            }
+              <div className="xl:w-3/5 space-y-4 sm:space-y-6">
+                {/* Live Output Card */}
+                <Card title="Live Output">
+                  {displayOutputText || streamStatus === 'streaming' ? (
+                    <LiveOutput
+                      outputText={displayOutputText}
+                      status={streamStatus}
+                    />
+                  ) : (
+                    <div className="text-center py-8 sm:py-12">
+                      <div className="text-muted mb-4" aria-hidden="true">
+                        <svg
+                          className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4M7 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4H17M7 4H17"
                           />
-                        ))}
+                        </svg>
                       </div>
-                    </Card>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                        Ready to stream
+                      </h3>
+                      <p className="text-sm sm:text-base text-muted px-2">
+                        Your prompt output will appear here in real-time when
+                        you run an evaluation
+                      </p>
+                    </div>
                   )}
-                </div>
+                </Card>
+
+                {/* Evaluation Results Card */}
+                {metrics && Object.keys(metrics).length > 0 && (
+                  <Card title="Evaluation Results">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {Object.entries(metrics).map(([name, value]) => (
+                        <StatCard
+                          key={name}
+                          title={name
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, (str) => str.toUpperCase())}
+                          value={
+                            typeof value === 'number'
+                              ? value.toFixed(3)
+                              : String(value)
+                          }
+                        />
+                      ))}
+                    </div>
+                  </Card>
+                )}
               </div>
             </section>
           )}

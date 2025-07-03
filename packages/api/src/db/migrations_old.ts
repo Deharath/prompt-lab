@@ -30,8 +30,6 @@ export async function runMigrationsOnConnection(sqlite: Database.Database) {
         CREATE TABLE IF NOT EXISTS jobs (
           id TEXT PRIMARY KEY,
           prompt TEXT NOT NULL,
-          template TEXT,
-          input_data TEXT,
           provider TEXT NOT NULL,
           model TEXT NOT NULL,
           status TEXT NOT NULL DEFAULT 'pending',
@@ -106,8 +104,6 @@ export async function runMigrations() {
         CREATE TABLE IF NOT EXISTS jobs (
           id TEXT PRIMARY KEY,
           prompt TEXT NOT NULL,
-          template TEXT,
-          input_data TEXT,
           provider TEXT NOT NULL,
           model TEXT NOT NULL,
           status TEXT NOT NULL DEFAULT 'pending',

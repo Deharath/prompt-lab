@@ -27,6 +27,8 @@ function parseDatesInObject<T>(obj: any): T {
 
 export interface JobRequest {
   prompt: string;
+  template?: string;
+  inputData?: string;
   provider: string;
   model: string;
   temperature?: number;
@@ -59,6 +61,8 @@ export interface JobResult {
 
 export interface JobDetails extends JobResult {
   prompt: string;
+  template?: string;
+  inputData?: string;
   provider: string;
   model: string;
 }

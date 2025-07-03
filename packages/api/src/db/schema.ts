@@ -12,6 +12,8 @@ export const jobs = sqliteTable(
   {
     id: text('id').primaryKey(),
     prompt: text('prompt').notNull(),
+    template: text('template'), // Original template before input substitution
+    inputData: text('input_data'), // Original input data
     provider: text('provider').notNull(),
     model: text('model').notNull(),
     status: text('status', {

@@ -97,6 +97,8 @@ jobsRouter.post(
     try {
       const {
         prompt,
+        template,
+        inputData,
         provider: providerName,
         model,
         temperature,
@@ -178,6 +180,8 @@ jobsRouter.post(
       // Build the job creation payload with optional parameters
       const jobData = {
         prompt,
+        ...(template && { template }),
+        ...(inputData && { inputData }),
         provider: providerName,
         model,
         ...(temperature !== undefined && { temperature }),
