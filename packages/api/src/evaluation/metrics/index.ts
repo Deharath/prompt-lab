@@ -9,4 +9,8 @@ export {
   checkJsonValidity,
   countWords,
   checkForKeywords,
+  calculatePrecision,
+  calculateRecall,
+  calculateFScore,
+  calculateMockLatency,
 } from './metrics.js';

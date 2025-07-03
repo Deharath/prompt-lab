@@ -7,6 +7,10 @@ import {
   checkJsonValidity,
   countWords,
   checkForKeywords,
+  calculatePrecision,
+  calculateRecall,
+  calculateFScore,
+  calculateMockLatency,
 } from './metrics.js';
 
 describe('Metrics Library', () => {
@@ -159,6 +163,131 @@ describe('Metrics Library', () => {
       );
       expect(emptyKeywordsResult.foundCount).toBe(0);
       expect(emptyKeywordsResult.matchPercentage).toBe(0);
+    });
+  });
+
+  describe('calculatePrecision', () => {
+    it('should calculate precision correctly for keyword-based classification', () => {
+      const prediction = 'The weather is sunny and warm';
+      const reference = 'It is sunny today';
+      const keywords = ['sunny', 'warm', 'cold'];
+
+      // Prediction has: sunny, warm (2 keywords)
+      // Reference has: sunny (1 keyword)
+      // True positives: sunny (1)
+      // Precision = TP / (TP + FP) = 1 / 2 = 0.5
+      const result = calculatePrecision(prediction, reference, keywords);
+      expect(result).toBeCloseTo(0.5);
+    });
+
+    it('should calculate word-level precision when no keywords provided', () => {
+      const prediction = 'the cat sat on mat';
+      const reference = 'the dog sat on chair';
+
+      // Prediction words: the, cat, sat, on, mat (5)
+      // Reference words: the, dog, sat, on, chair
+      // Common words: the, sat, on (3)
+      // Precision = 3 / 5 = 0.6
+      const result = calculatePrecision(prediction, reference);
+      expect(result).toBeCloseTo(0.6);
+    });
+
+    it('should return 0 for empty inputs', () => {
+      expect(calculatePrecision('', 'reference')).toBe(0);
+      expect(calculatePrecision('prediction', '')).toBe(0);
+    });
+  });
+
+  describe('calculateRecall', () => {
+    it('should calculate recall correctly for keyword-based classification', () => {
+      const prediction = 'The weather is sunny';
+      const reference = 'It is sunny and warm today';
+      const keywords = ['sunny', 'warm', 'cold'];
+
+      // Prediction has: sunny (1 keyword)
+      // Reference has: sunny, warm (2 keywords)
+      // True positives: sunny (1)
+      // Recall = TP / (TP + FN) = 1 / 2 = 0.5
+      const result = calculateRecall(prediction, reference, keywords);
+      expect(result).toBeCloseTo(0.5);
+    });
+
+    it('should calculate word-level recall when no keywords provided', () => {
+      const prediction = 'the cat sat on';
+      const reference = 'the dog sat on chair';
+
+      // Prediction words: the, cat, sat, on
+      // Reference words: the, dog, sat, on, chair (5)
+      // Common words: the, sat, on (3)
+      // Recall = 3 / 5 = 0.6
+      const result = calculateRecall(prediction, reference);
+      expect(result).toBeCloseTo(0.6);
+    });
+
+    it('should return 0 for empty inputs', () => {
+      expect(calculateRecall('', 'reference')).toBe(0);
+      expect(calculateRecall('prediction', '')).toBe(0);
+    });
+  });
+
+  describe('calculateFScore', () => {
+    it('should calculate F-score as harmonic mean of precision and recall', () => {
+      const prediction = 'the cat sat';
+      const reference = 'the dog sat on chair';
+
+      // Word-level calculation:
+      // Precision = 2/3 ≈ 0.667 (the, sat are common out of 3 prediction words)
+      // Recall = 2/5 = 0.4 (the, sat are common out of 5 reference words)
+      // F-score = 2 * (0.667 * 0.4) / (0.667 + 0.4) ≈ 0.5
+      const result = calculateFScore(prediction, reference);
+      expect(result).toBeCloseTo(0.5, 1);
+    });
+
+    it('should return 0 when precision and recall are both 0', () => {
+      const result = calculateFScore('xyz', 'abc');
+      expect(result).toBe(0);
+    });
+
+    it('should return 0 for empty inputs', () => {
+      expect(calculateFScore('', 'reference')).toBe(0);
+      expect(calculateFScore('prediction', '')).toBe(0);
+    });
+  });
+  describe('calculateMockLatency', () => {
+    it('should return higher latency for longer text', () => {
+      const shortText = 'Hello world';
+      const longText =
+        'This is a much longer text with many more words and much more content to process for the evaluation system';
+
+      const shortLatency = calculateMockLatency(shortText);
+      const longLatency = calculateMockLatency(longText);
+
+      // More robust test - long text should generally have higher latency
+      expect(longLatency).toBeGreaterThan(shortLatency);
+    });
+
+    it('should return higher latency for more complex text', () => {
+      const simpleText = 'I like cats. Cats are fun. They play all day.';
+      const complexText =
+        'The utilization of sophisticated linguistic constructs demonstrates enhanced computational complexity.';
+
+      const simpleLatency = calculateMockLatency(simpleText);
+      const complexLatency = calculateMockLatency(complexText);
+
+      expect(complexLatency).toBeGreaterThan(simpleLatency);
+    });
+
+    it('should return 0 for empty text', () => {
+      expect(calculateMockLatency('')).toBe(0);
+      expect(calculateMockLatency('   ')).toBe(0);
+    });
+
+    it('should return a reasonable latency value', () => {
+      const text = 'This is a sample text for testing';
+      const latency = calculateMockLatency(text);
+
+      expect(latency).toBeGreaterThan(0);
+      expect(latency).toBeLessThan(10000); // Should be reasonable
     });
   });
 });

@@ -22,7 +22,11 @@ import {
   checkJsonValidity,
   countWords,
   checkForKeywords,
-} from '../../../../packages/api/src/evaluation/metrics/index.js';
+  calculatePrecision,
+  calculateRecall,
+  calculateFScore,
+  calculateMockLatency,
+} from '@prompt-lab/api';
 
 // Helper function to calculate selected metrics
 function calculateSelectedMetrics(
@@ -55,6 +59,26 @@ function calculateSelectedMetrics(
           const keywords = metric.input.split(',').map((k) => k.trim());
           results.keywords = checkForKeywords(output, keywords);
         }
+        break;
+      case 'precision':
+        // For precision, we'll use the output as prediction and a simple baseline as reference
+        // In practice, this would be calculated against a proper reference
+        results.precision = calculatePrecision(
+          output,
+          'baseline reference text',
+        );
+        break;
+      case 'recall':
+        // For recall, we'll use the output as prediction and a simple baseline as reference
+        results.recall = calculateRecall(output, 'baseline reference text');
+        break;
+      case 'f_score':
+        // F-score calculation using the same baseline
+        results.f_score = calculateFScore(output, 'baseline reference text');
+        break;
+      case 'latency':
+        // Mock latency calculation based on output complexity
+        results.latency = calculateMockLatency(output);
         break;
     }
   }

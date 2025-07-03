@@ -284,3 +284,152 @@ export function checkForKeywords(
     matchPercentage,
   };
 }
+
+/**
+ * Calculates precision for binary classification tasks.
+ * Precision is the ratio of true positives to the sum of true positives and false positives.
+ *
+ * @param prediction - The predicted text
+ * @param reference - The reference/ground truth text
+ * @param keywords - Array of keywords that represent positive cases
+ * @returns A precision score between 0 and 1
+ */
+export function calculatePrecision(
+  prediction: string,
+  reference: string,
+  keywords: string[] = [],
+): number {
+  if (!prediction || !reference) {
+    return 0;
+  }
+
+  const predictionLower = prediction.toLowerCase();
+  const referenceLower = reference.toLowerCase();
+
+  // Use keywords if provided, otherwise use word-level comparison
+  if (keywords.length > 0) {
+    const predKeywords = keywords.filter((keyword) =>
+      predictionLower.includes(keyword.toLowerCase()),
+    );
+    const refKeywords = keywords.filter((keyword) =>
+      referenceLower.includes(keyword.toLowerCase()),
+    );
+
+    if (predKeywords.length === 0) return 0;
+
+    const truePositives = predKeywords.filter((keyword) =>
+      refKeywords.includes(keyword),
+    ).length;
+
+    return truePositives / predKeywords.length;
+  }
+
+  // Word-level precision
+  const predWords = predictionLower.split(/\s+/).filter((w) => w.length > 0);
+  const refWords = new Set(
+    referenceLower.split(/\s+/).filter((w) => w.length > 0),
+  );
+
+  if (predWords.length === 0) return 0;
+
+  const truePositives = predWords.filter((word) => refWords.has(word)).length;
+  return truePositives / predWords.length;
+}
+
+/**
+ * Calculates recall for binary classification tasks.
+ * Recall is the ratio of true positives to the sum of true positives and false negatives.
+ *
+ * @param prediction - The predicted text
+ * @param reference - The reference/ground truth text
+ * @param keywords - Array of keywords that represent positive cases
+ * @returns A recall score between 0 and 1
+ */
+export function calculateRecall(
+  prediction: string,
+  reference: string,
+  keywords: string[] = [],
+): number {
+  if (!prediction || !reference) {
+    return 0;
+  }
+
+  const predictionLower = prediction.toLowerCase();
+  const referenceLower = reference.toLowerCase();
+
+  // Use keywords if provided, otherwise use word-level comparison
+  if (keywords.length > 0) {
+    const predKeywords = keywords.filter((keyword) =>
+      predictionLower.includes(keyword.toLowerCase()),
+    );
+    const refKeywords = keywords.filter((keyword) =>
+      referenceLower.includes(keyword.toLowerCase()),
+    );
+
+    if (refKeywords.length === 0) return 0;
+
+    const truePositives = refKeywords.filter((keyword) =>
+      predKeywords.includes(keyword),
+    ).length;
+
+    return truePositives / refKeywords.length;
+  }
+
+  // Word-level recall
+  const predWords = new Set(
+    predictionLower.split(/\s+/).filter((w) => w.length > 0),
+  );
+  const refWords = referenceLower.split(/\s+/).filter((w) => w.length > 0);
+
+  if (refWords.length === 0) return 0;
+
+  const truePositives = refWords.filter((word) => predWords.has(word)).length;
+  return truePositives / refWords.length;
+}
+
+/**
+ * Calculates F-score (F1 score) which is the harmonic mean of precision and recall.
+ *
+ * @param prediction - The predicted text
+ * @param reference - The reference/ground truth text
+ * @param keywords - Array of keywords that represent positive cases
+ * @returns An F-score between 0 and 1
+ */
+export function calculateFScore(
+  prediction: string,
+  reference: string,
+  keywords: string[] = [],
+): number {
+  const precision = calculatePrecision(prediction, reference, keywords);
+  const recall = calculateRecall(prediction, reference, keywords);
+
+  if (precision + recall === 0) {
+    return 0;
+  }
+
+  return (2 * precision * recall) / (precision + recall);
+}
+
+/**
+ * Measures response latency by analyzing timing patterns in text.
+ * This is a mock implementation for demonstration - in practice, latency would be measured
+ * during actual API calls.
+ *
+ * @param text - The response text to analyze
+ * @returns A mock latency score in milliseconds
+ */
+export function calculateMockLatency(text: string): number {
+  if (!text || text.trim().length === 0) {
+    return 0;
+  }
+
+  // Mock latency calculation based on text length and complexity
+  const wordCount = countWords(text);
+  const complexity = calculateFleschReadingEase(text);
+
+  // Simulate latency: longer text = higher latency, more complex text = higher latency
+  const baseLatency = Math.max(50, wordCount * 5);
+  const complexityFactor = Math.max(1.0, (100 - complexity) / 50); // Higher complexity = higher latency
+
+  return Math.round(baseLatency * complexityFactor);
+}

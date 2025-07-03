@@ -238,7 +238,6 @@ describe('Dashboard API', () => {
   it('should handle jobs without metrics gracefully', async () => {
     // ARRANGE: Seed jobs with and without metrics
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const yesterdayTimestamp = Math.floor(yesterday.getTime() / 1000);
 
     const testId = Math.random().toString(36).substring(7);
 
@@ -249,9 +248,9 @@ describe('Dashboard API', () => {
         provider: 'openai',
         model: 'gpt-4o-mini',
         status: 'completed',
-        created_at: yesterdayTimestamp,
+        createdAt: yesterday,
         metrics: JSON.stringify({ scores: { accuracy: 0.8, relevance: 0.9 } }),
-        cost_usd: 1.0,
+        costUsd: 1.0,
       },
       {
         id: `job-without-metrics-graceful-${testId}`,
@@ -259,9 +258,9 @@ describe('Dashboard API', () => {
         provider: 'openai',
         model: 'gpt-4o-mini',
         status: 'completed',
-        created_at: yesterdayTimestamp,
+        createdAt: yesterday,
         metrics: null,
-        cost_usd: 2.0,
+        costUsd: 2.0,
       },
     ]);
 

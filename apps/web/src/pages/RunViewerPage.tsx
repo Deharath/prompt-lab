@@ -7,6 +7,7 @@ import Button from '../components/ui/Button.js';
 import LoadingSpinner from '../components/LoadingSpinner.js';
 import ErrorMessage from '../components/ErrorMessage.js';
 import ShareRunButton from '../components/ShareRunButton.js';
+import ResultsPanel from '../components/ResultsPanel.js';
 
 const RunViewerPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -476,68 +477,7 @@ const RunViewerPage = () => {
         )}
 
         {/* Metrics Section */}
-        {job.metrics && Object.keys(job.metrics).length > 0 && (
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-amber-500 to-orange-600 text-white shadow-md">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </div>
-                <h3
-                  className={`text-lg font-semibold transition-colors duration-300 ${
-                    darkMode ? 'text-gray-200' : 'text-gray-900'
-                  }`}
-                >
-                  Metrics
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(job.metrics).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className={`p-4 rounded-xl border transition-colors duration-300 ${
-                      darkMode
-                        ? 'bg-gray-800/30 border-gray-700/50'
-                        : 'bg-gray-50/30 border-gray-200/50'
-                    }`}
-                  >
-                    <div
-                      className={`text-sm font-medium mb-1 transition-colors duration-300 ${
-                        darkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}
-                    >
-                      {key
-                        .replace(/([A-Z])/g, ' $1')
-                        .replace(/^./, (str) => str.toUpperCase())}
-                    </div>
-                    <div
-                      className={`text-xl font-bold transition-colors duration-300 ${
-                        darkMode ? 'text-gray-200' : 'text-gray-900'
-                      }`}
-                    >
-                      {typeof value === 'number'
-                        ? value.toFixed(3)
-                        : String(value)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        )}
+        <ResultsPanel metrics={job.metrics} jobId={job.id} />
 
         {/* Usage Info */}
         {(job.tokensUsed || job.costUsd) && (

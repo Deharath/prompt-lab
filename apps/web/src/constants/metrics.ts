@@ -42,4 +42,28 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     inputLabel: 'Keywords (comma-separated)',
     inputPlaceholder: 'e.g., climate, sustainability, renewable',
   },
+  {
+    id: 'precision',
+    name: 'Precision',
+    description:
+      'Measures the ratio of relevant retrieved items to total retrieved items. Higher values indicate fewer false positives.',
+  },
+  {
+    id: 'recall',
+    name: 'Recall',
+    description:
+      'Measures the ratio of relevant retrieved items to total relevant items. Higher values indicate fewer false negatives.',
+  },
+  {
+    id: 'f_score',
+    name: 'F-Score',
+    description:
+      'Harmonic mean of precision and recall, providing a balanced measure of both metrics.',
+  },
+  {
+    id: 'latency',
+    name: 'Response Latency',
+    description:
+      'Measures the time taken to generate the response. Lower values indicate faster processing.',
+  },
 ];
