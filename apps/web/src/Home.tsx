@@ -212,6 +212,7 @@ const Home = () => {
           model={model}
           onProviderChange={setProvider}
           onModelChange={setModel}
+          onLoadTemplate={setTemplate}
         />
       </div>
 

@@ -7,7 +7,6 @@ import ShareRunButton from './ShareRunButton.js';
 import ModelSelector from './ModelSelector.js';
 import RunConfiguration from './RunConfiguration.js';
 import MetricSelector from './MetricSelector.js';
-import CustomPrompt from './CustomPrompt.js';
 import { AVAILABLE_METRICS } from '../constants/metrics.js';
 
 // Type definition for JobSummary (from API)
@@ -32,11 +31,9 @@ interface HistorySidebarProps {
   model: string;
   onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
-  // Custom prompt template loading
-  onLoadTemplate?: (template: string) => void;
 }
 
-const AppSidebar = ({
+const HistorySidebar = ({
   isCollapsed,
   onToggle,
   onSelectJob,
@@ -45,7 +42,6 @@ const AppSidebar = ({
   model,
   onProviderChange,
   onModelChange,
-  onLoadTemplate,
 }: HistorySidebarProps) => {
   const {
     start,
@@ -743,8 +739,30 @@ const AppSidebar = ({
         )}
 
         {activeTab === 'custom' && (
-          <div className="h-full overflow-auto">
-            <CustomPrompt onLoadTemplate={onLoadTemplate || (() => {})} />
+          <div className="h-full flex items-center justify-center p-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg
+                  className="w-6 h-6 text-muted-foreground"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-foreground mb-1">
+                Custom Prompts
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Feature coming soon
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -807,4 +825,4 @@ const AppSidebar = ({
   );
 };
 
-export default AppSidebar;
+export default HistorySidebar;

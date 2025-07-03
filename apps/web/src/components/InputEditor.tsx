@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { countTokens, countTokensAsync } from '../utils/tokenCounter.js';
+import { LoadingSkeleton } from './ui/LoadingState.js';
 
 interface InputEditorProps {
   value: string;
@@ -16,6 +17,9 @@ const InputEditor = ({
 }: InputEditorProps) => {
   const [manualState, setManualState] = useState<boolean | null>(null); // null = auto, true = manually expanded, false = manually collapsed
   const [tokenCount, setTokenCount] = useState(0);
+  const [isCalculatingTokens, setIsCalculatingTokens] = useState(false);
+  const [_wordCount, setWordCount] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Determine if should be expanded
   const hasLargeContent = value.length > 200;
@@ -23,9 +27,10 @@ const InputEditor = ({
     manualState !== null ? manualState : hasLargeContent;
   const actualRows = shouldShowExpanded ? 12 : 6;
 
-  // Calculate tokens - try async first, fallback to sync
+  // Calculate tokens and word count
   useEffect(() => {
-    const updateTokenCount = async () => {
+    const updateCounts = async () => {
+      setIsCalculatingTokens(true);
       try {
         const count = await countTokensAsync(value, model);
         setTokenCount(count);
@@ -33,9 +38,18 @@ const InputEditor = ({
         // Fallback to sync calculation
         setTokenCount(countTokens(value, model));
       }
+
+      // Calculate word count
+      const words = value
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      setWordCount(words.length);
+
+      setIsCalculatingTokens(false);
     };
 
-    updateTokenCount();
+    updateCounts();
   }, [value, model]);
 
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -43,6 +57,33 @@ const InputEditor = ({
     if (pastedText.length > 100) {
       setManualState(true);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Auto-expand on Enter if content is growing
+    if (e.key === 'Enter' && value.length > 150 && !shouldShowExpanded) {
+      setManualState(true);
+    }
+  };
+
+  const insertSampleText = () => {
+    const sampleTexts = [
+      'Write a detailed analysis of market trends in the technology sector.',
+      'Create a summary of the latest developments in artificial intelligence and machine learning.',
+      'Explain the impact of climate change on global agriculture and food security.',
+      'Describe the evolution of remote work and its effects on productivity and work-life balance.',
+    ];
+
+    const randomSample =
+      sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+    onChange(randomSample);
+    setManualState(true);
+  };
+
+  const clearContent = () => {
+    onChange('');
+    setManualState(null);
+    textareaRef.current?.focus();
   };
 
   return (
@@ -65,6 +106,29 @@ const InputEditor = ({
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Quick actions */}
+          {!value && (
+            <button
+              type="button"
+              onClick={insertSampleText}
+              className="text-xs px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 transition-colors"
+              title="Insert sample text"
+            >
+              Sample
+            </button>
+          )}
+
+          {value && (
+            <button
+              type="button"
+              onClick={clearContent}
+              className="text-xs px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 text-red-600 dark:bg-red-800 dark:hover:bg-red-700 dark:text-red-300 transition-colors"
+              title="Clear content"
+            >
+              Clear
+            </button>
+          )}
+
           {/* Expand/Collapse Button */}
           <button
             type="button"
@@ -75,7 +139,7 @@ const InputEditor = ({
                 : 'Expand input editor'
             }
             aria-expanded={shouldShowExpanded}
-            className={`text-xs px-2 py-1 rounded-md transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${
+            className={`text-xs px-2 py-1 rounded-md transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transform hover:scale-105 ${
               shouldShowExpanded
                 ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-300'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300'
@@ -95,9 +159,11 @@ const InputEditor = ({
         <textarea
           id="input-editor"
           data-testid="input-editor"
+          ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onPaste={handlePaste}
+          onKeyDown={handleKeyDown}
           placeholder={
             placeholder ||
             'Enter the data you want to analyze or process...\n\nFor example:\n- News articles for summarization\n- Customer reviews for sentiment analysis\n- Code snippets for review\n- Any text content for your prompt template'
@@ -118,7 +184,11 @@ const InputEditor = ({
           </div>
           {value.length > 0 && (
             <div className="text-xs px-2 py-1 rounded-md transition-colors duration-300 text-gray-500 bg-white/80 dark:text-gray-400 dark:bg-gray-700/80">
-              {tokenCount} tokens
+              {isCalculatingTokens ? (
+                <LoadingSkeleton className="w-20 h-4" />
+              ) : (
+                `${tokenCount} tokens`
+              )}
             </div>
           )}
         </div>

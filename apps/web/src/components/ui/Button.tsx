@@ -1,6 +1,6 @@
 import { ReactNode, ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps
@@ -27,18 +27,24 @@ const Button = ({
   const isDisabled = loading || disabled;
 
   const baseClasses =
-    'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+    'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background transform hover:scale-[1.02] active:scale-[0.98]';
 
   const variantClasses = {
     primary: isDisabled
-      ? 'bg-muted text-foreground/50 cursor-not-allowed'
+      ? 'bg-muted text-foreground/50 cursor-not-allowed transform-none'
       : 'bg-primary text-white hover:bg-primary/90 active:bg-primary/95 shadow-md hover:shadow-lg',
     secondary: isDisabled
-      ? 'border border-border bg-card text-foreground/50 cursor-not-allowed'
+      ? 'border border-border bg-card text-foreground/50 cursor-not-allowed transform-none'
       : 'border border-primary bg-transparent text-primary hover:bg-primary/10 active:bg-primary/20',
     ghost: isDisabled
-      ? 'text-foreground/50 cursor-not-allowed'
+      ? 'text-foreground/50 cursor-not-allowed transform-none'
       : 'text-foreground/70 hover:text-foreground hover:bg-muted/50 active:bg-muted/70',
+    danger: isDisabled
+      ? 'bg-muted text-foreground/50 cursor-not-allowed transform-none'
+      : 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-md hover:shadow-lg',
+    success: isDisabled
+      ? 'bg-muted text-foreground/50 cursor-not-allowed transform-none'
+      : 'bg-green-600 text-white hover:bg-green-700 active:bg-green-800 shadow-md hover:shadow-lg',
   };
 
   const sizeClasses = {
@@ -61,7 +67,7 @@ const Button = ({
     >
       {loading ? (
         <>
-          <div className="flex gap-1">
+          <div className="flex gap-1" role="status" aria-label="Loading">
             <div
               className="w-2 h-2 bg-current rounded-full animate-pulse"
               style={{ animationDelay: '0ms' }}
