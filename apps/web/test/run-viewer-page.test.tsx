@@ -90,6 +90,8 @@ const mockJobData = {
   },
   tokensUsed: 150,
   costUsd: 0.003,
+  createdAt: new Date('2025-07-03T15:50:08.000Z'),
+  updatedAt: new Date('2025-07-03T15:51:08.000Z'),
 };
 
 describe('RunViewerPage', () => {

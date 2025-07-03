@@ -8,6 +8,9 @@ import StatCard from './components/ui/StatCard.js';
 import PromptEditor from './components/PromptEditor.js';
 import InputEditor from './components/InputEditor.js';
 import ModelSelector from './components/ModelSelector.js';
+import RunConfiguration from './components/RunConfiguration.js';
+import MetricSelector from './components/MetricSelector.js';
+import { AVAILABLE_METRICS } from './constants/metrics.js';
 import LiveOutput from './components/LiveOutput.js';
 import ErrorAlert from './components/ErrorAlert.js';
 import HistorySidebar from './components/HistorySidebar.js';
@@ -42,6 +45,15 @@ const Home = () => {
     reset,
     setUserData,
     comparison,
+    // Model parameters
+    temperature,
+    topP,
+    maxTokens,
+    selectedMetrics,
+    setTemperature,
+    setTopP,
+    setMaxTokens,
+    setSelectedMetrics,
   } = useJobStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [outputText, setOutputText] = useState('');
@@ -55,7 +67,6 @@ const Home = () => {
   // Cleanup function to close any active EventSource
   const closeCurrentStream = () => {
     if (currentEventSourceRef.current) {
-      console.log('🔌 Closing existing EventSource');
       currentEventSourceRef.current.close();
       currentEventSourceRef.current = null;
     }
@@ -74,8 +85,6 @@ const Home = () => {
   }, [template, inputData, setUserData]);
 
   const handleRun = async () => {
-    console.log('🚀 Run button clicked!');
-
     // Close any existing stream before starting a new one
     closeCurrentStream();
 
@@ -88,19 +97,20 @@ const Home = () => {
 
     try {
       reset();
-      console.log('📝 Creating job with:', {
-        prompt: finalPrompt,
-        provider,
-        model,
-      });
+
+      // Convert selected metric IDs to string array for API
+      const metricIds = selectedMetrics.map((metric) => metric.id);
 
       const job = await ApiClient.createJob({
         prompt: finalPrompt,
         provider,
         model,
+        temperature,
+        topP,
+        maxTokens: maxTokens > 0 ? maxTokens : undefined, // Only send if > 0
+        metrics: metricIds.length > 0 ? metricIds : undefined, // Only send if metrics selected
       });
 
-      console.log('✅ Job created:', job);
       start(job);
       let fullText = '';
 
@@ -108,7 +118,6 @@ const Home = () => {
       const eventSource = ApiClient.streamJob(
         job.id,
         (token) => {
-          console.log('🔤 Received token:', JSON.stringify(token));
           fullText += token;
           setOutputText(fullText);
         },
@@ -117,7 +126,6 @@ const Home = () => {
           currentEventSourceRef.current = null;
           try {
             const final = await ApiClient.fetchJob(job.id);
-            console.log('📊 Final results:', final);
             finish((final.metrics as Record<string, number>) || {});
           } catch (_err) {
             finish({});
@@ -136,7 +144,6 @@ const Home = () => {
       currentEventSourceRef.current = eventSource;
     } catch (err) {
       setStreamStatus('error');
-      console.error('❌ Job creation failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to run';
       setError(errorMessage);
     }
@@ -306,9 +313,16 @@ const Home = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto" role="main">
+        <main
+          className="flex-1 overflow-hidden flex flex-col min-h-0"
+          role="main"
+        >
           {error && (
-            <div className="p-4 sm:p-6 pb-0" role="alert" aria-live="polite">
+            <div
+              className="flex-shrink-0 p-4 sm:p-6 pb-0"
+              role="alert"
+              aria-live="polite"
+            >
               <ErrorAlert error={error} />
             </div>
           )}
@@ -323,15 +337,14 @@ const Home = () => {
               />
             </section>
           ) : (
-            // Regular workspace view
+            // Sticky Two-Column Workspace Layout
             <section
-              className="p-4 sm:p-6"
+              className="h-full flex flex-col xl:flex-row gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6"
               aria-label="Prompt evaluation workspace"
             >
-              {/* Responsive Layout */}
-              <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
-                {/* Input Column - Full width on mobile, stacks first */}
-                <div className="xl:col-span-2 space-y-4 sm:space-y-6 order-1 xl:order-1">
+              {/* Left Column - Scrollable Configuration Panel */}
+              <div className="xl:w-2/5 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-24 xl:pb-4">
                   {/* Prompt Card */}
                   <Card title="Prompt Template">
                     {isEmptyState ? (
@@ -365,7 +378,7 @@ const Home = () => {
                           aria-label="Load a sample prompt and input to get started"
                           className="w-full sm:w-auto"
                         >
-                          Start with a guided example
+                          Get Started!
                         </Button>
                       </div>
                     ) : (
@@ -406,8 +419,8 @@ const Home = () => {
                     )}
                   </Card>
 
-                  {/* Run Configuration Card */}
-                  <Card title="Run Configuration">
+                  {/* Model Selector Card */}
+                  <Card title="Model Selection">
                     <div className="space-y-4">
                       <ModelSelector
                         provider={provider}
@@ -415,37 +428,86 @@ const Home = () => {
                         onProviderChange={setProvider}
                         onModelChange={setModel}
                       />
-
-                      <Button
-                        onClick={handleRun}
-                        variant="primary"
-                        fullWidth
-                        loading={running}
-                        disabled={!template || !inputData}
-                        aria-describedby={
-                          !template || !inputData
-                            ? 'run-button-help'
-                            : undefined
-                        }
-                      >
-                        {running ? 'Running Evaluation...' : 'Run Evaluation'}
-                      </Button>
-                      {(!template || !inputData) && (
-                        <p
-                          id="run-button-help"
-                          className="text-xs sm:text-sm text-muted text-center px-2"
-                          role="status"
-                        >
-                          Complete both prompt template and input data to run
-                          evaluation
-                        </p>
-                      )}
                     </div>
                   </Card>
+
+                  {/* Run Configuration Card */}
+                  <RunConfiguration
+                    temperature={temperature}
+                    topP={topP}
+                    maxTokens={maxTokens}
+                    onTemperatureChange={setTemperature}
+                    onTopPChange={setTopP}
+                    onMaxTokensChange={setMaxTokens}
+                  />
+
+                  {/* Metrics Selection Card */}
+                  <MetricSelector
+                    metrics={AVAILABLE_METRICS}
+                    selectedMetrics={selectedMetrics}
+                    onChange={setSelectedMetrics}
+                  />
                 </div>
 
-                {/* Output Column - Full width on mobile, stacks second */}
-                <div className="xl:col-span-3 space-y-4 sm:space-y-6 order-2 xl:order-2">
+                {/* Sticky Run Button - Mobile */}
+                <div className="fixed bottom-0 left-0 right-0 xl:hidden bg-background/95 backdrop-blur-sm border-t border-border p-4 z-10">
+                  <Button
+                    onClick={handleRun}
+                    variant="primary"
+                    fullWidth
+                    loading={running}
+                    disabled={!template || !inputData}
+                    aria-describedby={
+                      !template || !inputData
+                        ? 'run-button-help-mobile'
+                        : undefined
+                    }
+                  >
+                    {running ? 'Running Evaluation...' : 'Run Evaluation'}
+                  </Button>
+                  {(!template || !inputData) && (
+                    <p
+                      id="run-button-help-mobile"
+                      className="text-xs text-muted text-center mt-2"
+                      role="status"
+                    >
+                      Complete both prompt template and input data
+                    </p>
+                  )}
+                </div>
+
+                {/* Sticky Run Button - Desktop */}
+                <div className="hidden xl:block sticky bottom-6 mt-6 z-10">
+                  <Button
+                    onClick={handleRun}
+                    variant="primary"
+                    fullWidth
+                    loading={running}
+                    disabled={!template || !inputData}
+                    aria-describedby={
+                      !template || !inputData
+                        ? 'run-button-help-desktop'
+                        : undefined
+                    }
+                  >
+                    {running ? 'Running Evaluation...' : 'Run Evaluation'}
+                  </Button>
+                  {(!template || !inputData) && (
+                    <p
+                      id="run-button-help-desktop"
+                      className="text-xs sm:text-sm text-muted text-center mt-2"
+                      role="status"
+                    >
+                      Complete both prompt template and input data to run
+                      evaluation
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column - Output Panel */}
+              <div className="xl:w-3/5 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6">
                   {/* Live Output Card */}
                   <Card title="Live Output">
                     {outputText || streamStatus === 'streaming' ? (

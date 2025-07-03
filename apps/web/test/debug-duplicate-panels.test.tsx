@@ -9,11 +9,17 @@ describe('Debug duplicate panels', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock fetch for job creation
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: 'job-123', status: 'pending' }),
-    });
+    // Mock fetch for job history and job creation
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [], // Empty job history array
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: 'job-123', status: 'pending' }),
+      });
 
     // Mock EventSource
     global.EventSource = vi.fn().mockImplementation((url) => {
@@ -86,36 +92,15 @@ describe('Debug duplicate panels', () => {
         name: /Loading/i,
       });
       expect(loadingButtons).toHaveLength(1);
-
-      console.log('=== AFTER STARTING EVALUATION ===');
-      console.log(
-        'Prompt editors:',
-        screen.queryAllByTestId('prompt-editor').length,
-      );
-      console.log(
-        'Input editors:',
-        screen.queryAllByTestId('input-editor').length,
-      );
-      console.log('Loading buttons:', loadingButtons.length);
-      console.log(
-        'Run buttons:',
-        screen.queryAllByRole('button', { name: /Run Evaluation/i }).length,
-      );
     });
 
     // Now change provider while evaluation is running (this might trigger the bug)
     const providerSelects = screen.queryAllByTestId('provider-select');
-    console.log('Provider selects found:', providerSelects.length);
 
     if (providerSelects.length === 0) {
-      console.log('No provider select found, checking by role...');
       const selectElements = screen.queryAllByRole('combobox');
-      console.log('Combobox elements found:', selectElements.length);
-      selectElements.forEach((select, index) => {
-        console.log(
-          `Combobox ${index} value:`,
-          (select as HTMLSelectElement).value,
-        );
+      selectElements.forEach(() => {
+        // Removed debug log for combobox value
       });
     }
 
@@ -128,7 +113,6 @@ describe('Debug duplicate panels', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Check state after provider change
-    console.log('=== AFTER PROVIDER CHANGE ===');
     const promptEditorsAfter = screen.queryAllByTestId('prompt-editor');
     const inputEditorsAfter = screen.queryAllByTestId('input-editor');
     const loadingButtonsAfter = screen.queryAllByRole('button', {
@@ -137,11 +121,6 @@ describe('Debug duplicate panels', () => {
     const runButtonsAfter = screen.queryAllByRole('button', {
       name: /Run Evaluation/i,
     });
-
-    console.log('Prompt editors after:', promptEditorsAfter.length);
-    console.log('Input editors after:', inputEditorsAfter.length);
-    console.log('Loading buttons after:', loadingButtonsAfter.length);
-    console.log('Run buttons after:', runButtonsAfter.length);
 
     // We should still have exactly one ConfigurationPanel
     expect(promptEditorsAfter).toHaveLength(1);

@@ -4,9 +4,13 @@ import App from '../src/App.js';
 
 describe('App', () => {
   it('streams log and renders metrics', async () => {
-    // Mock fetch for job creation and final job fetch
+    // Mock fetch for job history, job creation and final job fetch
     global.fetch = vi
       .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [], // Empty job history array
+      })
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ id: 'job-123', status: 'pending' }),

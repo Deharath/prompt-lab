@@ -22,6 +22,11 @@ async function complete(
   const resp = await openai.chat.completions.create({
     model: options.model,
     messages: [{ role: 'user', content: prompt }],
+    ...(options.temperature !== undefined && {
+      temperature: options.temperature,
+    }),
+    ...(options.topP !== undefined && { top_p: options.topP }),
+    ...(options.maxTokens !== undefined && { max_tokens: options.maxTokens }),
   });
 
   const output = resp.choices[0]?.message?.content ?? '';
@@ -50,6 +55,11 @@ async function* stream(
     model: options.model,
     messages: [{ role: 'user', content: prompt }],
     stream: true,
+    ...(options.temperature !== undefined && {
+      temperature: options.temperature,
+    }),
+    ...(options.topP !== undefined && { top_p: options.topP }),
+    ...(options.maxTokens !== undefined && { max_tokens: options.maxTokens }),
   });
 
   for await (const chunk of stream) {

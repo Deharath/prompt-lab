@@ -15,6 +15,13 @@
       "when": 1751124115925,
       "tag": "0001_add_cost_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1751502488256,
+      "tag": "0002_add_model_params",
+      "breakpoints": true
     }
   ]
 }

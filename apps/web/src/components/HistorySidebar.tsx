@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import { fetchJob, listJobs } from '../api.js';
 import { useJobStore } from '../store/jobStore.js';
 import ShareRunButton from './ShareRunButton.js';
@@ -55,7 +56,15 @@ const HistorySidebar = ({
     try {
       reset();
       const job = await fetchJob(id);
-      start({ id: job.id, status: job.status });
+      start({
+        id: job.id,
+        status: job.status,
+        createdAt: job.createdAt,
+        provider: job.provider,
+        model: job.model,
+        costUsd: job.costUsd || null,
+        avgScore: null, // Will be calculated from metrics if needed
+      });
       if (job.result) {
         append(job.result);
       }
@@ -287,9 +296,7 @@ const HistorySidebar = ({
                     ? 'Compare'
                     : null;
 
-              const jobTime = new Date(
-                parseInt(job.id.substring(0, 8), 16) * 1000,
-              ).toLocaleString();
+              const jobTime = format(job.createdAt, 'MMM d, yyyy, h:mm:ss a');
               const shortId = job.id.substring(0, 8);
 
               return (

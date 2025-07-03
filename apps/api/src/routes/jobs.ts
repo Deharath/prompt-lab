@@ -15,15 +15,70 @@ import {
   ServiceUnavailableError,
 } from '../errors/ApiError.js';
 
+// Import metric functions
+import {
+  calculateFleschReadingEase,
+  calculateSentiment,
+  checkJsonValidity,
+  countWords,
+  checkForKeywords,
+} from '../../../../packages/api/src/evaluation/metrics/index.js';
+
+// Helper function to calculate selected metrics
+function calculateSelectedMetrics(
+  output: string,
+  selectedMetrics?: unknown,
+): Record<string, unknown> {
+  if (!selectedMetrics || !Array.isArray(selectedMetrics)) {
+    return {};
+  }
+
+  const metrics = selectedMetrics as Array<{ id: string; input?: string }>;
+  const results: Record<string, unknown> = {};
+
+  for (const metric of metrics) {
+    switch (metric.id) {
+      case 'flesch_reading_ease':
+        results.flesch_reading_ease = calculateFleschReadingEase(output);
+        break;
+      case 'sentiment_score':
+        results.sentiment_score = calculateSentiment(output);
+        break;
+      case 'is_valid_json':
+        results.is_valid_json = checkJsonValidity(output);
+        break;
+      case 'word_count':
+        results.word_count = countWords(output);
+        break;
+      case 'keywords':
+        if (metric.input) {
+          const keywords = metric.input.split(',').map((k) => k.trim());
+          results.keywords = checkForKeywords(output, keywords);
+        }
+        break;
+    }
+  }
+
+  return results;
+}
+
 const jobsRouter = createRouter();
 
 // POST /jobs - Create a new job
 jobsRouter.post(
-  '/',
+  '/', // ...existing code...
 
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { prompt, provider: providerName, model } = req.body;
+      const {
+        prompt,
+        provider: providerName,
+        model,
+        temperature,
+        topP,
+        maxTokens,
+        metrics: selectedMetrics,
+      } = req.body;
 
       // Enhanced validation
       if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
@@ -36,6 +91,34 @@ jobsRouter.post(
 
       if (!model || typeof model !== 'string') {
         throw new ValidationError('model must be a non-empty string.');
+      }
+
+      // Validate optional model parameters
+      if (
+        temperature !== undefined &&
+        (typeof temperature !== 'number' || temperature < 0 || temperature > 2)
+      ) {
+        throw new ValidationError(
+          'temperature must be a number between 0 and 2.',
+        );
+      }
+
+      if (
+        topP !== undefined &&
+        (typeof topP !== 'number' || topP < 0 || topP > 1)
+      ) {
+        throw new ValidationError('topP must be a number between 0 and 1.');
+      }
+
+      if (
+        maxTokens !== undefined &&
+        (typeof maxTokens !== 'number' || maxTokens < 0)
+      ) {
+        throw new ValidationError('maxTokens must be a positive number.');
+      }
+
+      if (selectedMetrics !== undefined && !Array.isArray(selectedMetrics)) {
+        throw new ValidationError('metrics must be an array of metric IDs.');
       }
 
       // Limit prompt length for security and cost control
@@ -67,11 +150,18 @@ jobsRouter.post(
         );
       }
 
-      const job = await createJob({
+      // Build the job creation payload with optional parameters
+      const jobData = {
         prompt,
         provider: providerName,
         model,
-      });
+        ...(temperature !== undefined && { temperature }),
+        ...(topP !== undefined && { topP }),
+        ...(maxTokens !== undefined && { maxTokens }),
+        ...(selectedMetrics !== undefined && { selectedMetrics }),
+      };
+
+      const job = await createJob(jobData);
 
       res.status(202).json(job);
     } catch (error) {
@@ -182,11 +272,10 @@ jobsRouter.get(
             sseString += `event: ${event}\n`;
           }
           sseString += `data: ${jsonData}\n\n`;
-          console.log('SSE WRITE:', JSON.stringify(sseString)); // TEMP DEBUG
           res.write(sseString);
           if (typeof res.flush === 'function') res.flush(); // Ensure immediate delivery
-        } catch (error) {
-          console.error('Failed to send SSE event:', error);
+        } catch {
+          // error intentionally ignored
         }
       };
 
@@ -197,6 +286,9 @@ jobsRouter.get(
         if (provider.stream) {
           const streamIterator = provider.stream(job.prompt, {
             model: job.model,
+            ...(job.temperature !== null && { temperature: job.temperature }),
+            ...(job.topP !== null && { topP: job.topP }),
+            ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
           });
           try {
             while (true) {
@@ -233,6 +325,13 @@ jobsRouter.get(
             tokens = Math.floor(output.length / 4);
             const pricePerK = 0.002;
             cost = (tokens / 1000) * pricePerK;
+
+            // Calculate custom metrics based on selected metrics
+            const customMetrics = calculateSelectedMetrics(
+              output,
+              job.selectedMetrics,
+            );
+
             const metrics: import('@prompt-lab/api').JobMetrics = {
               totalTokens: tokens,
               avgCosSim: 0,
@@ -241,6 +340,7 @@ jobsRouter.get(
               evaluationCases: 0,
               startTime,
               endTime,
+              ...customMetrics, // Add the calculated custom metrics
             };
             await updateJob(id, {
               status: 'completed',
@@ -272,6 +372,9 @@ jobsRouter.get(
           // Fallback to non-streaming
           const result = await provider.complete(job.prompt, {
             model: job.model,
+            ...(job.temperature !== null && { temperature: job.temperature }),
+            ...(job.topP !== null && { topP: job.topP }),
+            ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
           });
           output = result.output;
           tokens = result.tokens;

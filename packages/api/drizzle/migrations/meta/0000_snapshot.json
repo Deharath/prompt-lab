@@ -1,8 +1,6 @@
 {
-  "version": "5",
+  "version": "6",
   "dialect": "sqlite",
-  "id": "9612eef5-6450-4761-81f7-2c0bab25cfc9",
-  "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "jobs": {
       "name": "jobs",
@@ -100,13 +98,16 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     }
   },
   "enums": {},
   "_meta": {
-    "schemas": {},
     "tables": {},
     "columns": {}
-  }
+  },
+  "id": "9612eef5-6450-4761-81f7-2c0bab25cfc9",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "views": {}
 }

@@ -24,6 +24,10 @@ export const jobs = sqliteTable(
     errorMessage: text('error_message'), // New field for error details
     tokensUsed: integer('tokens_used'),
     costUsd: real('cost_usd'),
+    temperature: real('temperature'),
+    topP: real('top_p'),
+    maxTokens: integer('max_tokens'),
+    selectedMetrics: text('selected_metrics', { mode: 'json' }), // Array of selected metric configs
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
       .default(sql`(strftime('%s', 'now'))`),

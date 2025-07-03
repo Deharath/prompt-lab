@@ -47,11 +47,17 @@ describe('EventSource cancellation bug fix', () => {
       return mockES;
     }) as any;
 
-    // Mock fetch for job creation
-    mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: 'job-123', status: 'pending' }),
-    });
+    // Mock fetch for job history and job creation
+    mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [], // Empty job history array
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: 'job-123', status: 'pending' }),
+      });
     global.fetch = mockFetch;
 
     // Reset Zustand store state completely and aggressively

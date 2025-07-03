@@ -3,7 +3,9 @@ import { GeminiProvider } from './gemini.js';
 
 export interface ProviderOptions {
   model: string;
-  // Future options: temperature, max_tokens, etc.
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
 }
 
 export interface ProviderStreamChunk {

@@ -7,6 +7,9 @@ interface LogLine {
   text: string;
 }
 
+// Import types from MetricSelector
+import type { SelectedMetric } from '../components/MetricSelector.js';
+
 interface JobState {
   current?: JobSummary;
   log: LogLine[];
@@ -14,6 +17,11 @@ interface JobState {
   metrics?: Record<string, number>;
   running: boolean;
   hasUserData: boolean; // Track if user has any prompt/input data
+  // Model parameters
+  temperature: number;
+  topP: number;
+  maxTokens: number;
+  selectedMetrics: SelectedMetric[];
   comparison: {
     baseJobId?: string;
     compareJobId?: string;
@@ -27,6 +35,10 @@ interface JobState {
   setCompareJob(id: string): void;
   clearComparison(): void;
   loadHistory(): Promise<void>;
+  setTemperature(value: number): void;
+  setTopP(value: number): void;
+  setMaxTokens(value: number): void;
+  setSelectedMetrics(metrics: SelectedMetric[]): void;
 }
 
 export const useJobStore = create<JobState>((set) => ({
@@ -34,9 +46,13 @@ export const useJobStore = create<JobState>((set) => ({
   history: [],
   running: false,
   hasUserData: false,
+  // Default parameter values
+  temperature: 0.7,
+  topP: 1.0,
+  maxTokens: 0, // 0 means use model default
+  selectedMetrics: [] as SelectedMetric[],
   comparison: {},
   start: (job) => {
-    console.log('🏁 Store: Starting job', job);
     set({
       current: job,
       log: [],
@@ -46,15 +62,12 @@ export const useJobStore = create<JobState>((set) => ({
     });
   },
   append: (text) => {
-    console.log('📝 Store: Appending text', text);
     set((s) => ({ log: [...s.log, { ts: Date.now(), text }] }));
   },
   finish: (metrics) => {
-    console.log('🎯 Store: Finishing with metrics', metrics);
     set({ metrics, running: false });
   },
   reset: () => {
-    console.log('🔄 Store: Resetting');
     set({ current: undefined, log: [], metrics: undefined, running: false });
     // Note: We intentionally do NOT reset hasUserData here to preserve the user's input between evaluations
   },
@@ -71,12 +84,23 @@ export const useJobStore = create<JobState>((set) => ({
     set(() => ({ comparison: {} }));
   },
   loadHistory: async () => {
-    console.log('📜 Store: Loading history');
     try {
       const history = await listJobs();
       set({ history });
     } catch (err) {
       console.error('Failed to load history', err);
     }
+  },
+  setTemperature: (value) => {
+    set({ temperature: value });
+  },
+  setTopP: (value) => {
+    set({ topP: value });
+  },
+  setMaxTokens: (value) => {
+    set({ maxTokens: value });
+  },
+  setSelectedMetrics: (metrics) => {
+    set({ selectedMetrics: metrics });
   },
 }));

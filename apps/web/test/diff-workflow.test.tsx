@@ -7,8 +7,8 @@ import {
   cleanup,
 } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import HistoryDrawer from '../src/components/HistoryDrawer.js';
 import DiffPage from '../src/pages/DiffPage.js';
+import HistoryDrawer from '../src/components/HistoryDrawer.js';
 import * as jobStoreModule from '../src/store/jobStore.js';
 import { ApiClient } from '../src/api.js';
 
@@ -26,8 +26,24 @@ describe('Diff workflow', () => {
 
     vi.spyOn(jobStoreModule, 'useJobStore').mockReturnValue({
       history: [
-        { id: 'job1', status: 'completed' },
-        { id: 'job2', status: 'completed' },
+        {
+          id: 'job1',
+          status: 'completed',
+          createdAt: new Date('2025-07-03T15:50:08.000Z'),
+          provider: 'openai',
+          model: 'gpt-4o-mini',
+          costUsd: 0.001,
+          avgScore: 0.95,
+        },
+        {
+          id: 'job2',
+          status: 'completed',
+          createdAt: new Date('2025-07-03T16:50:08.000Z'),
+          provider: 'gemini',
+          model: 'gemini-2.5-flash',
+          costUsd: 0.0005,
+          avgScore: 0.88,
+        },
       ],
       comparison: state.comparison,
       loadHistory,
@@ -55,6 +71,8 @@ describe('Diff workflow', () => {
         prompt: '',
         provider: 'openai',
         model: 'gpt',
+        createdAt: new Date('2025-07-03T15:50:08.000Z'),
+        updatedAt: new Date('2025-07-03T15:51:08.000Z'),
       },
       compareJob: {
         id: 'job2',
@@ -66,6 +84,8 @@ describe('Diff workflow', () => {
         prompt: '',
         provider: 'openai',
         model: 'gpt',
+        createdAt: new Date('2025-07-03T16:50:08.000Z'),
+        updatedAt: new Date('2025-07-03T16:51:08.000Z'),
       },
     });
 

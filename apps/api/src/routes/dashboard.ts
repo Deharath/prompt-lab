@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
 import { db, getDb } from '@prompt-lab/api';
-import { jobs } from '@prompt-lab/api';
-import { gte, sql } from 'drizzle-orm';
 import { ValidationError } from '../errors/ApiError.js';
 
 const dashboardRouter = createRouter();
@@ -27,47 +25,86 @@ dashboardRouter.get(
       // Calculate the date threshold
       const dateThreshold = new Date();
       dateThreshold.setDate(dateThreshold.getDate() - daysNum);
+      const dateThresholdUnix = Math.floor(dateThreshold.getTime() / 1000);
 
-      // Query for score history - group by day and calculate average score
-      const scoreHistoryQuery = await db
-        .select({
-          date: sql<string>`DATE(${jobs.createdAt}, 'unixepoch')`.as('date'),
-          avgScore: sql<number>`AVG(
+      // Access the underlying SQLite instance through the Drizzle client
+      if (
+        !db ||
+        typeof db !== 'object' ||
+        !('_' in db) ||
+        typeof db._ !== 'object' ||
+        !('session' in db._) ||
+        typeof db._.session !== 'object' ||
+        db._.session === null ||
+        !('client' in db._.session)
+      ) {
+        throw new Error('Database client is not available');
+      }
+      const sqlite = db._.session.client as {
+        prepare: (sql: string) => { all: (param: unknown) => unknown[] };
+      };
+
+      // Create prepared statements for better performance and to get actual results
+      const scoreHistoryStmt = sqlite.prepare(`
+        SELECT 
+          DATE(created_at, 'unixepoch') as date,
+          AVG(
             CASE 
-              WHEN json_extract(${jobs.metrics}, '$.avgScore') IS NOT NULL 
-              THEN json_extract(${jobs.metrics}, '$.avgScore')
+              WHEN json_extract(metrics, '$.avgScore') IS NOT NULL 
+              THEN json_extract(metrics, '$.avgScore')
               ELSE NULL
             END
-          )`.as('avgScore'),
-        })
-        .from(jobs)
-        .where(gte(jobs.createdAt, dateThreshold))
-        .groupBy(sql`DATE(${jobs.createdAt}, 'unixepoch')`)
-        .orderBy(sql`DATE(${jobs.createdAt}, 'unixepoch')`);
+          ) as avgScore
+        FROM jobs 
+        WHERE created_at >= ?
+        GROUP BY DATE(created_at, 'unixepoch')
+        ORDER BY DATE(created_at, 'unixepoch')
+      `);
 
-      // Query for cost by model - group by model and sum cost
-      const costByModelQuery = await db
-        .select({
-          model: jobs.model,
-          totalCost: sql<number>`SUM(COALESCE(${jobs.costUsd}, 0))`.as(
-            'totalCost',
-          ),
-        })
-        .from(jobs)
-        .where(gte(jobs.createdAt, dateThreshold))
-        .groupBy(jobs.model)
-        .orderBy(jobs.model);
+      const costByModelStmt = sqlite.prepare(`
+        SELECT 
+          model,
+          SUM(COALESCE(cost_usd, 0)) as totalCost
+        FROM jobs 
+        WHERE created_at >= ?
+        GROUP BY model
+        ORDER BY model
+      `);
+
+      // Execute queries
+      const scoreHistoryQuery = scoreHistoryStmt.all(dateThresholdUnix);
+      const costByModelQuery = costByModelStmt.all(dateThresholdUnix);
 
       // Format the response
-      const scoreHistory = scoreHistoryQuery.map((row) => ({
-        date: row.date,
-        avgScore: row.avgScore || 0,
-      }));
+      const scoreHistory = scoreHistoryQuery.map((row: unknown) => {
+        if (
+          typeof row === 'object' &&
+          row !== null &&
+          'date' in row &&
+          'avgScore' in row
+        ) {
+          return {
+            date: (row as { date: string }).date,
+            avgScore: (row as { avgScore: number }).avgScore || 0,
+          };
+        }
+        return { date: '', avgScore: 0 };
+      });
 
-      const costByModel = costByModelQuery.map((row) => ({
-        model: row.model,
-        totalCost: row.totalCost || 0,
-      }));
+      const costByModel = costByModelQuery.map((row: unknown) => {
+        if (
+          typeof row === 'object' &&
+          row !== null &&
+          'model' in row &&
+          'totalCost' in row
+        ) {
+          return {
+            model: (row as { model: string }).model,
+            totalCost: (row as { totalCost: number }).totalCost || 0,
+          };
+        }
+        return { model: '', totalCost: 0 };
+      });
 
       res.json({
         scoreHistory,

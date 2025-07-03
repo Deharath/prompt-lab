@@ -5,7 +5,7 @@ import { log } from '../utils/logger.js';
 import { runMigrations } from './migrations.js';
 import * as schema from './schema.js';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -24,21 +24,6 @@ async function initializeDb() {
         dbPath = resolve(rootDir, dbPath);
       }
 
-      console.log('🗃️ Database path:', dbPath);
-      console.log('🗂️ Current working directory:', process.cwd());
-
-      // Ensure directory exists for file-based databases
-      if (dbPath !== ':memory:') {
-        const dir = dirname(dbPath);
-        const { mkdirSync, existsSync } = await import('node:fs');
-        if (!existsSync(dir)) {
-          console.log('📁 Creating directory:', dir);
-          mkdirSync(dir, { recursive: true });
-        } else {
-          console.log('✅ Directory already exists:', dir);
-        }
-      }
-
       // Initialize database connection first
       const sqlite = new Database(dbPath);
 
@@ -50,45 +35,10 @@ async function initializeDb() {
         sqlite.pragma('foreign_keys = ON');
       }
 
+      // Run migrations BEFORE initializing Drizzle (schema must match)
+      await runMigrations();
+
       _db = drizzle(sqlite, { schema });
-
-      // Run migrations if available, otherwise create tables manually
-      const { join } = await import('node:path');
-      const { existsSync } = await import('node:fs');
-
-      const __dirname = fileURLToPath(new URL('.', import.meta.url));
-      const migrationPath = join(__dirname, '../../drizzle/migrations');
-      const fallbackPath = join(__dirname, '../../../drizzle/migrations');
-      const hasMigrations =
-        existsSync(migrationPath) || existsSync(fallbackPath);
-
-      if (hasMigrations && dbPath !== ':memory:') {
-        await runMigrations();
-      } else {
-        log.info('No migrations folder found, creating tables manually');
-        // Create tables manually using the schema
-        sqlite.exec(`
-          CREATE TABLE IF NOT EXISTS jobs (
-            id TEXT PRIMARY KEY,
-            prompt TEXT NOT NULL,
-            provider TEXT NOT NULL,
-            model TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending',
-            result TEXT,
-            metrics TEXT,
-            error_message TEXT,
-            tokens_used INTEGER,
-            cost_usd REAL,
-            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-            updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
-          );
-          
-          CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs(status);
-          CREATE INDEX IF NOT EXISTS jobs_created_at_idx ON jobs(created_at);
-          CREATE INDEX IF NOT EXISTS jobs_provider_model_idx ON jobs(provider, model);
-        `);
-        log.info('Tables created successfully');
-      }
 
       // Attach raw methods for test setup compatibility
       Object.assign(_db, {
@@ -140,4 +90,4 @@ export function resetDb() {
   dbInitPromise = null;
 }
 
-export { getDb };
+export { getDb, runMigrations };

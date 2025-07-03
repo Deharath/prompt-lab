@@ -86,9 +86,6 @@ const DashboardPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Average Score Over Time Chart */}
             <Card title="Average Score Over Time" className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Average Score Over Time
-              </h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.scoreHistory}>
@@ -128,9 +125,6 @@ const DashboardPage = () => {
 
             {/* Total Cost by Model Chart */}
             <Card title="Total Cost by Model" className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Total Cost by Model
-              </h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.costByModel}>

@@ -1,4 +1,43 @@
 import { vi, beforeAll, afterEach } from 'vitest';
+
+// Set up in-memory database and environment variables for all tests FIRST
+process.env.DATABASE_URL = ':memory:';
+process.env.NODE_ENV = 'test';
+process.env.OPENAI_API_KEY = 'test-openai-key';
+process.env.GEMINI_API_KEY = 'test-gemini-key';
+
+// Ensure DB migrations are run before any tests
+beforeAll(async () => {
+  // Dynamically resolve the absolute path to the migrations file for ESM/monorepo
+  const { fileURLToPath, pathToFileURL } = await import('url');
+  const { join, dirname, resolve } = await import('path');
+  const { existsSync, unlinkSync } = await import('fs');
+  const testDir = dirname(fileURLToPath(import.meta.url));
+  // Determine the test DB file path (matches config/database)
+  const monorepoRoot = resolve(testDir, '../../../');
+  const dbFile = resolve(monorepoRoot, 'packages/db/db.sqlite');
+  // Only delete if DATABASE_URL points to this file (avoid deleting real DBs)
+  if (
+    process.env.DATABASE_URL === 'packages/db/db.sqlite' ||
+    process.env.DATABASE_URL === './packages/db/db.sqlite' ||
+    process.env.DATABASE_URL === dbFile
+  ) {
+    if (existsSync(dbFile)) {
+      unlinkSync(dbFile);
+      // Optionally log
+      // console.log('🗑️ Deleted test DB file:', dbFile);
+    }
+  }
+  const migrationsPath = join(
+    testDir,
+    '../../../packages/api/src/db/migrations.ts',
+  );
+  const migrationsUrl = pathToFileURL(migrationsPath).href;
+  const { runMigrations } = await import(migrationsUrl);
+  await runMigrations();
+  // Optionally log success
+  // console.log('✅ DB migrations completed for test environment');
+});
 import type { LLMProvider } from '@prompt-lab/api';
 
 // =================================================================  mockGetPreviousJob.mockImplementation(getPreviousJobImpl);usJob.mockImplementation(getPreviousJobImpl);================
@@ -305,10 +344,42 @@ vi.mock('fs', async () => {
 // --- MOCK DATABASE AND OTHER LIBS (These are usually correct) ---
 // Mock better-sqlite3 to avoid native module compilation issues in CI
 vi.mock('better-sqlite3', () => {
+  // Simulate a jobs table with all expected columns
+  let jobsTable: unknown[] = [];
+
   const mockStatement = {
-    run: vi.fn().mockReturnValue({ changes: 1, lastInsertRowid: 1 }),
-    get: vi.fn().mockReturnValue(null),
-    all: vi.fn().mockReturnValue([]),
+    run: vi.fn((params) => {
+      // Simulate INSERT INTO jobs
+      if (params && typeof params === 'object') {
+        jobsTable.push({
+          id: params.id || `job-${jobsTable.length + 1}`,
+          prompt: params.prompt || '',
+          provider: params.provider || '',
+          model: params.model || '',
+          status: params.status || 'pending',
+          result: params.result || null,
+          metrics: params.metrics || null,
+          error_message: params.error_message || null,
+          tokens_used: params.tokens_used || null,
+          cost_usd: params.cost_usd || null,
+          temperature: params.temperature || null,
+          top_p: params.top_p || null,
+          max_tokens: params.max_tokens || null,
+          selected_metrics: params.selected_metrics || null,
+          created_at: params.created_at || Date.now(),
+          updated_at: params.updated_at || Date.now(),
+        });
+      }
+      return { changes: 1, lastInsertRowid: jobsTable.length };
+    }),
+    get: vi.fn(() => {
+      // Simulate SELECT * FROM jobs WHERE ...
+      if (jobsTable.length > 0) {
+        return jobsTable[0];
+      }
+      return null;
+    }),
+    all: vi.fn(() => jobsTable),
     bind: vi.fn().mockReturnThis(),
     finalize: vi.fn(),
     raw: vi.fn().mockReturnThis(), // Critical: adds the 'raw' method for Drizzle
@@ -318,7 +389,12 @@ vi.mock('better-sqlite3', () => {
   const mockDb = {
     prepare: vi.fn(() => mockStatement),
     close: vi.fn(),
-    exec: vi.fn(),
+    exec: vi.fn((sql: string) => {
+      // Simulate CREATE TABLE IF NOT EXISTS jobs ...
+      if (sql && sql.includes('CREATE TABLE IF NOT EXISTS jobs')) {
+        // No-op, just acknowledge table creation
+      }
+    }),
     transaction: vi.fn((fn) => fn),
   };
 
@@ -397,14 +473,6 @@ vi.mock('@google/generative-ai', () => {
 // ================================================================================================
 // TEST ISOLATION - Enforce Clean State
 // ================================================================================================
-
-// Set up in-memory database for all tests
-beforeAll(() => {
-  process.env.DATABASE_URL = ':memory:';
-  process.env.NODE_ENV = 'test';
-  process.env.OPENAI_API_KEY = 'test-openai-key';
-  process.env.GEMINI_API_KEY = 'test-gemini-key';
-});
 
 /**
  * Global afterEach hook - maintains test isolation

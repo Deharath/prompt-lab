@@ -30,7 +30,15 @@ describe('jobStore', () => {
   });
 
   it('start sets current job and running', () => {
-    const job = { id: '1', status: 'pending' as const };
+    const job = {
+      id: '1',
+      status: 'pending' as const,
+      createdAt: new Date('2025-07-03T15:50:08.000Z'),
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      costUsd: null,
+      avgScore: null,
+    };
     act(() => useJobStore.getState().start(job));
     const state = useJobStore.getState();
     expect(state.current).toEqual(job);
@@ -56,7 +64,15 @@ describe('jobStore', () => {
 
   it('reset clears current, log, metrics, running', () => {
     act(() => {
-      useJobStore.getState().start({ id: '1', status: 'pending' as const });
+      useJobStore.getState().start({
+        id: '1',
+        status: 'pending' as const,
+        createdAt: new Date('2025-07-03T15:50:08.000Z'),
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        costUsd: null,
+        avgScore: null,
+      });
       useJobStore.getState().append('log');
       useJobStore.getState().finish({ score: 1 });
       useJobStore.getState().reset();

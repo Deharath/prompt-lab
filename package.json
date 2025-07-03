@@ -106,5 +106,10 @@
       }
     }
   },
-  "//": "Ensure only @types/express@4.17.21 is used for Express 4.x compatibility"
+  "//": "Ensure only @types/express@4.17.21 is used for Express 4.x compatibility",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.2"
+  }
 }

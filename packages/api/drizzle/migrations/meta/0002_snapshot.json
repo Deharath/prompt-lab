@@ -1,6 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
+  "id": "8afa8856-6658-4993-bd31-f8ab28e8f893",
+  "prevId": "786c8572-f3d5-4a00-8a5f-155fcccecd9b",
   "tables": {
     "jobs": {
       "name": "jobs",
@@ -76,6 +78,34 @@
           "notNull": false,
           "autoincrement": false
         },
+        "temperature": {
+          "name": "temperature",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "top_p": {
+          "name": "top_p",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "max_tokens": {
+          "name": "max_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selected_metrics": {
+          "name": "selected_metrics",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -116,12 +146,14 @@
       "checkConstraints": {}
     }
   },
+  "views": {},
   "enums": {},
   "_meta": {
+    "schemas": {},
     "tables": {},
     "columns": {}
   },
-  "id": "786c8572-f3d5-4a00-8a5f-155fcccecd9b",
-  "prevId": "9612eef5-6450-4761-81f7-2c0bab25cfc9",
-  "views": {}
+  "internal": {
+    "indexes": {}
+  }
 }

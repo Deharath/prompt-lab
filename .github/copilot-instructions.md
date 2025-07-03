@@ -24,7 +24,7 @@ Adhere to this rigorous, cyclical workflow for all tasks. Never break the loop.
 
 2.  **Act & Test (Incremental Changes):**
     - Execute **one small step** from your plan.
-    - Immediately run the relevant tests (`pnpm test`).
+    - Immediately run the relevant tests (`pnpm test --silent`), always use `--silent`, except in situations where it's absolutely needed.
     - **If tests fail:** STOP. Do not proceed. Enter a debugging sub-loop. Analyze the error, form a hypothesis, and apply a targeted fix. Re-run tests until they pass.
     - **If tests pass:** Proceed to the next small step in your plan.
 

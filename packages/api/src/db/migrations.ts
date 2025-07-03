@@ -51,14 +51,18 @@ export async function runMigrations() {
         CREATE TABLE IF NOT EXISTS jobs (
           id TEXT PRIMARY KEY,
           prompt TEXT NOT NULL,
-          model TEXT NOT NULL,
           provider TEXT NOT NULL,
+          model TEXT NOT NULL,
           status TEXT NOT NULL DEFAULT 'pending',
           result TEXT,
           metrics TEXT,
           error_message TEXT,
           tokens_used INTEGER,
           cost_usd REAL,
+          temperature REAL,
+          top_p REAL,
+          max_tokens INTEGER,
+          selected_metrics TEXT,
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
           updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
         );
