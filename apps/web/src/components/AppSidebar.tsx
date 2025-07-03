@@ -34,6 +34,10 @@ interface HistorySidebarProps {
   onModelChange: (model: string) => void;
   // Custom prompt template loading
   onLoadTemplate?: (template: string) => void;
+  // Run evaluation props
+  onRunEvaluation?: () => void;
+  canRunEvaluation?: boolean;
+  isRunning?: boolean;
 }
 
 const AppSidebar = ({
@@ -46,6 +50,9 @@ const AppSidebar = ({
   onProviderChange,
   onModelChange,
   onLoadTemplate,
+  onRunEvaluation,
+  canRunEvaluation = false,
+  isRunning = false,
 }: HistorySidebarProps) => {
   const {
     start,
@@ -353,7 +360,7 @@ const AppSidebar = ({
 
   return (
     <aside
-      className="w-80 bg-card border-r border-border flex flex-col max-h-screen"
+      className="w-80 bg-card border-r border-border flex flex-col h-screen sticky top-0"
       aria-label="Sidebar with history, configuration, and custom prompt tabs"
       id="sidebar"
     >
@@ -436,315 +443,366 @@ const AppSidebar = ({
       </header>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden min-h-0">
-        {activeTab === 'history' && (
-          <div className="h-full flex flex-col">
-            {/* History Header Controls */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground">
-                  Evaluation History
-                </h3>
-                <button
-                  onClick={toggleCompareMode}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    compareMode
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                  aria-pressed={compareMode}
-                  aria-label={
-                    compareMode
-                      ? 'Exit comparison mode'
-                      : 'Enter comparison mode to compare two jobs'
-                  }
-                >
-                  {compareMode ? 'Cancel' : 'Compare'}
-                </button>
+      <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+        <div className="flex-1 overflow-hidden min-h-0">
+          {activeTab === 'history' && (
+            <div className="h-full flex flex-col">
+              {/* History Header Controls */}
+              <div className="p-4 border-b border-border flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Evaluation History
+                  </h3>
+                  <button
+                    onClick={toggleCompareMode}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      compareMode
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                    aria-pressed={compareMode}
+                    aria-label={
+                      compareMode
+                        ? 'Exit comparison mode'
+                        : 'Enter comparison mode to compare two jobs'
+                    }
+                  >
+                    {compareMode ? 'Cancel' : 'Compare'}
+                  </button>
+                </div>
+
+                {/* Compare Mode Instructions */}
+                {compareMode && (
+                  <div
+                    className="mt-3 p-3 bg-primary/5 rounded-lg text-sm border border-primary/20"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {!comparison.baseJobId ? (
+                      <p>
+                        <strong>Step 1:</strong> Select the first job to compare
+                      </p>
+                    ) : !comparison.compareJobId ? (
+                      <p>
+                        <strong>Step 2:</strong> Select the second job to
+                        compare
+                      </p>
+                    ) : (
+                      <p>
+                        <strong>Comparing:</strong> Select a new job to change
+                        comparison
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Compare Mode Instructions */}
-              {compareMode && (
-                <div
-                  className="mt-3 p-3 bg-primary/5 rounded-lg text-sm border border-primary/20"
-                  role="status"
-                  aria-live="polite"
-                >
-                  {!comparison.baseJobId ? (
-                    <p>
-                      <strong>Step 1:</strong> Select the first job to compare
-                    </p>
-                  ) : !comparison.compareJobId ? (
-                    <p>
-                      <strong>Step 2:</strong> Select the second job to compare
-                    </p>
-                  ) : (
-                    <p>
-                      <strong>Comparing:</strong> Select a new job to change
-                      comparison
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* History Content */}
-            <div className="flex-1 overflow-hidden min-h-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="flex items-center space-x-3">
-                    <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
-                    <span className="text-sm text-muted-foreground">
-                      Loading...
-                    </span>
+              {/* History Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="flex items-center space-x-3">
+                      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span className="text-sm text-muted-foreground">
+                        Loading...
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ) : history.length === 0 ? (
-                <div className="p-6 text-center">
-                  <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg
-                      className="w-6 h-6 text-muted-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-medium text-foreground mb-1">
-                    No history yet
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Run your first evaluation to see results here
-                  </p>
-                </div>
-              ) : (
-                <div
-                  ref={jobListRef}
-                  className="p-3 space-y-2 h-full overflow-y-auto"
-                  tabIndex={0}
-                  role="listbox"
-                  aria-label="Job history list. Use arrow keys to navigate, Enter to select, Delete to remove"
-                >
-                  {(history || []).map((job, index) => {
-                    const isSelected =
-                      job.id === comparison.baseJobId ||
-                      job.id === comparison.compareJobId;
-                    const isFocused = index === focusedJobIndex;
-                    const selectionType =
-                      job.id === comparison.baseJobId
-                        ? 'Base'
-                        : job.id === comparison.compareJobId
-                          ? 'Compare'
-                          : null;
-
-                    const shortId = job.id.substring(0, 8);
-                    const readableLabel = getReadableLabel(job);
-                    const timestamp = getFormattedTimestamp(job); // Bug #2 fix
-
-                    return (
-                      <div
-                        key={job.id}
-                        className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
-                          isSelected
-                            ? 'bg-primary/8 border-primary/40 shadow-lg ring-2 ring-primary/30'
-                            : isFocused
-                              ? 'bg-primary/4 border-primary/20 shadow-md ring-1 ring-primary/20'
-                              : 'bg-card border-border/60 hover:bg-muted/30 hover:border-border hover:shadow-md'
-                        }`}
-                        role="option"
-                        aria-selected={isSelected}
-                        onClick={() => handleSelect(job.id)}
-                        onFocus={() => setFocusedJobIndex(index)}
-                        tabIndex={0}
-                        aria-label={`Job: ${readableLabel}, Status: ${job.status}, Created: ${timestamp}`}
+                ) : history.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg
+                        className="w-6 h-6 text-muted-foreground"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
-                        {/* Status stripe */}
-                        <div
-                          className={`absolute left-0 top-0 w-1 h-full ${
-                            job.status === 'completed'
-                              ? 'bg-success'
-                              : job.status === 'running'
-                                ? 'bg-primary'
-                                : job.status === 'failed'
-                                  ? 'bg-destructive'
-                                  : 'bg-muted-foreground/40'
-                          }`}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-medium text-foreground mb-1">
+                      No history yet
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Run your first evaluation to see results here
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    ref={jobListRef}
+                    className="p-3 space-y-2"
+                    tabIndex={0}
+                    role="listbox"
+                    aria-label="Job history list. Use arrow keys to navigate, Enter to select, Delete to remove"
+                  >
+                    {(history || []).map((job, index) => {
+                      const isSelected =
+                        job.id === comparison.baseJobId ||
+                        job.id === comparison.compareJobId;
+                      const isFocused = index === focusedJobIndex;
+                      const selectionType =
+                        job.id === comparison.baseJobId
+                          ? 'Base'
+                          : job.id === comparison.compareJobId
+                            ? 'Compare'
+                            : null;
 
-                        <div className="p-4 pl-6">
-                          {/* Header row */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-bold text-foreground">
-                                #{shortId}
-                              </span>
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                  job.status === 'completed'
-                                    ? 'bg-success/15 text-success border border-success/20'
-                                    : job.status === 'running'
-                                      ? 'bg-primary/15 text-primary border border-primary/20'
-                                      : job.status === 'failed'
-                                        ? 'bg-destructive/15 text-destructive border border-destructive/20'
-                                        : 'bg-muted text-muted-foreground border border-border'
-                                }`}
-                              >
-                                {job.status}
-                              </span>
-                              {selectionType && (
-                                <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/20 text-primary border border-primary/30">
-                                  {selectionType}
+                      const shortId = job.id.substring(0, 8);
+                      const readableLabel = getReadableLabel(job);
+                      const timestamp = getFormattedTimestamp(job); // Bug #2 fix
+
+                      return (
+                        <div
+                          key={job.id}
+                          className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
+                            isSelected
+                              ? 'bg-primary/8 border-primary/40 shadow-lg ring-2 ring-primary/30'
+                              : isFocused
+                                ? 'bg-primary/4 border-primary/20 shadow-md ring-1 ring-primary/20'
+                                : 'bg-card border-border/60 hover:bg-muted/30 hover:border-border hover:shadow-md'
+                          }`}
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => handleSelect(job.id)}
+                          onFocus={() => setFocusedJobIndex(index)}
+                          tabIndex={0}
+                          aria-label={`Job: ${readableLabel}, Status: ${job.status}, Created: ${timestamp}`}
+                        >
+                          {/* Status stripe */}
+                          <div
+                            className={`absolute left-0 top-0 w-1 h-full ${
+                              job.status === 'completed'
+                                ? 'bg-success'
+                                : job.status === 'running'
+                                  ? 'bg-primary'
+                                  : job.status === 'failed'
+                                    ? 'bg-destructive'
+                                    : 'bg-muted-foreground/40'
+                            }`}
+                          />
+
+                          <div className="p-4 pl-6">
+                            {/* Header row */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-bold text-foreground">
+                                  #{shortId}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                    job.status === 'completed'
+                                      ? 'bg-success/15 text-success border border-success/20'
+                                      : job.status === 'running'
+                                        ? 'bg-primary/15 text-primary border border-primary/20'
+                                        : job.status === 'failed'
+                                          ? 'bg-destructive/15 text-destructive border border-destructive/20'
+                                          : 'bg-muted text-muted-foreground border border-border'
+                                  }`}
+                                >
+                                  {job.status}
+                                </span>
+                                {selectionType && (
+                                  <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/20 text-primary border border-primary/30">
+                                    {selectionType}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Action buttons */}
+                              <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <ShareRunButton jobId={job.id} as="span" />
+                                </div>
+
+                                <button
+                                  onClick={(e) => handleDelete(job.id, e)}
+                                  className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20 cursor-pointer"
+                                  aria-label={`Delete job ${shortId}`}
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Response content snippet - Issue #1 fix */}
+                            {job.resultSnippet && (
+                              <div className="mb-3 p-3 bg-muted/30 rounded-lg border border-border/40">
+                                <div className="text-xs text-muted-foreground/80 font-medium mb-1 uppercase tracking-wide">
+                                  Response
+                                </div>
+                                <div className="text-sm text-foreground/90 leading-relaxed font-mono">
+                                  "{job.resultSnippet}"
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Technical details */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground font-medium">
+                                  {job.provider}/{job.model}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {timestamp}
+                                </span>
+                              </div>
+
+                              {(job.costUsd || job.avgScore) && (
+                                <div className="flex items-center space-x-4 text-xs">
+                                  {job.costUsd && (
+                                    <div className="flex items-center space-x-1">
+                                      <span className="text-muted-foreground/70">
+                                        Cost:
+                                      </span>
+                                      <span className="font-medium text-foreground/80">
+                                        ${job.costUsd.toFixed(4)}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {job.avgScore && (
+                                    <div className="flex items-center space-x-1">
+                                      <span className="text-muted-foreground/70">
+                                        Score:
+                                      </span>
+                                      <span className="font-medium text-foreground/80">
+                                        {job.avgScore.toFixed(1)}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
-
-                            {/* Action buttons */}
-                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <ShareRunButton jobId={job.id} as="span" />
-                              </div>
-
-                              <button
-                                onClick={(e) => handleDelete(job.id, e)}
-                                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20 cursor-pointer"
-                                aria-label={`Delete job ${shortId}`}
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Response content snippet - Issue #1 fix */}
-                          {job.resultSnippet && (
-                            <div className="mb-3 p-3 bg-muted/30 rounded-lg border border-border/40">
-                              <div className="text-xs text-muted-foreground/80 font-medium mb-1 uppercase tracking-wide">
-                                Response
-                              </div>
-                              <div className="text-sm text-foreground/90 leading-relaxed font-mono">
-                                "{job.resultSnippet}"
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Technical details */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground font-medium">
-                                {job.provider}/{job.model}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {timestamp}
-                              </span>
-                            </div>
-
-                            {(job.costUsd || job.avgScore) && (
-                              <div className="flex items-center space-x-4 text-xs">
-                                {job.costUsd && (
-                                  <div className="flex items-center space-x-1">
-                                    <span className="text-muted-foreground/70">
-                                      Cost:
-                                    </span>
-                                    <span className="font-medium text-foreground/80">
-                                      ${job.costUsd.toFixed(4)}
-                                    </span>
-                                  </div>
-                                )}
-                                {job.avgScore && (
-                                  <div className="flex items-center space-x-1">
-                                    <span className="text-muted-foreground/70">
-                                      Score:
-                                    </span>
-                                    <span className="font-medium text-foreground/80">
-                                      {job.avgScore.toFixed(1)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* History Footer */}
+              {compareMode && comparison.baseJobId && (
+                <div className="p-3 bg-muted/30 border-t border-border flex-shrink-0">
+                  <div className="text-xs text-muted-foreground text-center">
+                    {comparison.compareJobId
+                      ? 'Both jobs selected. Compare view will appear in main area.'
+                      : 'Select a second job to compare.'}
+                  </div>
                 </div>
               )}
             </div>
+          )}
 
-            {/* History Footer */}
-            {compareMode && comparison.baseJobId && (
-              <div className="p-3 bg-muted/30 border-t border-border">
-                <div className="text-xs text-muted-foreground text-center">
-                  {comparison.compareJobId
-                    ? 'Both jobs selected. Compare view will appear in main area.'
-                    : 'Select a second job to compare.'}
+          {activeTab === 'configuration' && (
+            <div className="h-full overflow-y-auto p-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    Model Configuration
+                  </h3>
+                  <ModelSelector
+                    provider={provider}
+                    model={model}
+                    onProviderChange={onProviderChange}
+                    onModelChange={onModelChange}
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    Parameters
+                  </h3>
+                  <RunConfiguration
+                    temperature={temperature}
+                    topP={topP}
+                    maxTokens={maxTokens}
+                    onTemperatureChange={setTemperature}
+                    onTopPChange={setTopP}
+                    onMaxTokensChange={setMaxTokens}
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    Metrics
+                  </h3>
+                  <MetricSelector
+                    metrics={AVAILABLE_METRICS}
+                    selectedMetrics={selectedMetrics}
+                    onChange={setSelectedMetrics}
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'configuration' && (
-          <div className="h-full overflow-y-auto p-4 space-y-6">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">
-                Model Configuration
-              </h3>
-              <ModelSelector
-                provider={provider}
-                model={model}
-                onProviderChange={onProviderChange}
-                onModelChange={onModelChange}
-              />
             </div>
+          )}
 
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">
-                Run Parameters
-              </h3>
-              <RunConfiguration
-                temperature={temperature}
-                topP={topP}
-                maxTokens={maxTokens}
-                onTemperatureChange={setTemperature}
-                onTopPChange={setTopP}
-                onMaxTokensChange={setMaxTokens}
-              />
+          {activeTab === 'custom' && (
+            <div className="h-full overflow-y-auto">
+              <CustomPrompt onLoadTemplate={onLoadTemplate || (() => {})} />
             </div>
+          )}
+        </div>
 
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4">
-                Evaluation Metrics
-              </h3>
-              <MetricSelector
-                metrics={AVAILABLE_METRICS}
-                selectedMetrics={selectedMetrics}
-                onChange={setSelectedMetrics}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'custom' && (
-          <div className="h-full overflow-auto">
-            <CustomPrompt onLoadTemplate={onLoadTemplate || (() => {})} />
+        {/* Run Evaluation Button - Always at bottom */}
+        {onRunEvaluation && (
+          <div className="border-t border-border bg-card p-4 flex-shrink-0">
+            <button
+              onClick={onRunEvaluation}
+              disabled={!canRunEvaluation || isRunning}
+              className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed ${
+                canRunEvaluation && !isRunning
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+              }`}
+              aria-label={
+                isRunning
+                  ? 'Evaluation running...'
+                  : canRunEvaluation
+                    ? 'Start evaluation'
+                    : 'Complete prompt and input to run evaluation'
+              }
+            >
+              {isRunning ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                  <span>Running...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center space-x-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m2-6v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2z"
+                    />
+                  </svg>
+                  <span>Run Evaluation</span>
+                </div>
+              )}
+            </button>
           </div>
         )}
       </div>

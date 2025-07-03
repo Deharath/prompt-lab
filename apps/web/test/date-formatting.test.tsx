@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { format } from 'date-fns';
 import { MemoryRouter } from 'react-router-dom';
-import HistorySidebar from '../src/components/HistorySidebar.js';
+import HistorySidebar from '../src/components/AppSidebar.js';
 
 // Mock the API module
 vi.mock('../src/api.js', () => ({
@@ -58,6 +58,10 @@ describe('HistorySidebar Date Formatting', () => {
           onToggle={() => {}}
           onSelectJob={() => {}}
           onCompareJobs={() => {}}
+          provider="openai"
+          model="gpt-4o-mini"
+          onProviderChange={() => {}}
+          onModelChange={() => {}}
         />
       </MemoryRouter>,
     );

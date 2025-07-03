@@ -213,6 +213,9 @@ const Home = () => {
           onProviderChange={setProvider}
           onModelChange={setModel}
           onLoadTemplate={setTemplate}
+          onRunEvaluation={handleRun}
+          canRunEvaluation={!!(template && inputData)}
+          isRunning={running}
         />
       </div>
 
