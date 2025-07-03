@@ -1,44 +1,49 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { Express } from 'express';
 import type { Server } from 'http';
 import type supertest from 'supertest';
 
 let app: Express;
 let getDb: unknown;
+let resetDb: unknown;
 let jobs: unknown;
 let request: typeof supertest;
 let getPort: () => Promise<number>;
 let server: Server;
 
 describe('Dashboard API', () => {
-  beforeAll(async () => {
-    // Clean and migrate DB before importing app/DB code
-    const { fileURLToPath, pathToFileURL } = await import('url');
-    const { join, dirname, resolve } = await import('path');
-    const { existsSync, unlinkSync } = await import('fs');
-    const testDir = dirname(fileURLToPath(import.meta.url));
-    const monorepoRoot = resolve(testDir, '../../../');
-    const dbFile = resolve(monorepoRoot, 'packages/db/db.sqlite');
-    const { resetDb } = await import('@prompt-lab/api');
-    if (existsSync(dbFile)) {
-      unlinkSync(dbFile);
-    }
-    resetDb();
-    const migrationsPath = join(
-      testDir,
-      '../../../packages/api/src/db/migrations.ts',
-    );
-    const migrationsUrl = pathToFileURL(migrationsPath).href;
-    const { runMigrations } = await import(migrationsUrl);
-    await runMigrations();
+  beforeEach(async () => {
+    // Reset modules and set up clean test environment
+    const { vi } = await import('vitest');
+    vi.resetModules();
 
-    // Now import app/DB code
-    request = (await import('supertest')).default;
-    getPort = (await import('get-port')).default;
+    process.env.DATABASE_URL = ':memory:';
+    process.env.NODE_ENV = 'test';
+
+    // Import and initialize database
     const api = await import('@prompt-lab/api');
     getDb = api.getDb;
+    resetDb = api.resetDb;
     jobs = api.jobs;
+
+    // Reset and initialize database properly
+    if (typeof resetDb === 'function') {
+      resetDb();
+    }
+    if (typeof getDb === 'function') {
+      await getDb(); // This will run migrations and create tables
+    }
+
+    // Import other dependencies
+    request = (await import('supertest')).default;
+    getPort = (await import('get-port')).default;
     app = (await import('../src/index.ts')).app;
+  });
+
+  afterEach(async () => {
+    if (server) {
+      server.close();
+    }
   });
 
   async function seedJobs(jobList: unknown[]) {
@@ -233,6 +238,7 @@ describe('Dashboard API', () => {
   it('should handle jobs without metrics gracefully', async () => {
     // ARRANGE: Seed jobs with and without metrics
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const yesterdayTimestamp = Math.floor(yesterday.getTime() / 1000);
 
     const testId = Math.random().toString(36).substring(7);
 
@@ -243,9 +249,9 @@ describe('Dashboard API', () => {
         provider: 'openai',
         model: 'gpt-4o-mini',
         status: 'completed',
-        createdAt: yesterday,
+        created_at: yesterdayTimestamp,
         metrics: JSON.stringify({ scores: { accuracy: 0.8, relevance: 0.9 } }),
-        costUsd: 1.0,
+        cost_usd: 1.0,
       },
       {
         id: `job-without-metrics-graceful-${testId}`,
@@ -253,14 +259,16 @@ describe('Dashboard API', () => {
         provider: 'openai',
         model: 'gpt-4o-mini',
         status: 'completed',
-        createdAt: yesterday,
+        created_at: yesterdayTimestamp,
         metrics: null,
-        costUsd: 2.0,
+        cost_usd: 2.0,
       },
     ]);
 
     // ACT: Make a request to the dashboard stats endpoint
+    server = app.listen(await getPort());
     const response = await request(server).get('/api/dashboard/stats?days=30');
+    server.close();
 
     // ASSERT: Verify the endpoint handles null metrics gracefully
     expect(response.status).toBe(200);

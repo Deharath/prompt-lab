@@ -4,6 +4,8 @@ import type { JobMetrics } from '@prompt-lab/api';
 let createJob: typeof import('@prompt-lab/api').createJob;
 let getJob: typeof import('@prompt-lab/api').getJob;
 let updateJob: typeof import('@prompt-lab/api').updateJob;
+let getDb: typeof import('@prompt-lab/api').getDb;
+let resetDb: typeof import('@prompt-lab/api').resetDb;
 let log: typeof import('@prompt-lab/api').log;
 
 beforeEach(async () => {
@@ -14,7 +16,14 @@ beforeEach(async () => {
   createJob = api.createJob;
   getJob = api.getJob;
   updateJob = api.updateJob;
+  getDb = api.getDb;
+  resetDb = api.resetDb;
   log = api.log;
+
+  // Reset and initialize database properly
+  resetDb();
+  await getDb(); // This will run migrations and create tables
+
   // silence logging during tests
   vi.spyOn(log, 'jobCreated').mockImplementation(() => {});
   vi.spyOn(log, 'jobStarted').mockImplementation(() => {});

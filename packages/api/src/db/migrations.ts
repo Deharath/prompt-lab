@@ -9,6 +9,59 @@ import { log } from '../utils/logger.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
+export async function runMigrationsOnConnection(sqlite: Database.Database) {
+  try {
+    const db = drizzle(sqlite);
+
+    const migrationPath = join(__dirname, '../../drizzle/migrations');
+    const fallbackPath = join(__dirname, '../../../drizzle/migrations');
+
+    const resolvedPath = existsSync(migrationPath)
+      ? migrationPath
+      : fallbackPath;
+    if (existsSync(resolvedPath)) {
+      log.info('Running database migrations', { migrationPath: resolvedPath });
+      await migrate(db, { migrationsFolder: resolvedPath });
+      log.info('Database migrations completed successfully');
+    } else {
+      log.info('No migrations folder found, creating tables manually');
+      // Create tables manually using the schema
+      sqlite.exec(`
+        CREATE TABLE IF NOT EXISTS jobs (
+          id TEXT PRIMARY KEY,
+          prompt TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          model TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          result TEXT,
+          metrics TEXT,
+          error_message TEXT,
+          tokens_used INTEGER,
+          cost_usd REAL,
+          temperature REAL,
+          top_p REAL,
+          max_tokens INTEGER,
+          selected_metrics TEXT,
+          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs(status);
+        CREATE INDEX IF NOT EXISTS jobs_created_at_idx ON jobs(created_at);
+        CREATE INDEX IF NOT EXISTS jobs_provider_model_idx ON jobs(provider, model);
+      `);
+      log.info('Tables created successfully');
+    }
+  } catch (error) {
+    log.error(
+      'Migration failed',
+      {},
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    throw error;
+  }
+}
+
 export async function runMigrations() {
   try {
     // Parse and resolve database path as in index.ts
