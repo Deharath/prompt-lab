@@ -8,13 +8,13 @@ interface DarkModeToggleProps {
 const DarkModeToggle = ({ compact = false }: DarkModeToggleProps) => {
   const { isDarkMode, toggleDarkMode } = useDarkModeStore();
 
-  const buttonSize = compact ? 'h-8 w-8' : 'h-10 w-10';
-  const iconSize = compact ? 'h-4 w-4' : 'h-5 w-5';
+  const buttonSize = compact ? 'h-9 w-9' : 'h-10 w-10';
+  const iconSize = compact ? 'h-5 w-5' : 'h-6 w-6';
 
   return (
     <button
       onClick={toggleDarkMode}
-      className={`group flex ${buttonSize} items-center justify-center rounded-xl shadow-md ring-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-card hover:bg-muted border-border hover:border-accent`}
+      className={`group flex ${buttonSize} items-center justify-center rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-background hover:bg-muted border-2 border-muted hover:border-accent hover:shadow-lg transform hover:scale-105`}
       aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     >

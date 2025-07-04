@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useDarkModeStore } from './store/darkModeStore.js';
+import MainLayout from './components/layout/MainLayout.js';
 import Home from './Home.js';
 import DiffPage from './pages/DiffPage.js';
 import DashboardPage from './pages/DashboardPage.js';
 import RunViewerPage from './pages/RunViewerPage.js';
-import { useDarkModeStore } from './store/darkModeStore.js';
-import { useEffect } from 'react';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -41,14 +42,36 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground transition-colors duration-200">
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/diff" element={<DiffPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/run/:id" element={<RunViewerPage />} />
-        </Routes>
-      </main>
+      <Routes>
+        {/* Home page manages its own layout */}
+        <Route path="/" element={<Home />} />
+
+        {/* Other pages use MainLayout */}
+        <Route
+          path="/diff"
+          element={
+            <MainLayout>
+              <DiffPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <MainLayout>
+              <DashboardPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/run/:id"
+          element={
+            <MainLayout>
+              <RunViewerPage />
+            </MainLayout>
+          }
+        />
+      </Routes>
     </div>
   );
 };

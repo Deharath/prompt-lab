@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { format } from 'date-fns';
 import { MemoryRouter } from 'react-router-dom';
-import HistorySidebar from '../src/components/AppSidebar.js';
+import AppSidebar from '../src/components/AppSidebar.js';
 
 // Mock the API module
 vi.mock('../src/api.js', () => ({
@@ -21,6 +21,15 @@ vi.mock('../src/store/jobStore.js', () => ({
     setCompareJob: vi.fn(),
     clearComparison: vi.fn(),
     comparison: {},
+    running: false,
+    temperature: 0.7,
+    topP: 1,
+    maxTokens: 1000,
+    selectedMetrics: [],
+    setTemperature: vi.fn(),
+    setTopP: vi.fn(),
+    setMaxTokens: vi.fn(),
+    setSelectedMetrics: vi.fn(),
   }),
 }));
 
@@ -46,14 +55,18 @@ vi.mock('@tanstack/react-query', () => ({
     isLoading: false,
     error: null,
   }),
+  useQueryClient: () => ({
+    invalidateQueries: vi.fn(),
+    setQueryData: vi.fn(),
+  }),
 }));
 
-describe('HistorySidebar Date Formatting', () => {
+describe('AppSidebar Date Formatting', () => {
   it('should display dates in human-readable format using date-fns', () => {
-    // ARRANGE: Render the HistorySidebar component
+    // ARRANGE: Render the AppSidebar component
     render(
       <MemoryRouter>
-        <HistorySidebar
+        <AppSidebar
           isCollapsed={false}
           onToggle={() => {}}
           onSelectJob={() => {}}
@@ -68,15 +81,13 @@ describe('HistorySidebar Date Formatting', () => {
 
     // ACT: Find the date display in the rendered component
     const testDate = new Date('2025-07-03T15:50:08.000Z');
-    const expectedDateFormat = format(testDate, 'MMM d, yyyy, h:mm:ss a');
+    const expectedDateFormat = format(testDate, 'MMM d · HH:mm');
 
     // ASSERT: Verify the date is displayed in the expected human-readable format
     expect(screen.getByText(expectedDateFormat)).toBeInTheDocument();
 
     // Additional assertion: verify that date-fns formatting produces a human-readable string
-    // The exact time will vary by timezone, but format should include month, day, year, and time
-    expect(expectedDateFormat).toMatch(
-      /^[A-Za-z]{3} \d{1,2}, \d{4}, \d{1,2}:\d{2}:\d{2} [AP]M$/,
-    );
+    // The format should match the sidebar's timestamp format: "Jul 3 · 17:50"
+    expect(expectedDateFormat).toMatch(/^[A-Za-z]{3} \d{1,2} · \d{2}:\d{2}$/);
   });
 });

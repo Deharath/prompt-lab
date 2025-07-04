@@ -29,7 +29,7 @@ const getSystemPreference = (): boolean => {
 export const useDarkModeStore = create<DarkModeState>()(
   persist(
     (set) => ({
-      isDarkMode: getSystemPreference(), // Default to system preference
+      isDarkMode: true, // Default to dark mode
       toggleDarkMode: () =>
         set((state) => {
           const newMode = !state.isDarkMode;

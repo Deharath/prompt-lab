@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -16,7 +15,6 @@ import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/TimeRangeSelector.js';
 import LoadingSpinner from '../components/LoadingSpinner.js';
 import ErrorMessage from '../components/ErrorMessage.js';
-import Button from '../components/ui/Button.js';
 
 const DashboardPage = () => {
   const { isLoading, error, data, days, fetchDashboardStats } =
@@ -32,26 +30,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-900 dark:to-black transition-colors duration-300">
-      {/* Floating Back Button */}
-      <Link to="/" className="fixed top-6 left-6 z-50">
-        <Button variant="secondary" size="md" aria-label="Back to Home">
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Home
-        </Button>
-      </Link>
+    <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
         <div className="mb-8">

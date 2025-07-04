@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ApiClient, fetchJob } from './api.js';
 import { useJobStore } from './store/jobStore.js';
 import { useDarkModeStore } from './store/darkModeStore.js';
+import { useToggle } from './hooks/useUtilities.js';
 import Card from './components/ui/Card.js';
 import Button from './components/ui/Button.js';
 import StatCard from './components/ui/StatCard.js';
@@ -31,12 +32,14 @@ Please structure your response with:
 const SAMPLE_INPUT = `This is a sample news article about recent developments in artificial intelligence technology. AI continues to advance rapidly across various industries, bringing both opportunities and challenges. Researchers are working on making AI systems more reliable, interpretable, and beneficial for society.`;
 
 const Home = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [template, setTemplate] = useState('');
   const [inputData, setInputData] = useState('');
   const [provider, setProvider] = useState('openai');
   const [model, setModel] = useState('gpt-4o-mini');
   const [error, setError] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, toggleMobileMenu] = useToggle(false);
   const {
     current: _current,
     log,
@@ -54,7 +57,6 @@ const Home = () => {
     maxTokens,
     selectedMetrics,
   } = useJobStore();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [outputText, setOutputText] = useState('');
   const [streamStatus, setStreamStatus] = useState<
     'streaming' | 'complete' | 'error'
@@ -214,17 +216,32 @@ const Home = () => {
     // Comparison state is managed by the store, we just need to react to it
   };
 
+  // Navigation items for the header
+  const navigationItems = [
+    {
+      href: '/',
+      label: 'Home',
+      icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z',
+    },
+    {
+      href: '/dashboard',
+      label: 'Dashboard',
+      icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    },
+  ];
+
   return (
     <div className="h-screen bg-background flex overflow-hidden">
-      {/* History Sidebar - Properly sticky for desktop */}
+      {/* Sticky Sidebar - Always visible on desktop, overlay on mobile */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-30 
-          lg:sticky lg:top-0 lg:h-full lg:z-auto lg:flex-shrink-0
+          sticky top-0 h-screen z-30 flex-shrink-0
+          lg:static lg:z-auto
           transform transition-transform duration-300 ease-in-out
-          ${sidebarCollapsed ? 'lg:w-12' : 'lg:w-80'} 
+          ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-80 lg:w-80'} 
           ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
           bg-background border-r border-border
+          lg:translate-x-0
         `}
       >
         <AppSidebar
@@ -259,136 +276,200 @@ const Home = () => {
         />
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 min-w-0 flex flex-col h-full">
-        {/* Header */}
-        <header
-          className="border-b border-border bg-card/50 backdrop-blur-sm flex-shrink-0"
-          role="banner"
-        >
-          <div className="px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Mobile menu button */}
-                <button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                  aria-label="Toggle job history sidebar"
-                  aria-expanded={!sidebarCollapsed}
-                  aria-controls="history-sidebar"
+      {/* Fixed Navigation - Always centered relative to viewport */}
+      <div className="fixed left-1/2 transform -translate-x-1/2 top-4 hidden md:flex z-50">
+        <nav className="flex items-center space-x-1 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-2 py-1 shadow-sm">
+          {navigationItems.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                location.pathname === item.href
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  </svg>
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d={item.icon}
+                  />
+                </svg>
+                <span>{item.label}</span>
+              </div>
+            </Link>
+          ))}
+        </nav>
+      </div>
 
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white"
+      {/* Main Content Area */}
+      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+        {/* Navigation Header - Always visible */}
+        <header className="sticky top-0 z-40 flex-shrink-0 border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Left Side - Title and Mobile Toggle */}
+            <div className="flex items-center space-x-4 flex-1">
+              {/* Mobile sidebar toggle */}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 rounded-lg hover:bg-muted/50 transition-colors lg:hidden"
+                aria-label="Toggle job history sidebar"
+                aria-expanded={!sidebarCollapsed}
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+
+              {/* Title - Only visible on small screens */}
+              <div className="flex items-center md:hidden">
+                <h1 className="text-lg font-semibold text-foreground">
+                  Prompt evaluation workspace
+                </h1>
+              </div>
+            </div>
+
+            {/* Spacer for desktop navigation (fixed positioning) */}
+            <div className="hidden md:block flex-1"></div>
+
+            {/* Right Side - Token Info and Controls */}
+            <div className="flex items-center space-x-3 flex-1 justify-end">
+              {/* Always visible Token Summary */}
+              <div className="hidden sm:flex items-center gap-6 text-sm bg-muted/30 px-4 py-2 rounded-lg border border-border/50">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Prompt Tokens:
+                  </span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {promptTokens > 0 ? promptTokens.toLocaleString() : '-'}
+                  </span>
                 </div>
-                <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                    Prompt Lab
-                  </h1>
-                  <p className="text-sm text-muted hidden sm:block">
-                    Evaluate and test your prompts with real-time streaming
-                  </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Est. Output:
+                  </span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {estimatedCompletionTokens > 0
+                      ? estimatedCompletionTokens.toLocaleString()
+                      : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 border-l border-border pl-6">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Total Tokens:
+                  </span>
+                  <span className="font-mono font-bold text-primary">
+                    {totalTokens > 0 ? totalTokens.toLocaleString() : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Estimated Cost:
+                  </span>
+                  <span className="font-mono font-bold text-green-600 dark:text-green-400">
+                    {estimatedCost > 0
+                      ? estimatedCost < 0.01
+                        ? '<$0.01'
+                        : `$${estimatedCost.toFixed(4)}`
+                      : '-'}
+                  </span>
                 </div>
               </div>
 
-              <nav
-                className="flex items-center gap-2"
-                role="navigation"
-                aria-label="Main navigation"
+              {/* Mobile Menu Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleMobileMenu}
+                className="md:hidden h-10 w-10"
+                aria-label="Toggle navigation menu"
               >
-                <Button
-                  onClick={() => navigate('/dashboard')}
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Go to analytics dashboard"
-                  className="hidden sm:inline-flex"
-                  icon={
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                  }
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  Dashboard
-                </Button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d={
+                      mobileMenuOpen
+                        ? 'M6 18L18 6M6 6l12 12'
+                        : 'M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z'
+                    }
+                  />
+                </svg>
+              </Button>
 
-                {/* Mobile dashboard button */}
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="sm:hidden p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                  aria-label="Go to analytics dashboard"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </button>
-
-                {/* Dark Mode Toggle */}
-                <DarkModeToggle />
-              </nav>
+              {/* Dark Mode Toggle */}
+              <DarkModeToggle />
             </div>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="border-t border-border bg-card md:hidden">
+              <nav className="px-4 py-3 space-y-1">
+                {navigationItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={toggleMobileMenu}
+                    className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname === item.href
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d={item.icon}
+                        />
+                      </svg>
+                      <span>{item.label}</span>
+                    </div>
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          )}
         </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto" role="main">
+        {/* Single Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          {/* Error Alert */}
           {error && (
-            <div
-              className="flex-shrink-0 p-4 sm:p-6 pb-0"
-              role="alert"
-              aria-live="polite"
-            >
+            <div className="p-4 sm:p-6 pb-0" role="alert" aria-live="polite">
               <ErrorAlert error={error} />
             </div>
           )}
@@ -403,13 +484,13 @@ const Home = () => {
               />
             </section>
           ) : (
-            // Two-Column Workspace Layout
+            // Two-Column Workspace Layout - Fixed overflow with proper constraints
             <section
-              className="flex flex-col xl:flex-row gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6"
+              className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 items-start min-h-0 w-full max-w-full"
               aria-label="Prompt evaluation workspace"
             >
               {/* Left Column - Configuration Panel */}
-              <div className="xl:w-2/5 space-y-4 sm:space-y-6">
+              <div className="w-full lg:w-2/5 lg:max-w-[40%] flex-shrink-0 space-y-4 sm:space-y-6 min-w-0">
                 {/* Prompt Card */}
                 <Card title="Prompt Template">
                   {isEmptyState ? (
@@ -496,7 +577,7 @@ const Home = () => {
               </div>
 
               {/* Right Column - Output Panel */}
-              <div className="xl:w-3/5 space-y-4 sm:space-y-6">
+              <div className="w-full lg:w-3/5 lg:max-w-[60%] space-y-4 sm:space-y-6 min-w-0">
                 {/* Live Output Card */}
                 <Card title="Live Output">
                   {displayOutputText || streamStatus === 'streaming' ? (
@@ -555,7 +636,7 @@ const Home = () => {
               </div>
             </section>
           )}
-        </main>
+        </div>
       </div>
     </div>
   );
