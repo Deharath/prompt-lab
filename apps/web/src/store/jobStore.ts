@@ -14,7 +14,7 @@ interface JobState {
   current?: JobSummary;
   log: LogLine[];
   history: JobSummary[];
-  metrics?: Record<string, number>;
+  metrics?: Record<string, unknown>;
   running: boolean;
   hasUserData: boolean; // Track if user has any prompt/input data
   // Model parameters
@@ -28,7 +28,7 @@ interface JobState {
   };
   start(job: JobSummary): void;
   append(text: string): void;
-  finish(metrics: Record<string, number>): void;
+  finish(metrics: Record<string, unknown>): void;
   reset(): void;
   setUserData(hasData: boolean): void;
   setBaseJob(id: string): void;
@@ -50,7 +50,14 @@ export const useJobStore = create<JobState>((set) => ({
   temperature: 0.7,
   topP: 1.0,
   maxTokens: 0, // 0 means use model default
-  selectedMetrics: [] as SelectedMetric[],
+  selectedMetrics: [
+    { id: 'flesch_reading_ease' },
+    { id: 'sentiment' },
+    { id: 'word_count' },
+    { id: 'precision' },
+    { id: 'recall' },
+    { id: 'f_score' },
+  ] as SelectedMetric[],
   comparison: {},
   start: (job) => {
     set({

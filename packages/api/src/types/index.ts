@@ -1,13 +1,33 @@
 // Type definitions for better type safety
 
 export interface JobMetrics {
-  totalTokens: number;
-  avgCosSim: number;
-  meanLatencyMs: number;
-  costUsd: number;
-  evaluationCases: number;
-  startTime: number;
-  endTime: number;
+  // Content Quality Metrics
+  flesch_reading_ease?: number;
+  sentiment?: number;
+  word_count?: number;
+
+  // Structure & Format Metrics
+  is_valid_json?: boolean | { isValid: boolean; errorMessage?: string };
+
+  // Keyword Analysis
+  keywords?: {
+    found: string[];
+    missing: string[];
+    foundCount: number;
+    missingCount: number;
+    matchPercentage: number;
+  };
+
+  // Classification Metrics (when applicable)
+  precision?: number;
+  recall?: number;
+  f_score?: number;
+
+  // Performance (only essential)
+  response_time_ms?: number;
+
+  // Cost (only if needed for budgeting)
+  estimated_cost_usd?: number;
 }
 
 export interface BatchEvaluationResult {

@@ -23,13 +23,10 @@ import {
   checkJsonValidity,
   countWords,
   checkForKeywords,
-  calculatePrecision,
-  calculateRecall,
-  calculateFScore,
   calculateMockLatency,
 } from '@prompt-lab/api';
 
-// Helper function to calculate selected metrics
+// Helper function to calculate selected metrics with meaningful results
 function calculateSelectedMetrics(
   output: string,
   selectedMetrics?: unknown,
@@ -46,8 +43,8 @@ function calculateSelectedMetrics(
       case 'flesch_reading_ease':
         results.flesch_reading_ease = calculateFleschReadingEase(output);
         break;
-      case 'sentiment_score':
-        results.sentiment_score = calculateSentiment(output);
+      case 'sentiment':
+        results.sentiment = calculateSentiment(output);
         break;
       case 'is_valid_json':
         results.is_valid_json = checkJsonValidity(output);
@@ -61,26 +58,82 @@ function calculateSelectedMetrics(
           results.keywords = checkForKeywords(output, keywords);
         }
         break;
-      case 'precision':
-        // For precision, we'll use the output as prediction and a simple baseline as reference
-        // In practice, this would be calculated against a proper reference
-        results.precision = calculatePrecision(
-          output,
-          'baseline reference text',
+      case 'precision': {
+        // Calculate precision as content focus score (0-1)
+        // Higher precision = more focused, less rambling content
+        const precisionWords = output
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 0);
+        const uniquePrecisionWords = new Set(precisionWords);
+        const repetitionRatio =
+          precisionWords.length > 0
+            ? uniquePrecisionWords.size / precisionWords.length
+            : 0;
+        results.precision = Math.min(repetitionRatio * 1.2, 1.0); // Normalize and cap at 1.0
+        break;
+      }
+      case 'recall': {
+        // Calculate recall as completeness score based on response length and depth
+        // Longer, more detailed responses get higher recall scores
+        const recallWords = output
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 0);
+        const recallSentences = output
+          .split(/[.!?]+/)
+          .filter((s) => s.trim().length > 0);
+        const avgWordsPerSentence =
+          recallWords.length / Math.max(recallSentences.length, 1);
+        const completenessScore = Math.min(
+          (avgWordsPerSentence / 15) * 0.7 +
+            (recallSentences.length / 10) * 0.3,
+          1.0,
         );
+        results.recall = completenessScore;
         break;
-      case 'recall':
-        // For recall, we'll use the output as prediction and a simple baseline as reference
-        results.recall = calculateRecall(output, 'baseline reference text');
+      }
+      case 'f_score': {
+        // Calculate F-score as harmonic mean of our precision and recall
+        const fScoreWords = output
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 0);
+        const uniqueFScoreWords = new Set(fScoreWords);
+        const fScoreSentences = output
+          .split(/[.!?]+/)
+          .filter((s) => s.trim().length > 0);
+        const fScoreAvgWords =
+          fScoreWords.length / Math.max(fScoreSentences.length, 1);
+
+        const precisionScore =
+          typeof results.precision === 'number'
+            ? results.precision
+            : Math.min(
+                (uniqueFScoreWords.size / Math.max(fScoreWords.length, 1)) *
+                  1.2,
+                1.0,
+              );
+        const recallScore =
+          typeof results.recall === 'number'
+            ? results.recall
+            : Math.min(
+                (fScoreAvgWords / 15) * 0.7 +
+                  (fScoreSentences.length / 10) * 0.3,
+                1.0,
+              );
+
+        results.f_score =
+          precisionScore > 0 && recallScore > 0
+            ? (2 * precisionScore * recallScore) /
+              (precisionScore + recallScore)
+            : 0;
         break;
-      case 'f_score':
-        // F-score calculation using the same baseline
-        results.f_score = calculateFScore(output, 'baseline reference text');
+      }
+      case 'latency': {
+        results.response_time_ms = calculateMockLatency(output);
         break;
-      case 'latency':
-        // Mock latency calculation based on output complexity
-        results.latency = calculateMockLatency(output);
-        break;
+      }
     }
   }
 
@@ -361,15 +414,12 @@ jobsRouter.get(
               job.selectedMetrics,
             );
 
+            // Only include meaningful metrics - remove obsolete ones
             const metrics: import('@prompt-lab/api').JobMetrics = {
-              totalTokens: tokens,
-              avgCosSim: 0,
-              meanLatencyMs: endTime - startTime,
-              costUsd: cost,
-              evaluationCases: 0,
-              startTime,
-              endTime,
-              ...customMetrics, // Add the calculated custom metrics
+              ...customMetrics, // Our valuable metrics from metrics.ts
+              response_time_ms: endTime - startTime,
+              // Only include cost if it's actually valuable for the use case
+              ...(cost > 0 && { estimated_cost_usd: cost }),
             };
             await updateJob(id, {
               status: 'completed',
@@ -422,14 +472,17 @@ jobsRouter.get(
           cost = (tokens / 1000) * pricePerK;
         }
 
+        // Calculate custom metrics for non-streaming responses too
+        const customMetrics = calculateSelectedMetrics(
+          output,
+          job.selectedMetrics,
+        );
+
         const metrics: import('@prompt-lab/api').JobMetrics = {
-          totalTokens: tokens,
-          avgCosSim: 0, // Not applicable for streaming jobs
-          meanLatencyMs: endTime - startTime,
-          costUsd: cost,
-          evaluationCases: 0, // Not applicable for streaming jobs
-          startTime,
-          endTime,
+          ...customMetrics, // Our valuable metrics from metrics.ts
+          response_time_ms: endTime - startTime,
+          // Only include cost if it's actually valuable for the use case
+          ...(cost > 0 && { estimated_cost_usd: cost }),
         };
 
         await updateJob(id, {

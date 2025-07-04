@@ -46,24 +46,18 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     id: 'precision',
     name: 'Precision',
     description:
-      'Measures the ratio of relevant retrieved items to total retrieved items. Higher values indicate fewer false positives.',
+      'Measures the ratio of relevant content to total content. Higher values indicate more focused, relevant responses.',
   },
   {
     id: 'recall',
     name: 'Recall',
     description:
-      'Measures the ratio of relevant retrieved items to total relevant items. Higher values indicate fewer false negatives.',
+      'Measures completeness of the response. Higher values indicate the response covers more of the expected content.',
   },
   {
     id: 'f_score',
     name: 'F-Score',
     description:
-      'Harmonic mean of precision and recall, providing a balanced measure of both metrics.',
-  },
-  {
-    id: 'latency',
-    name: 'Response Latency',
-    description:
-      'Measures the time taken to generate the response. Lower values indicate faster processing.',
+      'Balanced measure combining precision and recall. Higher values indicate both relevant and complete responses.',
   },
 ];

@@ -14,14 +14,32 @@ export interface JobMetricsWithAvg extends JobMetrics {
 }
 
 export function calculateAverageScore(metrics: JobMetrics): number {
-  const numericValues = Object.values(metrics).filter(
-    (v): v is number => typeof v === 'number',
-  );
-  if (numericValues.length === 0) {
+  // Calculate average score from meaningful numeric metrics only
+  const numericMetrics: number[] = [];
+
+  // Include only our valuable metrics in the average
+  if (typeof metrics.flesch_reading_ease === 'number') {
+    numericMetrics.push(metrics.flesch_reading_ease / 100); // Normalize to 0-1
+  }
+  if (typeof metrics.sentiment === 'number') {
+    numericMetrics.push((metrics.sentiment + 1) / 2); // Convert -1 to 1 range to 0-1
+  }
+  if (typeof metrics.precision === 'number') {
+    numericMetrics.push(metrics.precision);
+  }
+  if (typeof metrics.recall === 'number') {
+    numericMetrics.push(metrics.recall);
+  }
+  if (typeof metrics.f_score === 'number') {
+    numericMetrics.push(metrics.f_score);
+  }
+
+  if (numericMetrics.length === 0) {
     return 0;
   }
-  const sum = numericValues.reduce((a, b) => a + b, 0);
-  return sum / numericValues.length;
+
+  const sum = numericMetrics.reduce((a, b) => a + b, 0);
+  return sum / numericMetrics.length;
 }
 
 export function withAverageScore(metrics: JobMetrics): JobMetricsWithAvg {
@@ -30,8 +48,8 @@ export function withAverageScore(metrics: JobMetrics): JobMetricsWithAvg {
 
 export function usageFromMetrics(metrics: JobMetrics) {
   return {
-    tokensUsed: metrics.totalTokens,
-    costUsd: metrics.costUsd,
+    tokensUsed: metrics.word_count || 0, // Use word count as a proxy for token usage
+    costUsd: metrics.estimated_cost_usd || 0,
   };
 }
 

@@ -34,7 +34,7 @@ export interface JobRequest {
   temperature?: number;
   topP?: number;
   maxTokens?: number;
-  metrics?: string[];
+  metrics?: Array<{ id: string; input?: string }>;
 }
 
 export interface JobSummary {

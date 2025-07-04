@@ -6,7 +6,7 @@ import { useDarkModeStore } from './store/darkModeStore.js';
 import { useToggle } from './hooks/useUtilities.js';
 import Card from './components/ui/Card.js';
 import Button from './components/ui/Button.js';
-import StatCard from './components/ui/StatCard.js';
+import ResultsPanel from './components/ResultsPanel.js';
 import PromptEditor from './components/PromptEditor.js';
 import InputEditor from './components/InputEditor.js';
 import LiveOutput from './components/LiveOutput.js';
@@ -126,8 +126,9 @@ const Home = () => {
     try {
       reset();
 
-      // Convert selected metric IDs to string array for API
-      const metricIds = selectedMetrics.map((metric) => metric.id);
+      // Send the full selectedMetrics array with IDs and input data
+      const metricsToSend =
+        selectedMetrics.length > 0 ? selectedMetrics : undefined;
 
       const job = await ApiClient.createJob({
         prompt: finalPrompt,
@@ -138,7 +139,7 @@ const Home = () => {
         temperature,
         topP,
         maxTokens: maxTokens > 0 ? maxTokens : undefined, // Only send if > 0
-        metrics: metricIds.length > 0 ? metricIds : undefined, // Only send if metrics selected
+        metrics: metricsToSend, // Send full metric objects with potential input data
       });
 
       start(job);
@@ -156,7 +157,7 @@ const Home = () => {
           currentEventSourceRef.current = null;
           try {
             const final = await ApiClient.fetchJob(job.id);
-            finish((final.metrics as Record<string, number>) || {});
+            finish((final.metrics as Record<string, unknown>) || {});
           } catch (_err) {
             finish({});
           }
@@ -167,7 +168,8 @@ const Home = () => {
           setError(`Stream error: ${streamError.message}`);
         },
         (metrics) => {
-          finish((metrics as Record<string, number>) || {});
+          // Don't cast to Record<string, number> as metrics can include complex objects
+          finish((metrics as Record<string, unknown>) || {});
         },
       );
 
@@ -613,25 +615,13 @@ const Home = () => {
                   )}
                 </Card>
 
-                {/* Evaluation Results Card */}
+                {/* Evaluation Results Panel */}
                 {metrics && Object.keys(metrics).length > 0 && (
-                  <Card title="Evaluation Results">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {Object.entries(metrics).map(([name, value]) => (
-                        <StatCard
-                          key={name}
-                          title={name
-                            .replace(/([A-Z])/g, ' $1')
-                            .replace(/^./, (str) => str.toUpperCase())}
-                          value={
-                            typeof value === 'number'
-                              ? value.toFixed(3)
-                              : String(value)
-                          }
-                        />
-                      ))}
-                    </div>
-                  </Card>
+                  <ResultsPanel
+                    metrics={metrics}
+                    title="Evaluation Results"
+                    showInsights={true}
+                  />
                 )}
               </div>
             </section>
