@@ -52,6 +52,8 @@ pnpm dev
 - **Multi-model streaming**: GPT-4.1 (full, mini, nano) and Gemini 2.5 Flash with real-time execution
 - **Job-based architecture**: Persistent job tracking with SQLite, Server-Sent Events, and a `/jobs` endpoint for retrieving results
 - **Advanced evaluation**: Cosine similarity and exact-match metrics via a modular evaluation package
+- **Quality metrics (NEW)**: Comprehensive text readability and sentiment analysis with caching
+- **Quality dashboard**: Real-time quality summary with aggregated metrics and P95 latency tracking
 - **Cost & token tracking**: Detailed per-job totals exposed through the `/jobs` endpoint
 - **React UI**: Modern interface with streaming job execution and progress monitoring
 - **CI/CD ready**: Comprehensive test suite (79+ tests) with automated quality gates
@@ -323,5 +325,54 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 - Always install `@types` for all dependencies, including dev-only packages.
 - Use [Renovate](https://github.com/renovatebot/renovate) or [Dependabot](https://github.com/dependabot) for automated dependency updates.
 - After any dependency change, run `pnpm install` at the root and commit `pnpm-lock.yaml`.
+
+---
+
+## 📊 Quality Metrics & Analytics
+
+PromptLab includes comprehensive quality analysis for text outputs:
+
+### Quality Summary API
+
+Get aggregated quality metrics with the `/api/quality-summary` endpoint:
+
+```bash
+# Get quality summary for all models (last 7 days)
+curl "http://localhost:3000/api/quality-summary"
+
+# Filter by model and custom time range
+curl "http://localhost:3000/api/quality-summary?model=gpt-4&windowDays=30"
+
+# Include P95 latency calculations
+WITH_P95=true curl "http://localhost:3000/api/quality-summary"
+```
+
+### Quality Metrics Include:
+
+- **Readability Analysis**: Flesch Reading Ease, Flesch-Kincaid Grade Level, SMOG Index
+- **Sentiment Analysis**: VADER (fast) or DistilBERT (accurate) sentiment scoring
+- **Performance Metrics**: Average response time, P95 latency (when enabled)
+- **Success Rates**: Job completion and error rates
+- **Text Quality**: Combined readability and sentiment scores
+
+### Environment Variables
+
+| Variable              | Default | Description                                                      |
+| --------------------- | ------- | ---------------------------------------------------------------- |
+| `SENTIMENT_MODE`      | `fast`  | Use `fast` (VADER) or `accurate` (DistilBERT) sentiment analysis |
+| `ENABLE_BERTSCORE`    | `false` | Enable BERTScore microservice for semantic similarity            |
+| `WITH_P95`            | `false` | Include P95 latency calculations in quality summary              |
+| `SUMMARY_WINDOW_DAYS` | `7`     | Default time window for quality summaries                        |
+| `SUMMARY_CACHE_TTL`   | `30`    | Cache TTL in seconds for quality summary results                 |
+
+### Quality Dashboard
+
+The React UI includes a comprehensive quality dashboard showing:
+
+- Real-time quality metrics with color-coded status indicators
+- Model filtering and time window selection
+- Responsive design with dark/light theme support
+- Cached data indicators and offline fallback
+- Accessibility features and keyboard navigation
 
 ---

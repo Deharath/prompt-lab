@@ -10,6 +10,7 @@ export default defineConfig({
     proxy: {
       '/jobs': 'http://localhost:3000',
       '/health': 'http://localhost:3000',
+      '/api': 'http://localhost:3000',
       '/dashboard': {
         target: 'http://localhost:3000',
         rewrite: (path) => path.replace(/^\/dashboard/, '/api/dashboard'),

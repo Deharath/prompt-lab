@@ -6,7 +6,7 @@ import { useDarkModeStore } from './store/darkModeStore.js';
 import { useToggle } from './hooks/useUtilities.js';
 import Card from './components/ui/Card.js';
 import Button from './components/ui/Button.js';
-import ResultsPanel from './components/ResultsPanel.js';
+import ResultsPanel from './components/ResultsPanelV2.js';
 import PromptEditor from './components/PromptEditor.js';
 import InputEditor from './components/InputEditor.js';
 import LiveOutput from './components/LiveOutput.js';

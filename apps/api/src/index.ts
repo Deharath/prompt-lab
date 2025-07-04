@@ -1,5 +1,6 @@
 import express, { type Express } from 'express';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
@@ -8,6 +9,9 @@ import { ApiError } from '@prompt-lab/api';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
 import dashboardRouter from './routes/dashboard.js';
+import qualitySummaryRouter, {
+  initializeCache,
+} from './routes/quality-summary.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
@@ -80,13 +84,30 @@ app.get('/health', (_req, res) => {
 
 app.use('/jobs', jobsReadRateLimit, jobsWriteRateLimit, jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api', qualitySummaryRouter);
 
-// Serve built web UI from /public when present
+// Serve built web UI from /public when present (production only)
 app.use(express.static(join(rootDir, 'public')));
 
-// Fallback to index.html for SPA routing
+// Fallback to index.html for SPA routing (only if index.html exists)
 app.get('*', (_req, res) => {
-  res.sendFile(join(rootDir, 'public', 'index.html'));
+  const indexPath = join(rootDir, 'public', 'index.html');
+  if (existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // In development mode, return a simple API-only response
+    res.status(404).json({
+      error: 'Not Found',
+      message:
+        'This is the API server. Frontend is served separately in development mode.',
+      availableEndpoints: [
+        '/health',
+        '/jobs',
+        '/api/dashboard',
+        '/api/quality-summary',
+      ],
+    });
+  }
 });
 
 app.use(
@@ -140,6 +161,9 @@ app.use(
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
   try {
+    // Initialize quality summary cache
+    initializeCache();
+
     const server = app.listen(config.server.port, config.server.host, () => {
       log.info(`API server started`, {
         port: config.server.port,

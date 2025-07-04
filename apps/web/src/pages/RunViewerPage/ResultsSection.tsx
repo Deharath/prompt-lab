@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
 import ShareRunButton from '../../components/ShareRunButton.js';
-import ResultsPanel from '../../components/ResultsPanel.js';
+import ResultsPanel from '../../components/ResultsPanelV2.js';
 import type { JobDetails } from './types.js';
 
 interface ResultsSectionProps {

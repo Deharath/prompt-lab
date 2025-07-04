@@ -15,6 +15,7 @@ import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/TimeRangeSelector.js';
 import LoadingSpinner from '../components/LoadingSpinner.js';
 import ErrorMessage from '../components/ErrorMessage.js';
+import { QualitySummaryDashboard } from '../components/QualitySummaryDashboard.js';
 
 const DashboardPage = () => {
   const { isLoading, error, data, days, fetchDashboardStats } =
@@ -62,86 +63,96 @@ const DashboardPage = () => {
         {error && <ErrorMessage message={error} />}
 
         {data && !isLoading && !error && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Average Score Over Time Chart */}
-            <Card title="Average Score Over Time" className="p-6">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data.scoreHistory}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="opacity-30"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      className="text-gray-600 dark:text-gray-400"
-                      fontSize={12}
-                    />
-                    <YAxis
-                      className="text-gray-600 dark:text-gray-400"
-                      fontSize={12}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avgScore"
-                      stroke="#3b82f6"
-                      strokeWidth={3}
-                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+          <>
+            {/* Quality Summary Dashboard - New Metrics System */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Quality Metrics Summary
+              </h2>
+              <QualitySummaryDashboard />
+            </div>
 
-            {/* Total Cost by Model Chart */}
-            <Card title="Total Cost by Model" className="p-6">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.costByModel}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="opacity-30"
-                    />
-                    <XAxis
-                      dataKey="model"
-                      className="text-gray-600 dark:text-gray-400"
-                      fontSize={12}
-                    />
-                    <YAxis
-                      className="text-gray-600 dark:text-gray-400"
-                      fontSize={12}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                      }}
-                      formatter={(value: number) => [
-                        `$${value.toFixed(4)}`,
-                        'Total Cost',
-                      ]}
-                    />
-                    <Bar
-                      dataKey="totalCost"
-                      fill="#8b5cf6"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Average Score Over Time Chart */}
+              <Card title="Average Score Over Time" className="p-6">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data.scoreHistory}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="opacity-30"
+                      />
+                      <XAxis
+                        dataKey="date"
+                        className="text-gray-600 dark:text-gray-400"
+                        fontSize={12}
+                      />
+                      <YAxis
+                        className="text-gray-600 dark:text-gray-400"
+                        fontSize={12}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="avgScore"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+
+              {/* Total Cost by Model Chart */}
+              <Card title="Total Cost by Model" className="p-6">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data.costByModel}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="opacity-30"
+                      />
+                      <XAxis
+                        dataKey="model"
+                        className="text-gray-600 dark:text-gray-400"
+                        fontSize={12}
+                      />
+                      <YAxis
+                        className="text-gray-600 dark:text-gray-400"
+                        fontSize={12}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                        }}
+                        formatter={(value: number) => [
+                          `$${value.toFixed(4)}`,
+                          'Total Cost',
+                        ]}
+                      />
+                      <Bar
+                        dataKey="totalCost"
+                        fill="#8b5cf6"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            </div>
+          </>
         )}
       </div>
     </div>

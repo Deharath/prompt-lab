@@ -16,128 +16,77 @@ import {
   ServiceUnavailableError,
 } from '../errors/ApiError.js';
 
-// Import metric functions
-import {
-  calculateFleschReadingEase,
-  calculateSentiment,
-  checkJsonValidity,
-  countWords,
-  checkForKeywords,
-  calculateMockLatency,
-} from '@prompt-lab/api';
+// Import NEW metric calculation system
+import { calculateMetrics, type MetricInput } from '@prompt-lab/api';
 
-// Helper function to calculate selected metrics with meaningful results
-function calculateSelectedMetrics(
+// Default metrics that are always calculated as per plan_for_metrics_upgrade.md
+const DEFAULT_METRICS: MetricInput[] = [
+  { id: 'flesch_reading_ease' },
+  { id: 'flesch_kincaid' },
+  { id: 'sentiment' },
+  { id: 'word_count' },
+  { id: 'sentence_count' },
+  { id: 'avg_words_per_sentence' },
+  { id: 'vocab_diversity' },
+  { id: 'completeness_score' },
+];
+
+// Helper function to calculate metrics with new upgraded system
+async function calculateJobMetrics(
   output: string,
   selectedMetrics?: unknown,
-): Record<string, unknown> {
-  if (!selectedMetrics || !Array.isArray(selectedMetrics)) {
+  jobContext?: { prompt?: string; inputData?: unknown; template?: string },
+): Promise<Record<string, unknown>> {
+  if (!output || typeof output !== 'string') {
     return {};
   }
 
-  const metrics = selectedMetrics as Array<{ id: string; input?: string }>;
-  const results: Record<string, unknown> = {};
+  // Start with default metrics that are always calculated
+  let allMetrics = [...DEFAULT_METRICS];
 
-  for (const metric of metrics) {
-    switch (metric.id) {
-      case 'flesch_reading_ease':
-        results.flesch_reading_ease = calculateFleschReadingEase(output);
-        break;
-      case 'sentiment':
-        results.sentiment = calculateSentiment(output);
-        break;
-      case 'is_valid_json':
-        results.is_valid_json = checkJsonValidity(output);
-        break;
-      case 'word_count':
-        results.word_count = countWords(output);
-        break;
-      case 'keywords':
-        if (metric.input) {
-          const keywords = metric.input.split(',').map((k) => k.trim());
-          results.keywords = checkForKeywords(output, keywords);
-        }
-        break;
-      case 'precision': {
-        // Calculate precision as content focus score (0-1)
-        // Higher precision = more focused, less rambling content
-        const precisionWords = output
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((w) => w.length > 0);
-        const uniquePrecisionWords = new Set(precisionWords);
-        const repetitionRatio =
-          precisionWords.length > 0
-            ? uniquePrecisionWords.size / precisionWords.length
-            : 0;
-        results.precision = Math.min(repetitionRatio * 1.2, 1.0); // Normalize and cap at 1.0
-        break;
-      }
-      case 'recall': {
-        // Calculate recall as completeness score based on response length and depth
-        // Longer, more detailed responses get higher recall scores
-        const recallWords = output
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((w) => w.length > 0);
-        const recallSentences = output
-          .split(/[.!?]+/)
-          .filter((s) => s.trim().length > 0);
-        const avgWordsPerSentence =
-          recallWords.length / Math.max(recallSentences.length, 1);
-        const completenessScore = Math.min(
-          (avgWordsPerSentence / 15) * 0.7 +
-            (recallSentences.length / 10) * 0.3,
-          1.0,
-        );
-        results.recall = completenessScore;
-        break;
-      }
-      case 'f_score': {
-        // Calculate F-score as harmonic mean of our precision and recall
-        const fScoreWords = output
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((w) => w.length > 0);
-        const uniqueFScoreWords = new Set(fScoreWords);
-        const fScoreSentences = output
-          .split(/[.!?]+/)
-          .filter((s) => s.trim().length > 0);
-        const fScoreAvgWords =
-          fScoreWords.length / Math.max(fScoreSentences.length, 1);
-
-        const precisionScore =
-          typeof results.precision === 'number'
-            ? results.precision
-            : Math.min(
-                (uniqueFScoreWords.size / Math.max(fScoreWords.length, 1)) *
-                  1.2,
-                1.0,
-              );
-        const recallScore =
-          typeof results.recall === 'number'
-            ? results.recall
-            : Math.min(
-                (fScoreAvgWords / 15) * 0.7 +
-                  (fScoreSentences.length / 10) * 0.3,
-                1.0,
-              );
-
-        results.f_score =
-          precisionScore > 0 && recallScore > 0
-            ? (2 * precisionScore * recallScore) /
-              (precisionScore + recallScore)
-            : 0;
-        break;
-      }
-      case 'latency': {
-        results.response_time_ms = calculateMockLatency(output);
-        break;
-      }
-    }
+  // Add any additional selected metrics
+  if (selectedMetrics && Array.isArray(selectedMetrics)) {
+    const additionalMetrics = selectedMetrics as Array<{
+      id: string;
+      input?: string;
+    }>;
+    const additionalInputs: MetricInput[] = additionalMetrics
+      .filter((m) => !DEFAULT_METRICS.some((d) => d.id === m.id)) // Avoid duplicates
+      .map((m) => ({ id: m.id, input: m.input }));
+    allMetrics = [...allMetrics, ...additionalInputs];
   }
 
-  return results;
+  // For precision, recall, f_score: if no explicit input provided, use job context as reference
+  if (jobContext) {
+    ['precision', 'recall', 'f_score'].forEach((metricId) => {
+      const metric = allMetrics.find((m) => m.id === metricId);
+      if (metric && !metric.input) {
+        // Build reference text from input data (the article/content to summarize)
+        let referenceText = '';
+
+        // Primary source: inputData (the actual content being processed)
+        if (jobContext.inputData) {
+          if (typeof jobContext.inputData === 'string') {
+            referenceText = jobContext.inputData;
+          } else if (typeof jobContext.inputData === 'object') {
+            referenceText = JSON.stringify(jobContext.inputData);
+          }
+        }
+
+        // Fallback: use prompt if no inputData
+        if (!referenceText && jobContext.prompt) {
+          referenceText = jobContext.prompt;
+        }
+
+        // Set the reference text for comparison
+        if (referenceText.trim()) {
+          metric.input = referenceText.trim();
+        }
+      }
+    });
+  }
+
+  return await calculateMetrics(output, allMetrics);
 }
 
 const jobsRouter = createRouter();
@@ -401,17 +350,21 @@ jobsRouter.get(
                 sendEvent({ token: result.value.content });
               }
             }
-            sendEvent({ done: true }, 'done');
-            // Only send metrics if streaming completed without error
+            // Don't send 'done' event yet - calculate metrics first
             const endTime = Date.now();
             tokens = Math.floor(output.length / 4);
             const pricePerK = 0.002;
             cost = (tokens / 1000) * pricePerK;
 
-            // Calculate custom metrics based on selected metrics
-            const customMetrics = calculateSelectedMetrics(
+            // Calculate metrics including defaults
+            const customMetrics = await calculateJobMetrics(
               output,
               job.selectedMetrics,
+              {
+                prompt: job.prompt,
+                inputData: job.inputData,
+                template: job.template || undefined,
+              },
             );
 
             // Only include meaningful metrics - remove obsolete ones
@@ -421,12 +374,17 @@ jobsRouter.get(
               // Only include cost if it's actually valuable for the use case
               ...(cost > 0 && { estimated_cost_usd: cost }),
             };
+
+            // Update database with final result and metrics
             await updateJob(id, {
               status: 'completed',
               result: output,
               metrics,
             });
+
+            // Send metrics first, then done event
             sendEvent(metrics, 'metrics');
+            sendEvent({ done: true }, 'done');
             return;
           } catch (streamError) {
             // Defensive: should never reach here, but just in case
@@ -460,37 +418,34 @@ jobsRouter.get(
           cost = result.cost;
           sendEvent({ token: output });
           sendEvent({ done: true }, 'done');
+
+          const endTime = Date.now();
+
+          // Calculate metrics for non-streaming responses
+          const customMetrics = await calculateJobMetrics(
+            output,
+            job.selectedMetrics,
+            {
+              prompt: job.prompt,
+              inputData: job.inputData,
+              template: job.template || undefined,
+            },
+          );
+
+          const metrics: import('@prompt-lab/api').JobMetrics = {
+            ...customMetrics, // Our valuable metrics from metrics.ts
+            response_time_ms: endTime - startTime,
+            // Only include cost if it's actually valuable for the use case
+            ...(cost > 0 && { estimated_cost_usd: cost }),
+          };
+
+          await updateJob(id, {
+            status: 'completed',
+            result: output,
+            metrics,
+          });
+          sendEvent(metrics, 'metrics');
         }
-
-        const endTime = Date.now();
-
-        // For streaming, we need to get final metrics from the completed job
-        if (provider.stream) {
-          // Try to estimate tokens for streaming (rough approximation)
-          tokens = Math.floor(output.length / 4); // Rough token estimation
-          const pricePerK = 0.002; // Default pricing, should be provider-specific
-          cost = (tokens / 1000) * pricePerK;
-        }
-
-        // Calculate custom metrics for non-streaming responses too
-        const customMetrics = calculateSelectedMetrics(
-          output,
-          job.selectedMetrics,
-        );
-
-        const metrics: import('@prompt-lab/api').JobMetrics = {
-          ...customMetrics, // Our valuable metrics from metrics.ts
-          response_time_ms: endTime - startTime,
-          // Only include cost if it's actually valuable for the use case
-          ...(cost > 0 && { estimated_cost_usd: cost }),
-        };
-
-        await updateJob(id, {
-          status: 'completed',
-          result: output,
-          metrics,
-        });
-        sendEvent(metrics, 'metrics');
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';

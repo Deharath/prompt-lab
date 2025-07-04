@@ -1,4 +1,5 @@
 import type { DashboardStats } from './types/dashboard.js';
+import type { QualitySummaryData } from './hooks/useQualitySummary.js';
 
 // Helper function to parse dates from JSON
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,13 +93,22 @@ export class ApiClient {
         let errorMessage = 'An error occurred';
         let errorCode: string | undefined;
 
+        // Clone the response first, before any attempts to read the body
+        const responseForJson = response.clone();
+        const responseForText = response.clone();
+
         try {
-          const errorData: ApiError = await response.json();
+          const errorData: ApiError = await responseForJson.json();
           errorMessage = errorData.error || errorMessage;
           errorCode = errorData.code;
         } catch {
-          // If we can't parse JSON, use the response text
-          errorMessage = (await response.text()) || `HTTP ${response.status}`;
+          // If we can't parse JSON, try to get plain text
+          try {
+            errorMessage =
+              (await responseForText.text()) || `HTTP ${response.status}`;
+          } catch {
+            errorMessage = `HTTP ${response.status}`;
+          }
         }
 
         const error = new Error(errorMessage) as Error & {
@@ -236,6 +246,34 @@ export class ApiClient {
       method: 'DELETE',
     });
   }
+
+  static async fetchQualitySummary(
+    params: {
+      model?: string;
+      since?: string;
+      until?: string;
+      windowDays?: number;
+    } = {},
+  ): Promise<{
+    success: boolean;
+    data: QualitySummaryData;
+    cached: boolean;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params.model) queryParams.append('model', params.model);
+    if (params.since) queryParams.append('since', params.since);
+    if (params.until) queryParams.append('until', params.until);
+    if (params.windowDays)
+      queryParams.append('windowDays', params.windowDays.toString());
+
+    const endpoint = `/api/quality-summary?${queryParams.toString()}`;
+    const result = await this.makeRequest<{
+      success: boolean;
+      data: QualitySummaryData;
+      cached: boolean;
+    }>(endpoint);
+    return result;
+  }
 }
 
 // Legacy exports for backward compatibility
@@ -247,3 +285,5 @@ export const diffJobs = ApiClient.diffJobs.bind(ApiClient);
 export const fetchDashboardStats =
   ApiClient.fetchDashboardStats.bind(ApiClient);
 export const deleteJob = ApiClient.deleteJob.bind(ApiClient);
+export const fetchQualitySummary =
+  ApiClient.fetchQualitySummary.bind(ApiClient);

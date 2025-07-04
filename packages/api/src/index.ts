@@ -12,14 +12,13 @@ export * from './constants/index.js';
 export * from './errors/ApiError.js';
 
 // Explicit metrics exports for better TypeScript resolution
+// NOTE: Old metrics moved to new system in lib/metrics.js
+
+// NEW metrics system exports
 export {
-  calculateFleschReadingEase,
-  calculateSentiment,
-  checkJsonValidity,
-  countWords,
-  checkForKeywords,
-  calculatePrecision,
-  calculateRecall,
-  calculateFScore,
-  calculateMockLatency,
-} from './evaluation/metrics/metrics.js';
+  calculateMetrics,
+  calculateSelectedMetricsLegacy,
+  getAvailableMetrics,
+  type MetricInput,
+  type MetricResult,
+} from './lib/metrics.js';

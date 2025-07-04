@@ -44,20 +44,32 @@ export const AVAILABLE_METRICS: MetricOption[] = [
   },
   {
     id: 'precision',
-    name: 'Precision',
+    name: 'Content Precision',
     description:
-      'Measures the ratio of relevant content to total content. Higher values indicate more focused, relevant responses.',
+      'Measures how much of the LLM output is relevant compared to the input data.',
   },
   {
     id: 'recall',
-    name: 'Recall',
+    name: 'Content Recall',
     description:
-      'Measures completeness of the response. Higher values indicate the response covers more of the expected content.',
+      'Measures how much of the input data is covered in the LLM output.',
   },
   {
     id: 'f_score',
-    name: 'F-Score',
+    name: 'Content F-Score',
     description:
-      'Balanced measure combining precision and recall. Higher values indicate both relevant and complete responses.',
+      'Balanced measure of precision and recall for content comparison.',
+  },
+  {
+    id: 'vocab_diversity',
+    name: 'Vocabulary Diversity',
+    description:
+      'Measures unique words vs total words. Higher values indicate richer vocabulary.',
+  },
+  {
+    id: 'completeness_score',
+    name: 'Content Completeness',
+    description:
+      'Measures response depth and structure. Higher values indicate more complete responses.',
   },
 ];
