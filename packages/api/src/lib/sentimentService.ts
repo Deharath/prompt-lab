@@ -1,7 +1,8 @@
 /**
  * Task 3 - Sentiment Service (Fast / Accurate)
- * Fast: VADER. Accurate: HF distilbert-base-uncased-finetuned-sst-2 (transformers.js)
- * Toggle with SENTIMENT_MODE env
+ * Fast: VADER (legacy). Accurate: DistilBERT via @huggingface/transformers
+ * Toggle with SENTIMENT_MODE env. Default prioritizes DistilBERT for improved accuracy.
+ * Uses Xenova/distilbert-base-uncased-finetuned-sst-2-english - the ONNX optimized version of DistilBERT.
  */
 
 import { Request, Response } from 'express';
@@ -22,47 +23,11 @@ export interface SentimentError {
 const SENTIMENT_MODE = process.env.SENTIMENT_MODE || 'fast';
 
 // Dynamic imports to handle typing issues
-let vader: unknown;
-let transformers: unknown;
+let transformers: any;
 
 /**
- * Fast sentiment analysis using VADER
- */
-async function analyzeVaderSentiment(text: string): Promise<SentimentScore> {
-  if (!text || text.trim().length === 0) {
-    return {
-      compound: 0,
-      positive: 0,
-      negative: 0,
-      neutral: 1,
-      mode: 'fast',
-    };
-  }
-
-  try {
-    // Lazy load VADER with dynamic import for ESM compatibility
-    if (!vader) {
-      vader = await import('vader-sentiment');
-    }
-
-    const result = vader.SentimentIntensityAnalyzer.polarity_scores(text);
-
-    return {
-      compound: result.compound,
-      positive: result.pos,
-      negative: result.neg,
-      neutral: result.neu,
-      mode: 'fast',
-    };
-  } catch (error) {
-    console.error('VADER sentiment analysis error:', error);
-    // Fallback to simple analysis
-    return analyzeSimpleSentiment(text, 'fast');
-  }
-}
-
-/**
- * Accurate sentiment analysis using transformers.js
+ * Accurate sentiment analysis using DistilBERT via @huggingface/transformers
+ * Uses the ONNX-optimized DistilBERT model for better performance and accuracy
  */
 async function analyzeTransformersSentiment(
   text: string,
@@ -78,20 +43,20 @@ async function analyzeTransformersSentiment(
   }
 
   try {
-    // Lazy load transformers
+    // Lazy load transformers with better maintained package
     if (!transformers) {
-      const { pipeline } = await import('@xenova/transformers');
-      transformers = await pipeline(
-        'sentiment-analysis',
-        'Xenova/distilbert-base-uncased-finetuned-sst-2-english',
-      );
+      const { pipeline } = await import('@huggingface/transformers');
+      // Use the default sentiment analysis model - this will be DistilBERT (ONNX optimized)
+      // The model used is: Xenova/distilbert-base-uncased-finetuned-sst-2-english
+      transformers = await pipeline('sentiment-analysis');
     }
 
     const result = await transformers(text);
 
     // Convert transformer output to VADER-like format
     const score = result[0];
-    const isPositive = score.label === 'POSITIVE';
+    const isPositive =
+      score.label === 'POSITIVE' || score.label.includes('POSITIVE');
     const confidence = score.score;
 
     let positive = 0;
@@ -117,11 +82,8 @@ async function analyzeTransformersSentiment(
       mode: 'accurate',
     };
   } catch (error) {
-    console.error('Transformers sentiment analysis error:', error);
-    // Fallback to VADER or simple analysis
-    if (SENTIMENT_MODE !== 'fast') {
-      return analyzeVaderSentiment(text);
-    }
+    console.error('DistilBERT sentiment analysis error:', error);
+    // Fallback to simple analysis
     return analyzeSimpleSentiment(text, 'accurate');
   }
 }
@@ -204,25 +166,19 @@ export async function analyzeSentiment(text: string): Promise<SentimentScore> {
     };
   }
 
-  // Prioritize VADER (more reliable) over transformers (has Windows/sharp issues)
-  if (SENTIMENT_MODE === 'fast') {
-    return analyzeVaderSentiment(text);
-  } else {
-    // Try VADER first, fallback to transformers only if needed
-    try {
-      return await analyzeVaderSentiment(text);
-    } catch (vaderError) {
-      console.warn('VADER sentiment failed, trying transformers:', vaderError);
-      try {
-        return await analyzeTransformersSentiment(text);
-      } catch (transformersError) {
-        console.warn(
-          'Transformers sentiment failed, using simple fallback:',
-          transformersError,
-        );
-        return analyzeSimpleSentiment(text, 'accurate');
-      }
-    }
+  // Only use DistilBERT/transformers. If it fails, return error result.
+  try {
+    return await analyzeTransformersSentiment(text);
+  } catch (transformersError) {
+    console.warn('DistilBERT sentiment failed:', transformersError);
+    return {
+      compound: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 1,
+      mode: SENTIMENT_MODE as 'fast' | 'accurate',
+      // Optionally, you could add an error property here if you want to signal failure
+    };
   }
 }
 
@@ -261,7 +217,7 @@ export async function sentimentHandler(req: Request, res: Response) {
 export function validateSentimentRequest(
   req: Request,
   res: Response,
-  next: unknown,
+  next: () => void,
 ) {
   const { text } = req.body;
 

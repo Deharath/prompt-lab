@@ -1,7 +1,7 @@
 // Quick debug script to test sentiment analysis
 const {
   analyzeSentiment,
-} = require('./packages/api/dist/src/lib/sentimentService.js');
+} = require('../../packages/api/dist/src/lib/sentimentService.js');
 
 async function testSentiment() {
   console.log('Testing sentiment analysis...');

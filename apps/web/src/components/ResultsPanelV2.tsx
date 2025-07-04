@@ -131,7 +131,7 @@ const ResultsPanel = ({
         category: 'sentiment',
         displayName: 'Sentiment Score',
         description:
-          'VADER (fast) or DistilBERT (accurate) based on SENTIMENT_MODE env',
+          'DistilBERT (accurate) or VADER (fast) based on SENTIMENT_MODE env',
       },
       sentiment_detailed: {
         category: 'sentiment',

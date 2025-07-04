@@ -1,7 +1,7 @@
 /**
  * Test the readability service directly
  */
-import { calculateReadabilityScores } from './dist/src/lib/readabilityService.js';
+import { calculateReadabilityScores } from '../../packages/api/dist/src/lib/readabilityService.js';
 
 const testText = "The quick brown fox jumps over the lazy dog. This is a simple sentence to test readability metrics. The weather is nice today and I feel happy about the progress we've made.";
 

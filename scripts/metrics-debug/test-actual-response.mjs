@@ -1,7 +1,7 @@
 /**
  * Test readability with the actual job response text
  */
-import { calculateReadabilityScores } from './dist/src/lib/readabilityService.js';
+import { calculateReadabilityScores } from '../../packages/api/dist/src/lib/readabilityService.js';
 
 const actualJobResponse = `### Main Topic
 Recent developments in artificial intelligence technology and their implications for various industries.

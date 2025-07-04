@@ -1,7 +1,7 @@
 /**
  * Test the main metrics calculation function
  */
-import { calculateMetrics } from './dist/src/lib/metrics.js';
+import { calculateMetrics } from '../../packages/api/dist/src/lib/metrics.js';
 
 const testText = "The quick brown fox jumps over the lazy dog. This is a simple sentence to test readability metrics. The weather is nice today and I feel happy about the progress we've made.";
 

@@ -1,11 +1,25 @@
 /**
  * Task 2 - Readability Service
- * Expose FRE, FK, SMOG via text-readability-ts
+ * Expose FRE, FK, SMOG via text-readability
  * Reject input > 20 kB with 413
  */
 
 import { Request, Response, NextFunction } from 'express';
-import * as readability from 'text-readability-ts';
+
+// Dynamic import for CommonJS module in ESM context
+let ReadabilityClass: any;
+
+async function getReadability() {
+  if (!ReadabilityClass) {
+    const textReadabilityModule = await import('text-readability');
+    ReadabilityClass = textReadabilityModule.default || textReadabilityModule;
+    // Handle different export structures
+    if (typeof ReadabilityClass === 'object' && ReadabilityClass.default) {
+      ReadabilityClass = ReadabilityClass.default;
+    }
+  }
+  return ReadabilityClass;
+}
 
 export interface ReadabilityScores {
   fleschReadingEase: number;
@@ -42,7 +56,7 @@ export function validateTextSize(
 }
 
 /**
- * Calculate readability scores using text-readability-ts library
+ * Calculate readability scores using text-readability library
  */
 export async function calculateReadabilityScores(
   text: string,
@@ -69,13 +83,33 @@ export async function calculateReadabilityScores(
       };
     }
 
+    // Initialize readability analyzer
+    const ReadabilityModule = await getReadability();
+
+    // Handle different ways the module might be exported
+    let readabilityAnalyzer;
+    if (typeof ReadabilityModule === 'function') {
+      readabilityAnalyzer = new ReadabilityModule();
+    } else if (
+      ReadabilityModule &&
+      typeof ReadabilityModule.default === 'function'
+    ) {
+      readabilityAnalyzer = new ReadabilityModule.default();
+    } else {
+      // If it's not a constructor, try using it directly
+      readabilityAnalyzer = ReadabilityModule;
+    }
+
     return {
       fleschReadingEase: Math.max(
         0,
-        Math.min(100, readability.fleschReadingEase(cleanText)),
+        Math.min(100, readabilityAnalyzer.fleschReadingEase(cleanText)),
       ),
-      fleschKincaid: Math.max(0, readability.fleschKincaidGrade(cleanText)),
-      smog: Math.max(0, readability.smogIndex(cleanText)),
+      fleschKincaid: Math.max(
+        0,
+        readabilityAnalyzer.fleschKincaidGrade(cleanText),
+      ),
+      smog: Math.max(0, readabilityAnalyzer.smogIndex(cleanText)),
       textLength: text.length, // Keep original text length for reference
     };
   } catch (error) {

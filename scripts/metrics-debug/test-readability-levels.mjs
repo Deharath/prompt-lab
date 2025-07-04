@@ -1,7 +1,7 @@
 /**
  * Test readability with simple vs complex text to verify the scores make sense
  */
-import { calculateReadabilityScores } from './dist/src/lib/readabilityService.js';
+import { calculateReadabilityScores } from '../../packages/api/dist/src/lib/readabilityService.js';
 
 const verySimpleText = "The cat is happy. The dog is running. This is easy to read.";
 const complexText = "Recent developments in artificial intelligence technology and their implications for various industries. The progress in AI brings significant benefits, but it also poses challenges that need to be addressed.";

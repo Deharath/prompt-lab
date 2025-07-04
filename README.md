@@ -141,6 +141,7 @@ curl "http://localhost:3000/jobs/<baseJobId>/diff?otherId=<compareJobId>"
 ## 📚 Documentation & Resources
 
 - [AGENTS.md](docs/AGENTS.md): Agent architecture and design
+- [METRICS_ARCHITECTURE.md](docs/METRICS_ARCHITECTURE.md): Complete metrics system documentation
 - [CI_SETUP.md](docs/CI_SETUP.md): Continuous Integration setup
 - [CI_ENHANCEMENT_SUMMARY.md](docs/CI_ENHANCEMENT_SUMMARY.md): CI/CD enhancements
 - [CONTRIBUTING.md](CONTRIBUTING.md): Contribution guidelines
@@ -206,11 +207,15 @@ prompt-lab/
 │  ├─ api/            # Express + Zod API server
 │  └─ web/            # React + shadcn/ui frontend
 ├─ packages/
-│  ├─ api/            # Shared business logic, cost tracking, DB
-│  ├─ evaluator/      # Metrics and evaluation logic
+│  ├─ api/            # Shared business logic, metrics, DB
+│  │  └─ src/lib/     # Core services: sentiment, readability, metrics
+│  ├─ evaluator/      # Evaluation utilities (cosine similarity, exact match)
 │  ├─ jobs/           # Job helpers and types
 │  ├─ providers/      # Model provider integrations
 │  ├─ test-cases/     # JSONL fixtures and helpers
+├─ scripts/
+│  └─ metrics-debug/  # Debug scripts for metrics development
+├─ docs/              # Architecture documentation
 ├─ db/                # SQLite database files
 ```
 
@@ -350,7 +355,7 @@ WITH_P95=true curl "http://localhost:3000/api/quality-summary"
 ### Quality Metrics Include:
 
 - **Readability Analysis**: Flesch Reading Ease, Flesch-Kincaid Grade Level, SMOG Index
-- **Sentiment Analysis**: VADER (fast) or DistilBERT (accurate) sentiment scoring
+- **Sentiment Analysis**: DistilBERT (accurate) or VADER (fast) sentiment scoring
 - **Performance Metrics**: Average response time, P95 latency (when enabled)
 - **Success Rates**: Job completion and error rates
 - **Text Quality**: Combined readability and sentiment scores

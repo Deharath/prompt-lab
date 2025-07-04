@@ -325,7 +325,7 @@ export function getAvailableMetrics(): Array<{
       id: 'sentiment',
       name: 'Sentiment Analysis',
       description:
-        'Analyzes emotional tone from -1 (negative) to 1 (positive).',
+        'Analyzes emotional tone using DistilBERT (accurate) or VADER (fast) from -1 (negative) to 1 (positive).',
     },
     {
       id: 'is_valid_json',

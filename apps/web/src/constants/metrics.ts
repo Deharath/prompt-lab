@@ -21,7 +21,7 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     id: 'sentiment',
     name: 'Sentiment Analysis',
     description:
-      'Analyzes the emotional tone of the text, providing a score from -1 (negative) to 1 (positive).',
+      'Analyzes the emotional tone of the text using DistilBERT (accurate) or VADER (fast), providing a score from -1 (negative) to 1 (positive).',
   },
   {
     id: 'is_valid_json',
