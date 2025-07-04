@@ -5,8 +5,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-
-const readability: any = require('text-readability-ts');
+import * as readability from 'text-readability-ts';
 
 export interface ReadabilityScores {
   fleschReadingEase: number;
