@@ -278,7 +278,7 @@ const Home = () => {
 
       {/* Fixed Navigation - Always centered relative to viewport */}
       <div className="fixed left-1/2 transform -translate-x-1/2 top-4 hidden md:flex z-50">
-        <nav className="flex items-center space-x-1 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-2 py-1 shadow-sm">
+        <nav className="flex items-center space-x-1">
           {navigationItems.map((item) => (
             <Link
               key={item.href}
