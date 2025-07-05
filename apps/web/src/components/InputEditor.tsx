@@ -91,7 +91,7 @@ const InputEditor = ({
       // Perfect-fit resize logic: always match content size, preventing only micro-adjustments
       const heightDifference = Math.abs(requiredHeight - currentHeight);
       let shouldResize = false;
-      let newHeight = requiredHeight; // Always target the perfect fit height
+      const newHeight = requiredHeight; // Always target the perfect fit height
 
       // Only resize if there's a meaningful difference (>3px) to prevent micro-flickering
       if (heightDifference > 3) {

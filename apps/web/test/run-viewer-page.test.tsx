@@ -3,7 +3,7 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';
 import RunViewerPage from '../src/pages/RunViewerPage.js';
-import { fetchJob } from '../src/api.js';
+import { ApiClient } from '../src/api.js';
 
 // Mock react-router-dom useParams
 const mockUseParams = vi.fn();
@@ -17,11 +17,13 @@ vi.mock('react-router-dom', async () => {
 
 // Mock the api module
 vi.mock('../src/api.js', () => ({
-  fetchJob: vi.fn(),
+  ApiClient: {
+    fetchJob: vi.fn(),
+  },
 }));
 
 // Get the mocked function
-const mockFetchJob = vi.mocked(fetchJob);
+const mockFetchJob = vi.mocked(ApiClient.fetchJob);
 
 // Mock ShareRunButton
 vi.mock('../src/components/ShareRunButton.js', () => ({

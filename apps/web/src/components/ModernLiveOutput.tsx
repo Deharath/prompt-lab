@@ -125,7 +125,7 @@ export function ModernLiveOutput({
     if (status === 'streaming') {
       return (
         <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-          <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
           <span className="text-xs font-medium">Streaming...</span>
         </div>
       );
@@ -133,7 +133,7 @@ export function ModernLiveOutput({
     if (status === 'complete') {
       return (
         <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
-          <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+          <div className="h-2 w-2 bg-green-500 rounded-full" />
           <span className="text-xs font-medium">Complete</span>
         </div>
       );
@@ -141,7 +141,7 @@ export function ModernLiveOutput({
     if (status === 'error') {
       return (
         <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
-          <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+          <div className="h-2 w-2 bg-red-500 rounded-full" />
           <span className="text-xs font-medium">Error</span>
         </div>
       );

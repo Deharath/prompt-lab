@@ -36,10 +36,12 @@ export interface BatchItem {
   reference: string;
 }
 
+const DEFAULT_CONCURRENCY = 5;
+
 async function runBatch(
   openai: OpenAI,
   items: BatchItem[],
-  concurrency = 5,
+  concurrency = DEFAULT_CONCURRENCY,
 ): Promise<number[]> {
   const limit = pLimit(concurrency);
   return Promise.all(

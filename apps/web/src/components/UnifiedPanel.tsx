@@ -106,7 +106,7 @@ const UnifiedPanel = ({
               </svg>
               <span>Evaluation Results</span>
               {hasResults && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse" />
               )}
             </div>
           </button>

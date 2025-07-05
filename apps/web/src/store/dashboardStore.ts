@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchDashboardStats } from '../api.js';
+import { ApiClient } from '../api.js';
 import type { DashboardStats } from '../types/dashboard.js';
 
 interface DashboardState {
@@ -19,7 +19,7 @@ export const useDashboardStore = create<DashboardState>((set, _get) => ({
     set({ isLoading: true, error: null, days });
 
     try {
-      const data = await fetchDashboardStats(days);
+      const data = await ApiClient.fetchDashboardStats(days);
       set({ data, isLoading: false });
     } catch (error) {
       const errorMessage =

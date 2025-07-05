@@ -40,7 +40,7 @@ const ViewToggle = ({
         >
           Evaluation Results
           {hasResults && (
-            <span className="ml-2 inline-flex items-center justify-center w-2 h-2 bg-green-500 rounded-full"></span>
+            <span className="ml-2 inline-flex items-center justify-center w-2 h-2 bg-green-500 rounded-full" />
           )}
         </button>
       </div>

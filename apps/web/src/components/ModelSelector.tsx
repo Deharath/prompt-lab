@@ -141,7 +141,7 @@ const ModelSelector = ({
     {!compact && (
       <div className="p-3 rounded-lg border backdrop-blur-sm transition-colors duration-300 bg-blue-50/80 border-blue-200/50 dark:bg-blue-900/30 dark:border-blue-700/50">
         <div className="flex items-center space-x-2">
-          <div className="h-2 w-2 rounded-full transition-colors duration-300 bg-blue-500 dark:bg-blue-400"></div>
+          <div className="h-2 w-2 rounded-full transition-colors duration-300 bg-blue-500 dark:bg-blue-400" />
           <span className="text-xs font-medium transition-colors duration-300 text-blue-800 dark:text-blue-300">
             {provider === 'openai' ? 'OpenAI' : 'Google'} • {model}
           </span>

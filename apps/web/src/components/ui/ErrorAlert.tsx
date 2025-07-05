@@ -13,7 +13,7 @@ const ErrorAlert = ({ error }: ErrorAlertProps) => {
       data-testid="error-toast"
       className="relative overflow-hidden rounded-xl bg-red-50/80 backdrop-blur-sm border-2 border-red-200/60 shadow-lg ring-1 ring-red-200/20"
     >
-      <div className="absolute inset-0 bg-linear-to-r from-red-500/5 to-pink-500/5"></div>
+      <div className="absolute inset-0 bg-linear-to-r from-red-500/5 to-pink-500/5" />
       <div className="relative flex items-center space-x-4 p-6">
         {/* Icon */}
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 shadow-sm">
@@ -34,7 +34,7 @@ const ErrorAlert = ({ error }: ErrorAlertProps) => {
         <div className="flex-1">
           <div className="flex items-center space-x-2">
             <h3 className="text-sm font-semibold text-red-800">Error</h3>
-            <div className="h-1 w-1 bg-red-600 rounded-full"></div>
+            <div className="h-1 w-1 bg-red-600 rounded-full" />
             <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
               Failed
             </span>
@@ -45,9 +45,9 @@ const ErrorAlert = ({ error }: ErrorAlertProps) => {
         {/* Decorative element */}
         <div className="hidden sm:block">
           <div className="flex space-x-1">
-            <div className="w-2 h-8 bg-red-200 rounded-full opacity-60"></div>
-            <div className="w-2 h-6 bg-red-300 rounded-full opacity-80"></div>
-            <div className="w-2 h-4 bg-red-400 rounded-full"></div>
+            <div className="w-2 h-8 bg-red-200 rounded-full opacity-60" />
+            <div className="w-2 h-6 bg-red-300 rounded-full opacity-80" />
+            <div className="w-2 h-4 bg-red-400 rounded-full" />
           </div>
         </div>
       </div>

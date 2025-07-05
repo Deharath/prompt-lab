@@ -40,7 +40,7 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
         >
           {isRunning ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               <span>Running...</span>
             </div>
           ) : (

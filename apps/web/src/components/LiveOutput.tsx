@@ -122,7 +122,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
     if (status === 'streaming') {
       return (
         <span className="flex items-center space-x-1 text-green-400">
-          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
           <span className="text-xs">Streaming...</span>
         </span>
       );
@@ -130,7 +130,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
     if (status === 'complete') {
       return (
         <span className="flex items-center space-x-1 text-green-500">
-          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+          <span className="w-2 h-2 bg-green-500 rounded-full" />
           <span className="text-xs">Complete</span>
         </span>
       );
@@ -138,7 +138,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
     if (status === 'error') {
       return (
         <span className="flex items-center space-x-1 text-red-500">
-          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+          <span className="w-2 h-2 bg-red-500 rounded-full" />
           <span className="text-xs">Error</span>
         </span>
       );
@@ -422,7 +422,7 @@ export function LiveOutput({ outputText, status }: LiveOutputProps) {
           )}
         </div>
         {/* Gradient overlay for readability */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none transition-colors duration-300 bg-linear-to-t from-gray-900 to-transparent dark:from-black"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none transition-colors duration-300 bg-linear-to-t from-gray-900 to-transparent dark:from-black" />
       </div>
     </div>
   );

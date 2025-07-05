@@ -8,11 +8,13 @@ interface ConfigurationTabProps {
   temperature: number;
   topP: number;
   maxTokens: number;
+  selectedMetrics: any[];
   onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
   setTemperature: (temp: number) => void;
   setTopP: (topP: number) => void;
   setMaxTokens: (tokens: number) => void;
+  setSelectedMetrics: (metrics: any[]) => void;
 }
 
 /**
@@ -30,11 +32,13 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
   temperature,
   topP,
   maxTokens,
+  selectedMetrics,
   onProviderChange,
   onModelChange,
   setTemperature,
   setTopP,
   setMaxTokens,
+  setSelectedMetrics,
 }) => {
   return (
     <div
@@ -54,7 +58,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
             model={model}
             onProviderChange={onProviderChange}
             onModelChange={onModelChange}
-            compact={true}
+            compact
           />
         </div>
 

@@ -59,7 +59,27 @@ module.exports = [
     rules: {
       // Disable standard no-unused-vars in favor of TypeScript version
       'no-unused-vars': 'off',
-      // Basic TypeScript rules
+
+      // Code complexity and quality rules
+      complexity: ['error', 10],
+      'max-depth': ['error', 4],
+      'max-lines-per-function': [
+        'error',
+        { max: 50, skipBlankLines: true, skipComments: true },
+      ],
+      'max-nested-callbacks': ['error', 3],
+      'max-params': ['error', 4],
+      'no-console': ['warn'],
+      'no-debugger': 'error',
+      'no-duplicate-imports': 'error',
+      'no-magic-numbers': [
+        'warn',
+        { ignore: [-1, 0, 1, 2], ignoreArrayIndexes: true },
+      ],
+      'prefer-const': 'error',
+      'no-var': 'error',
+
+      // Basic TypeScript rules (not requiring type information)
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -71,10 +91,20 @@ module.exports = [
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'warn',
 
       // React rules
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'react/jsx-no-useless-fragment': 'error',
+      'react/jsx-boolean-value': ['error', 'never'],
+      'react/jsx-curly-brace-presence': [
+        'error',
+        { props: 'never', children: 'never' },
+      ],
+      'react/self-closing-comp': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
 
       // Prettier integration
       'prettier/prettier': 'error',
@@ -94,6 +124,24 @@ module.exports = [
         project: ['./packages/*/tsconfig.json', './apps/*/tsconfig.json'],
         tsconfigRootDir: __dirname,
       },
+    },
+    rules: {
+      // TypeScript rules requiring type information
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': [
+        'error',
+        {
+          allowString: true,
+          allowNumber: true,
+          allowNullableObject: true,
+          allowNullableBoolean: true,
+          allowNullableString: true,
+          allowNullableNumber: true,
+          allowAny: true,
+        },
+      ],
     },
   },
 

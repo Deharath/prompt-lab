@@ -1,4 +1,4 @@
-import LoadingSpinner from '../../components/LoadingSpinner.js';
+import { LoadingSpinner } from '../../components/ui/LoadingState.js';
 
 export const LoadingState = () => {
   return (

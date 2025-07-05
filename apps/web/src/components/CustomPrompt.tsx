@@ -260,7 +260,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
               >
                 {loadingTemplate === customTemplate ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     <span>Loading...</span>
                   </div>
                 ) : (
@@ -357,7 +357,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
                       >
                         {loadingTemplate === template.template ? (
                           <div className="flex items-center justify-center space-x-2">
-                            <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                            <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                             <span>Loading...</span>
                           </div>
                         ) : (

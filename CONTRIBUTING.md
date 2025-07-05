@@ -28,6 +28,20 @@ Thank you for your interest in contributing! Please follow these guidelines to e
    pnpm test
    ```
 
+## Frontend Component Organization
+
+**Component Directory Structure Rule:**
+
+A component must be placed in its own directory (e.g., `components/MyComponent/index.tsx`) if it has, or is expected to have, any of the following: sub-components, dedicated hooks, style files, or test files. Simple, single-file components can reside in a shared directory (e.g., `components/ui/Button.tsx`).
+
+**Hook Organization Rule:**
+
+New hooks should be created in their own file within the `hooks/` directory and have a single, clear responsibility. Each hook file should contain only one main hook and related helper functions. Avoid creating utility hook files that combine unrelated functionality.
+
+**Constants Organization Rule:**
+
+Static data like sample prompts, navigation items, and configuration constants should be moved to dedicated files in the `constants/` directory rather than being hardcoded within component files.
+
 ## Adding Packages or References
 
 - Update `tsconfig.json` references at the root.
@@ -37,8 +51,21 @@ Thank you for your interest in contributing! Please follow these guidelines to e
 
 ## Linting & Formatting
 
-- Run `pnpm lint` before committing. Zero warnings required for CI.
-- ESLint uses Airbnb+TS+Prettier. See `eslint.config.js` for details.
+- **Automated Quality Checks**: Run `pnpm lint` before committing. Zero warnings required for CI.
+- **Enhanced ESLint Rules**: Our configuration includes complexity limits, code quality checks, and best practices:
+  - Function complexity limit: 10
+  - Maximum function length: 50 lines
+  - Maximum function parameters: 4
+  - Magic number detection (use named constants)
+  - Prefer nullish coalescing (`??`) over logical OR (`||`)
+  - React best practices and hooks rules
+- **Pre-commit Hooks**: Husky automatically runs linting and formatting on staged files
+- **Base Configuration**: ESLint uses Airbnb+TS+Prettier. See `eslint.config.js` for details.
+- **Available Scripts**:
+  - `pnpm lint` - Run ESLint checks
+  - `pnpm format` - Format code with Prettier
+  - `pnpm quality:check` - Run lint, TypeScript checks, and tests
+  - `pnpm quality:fix` - Auto-fix formatting and linting issues
 - Test/config files may use devDependencies via overrides.
 
 ## Testing & Coverage

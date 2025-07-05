@@ -18,7 +18,7 @@ type TiktokenEncoding = import('@dqbd/tiktoken').TiktokenEncoding;
 
 // Lazy loading of tiktoken to handle WASM loading issues
 let tiktokenPromise: Promise<TiktokenModule | null> | null = null;
-let encodingCache: Map<string, Tiktoken> = new Map();
+const encodingCache: Map<string, Tiktoken> = new Map();
 
 async function getTiktoken() {
   if (!tiktokenPromise) {

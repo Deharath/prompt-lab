@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { listJobs } from '../api.js';
+import { ApiClient } from '../api.js';
 import type { JobSummary } from '../api.js';
 
 interface LogLine {
@@ -92,7 +92,7 @@ export const useJobStore = create<JobState>((set) => ({
   },
   loadHistory: async () => {
     try {
-      const history = await listJobs();
+      const history = await ApiClient.listJobs();
       set({ history });
     } catch (err) {
       console.error('Failed to load history', err);

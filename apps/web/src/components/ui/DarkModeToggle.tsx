@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDarkModeStore } from '../store/darkModeStore.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface DarkModeToggleProps {
   compact?: boolean;

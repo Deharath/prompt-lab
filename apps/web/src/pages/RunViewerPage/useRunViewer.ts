@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchJob } from '../../api.js';
+import { ApiClient } from '../../api.js';
 import type { JobDetails } from './types.js';
 
 export const useRunViewer = () => {
@@ -38,7 +38,7 @@ export const useRunViewer = () => {
       try {
         setLoading(true);
         setError(null);
-        const jobData = (await fetchJob(id)) as JobDetails;
+        const jobData = await ApiClient.fetchJob(id);
         setJob(jobData);
 
         // Set page title

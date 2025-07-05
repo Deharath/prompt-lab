@@ -276,14 +276,3 @@ export class ApiClient {
   }
 }
 
-// Legacy exports for backward compatibility
-export const createJob = ApiClient.createJob.bind(ApiClient);
-export const fetchJob = ApiClient.fetchJob.bind(ApiClient);
-export const streamJob = ApiClient.streamJob.bind(ApiClient);
-export const listJobs = ApiClient.listJobs.bind(ApiClient);
-export const diffJobs = ApiClient.diffJobs.bind(ApiClient);
-export const fetchDashboardStats =
-  ApiClient.fetchDashboardStats.bind(ApiClient);
-export const deleteJob = ApiClient.deleteJob.bind(ApiClient);
-export const fetchQualitySummary =
-  ApiClient.fetchQualitySummary.bind(ApiClient);

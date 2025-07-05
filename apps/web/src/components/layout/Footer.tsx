@@ -49,7 +49,7 @@ const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
                 PromptLab
               </span>
             </div>
-            <div className="h-4 w-px bg-border"></div>
+            <div className="h-4 w-px bg-border" />
             <span className="text-xs text-muted-foreground">v1.0.0</span>
           </div>
 
@@ -80,7 +80,7 @@ const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
           {/* Right section - Status */}
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-xs text-muted-foreground">
                 All systems operational
               </span>

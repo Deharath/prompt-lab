@@ -300,7 +300,7 @@ const ResultsPanel = ({
             } found`;
             unit =
               'matchPercentage' in kw && typeof kw.matchPercentage === 'number'
-                ? `(${((kw.matchPercentage as number) || 0).toFixed(1)}%)`
+                ? `(${(kw.matchPercentage || 0).toFixed(1)}%)`
                 : '';
           } else {
             formattedValue = JSON.stringify(value);

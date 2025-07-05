@@ -17,7 +17,7 @@ import type { BaseComponentProps } from '../../types/global.js';
 import Header from './Header.js';
 import Sidebar from './Sidebar.js';
 import Footer from './Footer.js';
-import LoadingSpinner from '../LoadingSpinner.js';
+import { LoadingSpinner } from '../ui/LoadingState.js';
 import ErrorBoundary from '../ErrorBoundary.js';
 
 interface MainLayoutProps extends BaseComponentProps {

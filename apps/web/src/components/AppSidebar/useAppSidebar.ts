@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJob, listJobs, deleteJob } from '../../api.js';
+import { ApiClient } from '../../api.js';
 import { useJobStore } from '../../store/jobStore.js';
 import type { JobSummary, DeleteConfirmation, TabType } from './types.js';
 
@@ -53,68 +53,83 @@ export const useAppSidebar = (
   const jobListRef = useRef<HTMLDivElement>(null);
 
   // Use TanStack Query for history data with auto-refresh
-  const { data: history = [], isLoading } = useQuery({
+  const { data: history = [], isLoading, error } = useQuery<JobSummary[]>({
     queryKey: ['jobs'],
-    queryFn: listJobs,
+    queryFn: () => {
+      if (!ApiClient) {
+        throw new Error('ApiClient is not available');
+      }
+      return ApiClient.listJobs();
+    },
     staleTime: 1000 * 5, // 5 seconds
     refetchInterval: 1000 * 15, // Refetch every 15 seconds for live updates
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchOnMount: true, // Always refetch on mount
   });
 
-  // Issue #1 fix: Immediately refresh history when job finishes
-  const prevRunning = useRef(running);
-  useEffect(() => {
-    if (prevRunning.current && !running) {
-      // Job just finished, immediately refresh history
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    }
-    prevRunning.current = running;
-  }, [running, queryClient]);
+  // Log any errors for debugging - TEMPORARILY DISABLED
+  // useEffect(() => {
+  //   if (error) {
+  //     console.error('History loading error:', error);
+  //   }
+  // }, [error]);
 
-  // Keyboard navigation for job list
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isCollapsed || history.length === 0) return;
+  // Issue #1 fix: Immediately refresh history when job finishes - TEMPORARILY DISABLED
+  // TODO: Fix queryClient dependency causing infinite loop
+  // const prevRunning = useRef(running);
+  // useEffect(() => {
+  //   if (prevRunning.current && !running) {
+  //     // Job just finished, immediately refresh history
+  //     queryClient.invalidateQueries({ queryKey: ['jobs'] });
+  //   }
+  //   prevRunning.current = running;
+  // }, [running, queryClient]);
 
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setFocusedJobIndex((prev) =>
-            prev < history.length - 1 ? prev + 1 : prev,
-          );
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setFocusedJobIndex((prev) => (prev > 0 ? prev - 1 : prev));
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (focusedJobIndex >= 0 && focusedJobIndex < history.length) {
-            handleSelect(history[focusedJobIndex].id);
-          }
-          break;
-        case 'Delete':
-        case 'Backspace':
-          e.preventDefault();
-          if (focusedJobIndex >= 0 && focusedJobIndex < history.length) {
-            const mockEvent = { stopPropagation: () => {} } as React.MouseEvent;
-            handleDelete(history[focusedJobIndex].id, mockEvent);
-          }
-          break;
-        case 'Escape':
-          setFocusedJobIndex(-1);
-          break;
-      }
-    };
+  // Keyboard navigation for job list - TEMPORARILY DISABLED to fix infinite loop
+  // TODO: Fix dependencies to re-enable keyboard navigation
+  // const historyLength = history.length;
+  // useEffect(() => {
+  //   const handleKeyDown = (e: KeyboardEvent) => {
+  //     if (isCollapsed || historyLength === 0) return;
 
-    if (jobListRef.current) {
-      jobListRef.current.addEventListener('keydown', handleKeyDown);
-      return () => {
-        jobListRef.current?.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [focusedJobIndex, history, isCollapsed]);
+  //     switch (e.key) {
+  //       case 'ArrowDown':
+  //         e.preventDefault();
+  //         setFocusedJobIndex((prev) =>
+  //           prev < historyLength - 1 ? prev + 1 : prev,
+  //         );
+  //         break;
+  //       case 'ArrowUp':
+  //         e.preventDefault();
+  //         setFocusedJobIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  //         break;
+  //       case 'Enter':
+  //         e.preventDefault();
+  //         if (focusedJobIndex >= 0 && focusedJobIndex < historyLength) {
+  //           handleSelect(history[focusedJobIndex].id);
+  //         }
+  //         break;
+  //       case 'Delete':
+  //       case 'Backspace':
+  //         e.preventDefault();
+  //         if (focusedJobIndex >= 0 && focusedJobIndex < historyLength) {
+  //           const mockEvent = { stopPropagation: () => {} } as React.MouseEvent;
+  //           handleDelete(history[focusedJobIndex].id, mockEvent);
+  //         }
+  //         break;
+  //       case 'Escape':
+  //         setFocusedJobIndex(-1);
+  //         break;
+  //     }
+  //   };
+
+  //   if (jobListRef.current) {
+  //     jobListRef.current.addEventListener('keydown', handleKeyDown);
+  //     return () => {
+  //       jobListRef.current?.removeEventListener('keydown', handleKeyDown);
+  //     };
+  //   }
+  // }, [focusedJobIndex, historyLength, isCollapsed]);
 
   // Delete handler with custom confirmation modal - Issue #2 fix
   const handleDelete = async (jobId: string, event: React.MouseEvent) => {
@@ -141,7 +156,7 @@ export const useAppSidebar = (
       }
 
       // Make API call
-      await deleteJob(jobId);
+      await ApiClient.deleteJob(jobId);
 
       // Invalidate query to refresh from server
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
@@ -170,7 +185,7 @@ export const useAppSidebar = (
 
     try {
       reset();
-      const job = await fetchJob(id);
+      const job = await ApiClient.fetchJob(id);
       start({
         id: job.id,
         status: job.status,
@@ -207,6 +222,7 @@ export const useAppSidebar = (
     deleteConfirmation,
     history,
     isLoading,
+    error,
 
     // Store values
     comparison,

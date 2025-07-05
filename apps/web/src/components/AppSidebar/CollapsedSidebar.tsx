@@ -124,7 +124,7 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
           >
             {isRunning ? (
               <>
-                <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
+                <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
                 <span className="text-[10px] font-medium mt-1">Running</span>
               </>
             ) : (

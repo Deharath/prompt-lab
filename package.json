@@ -25,7 +25,10 @@
     "deps:check": "depcheck --ignores='@types/*,@testing-library/*,@vitejs/*,@vitest/*,eslint-*,@eslint/*,typescript,react-dom,better-sqlite3,get-port,rimraf,supertest,@jridgewell/set-array' --ignore-patterns='scripts/**/*'",
     "deps:update": "pnpm update --recursive --latest",
     "prepare": "husky",
-    "migrate": "pnpm exec tsx scripts/migrate.ts"
+    "migrate": "pnpm exec tsx scripts/migrate.ts",
+    "quality:check": "pnpm lint && pnpm tsc && pnpm test",
+    "quality:fix": "pnpm format && pnpm lint --fix",
+    "pre-push": "pnpm quality:check"
   },
   "engines": {
     "node": ">=18.0.0",

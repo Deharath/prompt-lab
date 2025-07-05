@@ -3,12 +3,14 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import DashboardPage from '../src/pages/DashboardPage.js';
-import * as api from '../src/api.js';
+import { ApiClient } from '../src/api.js';
 import { useDashboardStore } from '../src/store/dashboardStore.js';
 
 // Mock the API module
 vi.mock('../src/api.js', () => ({
-  fetchDashboardStats: vi.fn(),
+  ApiClient: {
+    fetchDashboardStats: vi.fn(),
+  },
 }));
 
 // Mock Recharts components to avoid ResizeObserver issues
@@ -64,7 +66,7 @@ describe('DashboardPage', () => {
 
   it('shows loading indicator initially and renders charts after successful data fetch', async () => {
     // Mock successful API response
-    const mockFetchDashboardStats = vi.mocked(api.fetchDashboardStats);
+    const mockFetchDashboardStats = vi.mocked(ApiClient.fetchDashboardStats);
     mockFetchDashboardStats.mockResolvedValue(mockDashboardData);
 
     renderWithRouter(<DashboardPage />);
@@ -83,7 +85,7 @@ describe('DashboardPage', () => {
 
   it('displays error message when API call fails', async () => {
     // Mock API error
-    const mockFetchDashboardStats = vi.mocked(api.fetchDashboardStats);
+    const mockFetchDashboardStats = vi.mocked(ApiClient.fetchDashboardStats);
     mockFetchDashboardStats.mockRejectedValue(
       new Error('Failed to fetch data'),
     );

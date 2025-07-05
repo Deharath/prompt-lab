@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { listJobs } from '../api.js';
+import { ApiClient, type JobSummary } from '../api.js';
 import { useJobStore } from '../store/jobStore.js';
 
 interface HistoryDrawerProps {
@@ -19,9 +19,9 @@ const HistoryDrawer = ({ open, onClose }: HistoryDrawerProps) => {
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [isCompareMode, setIsCompareMode] = useState(false);
 
-  const { data: jobs = [] } = useQuery({
+  const { data: jobs = [] } = useQuery<JobSummary[]>({
     queryKey: ['jobs'],
-    queryFn: listJobs,
+    queryFn: ApiClient.listJobs,
   });
 
   const handleJobSelect = (jobId: string) => {

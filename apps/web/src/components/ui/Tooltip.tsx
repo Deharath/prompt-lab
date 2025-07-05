@@ -35,7 +35,7 @@ const Tooltip = ({ content, children }: TooltipProps) => {
           }}
           role="tooltip"
         >
-          <div className="absolute -top-1 left-1/2 -ml-1 h-2 w-2 rotate-45 bg-black bg-opacity-90"></div>
+          <div className="absolute -top-1 left-1/2 -ml-1 h-2 w-2 rotate-45 bg-black bg-opacity-90" />
           {content}
         </div>
       )}

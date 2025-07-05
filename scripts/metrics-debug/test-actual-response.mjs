@@ -21,13 +21,15 @@ console.log('Text length:', actualJobResponse.length, 'characters');
 console.log('Text preview:', actualJobResponse.substring(0, 200) + '...');
 
 calculateReadabilityScores(actualJobResponse)
-  .then(scores => {
+  .then((scores) => {
     console.log('\nReadability scores:', scores);
-    
+
     if (scores.fleschReadingEase === 0) {
       console.log('\n❌ PROBLEM FOUND: Flesch Reading Ease is 0!');
-      console.log('This indicates an issue with the text-readability-ts calculation for this specific text.');
-      
+      console.log(
+        'This indicates an issue with the text-readability-ts calculation for this specific text.',
+      );
+
       // Test with simpler text to see if it's the formatting
       const simpleText = actualJobResponse
         .replace(/###/g, '')
@@ -35,7 +37,7 @@ calculateReadabilityScores(actualJobResponse)
         .replace(/- /g, '')
         .replace(/\n+/g, ' ')
         .trim();
-      
+
       console.log('\nTesting with simplified text (no markdown)...');
       return calculateReadabilityScores(simpleText);
     } else {
@@ -43,17 +45,21 @@ calculateReadabilityScores(actualJobResponse)
       return null;
     }
   })
-  .then(simplifiedScores => {
+  .then((simplifiedScores) => {
     if (simplifiedScores) {
       console.log('Simplified text scores:', simplifiedScores);
-      
+
       if (simplifiedScores.fleschReadingEase === 0) {
-        console.log('❌ Still 0 even with simplified text - deeper issue with text-readability-ts');
+        console.log(
+          '❌ Still 0 even with simplified text - deeper issue with text-readability-ts',
+        );
       } else {
-        console.log('✓ Simplified text works - the issue is with markdown formatting');
+        console.log(
+          '✓ Simplified text works - the issue is with markdown formatting',
+        );
       }
     }
   })
-  .catch(error => {
+  .catch((error) => {
     console.error('Error testing readability:', error);
   });

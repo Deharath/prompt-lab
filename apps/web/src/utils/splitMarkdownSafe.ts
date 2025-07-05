@@ -10,7 +10,7 @@ export function splitMarkdownSafe(buf: string): {
   let inInlineCode = false;
   let bracketStack = 0;
   let parenStack = 0;
-  let emphasisStack: string[] = []; // Stack to track emphasis markers
+  const emphasisStack: string[] = []; // Stack to track emphasis markers
   let i = 0;
   let lastSafePosition = 0; // Track the last position that was completely safe
 

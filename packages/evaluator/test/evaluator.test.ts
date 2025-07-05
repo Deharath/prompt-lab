@@ -2,6 +2,12 @@ import { describe, it, expect, vi, type Mock } from 'vitest';
 import type OpenAI from 'openai';
 import { applyTemplate, scorePair, runBatch, BatchItem } from '../src/index.js';
 
+// Constants to avoid magic numbers
+const TEST_VECTOR_MAGNITUDE = 5;
+const CONCURRENCY_LIMIT = 1;
+const DELAY_MS = 10;
+const EXPECTED_TOTAL_CALLS = 4;
+
 class MockOpenAI {
   embeddings = {
     create: vi.fn(async ({ input }: { input: string }) => {
@@ -29,7 +35,7 @@ describe('scorePair', () => {
       b: [1, 0],
     }) as unknown as OpenAI;
     const score = await scorePair(openai, 'a', 'b');
-    const expected = 1 / Math.sqrt(5); // dot=1, |a|=sqrt(5), |b|=1
+    const expected = 1 / Math.sqrt(TEST_VECTOR_MAGNITUDE); // dot=1, |a|=sqrt(5), |b|=1
     expect(score).toBeCloseTo(expected);
     expect(
       (openai as unknown as { embeddings: { create: Mock } }).embeddings.create,
@@ -53,7 +59,7 @@ describe('runBatch', () => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise<void>((resolve) => {
-          setTimeout(resolve, 10);
+          setTimeout(resolve, DELAY_MS);
         });
         inFlight -= 1;
         calls.push(input);
@@ -68,10 +74,10 @@ describe('runBatch', () => {
       { prediction: 'x', reference: 'y' },
     ];
 
-    const scores = await runBatch(openai, items, 1);
+    const scores = await runBatch(openai, items, CONCURRENCY_LIMIT);
 
     expect(scores).toEqual([1, 1]);
     expect(maxInFlight).toBeLessThanOrEqual(2);
-    expect(calls).toHaveLength(4); // 2 items * 2 calls each
+    expect(calls).toHaveLength(EXPECTED_TOTAL_CALLS); // 2 items * 2 calls each
   });
 });

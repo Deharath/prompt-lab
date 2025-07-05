@@ -5,6 +5,7 @@ import type { JobSummary, ComparisonState } from './types.js';
 interface HistoryTabProps {
   history: JobSummary[];
   isLoading: boolean;
+  error?: Error | null;
   compareMode: boolean;
   comparison: ComparisonState;
   focusedJobIndex: number;
@@ -27,6 +28,7 @@ interface HistoryTabProps {
 const HistoryTab: React.FC<HistoryTabProps> = ({
   history,
   isLoading,
+  error,
   compareMode,
   comparison,
   focusedJobIndex,
@@ -94,10 +96,40 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
 
       {/* History Content - Scrollable */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {isLoading ? (
+        {error ? (
+          <div className="p-6 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg
+                className="w-6 h-6 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h4 className="text-sm font-semibold text-foreground mb-2">
+              Failed to load history
+            </h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              {error.message || 'Unable to fetch evaluation history'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs text-blue-600 hover:text-blue-700 underline"
+            >
+              Reload page
+            </button>
+          </div>
+        ) : isLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
               <span className="text-sm text-muted-foreground">Loading...</span>
             </div>
           </div>

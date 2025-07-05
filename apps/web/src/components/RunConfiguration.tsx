@@ -32,7 +32,7 @@ const RunConfiguration = ({
         step={0.01}
         decimals={2}
         description="Higher values make output more random, lower values make it more deterministic"
-        compact={true}
+        compact
       />
 
       {/* Top P Slider */}
@@ -45,7 +45,7 @@ const RunConfiguration = ({
         step={0.01}
         decimals={2}
         description="Controls diversity by limiting the cumulative probability of token selection"
-        compact={true}
+        compact
       />
 
       {/* Max Tokens Input */}

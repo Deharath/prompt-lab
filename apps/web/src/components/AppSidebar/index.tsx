@@ -50,6 +50,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     deleteConfirmation,
     history,
     isLoading,
+    error,
 
     // Store values
     comparison,
@@ -115,6 +116,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             <HistoryTab
               history={history}
               isLoading={isLoading}
+              error={error}
               compareMode={compareMode}
               comparison={comparison}
               focusedJobIndex={focusedJobIndex}

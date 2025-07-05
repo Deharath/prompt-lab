@@ -13,7 +13,7 @@ import {
 import { useDashboardStore } from '../store/dashboardStore.js';
 import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/TimeRangeSelector.js';
-import LoadingSpinner from '../components/LoadingSpinner.js';
+import { LoadingSpinner } from '../components/ui/LoadingState.js';
 import ErrorMessage from '../components/ErrorMessage.js';
 import { QualitySummaryDashboard } from '../components/QualitySummaryDashboard.js';
 
