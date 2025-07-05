@@ -1,10 +1,18 @@
 import React from 'react';
-import Card from '../ui/Card';
-import StatCard from '../ui/StatCard';
-import { calculateMetricStats } from './metrics-calculator';
-import { DiffMetricsTable } from './DiffMetricsTable';
+import Card from '../ui/Card.js';
+import StatCard from '../ui/StatCard.js';
+import { calculateMetricStats } from './metrics-calculator.js';
+import { DiffMetricsTable } from './DiffMetricsTable.js';
 
-export const DiffMetrics = ({ baseJob, compareJob }) => {
+interface DiffMetricsProps {
+  baseJob: any; // TODO: Add proper Job type
+  compareJob: any; // TODO: Add proper Job type
+}
+
+export const DiffMetrics: React.FC<DiffMetricsProps> = ({
+  baseJob,
+  compareJob,
+}) => {
   const metricStats = calculateMetricStats(baseJob, compareJob);
 
   return (
@@ -14,7 +22,7 @@ export const DiffMetrics = ({ baseJob, compareJob }) => {
         role="region"
         aria-label="Metrics comparison overview"
       >
-        {metricStats.slice(0, 4).map((stat) => (
+        {metricStats.slice(0, 4).map((stat: any) => (
           <StatCard
             key={stat.key}
             title={stat.label}

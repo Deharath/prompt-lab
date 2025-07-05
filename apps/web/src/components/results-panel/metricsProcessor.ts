@@ -1,5 +1,5 @@
-import { metricConfig } from './metric-config';
-import { formatSentiment, formatNumber, formatObject } from './formatters';
+import { metricConfig } from './metric-config.js';
+import { formatSentiment, formatNumber, formatObject } from './formatters.js';
 
 export const processMetrics = (metrics: Record<string, unknown>) => {
   const categories: Record<

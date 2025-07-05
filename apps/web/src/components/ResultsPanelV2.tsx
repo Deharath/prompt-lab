@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { processMetrics } from './results-panel/metricsProcessor';
-import { MetricSection } from './results-panel/MetricSection';
+import { processMetrics } from './results-panel/metricsProcessor.js';
+import { MetricSection } from './results-panel/MetricSection.js';
 
 interface ResultsPanelProps {
   metrics: Record<string, unknown> | undefined;
@@ -111,7 +111,7 @@ const ResultsPanelV2 = ({
             />
 
             {Object.values(categorizedMetrics).every(
-              (cat) => cat.length === 0,
+              (cat: any) => cat.length === 0,
             ) && (
               <div className="text-muted-foreground py-4 text-center">
                 <p className="text-sm">No metrics available</p>

@@ -37,7 +37,7 @@ const mockJobStreaming = {
   streamStatus: 'complete' as 'streaming' | 'complete' | 'error',
   isExecuting: false,
   executeJob: vi.fn(),
-  error: null,
+  error: null as string | null,
 };
 
 vi.mock('../src/store/jobStore.js', () => ({

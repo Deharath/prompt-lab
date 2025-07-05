@@ -1,6 +1,14 @@
 import React from 'react';
 
-export const DiffTabs = ({ activeTab, setActiveTab }) => (
+interface DiffTabsProps {
+  activeTab: 'output' | 'metrics';
+  setActiveTab: (tab: 'output' | 'metrics') => void;
+}
+
+export const DiffTabs: React.FC<DiffTabsProps> = ({
+  activeTab,
+  setActiveTab,
+}) => (
   <div
     className="bg-muted flex space-x-1 rounded-lg p-1"
     role="tablist"

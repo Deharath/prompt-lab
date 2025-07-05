@@ -1,7 +1,7 @@
 import React from 'react';
-import { useLiveOutput } from '../../hooks/useLiveOutput';
-import { LiveOutputHeader } from './live-output/LiveOutputHeader';
-import { LiveOutputDisplay } from './live-output/LiveOutputDisplay';
+import { useLiveOutput } from '../hooks/useLiveOutput.js';
+import { LiveOutputHeader } from './live-output/LiveOutputHeader.js';
+import { LiveOutputDisplay } from './live-output/LiveOutputDisplay.js';
 
 interface LiveOutputProps {
   outputText: string;

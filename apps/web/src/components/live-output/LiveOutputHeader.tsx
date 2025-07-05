@@ -1,6 +1,14 @@
 import React from 'react';
 
-export const LiveOutputHeader = ({
+interface LiveOutputHeaderProps {
+  status: 'idle' | 'streaming' | 'complete' | 'error';
+  viewMode: 'rendered' | 'raw';
+  setViewMode: (mode: 'rendered' | 'raw') => void;
+  copied: boolean;
+  handleCopy: () => void;
+}
+
+export const LiveOutputHeader: React.FC<LiveOutputHeaderProps> = ({
   status,
   viewMode,
   setViewMode,

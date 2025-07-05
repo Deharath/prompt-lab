@@ -1,6 +1,18 @@
 import React from 'react';
+import type { JobDetails } from '../../api.js';
 
-const format = (val: number | undefined) =>
+export interface MetricStat {
+  key: string;
+  label: string;
+  baseValue?: number;
+  compareValue?: number;
+  delta?: number;
+  percentChange?: number;
+  rawDelta?: number;
+  isImprovement?: boolean;
+}
+
+const format = (val: number | null | undefined) =>
   val === undefined || val === null ? 'N/A' : val.toFixed(3);
 
 const isImprovement = (key: string, delta: number) => {
@@ -15,7 +27,17 @@ const isImprovement = (key: string, delta: number) => {
   return delta >= 0;
 };
 
-export const DiffMetricsTable = ({ metricStats, baseJob, compareJob }) => (
+interface DiffMetricsTableProps {
+  metricStats: MetricStat[];
+  baseJob: JobDetails;
+  compareJob: JobDetails;
+}
+
+export const DiffMetricsTable: React.FC<DiffMetricsTableProps> = ({
+  metricStats,
+  baseJob,
+  compareJob,
+}) => (
   <table className="w-full" role="table" aria-label="Detailed metrics data">
     <thead className="bg-muted/30 border-border border-b">
       <tr>
@@ -46,7 +68,7 @@ export const DiffMetricsTable = ({ metricStats, baseJob, compareJob }) => (
       </tr>
     </thead>
     <tbody className="divide-border divide-y">
-      {metricStats.map((stat) => (
+      {metricStats.map((stat: MetricStat) => (
         <tr key={stat.key} className="hover:bg-muted/20">
           <td
             className="text-foreground px-4 py-3 text-sm font-medium"
@@ -65,7 +87,7 @@ export const DiffMetricsTable = ({ metricStats, baseJob, compareJob }) => (
               stat.isImprovement ? 'text-success' : 'text-error'
             }`}
           >
-            {stat.rawDelta > 0 ? '+' : ''}
+            {stat.rawDelta !== undefined && stat.rawDelta > 0 ? '+' : ''}
             {format(stat.rawDelta)}
           </td>
         </tr>

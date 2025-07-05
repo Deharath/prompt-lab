@@ -1,8 +1,17 @@
 import React from 'react';
 import DiffViewer from 'react-diff-viewer-continued';
-import Card from '../ui/Card';
+import Card from '../ui/Card.js';
+import type { JobDetails } from '../../api.js';
 
-export const DiffOutput = ({ baseJob, compareJob }) => (
+interface DiffOutputProps {
+  baseJob: JobDetails;
+  compareJob: JobDetails;
+}
+
+export const DiffOutput: React.FC<DiffOutputProps> = ({
+  baseJob,
+  compareJob,
+}) => (
   <div role="tabpanel" id="output-panel" aria-labelledby="output-tab">
     <Card title="Output Comparison">
       <div className="p-6" role="region" aria-label="Output diff viewer">

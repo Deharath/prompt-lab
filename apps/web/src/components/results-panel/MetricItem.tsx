@@ -4,7 +4,17 @@ const getScoreColor = (_value: unknown, _key: string): string => {
   return 'text-foreground';
 };
 
-export const MetricItem = ({
+interface MetricItemProps {
+  name: string;
+  value: any;
+  unit?: string;
+  description?: string;
+  originalValue?: any;
+  originalKey?: string;
+  index?: number;
+}
+
+export const MetricItem: React.FC<MetricItemProps> = ({
   name,
   value,
   unit,

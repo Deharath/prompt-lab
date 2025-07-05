@@ -297,7 +297,7 @@ const renderSection = (
   title: string,
   icon: string,
   categoryKey: string,
-  categorizedMetrics,
+  categorizedMetrics: any,
 ) => {
   const categoryMetrics = categorizedMetrics[categoryKey];
   if (!categoryMetrics || categoryMetrics.length === 0) return null;
@@ -309,7 +309,7 @@ const renderSection = (
         <h4 className="text-foreground text-sm font-semibold">{title}</h4>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {categoryMetrics.map(([name, value, unit, description]) =>
+        {categoryMetrics.map(([name, value, unit, description]: any[]) =>
           renderMetric(
             name,
             value,

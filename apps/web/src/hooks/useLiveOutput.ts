@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { splitMarkdownSafe } from '../../utils/splitMarkdownSafe';
+import { splitMarkdownSafe } from '../utils/splitMarkdownSafe.js';
 
 export const useLiveOutput = (outputText: string, status: string) => {
   const [viewMode, setViewMode] = useState<'rendered' | 'raw'>('rendered');

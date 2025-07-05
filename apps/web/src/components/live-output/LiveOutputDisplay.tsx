@@ -1,7 +1,14 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
-export const LiveOutputDisplay = ({
+interface LiveOutputDisplayProps {
+  outputRef: React.RefObject<HTMLDivElement | null>;
+  viewMode: 'rendered' | 'raw';
+  safeMarkdown: string;
+  outputText: string;
+}
+
+export const LiveOutputDisplay: React.FC<LiveOutputDisplayProps> = ({
   outputRef,
   viewMode,
   safeMarkdown,

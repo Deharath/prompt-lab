@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Page } from './Page';
+import { Page } from './Page.js';
 
 const meta = {
   title: 'Example/Page',
@@ -20,7 +20,7 @@ export const LoggedOut: Story = {};
 
 // More on component testing: https://storybook.js.org/docs/writing-tests/interaction-testing
 export const LoggedIn: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement }: any) => {
     const canvas = within(canvasElement);
     const loginButton = canvas.getByRole('button', { name: /Log in/i });
     await expect(loginButton).toBeInTheDocument();

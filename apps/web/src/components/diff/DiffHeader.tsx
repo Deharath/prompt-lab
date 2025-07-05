@@ -2,7 +2,17 @@ import React from 'react';
 import Card from '../ui/Card.js';
 import Button from '../ui/Button.js';
 
-export const DiffHeader = ({ baseJobId, compareJobId, onClose }) => (
+interface DiffHeaderProps {
+  baseJobId: string;
+  compareJobId: string;
+  onClose: () => void;
+}
+
+export const DiffHeader: React.FC<DiffHeaderProps> = ({
+  baseJobId,
+  compareJobId,
+  onClose,
+}) => (
   <Card>
     <div className="flex items-center justify-between p-4">
       <div>

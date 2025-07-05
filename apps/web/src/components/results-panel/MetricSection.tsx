@@ -1,7 +1,35 @@
 import React from 'react';
-import { MetricItem } from './MetricItem';
+import { MetricItem } from './MetricItem.js';
 
-export const MetricSection = ({ title, icon, metrics }) => {
+export interface MetricData {
+  name: string;
+  value: string | number;
+  unit?: string;
+  description?: string;
+  originalValue?: string | number;
+  originalKey?: string;
+}
+
+export type MetricTuple = [
+  name: string,
+  value: string | number,
+  unit?: string,
+  description?: string,
+  originalValue?: unknown,
+  originalKey?: string,
+];
+
+interface MetricSectionProps {
+  title: string;
+  icon: React.ReactNode;
+  metrics: MetricTuple[];
+}
+
+export const MetricSection: React.FC<MetricSectionProps> = ({
+  title,
+  icon,
+  metrics,
+}) => {
   if (!metrics || metrics.length === 0) return null;
 
   return (
@@ -13,8 +41,15 @@ export const MetricSection = ({ title, icon, metrics }) => {
       <div className="space-y-1">
         {metrics.map(
           (
-            [name, value, unit, description, originalValue, originalKey],
-            index,
+            [
+              name,
+              value,
+              unit,
+              description,
+              originalValue,
+              originalKey,
+            ]: MetricTuple,
+            index: number,
           ) => (
             <MetricItem
               key={index}
