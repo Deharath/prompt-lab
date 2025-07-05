@@ -59,7 +59,7 @@ export async function calculateMetrics(
 
         case 'sentiment': {
           const sentimentResult = await analyzeSentiment(text);
-          results.sentiment = sentimentResult.compound;
+          results.sentiment = sentimentResult; // Store full sentiment object
           results.sentiment_detailed = sentimentResult;
           break;
         }

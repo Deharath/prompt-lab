@@ -56,33 +56,16 @@ const jobsWriteRateLimit = rateLimit({
   skip: (req) => req.method === 'GET', // Skip rate limiting for GET requests (reading history)
 });
 
-// More permissive rate limiting for all jobs operations
-const jobsReadRateLimit = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.globalMax * 2, // Allow more reads than general global limit
-  message: { error: 'Too many job requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => req.method !== 'GET', // Only apply to GET requests
-});
-
-// Global rate limiting (more permissive)
-const globalRateLimit = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.globalMax,
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(globalRateLimit);
+// Remove global and read rate limits, only apply write rate limit to POST /jobs
 
 app.use('/health', healthRouter);
 app.get('/health', (_req, res) => {
   res.redirect('/health/');
 });
 
-app.use('/jobs', jobsReadRateLimit, jobsWriteRateLimit, jobsRouter);
+// Apply jobsWriteRateLimit only to POST /jobs
+app.post('/jobs', jobsWriteRateLimit);
+app.use('/jobs', jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api', qualitySummaryRouter);
 

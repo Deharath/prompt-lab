@@ -3,7 +3,7 @@ import {
   countTokensAsync,
   formatTokenCount,
 } from '../utils/tokenCounter.js';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Props {
   value: string;
@@ -13,6 +13,7 @@ interface Props {
 
 const PromptEditor = ({ value, onChange, model = 'gpt-4o-mini' }: Props) => {
   const [tokenCount, setTokenCount] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Calculate tokens - try async first, fallback to sync
   useEffect(() => {
@@ -29,34 +30,118 @@ const PromptEditor = ({ value, onChange, model = 'gpt-4o-mini' }: Props) => {
     updateTokenCount();
   }, [value, model]);
 
+  // Robust auto-resize with proper height calculation
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const minHeight = 128;
+
+      // Get current height, handling initial state properly
+      const currentHeight = textarea.offsetHeight;
+
+      // Create helper element with precise style matching
+      const helper = document.createElement('textarea');
+      const textareaStyles = window.getComputedStyle(textarea);
+
+      // Copy only the styles that affect text layout and height calculation
+      helper.style.position = 'absolute';
+      helper.style.visibility = 'hidden';
+      helper.style.top = '-9999px';
+      helper.style.left = '-9999px';
+      helper.style.height = 'auto';
+      helper.style.minHeight = '0';
+      helper.style.maxHeight = 'none';
+      helper.style.resize = 'none';
+      helper.style.overflow = 'hidden';
+
+      // Copy critical styles for accurate measurement
+      helper.style.width = textarea.offsetWidth + 'px'; // Exact width including padding/border
+      helper.style.fontFamily = textareaStyles.fontFamily;
+      helper.style.fontSize = textareaStyles.fontSize;
+      helper.style.fontWeight = textareaStyles.fontWeight;
+      helper.style.lineHeight = textareaStyles.lineHeight;
+      helper.style.letterSpacing = textareaStyles.letterSpacing;
+      helper.style.wordSpacing = textareaStyles.wordSpacing;
+      helper.style.padding = textareaStyles.padding;
+      helper.style.border = textareaStyles.border;
+      helper.style.boxSizing = textareaStyles.boxSizing;
+      helper.style.whiteSpace = textareaStyles.whiteSpace;
+      helper.style.wordWrap = textareaStyles.wordWrap;
+      helper.style.wordBreak = textareaStyles.wordBreak;
+
+      helper.value = value;
+
+      document.body.appendChild(helper);
+
+      // Get required height with minimal, consistent buffer
+      const rawRequiredHeight = helper.scrollHeight;
+
+      // Use minimal, consistent buffer - just enough to prevent cramping
+      const minimalBuffer = 6; // Simple 6px buffer for all content
+      const requiredHeight = Math.max(
+        minHeight,
+        rawRequiredHeight + minimalBuffer,
+      );
+
+      document.body.removeChild(helper);
+
+      // Perfect-fit resize logic: always match content size, preventing only micro-adjustments
+      const heightDifference = Math.abs(requiredHeight - currentHeight);
+      let shouldResize = false;
+      let newHeight = requiredHeight; // Always target the perfect fit height
+
+      // Only resize if there's a meaningful difference (>3px) to prevent micro-flickering
+      if (heightDifference > 3) {
+        shouldResize = true;
+      }
+
+      if (shouldResize) {
+        // Save scroll position and viewport info before height change
+        const scrollTop = window.pageYOffset;
+        const viewportHeight = window.innerHeight;
+        const textareaRect = textarea.getBoundingClientRect();
+        const textareaBottom = textareaRect.bottom;
+        const shouldPreventScroll = textareaBottom > viewportHeight * 0.7;
+
+        if (shouldPreventScroll) {
+          // Temporarily disable scroll during height change
+          const body = document.body;
+          const originalOverflow = body.style.overflow;
+          const originalPosition = body.style.position;
+          const originalTop = body.style.top;
+          const originalWidth = body.style.width;
+
+          body.style.overflow = 'hidden';
+          body.style.position = 'fixed';
+          body.style.top = `-${scrollTop}px`;
+          body.style.width = '100%';
+
+          // Apply height change
+          textarea.style.height = `${newHeight}px`;
+
+          // Re-enable scrolling and restore position
+          requestAnimationFrame(() => {
+            body.style.overflow = originalOverflow;
+            body.style.position = originalPosition;
+            body.style.top = originalTop;
+            body.style.width = originalWidth;
+            window.scrollTo(0, scrollTop);
+          });
+        } else {
+          // Safe to resize normally
+          textarea.style.height = `${newHeight}px`;
+        }
+      }
+    }
+  }, [value]);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center space-x-2">
-        <svg
-          className="h-5 w-5 transition-colors duration-300 text-gray-600 dark:text-gray-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-          />
-        </svg>
-        <label
-          htmlFor="prompt-editor"
-          className="block text-sm font-semibold transition-colors duration-300 text-gray-800 dark:text-gray-200"
-        >
-          Prompt Template
-        </label>
-      </div>
       <div className="relative">
         <textarea
           id="prompt-editor"
           data-testid="prompt-editor"
+          ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Enter your prompt template here. Use {{input}} for variable substitution...
@@ -67,29 +152,23 @@ Analyze the following text and provide a summary:
 {{input}}
 
 Please focus on the key points and main themes."
-          rows={8}
-          className="w-full px-4 py-3 border-2 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm backdrop-blur-sm transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 text-gray-900 placeholder-gray-500 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400"
-          aria-describedby="prompt-help"
+          className="w-full px-4 py-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none font-mono text-sm transition-all duration-200 bg-background text-foreground placeholder-muted-foreground/80 border border-border/50"
+          style={{ minHeight: '128px' }}
         />
-        <div className="absolute bottom-3 right-3 flex items-center space-x-3">
-          <div className="text-xs px-2 py-1 rounded-md transition-colors duration-300 text-gray-400 bg-white/80 dark:text-gray-500 dark:bg-gray-700/80">
+      </div>
+
+      <div className="flex items-center justify-end">
+        <div className="flex items-center space-x-2">
+          <div className="text-xs px-2 py-1 rounded-md bg-muted/70 text-foreground font-medium">
             {value.length} chars
           </div>
           {value.length > 0 && (
-            <div className="text-xs px-2 py-1 rounded-md transition-colors duration-300 text-gray-500 bg-white/80 dark:text-gray-400 dark:bg-gray-700/80">
+            <div className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
               {formatTokenCount(tokenCount)} tokens
             </div>
           )}
         </div>
       </div>
-
-      <p id="prompt-help" className="text-xs text-muted">
-        Use{' '}
-        <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
-          {'{{input}}'}
-        </code>{' '}
-        as a placeholder for data that will be replaced during evaluation.
-      </p>
     </div>
   );
 };

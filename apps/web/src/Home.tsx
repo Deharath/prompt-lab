@@ -4,12 +4,9 @@ import { ApiClient, fetchJob } from './api.js';
 import { useJobStore } from './store/jobStore.js';
 import { useDarkModeStore } from './store/darkModeStore.js';
 import { useToggle } from './hooks/useUtilities.js';
-import Card from './components/ui/Card.js';
 import Button from './components/ui/Button.js';
-import ResultsPanel from './components/ResultsPanelV2.js';
-import PromptEditor from './components/PromptEditor.js';
-import InputEditor from './components/InputEditor.js';
-import LiveOutput from './components/LiveOutput.js';
+import UnifiedPanel from './components/UnifiedPanel.js';
+import ModernLiveOutput from './components/ModernLiveOutput.js';
 import ErrorAlert from './components/ErrorAlert.js';
 import AppSidebar from './components/AppSidebar.js';
 import DiffView from './components/DiffView.js';
@@ -486,143 +483,62 @@ const Home = () => {
               />
             </section>
           ) : (
-            // Two-Column Workspace Layout - Fixed overflow with proper constraints
+            // Two-Column Modern Workspace Layout
             <section
-              className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 items-start min-h-0 w-full max-w-full"
+              className="flex flex-col lg:flex-row gap-6 lg:gap-8 p-4 sm:p-6 items-start min-h-0 w-full max-w-full"
               aria-label="Prompt evaluation workspace"
             >
-              {/* Left Column - Configuration Panel */}
-              <div className="w-full lg:w-2/5 lg:max-w-[40%] flex-shrink-0 space-y-4 sm:space-y-6 min-w-0">
-                {/* Prompt Card */}
-                <Card title="Prompt Template">
-                  {isEmptyState ? (
-                    <div className="text-center py-6 sm:py-8">
-                      <div className="text-muted mb-4" aria-hidden="true">
-                        <svg
-                          className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                        Create your first prompt
-                      </h3>
-                      <p className="text-sm sm:text-base text-muted mb-4 px-2">
-                        Write a prompt template with input placeholders like{' '}
-                        <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
-                          {'{{input}}'}
-                        </code>
-                      </p>
-                      <Button
-                        onClick={handleStartWithExample}
-                        variant="primary"
-                        size="sm"
-                        aria-label="Load a sample prompt and input to get started"
-                        className="w-full sm:w-auto"
-                      >
-                        Get Started!
-                      </Button>
-                    </div>
-                  ) : (
-                    <PromptEditor
-                      value={template}
-                      onChange={setTemplate}
-                      model={model}
-                    />
-                  )}
-                </Card>
-
-                {/* Input Data Card */}
-                <Card title="Input Data">
-                  {isEmptyState ? (
-                    <div className="text-center py-4 sm:py-6">
-                      <div className="text-muted mb-4" aria-hidden="true">
-                        <svg
-                          className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-sm sm:text-base text-muted px-2">
-                        Add the data that will replace{' '}
-                        <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
-                          {'{{input}}'}
-                        </code>{' '}
-                        in your prompt
-                      </p>
-                    </div>
-                  ) : (
-                    <InputEditor
-                      value={inputData}
-                      onChange={setInputData}
-                      placeholder="Enter your input data here..."
-                      model={model}
-                    />
-                  )}
-                </Card>
+              {/* Left Column - Unified Input & Results Panel */}
+              <div className="w-full lg:w-2/5 lg:max-w-[40%] flex-shrink-0 min-w-0">
+                <UnifiedPanel
+                  template={template}
+                  inputData={inputData}
+                  onTemplateChange={setTemplate}
+                  onInputDataChange={setInputData}
+                  model={model}
+                  onStartWithExample={handleStartWithExample}
+                  isEmptyState={isEmptyState}
+                  metrics={metrics}
+                  hasResults={!!(metrics && Object.keys(metrics).length > 0)}
+                />
               </div>
 
-              {/* Right Column - Output Panel */}
+              {/* Right Column - Modern Live Output */}
               <div className="w-full lg:w-3/5 lg:max-w-[60%] space-y-4 sm:space-y-6 min-w-0">
-                {/* Live Output Card */}
-                <Card title="Live Output">
-                  {displayOutputText || streamStatus === 'streaming' ? (
-                    <LiveOutput
-                      outputText={displayOutputText}
-                      status={streamStatus}
-                    />
-                  ) : (
-                    <div className="text-center py-8 sm:py-12">
-                      <div className="text-muted mb-4" aria-hidden="true">
-                        <svg
-                          className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-6 h-[600px]">
+                    {displayOutputText || streamStatus === 'streaming' ? (
+                      <ModernLiveOutput
+                        outputText={displayOutputText}
+                        status={streamStatus}
+                      />
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-center">
+                        <div
+                          className="text-muted-foreground mb-4"
+                          aria-hidden="true"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4M7 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4H17M7 4H17"
-                          />
-                        </svg>
+                          <svg
+                            className="h-16 w-16 mx-auto mb-4 opacity-60"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          Ready to stream
+                        </h3>
                       </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                        Ready to stream
-                      </h3>
-                      <p className="text-sm sm:text-base text-muted px-2">
-                        Your prompt output will appear here in real-time when
-                        you run an evaluation
-                      </p>
-                    </div>
-                  )}
-                </Card>
-
-                {/* Evaluation Results Panel */}
-                {metrics && Object.keys(metrics).length > 0 && (
-                  <ResultsPanel
-                    metrics={metrics}
-                    title="Evaluation Results"
-                    showInsights={true}
-                  />
-                )}
+                    )}
+                  </div>
+                </div>
               </div>
             </section>
           )}

@@ -1,4 +1,3 @@
-import Card from './ui/Card.js';
 import { useState, useEffect } from 'react';
 
 // Removed unused interfaces: KeywordMetrics, JsonValidityMetrics, SentimentDetailedMetrics
@@ -20,7 +19,6 @@ const ResultsPanel = ({
     const saved = localStorage.getItem('evaluation-panel-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
-  const [selectedCategory, setSelectedCategory] = useState<string>('quality');
 
   useEffect(() => {
     localStorage.setItem(
@@ -41,7 +39,7 @@ const ResultsPanel = ({
   const processMetrics = (metrics: Record<string, unknown>) => {
     const categories: Record<
       string,
-      Array<[string, number | string | object, string?, string?]>
+      Array<[string, string, string?, string?, unknown?, string?]> // Added originalKey as 6th element
     > = {
       quality: [],
       readability: [],
@@ -131,13 +129,13 @@ const ResultsPanel = ({
         category: 'sentiment',
         displayName: 'Sentiment Score',
         description:
-          'DistilBERT (accurate) or VADER (fast) based on SENTIMENT_MODE env',
+          'Xenova Twitter RoBERTa (accurate) or VADER (fast) based on SENTIMENT_MODE env',
       },
       sentiment_detailed: {
         category: 'sentiment',
         displayName: 'Detailed Sentiment',
         description:
-          'Full sentiment breakdown with positive/negative/neutral scores',
+          'Full sentiment breakdown with positive/negative/neutral confidence scores',
       },
 
       // NEW Content Metrics via Text Worker (Task 1)
@@ -209,7 +207,57 @@ const ResultsPanel = ({
       let formattedValue: string | number = value as string | number;
       let unit = '';
 
-      if (typeof value === 'number') {
+      // Handle sentiment specially regardless of type
+      if (key === 'sentiment') {
+        // Task 3: Enhanced Sentiment Service formatting for CardiffNLP
+        // Handle both object and stringified object cases
+        let sentimentObj: Record<string, unknown> | null = null;
+
+        if (typeof value === 'object' && value !== null) {
+          sentimentObj = value as Record<string, unknown>;
+        } else if (typeof value === 'string') {
+          // Try to parse if it's a stringified JSON object
+          try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === 'object' && parsed !== null) {
+              sentimentObj = parsed as Record<string, unknown>;
+            }
+          } catch {
+            // If parsing fails, treat as plain string
+          }
+        }
+
+        if (
+          sentimentObj &&
+          'label' in sentimentObj &&
+          'confidence' in sentimentObj
+        ) {
+          const label = sentimentObj.label as string;
+          const confidence = sentimentObj.confidence as number;
+          formattedValue = `${label.charAt(0).toUpperCase()}${label.slice(1)} (${(confidence * 100).toFixed(1)}%)`;
+          unit = ''; // Remove emoji icons as requested
+        } else if (sentimentObj && 'compound' in sentimentObj) {
+          const compound = sentimentObj.compound as number;
+          const label =
+            compound > 0.1
+              ? 'positive'
+              : compound < -0.1
+                ? 'negative'
+                : 'neutral';
+          formattedValue = `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+          unit = ''; // Remove emoji icons as requested
+        } else if (typeof value === 'number') {
+          // Legacy numeric sentiment - convert to label
+          const label =
+            value > 0.1 ? 'positive' : value < -0.1 ? 'negative' : 'neutral';
+          formattedValue = `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+          unit = ''; // Remove emoji icons as requested
+        } else {
+          // Fallback for any other case
+          formattedValue = typeof value === 'string' ? value : String(value);
+          unit = '';
+        }
+      } else if (typeof value === 'number') {
         if (
           key.includes('score') ||
           key.includes('precision') ||
@@ -222,14 +270,16 @@ const ResultsPanel = ({
           } else {
             formattedValue = value.toFixed(3);
           }
-        } else if (key === 'sentiment') {
-          // Task 3: Sentiment Service formatting
-          formattedValue = value.toFixed(3);
-          unit = value > 0.1 ? '😊' : value < -0.1 ? '😟' : '😐';
         } else if (key.includes('flesch') || key === 'smog') {
-          // Task 2: Readability Service - show readability scores
-          formattedValue = value.toFixed(1);
-          unit = key === 'flesch_reading_ease' ? '/100' : '';
+          // Task 2: Readability Service - show readability scores with better handling
+          const numValue = Number(value);
+          if (isNaN(numValue)) {
+            formattedValue = 'N/A';
+            unit = '';
+          } else {
+            formattedValue = numValue.toFixed(1);
+            unit = key === 'flesch_reading_ease' ? '/100' : '';
+          }
         } else if (key.includes('count')) {
           formattedValue = Math.round(value);
         } else if (key === 'response_time_ms') {
@@ -264,11 +314,34 @@ const ResultsPanel = ({
             formattedValue = JSON.stringify(value);
           }
         } else if (key === 'sentiment_detailed') {
-          // Task 3: Handle detailed sentiment breakdown
+          // Task 3: Handle detailed sentiment breakdown for CardiffNLP - improved formatting
           const sentiment = value as Record<string, unknown>;
-          if ('compound' in sentiment) {
-            formattedValue = `Compound: ${typeof sentiment.compound === 'number' ? sentiment.compound.toFixed(3) : 'N/A'}`;
-            unit = '';
+          if (
+            'label' in sentiment &&
+            'confidence' in sentiment &&
+            'positive' in sentiment &&
+            'negative' in sentiment &&
+            'neutral' in sentiment
+          ) {
+            const label = sentiment.label as string;
+            const confidence = sentiment.confidence as number;
+            const positive = sentiment.positive as number;
+            const negative = sentiment.negative as number;
+            const neutral = sentiment.neutral as number;
+
+            // Show the primary label and confidence, with breakdown in tooltip
+            formattedValue = `${label.charAt(0).toUpperCase()}${label.slice(1)} ${(confidence * 100).toFixed(1)}%`;
+            unit = `(Pos: ${(positive * 100).toFixed(0)}%, Neg: ${(negative * 100).toFixed(0)}%, Neu: ${(neutral * 100).toFixed(0)}%)`;
+          } else if ('compound' in sentiment) {
+            const compound = sentiment.compound as number;
+            const label =
+              compound > 0.1
+                ? 'positive'
+                : compound < -0.1
+                  ? 'negative'
+                  : 'neutral';
+            formattedValue = `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+            unit = `(${compound.toFixed(3)})`;
           } else {
             formattedValue = JSON.stringify(value);
           }
@@ -278,82 +351,115 @@ const ResultsPanel = ({
       } else if (typeof value === 'boolean') {
         formattedValue = value ? 'Yes' : 'No';
         unit = value ? '✅' : '❌';
+      } else if (typeof value === 'string') {
+        // Handle string values (not already handled by sentiment above)
+        formattedValue = value;
+        unit = '';
       }
 
       categories[category].push([
         displayName,
-        formattedValue,
+        formattedValue.toString(),
         unit,
         description,
+        value, // Store original value for color calculation
+        key, // Store original key for color calculation
       ]);
     });
 
     return categories;
   };
   const categorizedMetrics = processMetrics(metrics);
-  const categories = [
-    { id: 'quality', name: 'Quality', icon: '🎯' },
-    { id: 'readability', name: 'Readability', icon: '📖' },
-    { id: 'sentiment', name: 'Sentiment', icon: '💭' },
-    { id: 'content', name: 'Content', icon: '📄' },
-    { id: 'technical', name: 'Technical', icon: '⚙️' },
-  ].filter((cat) => categorizedMetrics[cat.id].length > 0);
 
-  // Updated scoring colors for NEW metrics system
-  const getScoreColor = (value: string | number, key: string): string => {
-    if (typeof value !== 'number') return 'text-gray-600 dark:text-gray-400';
+  // Helper function to render a metric item
+  const renderMetric = (
+    name: string,
+    value: string,
+    unit?: string,
+    description?: string,
+    originalValue?: unknown,
+    originalKey?: string,
+    index?: number,
+  ) => (
+    <div
+      key={`${name}-${index || 0}`}
+      className="flex items-center justify-between py-2 px-3 rounded-md bg-muted/20 dark:bg-muted/10 border border-border/50"
+      title={description}
+    >
+      <div className="flex items-center space-x-2">
+        <span className="text-xs font-medium text-foreground/80">{name}</span>
+        {description && (
+          <div className="group relative">
+            <span className="h-3 w-3 text-muted-foreground cursor-help text-xs">
+              ℹ️
+            </span>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10 border border-border shadow-md">
+              {description}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex items-center space-x-1">
+        <span
+          className={`text-xs font-semibold ${getScoreColor(
+            originalValue || value,
+            originalKey || name.toLowerCase(),
+          )}`}
+        >
+          {value}
+        </span>
+        {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
+      </div>
+    </div>
+  );
 
-    // NEW quality metrics (Task 7 focus)
-    if (
-      key.includes('score') ||
-      key.includes('precision') ||
-      key.includes('recall') ||
-      key === 'f_score'
-    ) {
-      if (value >= 0.8) return 'text-green-600 dark:text-green-400';
-      if (value >= 0.6) return 'text-yellow-600 dark:text-yellow-400';
-      return 'text-red-600 dark:text-red-400';
-    }
+  // Helper function to render a category section
+  const renderSection = (title: string, icon: string, categoryKey: string) => {
+    const categoryMetrics = categorizedMetrics[categoryKey];
+    if (!categoryMetrics || categoryMetrics.length === 0) return null;
 
-    // Task 2: Readability scoring
-    if (key === 'flesch_reading_ease') {
-      if (value >= 60) return 'text-green-600 dark:text-green-400'; // Easy to read
-      if (value >= 30) return 'text-yellow-600 dark:text-yellow-400'; // Moderate
-      return 'text-red-600 dark:text-red-400'; // Difficult
-    }
+    return (
+      <div className="mb-4">
+        <div className="flex items-center space-x-2 mb-2">
+          <span className="text-sm">{icon}</span>
+          <h4 className="text-sm font-semibold text-foreground">{title}</h4>
+        </div>
+        <div className="space-y-1">
+          {categoryMetrics.map(
+            (
+              [name, value, unit, description, originalValue, originalKey],
+              index,
+            ) =>
+              renderMetric(
+                name,
+                value,
+                unit,
+                description,
+                originalValue,
+                originalKey,
+                index,
+              ),
+          )}
+        </div>
+      </div>
+    );
+  };
 
-    if (key === 'flesch_kincaid' || key === 'smog') {
-      if (value <= 8) return 'text-green-600 dark:text-green-400'; // Grade level 8 or below
-      if (value <= 12) return 'text-yellow-600 dark:text-yellow-400'; // High school level
-      return 'text-red-600 dark:text-red-400'; // College level+
-    }
-
-    // Task 3: Sentiment scoring
-    if (key === 'sentiment') {
-      if (value > 0.2) return 'text-green-600 dark:text-green-400';
-      if (value < -0.2) return 'text-red-600 dark:text-red-400';
-      return 'text-gray-600 dark:text-gray-400';
-    }
-
-    // Task 6: Response time scoring
-    if (key === 'response_time_ms') {
-      if (value <= 1000) return 'text-green-600 dark:text-green-400'; // Under 1s
-      if (value <= 3000) return 'text-yellow-600 dark:text-yellow-400'; // Under 3s
-      return 'text-red-600 dark:text-red-400'; // Over 3s
-    }
-
-    return 'text-gray-700 dark:text-gray-300';
+  // Simplified neutral color for all metrics - no custom coloring
+  const getScoreColor = (_value: unknown, _key: string): string => {
+    // Use neutral color for all metrics to focus on functionality over styling
+    return 'text-foreground';
   };
 
   return (
-    <Card>
-      <div className="p-6">
+    <div className="bg-card border border-border rounded-lg shadow-sm">
+      <div className="p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-indigo-600 text-white shadow-md">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
               <svg
-                className="h-4 w-4"
+                className="h-3 w-3"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -366,17 +472,15 @@ const ResultsPanel = ({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {title}
-            </h3>
+            <h3 className="text-base font-semibold text-foreground">{title}</h3>
           </div>
           <button
             onClick={toggleCollapse}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
             aria-label={isCollapsed ? 'Expand metrics' : 'Collapse metrics'}
           >
             <svg
-              className={`h-5 w-5 transform transition-transform ${
+              className={`h-4 w-4 transform transition-transform ${
                 isCollapsed ? 'rotate-180' : ''
               }`}
               fill="none"
@@ -394,78 +498,26 @@ const ResultsPanel = ({
         </div>
 
         {!isCollapsed && (
-          <>
-            {/* Category Tabs */}
-            <div className="mb-6">
-              <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`flex-1 rounded-md py-2 px-3 text-sm font-medium transition-colors ${
-                      selectedCategory === category.id
-                        ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    }`}
-                  >
-                    <span className="mr-2">{category.icon}</span>
-                    {category.name}
-                  </button>
-                ))}
+          <div className="space-y-4">
+            {/* All Metrics in Organized Sections - Compact Layout */}
+            {renderSection('Quality Metrics', '🎯', 'quality')}
+            {renderSection('Readability Analysis', '📖', 'readability')}
+            {renderSection('Sentiment Analysis', '💭', 'sentiment')}
+            {renderSection('Content Analysis', '📄', 'content')}
+            {renderSection('Technical Metrics', '⚙️', 'technical')}
+
+            {/* Empty state if no metrics */}
+            {Object.values(categorizedMetrics).every(
+              (cat) => cat.length === 0,
+            ) && (
+              <div className="text-center py-4 text-muted-foreground">
+                <p className="text-sm">No metrics available</p>
               </div>
-            </div>
-
-            {/* Metrics Display */}
-            <div className="space-y-3">
-              {categorizedMetrics[selectedCategory]?.map(
-                ([name, value, unit, description], index) => (
-                  <div
-                    key={`${selectedCategory}-${index}`}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                    title={description}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {name}
-                      </span>
-                      {description && (
-                        <div className="group relative">
-                          <span className="h-4 w-4 text-gray-400 cursor-help">
-                            ℹ️
-                          </span>
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                            {description}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={`text-sm font-semibold ${getScoreColor(
-                          typeof value === 'object' ? 0 : value,
-                          name.toLowerCase(),
-                        )}`}
-                      >
-                        {typeof value === 'object'
-                          ? JSON.stringify(value)
-                          : value}
-                      </span>
-                      {unit && <span className="text-sm">{unit}</span>}
-                    </div>
-                  </div>
-                ),
-              )}
-
-              {categorizedMetrics[selectedCategory]?.length === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <p>No metrics available in this category</p>
-                </div>
-              )}
-            </div>
-          </>
+            )}
+          </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 };
 

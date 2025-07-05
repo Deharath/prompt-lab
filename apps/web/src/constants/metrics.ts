@@ -21,7 +21,7 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     id: 'sentiment',
     name: 'Sentiment Analysis',
     description:
-      'Analyzes the emotional tone of the text using DistilBERT (accurate) or VADER (fast), providing a score from -1 (negative) to 1 (positive).',
+      'Analyzes emotional tone using Xenova Twitter RoBERTa (accurate) or VADER (fast), providing positive/negative/neutral classification with confidence scores.',
   },
   {
     id: 'is_valid_json',
