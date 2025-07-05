@@ -1,6 +1,6 @@
 import React from 'react';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import Card from '../ui/Card.js';
+import Button from '../ui/Button.js';
 
 export const DiffHeader = ({ baseJobId, compareJobId, onClose }) => (
   <Card>

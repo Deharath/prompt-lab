@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useJobStore } from './store/jobStore.js';
 import { useWorkspaceStore } from './store/workspaceStore.js';
 import { useDarkModeStore } from './store/darkModeStore.js';
@@ -6,14 +6,17 @@ import { useToggle } from './hooks/useToggle.js';
 import AppSidebar from './components/AppSidebar.js';
 import DiffView from './components/DiffView.js';
 import HeaderWithTokenSummary from './components/layout/HeaderWithTokenSummary.js';
-import PromptWorkspace from './components/PromptWorkspace.js';
+import PromptWorkspace, {
+  type PromptWorkspaceRef,
+} from './components/PromptWorkspace.js';
 
 const Home = () => {
   // Layout-only state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, toggleMobileMenu] = useToggle(false);
 
-  const { comparison } = useJobStore();
+  const { comparison, temperature, topP, maxTokens, selectedMetrics } =
+    useJobStore();
 
   // Get workspace data from store
   const {
@@ -33,6 +36,9 @@ const Home = () => {
 
   const canRunEvaluation = !!(template && inputData);
 
+  // Reference to PromptWorkspace component
+  const promptWorkspaceRef = useRef<PromptWorkspaceRef>(null);
+
   // Get dark mode state (HTML class sync is handled by the store)
   useDarkModeStore();
 
@@ -43,8 +49,10 @@ const Home = () => {
   };
 
   const handleRun = async () => {
-    // This will be handled by PromptWorkspace internally via executeJob
-    // We just need a stub here for AppSidebar
+    // Call the PromptWorkspace's handleRun method via ref
+    if (promptWorkspaceRef.current) {
+      await promptWorkspaceRef.current.handleRun();
+    }
   };
 
   const handleCompareJobs = (_baseId: string, _compareId: string) => {
@@ -113,7 +121,10 @@ const Home = () => {
             </section>
           ) : (
             // Use the new PromptWorkspace component
-            <PromptWorkspace onJobSelect={handleJobSelect} />
+            <PromptWorkspace
+              ref={promptWorkspaceRef}
+              onJobSelect={handleJobSelect}
+            />
           )}
         </div>
       </div>

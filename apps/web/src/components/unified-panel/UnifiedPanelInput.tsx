@@ -1,6 +1,6 @@
 import React from 'react';
-import PromptEditor from '../PromptEditor';
-import InputEditor from '../InputEditor';
+import PromptEditor from '../PromptEditor.js';
+import InputEditor from '../InputEditor.js';
 
 interface UnifiedPanelInputProps {
   template: string;
