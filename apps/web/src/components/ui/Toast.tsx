@@ -39,20 +39,23 @@ export const useToast = () => {
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    const newToast = { ...toast, id };
+  const addToast = useCallback(
+    (toast: Omit<Toast, 'id'>) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      const newToast = { ...toast, id };
 
-    setToasts((prev) => [...prev, newToast]);
+      setToasts((prev) => [...prev, newToast]);
 
-    // Auto-remove after duration (default 5 seconds)
-    const duration = toast.duration ?? 5000;
-    if (duration > 0) {
-      setTimeout(() => {
-        removeToast(id);
-      }, duration);
-    }
-  }, []);
+      // Auto-remove after duration (default 5 seconds)
+      const duration = toast.duration ?? 5000;
+      if (duration > 0) {
+        setTimeout(() => {
+          removeToast(id);
+        }, duration);
+      }
+    },
+    [removeToast],
+  );
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -97,13 +100,13 @@ const ToastItem = ({
 }) => {
   return (
     <div
-      className="flex items-start gap-3 p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 min-w-80 max-w-md animate-in slide-in-from-right-full"
+      className="animate-in slide-in-from-right-full flex max-w-md min-w-80 items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800"
       role="alert"
       aria-live="assertive"
     >
       <StatusIndicator variant={toast.type} size="sm" />
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {toast.title}
         </h4>
@@ -124,10 +127,10 @@ const ToastItem = ({
 
       <button
         onClick={() => onRemove(toast.id)}
-        className="shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+        className="shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-200"
         aria-label="Dismiss notification"
       >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
           <path
             fillRule="evenodd"
             d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"

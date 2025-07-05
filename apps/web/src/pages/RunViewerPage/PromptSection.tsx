@@ -11,7 +11,7 @@ const PromptSection: React.FC<PromptSectionProps> = ({ job, darkMode }) => {
   return (
     <Card>
       <div className="p-6">
-        <div className="flex items-center space-x-3 mb-4">
+        <div className="mb-4 flex items-center space-x-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-md">
             <svg
               className="h-4 w-4"
@@ -36,10 +36,10 @@ const PromptSection: React.FC<PromptSectionProps> = ({ job, darkMode }) => {
           </h3>
         </div>
         <div
-          className={`w-full min-h-[120px] p-4 rounded-xl border-2 font-mono text-sm transition-colors duration-300 ${
+          className={`min-h-[120px] w-full rounded-xl border-2 p-4 font-mono text-sm transition-colors duration-300 ${
             darkMode
-              ? 'bg-gray-800/50 border-gray-600/50 text-gray-300'
-              : 'bg-gray-50/50 border-gray-200/50 text-gray-700'
+              ? 'border-gray-600/50 bg-gray-800/50 text-gray-300'
+              : 'border-gray-200/50 bg-gray-50/50 text-gray-700'
           }`}
           aria-disabled="true"
         >

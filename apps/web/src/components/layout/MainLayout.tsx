@@ -60,7 +60,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
   return (
     <div
-      className={`min-h-screen bg-background text-foreground transition-colors duration-200 ${className}`}
+      className={`bg-background text-foreground min-h-screen transition-colors duration-200 ${className}`}
       {...props}
     >
       <ErrorBoundary>
@@ -95,13 +95,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           >
             <div className="h-full overflow-y-auto">
               {loading ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex h-full items-center justify-center">
                   <LoadingSpinner />
                 </div>
               ) : error ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex h-full items-center justify-center">
                   <div className="text-center">
-                    <div className="text-destructive text-lg font-semibold mb-2">
+                    <div className="text-destructive mb-2 text-lg font-semibold">
                       Something went wrong
                     </div>
                     <div className="text-muted-foreground">{error}</div>

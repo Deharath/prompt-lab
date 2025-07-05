@@ -53,14 +53,14 @@ const RunConfiguration = ({
         <div className="flex items-center justify-between">
           <label
             htmlFor="max-tokens-input"
-            className="block text-xs font-medium text-muted-foreground"
+            className="text-muted-foreground block text-xs font-medium"
           >
             Maximum Tokens
           </label>
           <input
             type="number"
             id="max-tokens-input"
-            className="w-20 px-2 py-1 rounded border border-border text-right text-xs shadow-sm focus:border-primary focus:ring-1 focus:ring-primary bg-background"
+            className="border-border focus:border-primary focus:ring-primary bg-background w-20 rounded border px-2 py-1 text-right text-xs shadow-sm focus:ring-1"
             value={maxTokens}
             onChange={(e) => {
               const value = parseInt(e.target.value);

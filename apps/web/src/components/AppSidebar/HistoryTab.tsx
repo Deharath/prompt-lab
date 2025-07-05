@@ -40,20 +40,20 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
 }) => {
   return (
     <div
-      className="h-full flex flex-col"
+      className="flex h-full flex-col"
       role="tabpanel"
       id="history-panel"
       aria-labelledby="history-tab"
     >
       {/* History Header Controls */}
-      <div className="p-4 border-b border-border flex-shrink-0">
+      <div className="border-border flex-shrink-0 border-b p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-foreground text-sm font-semibold">
             Evaluation History
           </h3>
           <button
             onClick={onToggleCompareMode}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`focus-visible:ring-primary rounded-md px-3 py-1.5 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 ${
               compareMode
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -72,7 +72,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
         {/* Compare Mode Instructions */}
         {compareMode && (
           <div
-            className="mt-3 p-3 bg-primary/5 rounded-lg text-sm border border-primary/20"
+            className="bg-primary/5 border-primary/20 mt-3 rounded-lg border p-3 text-sm"
             role="status"
             aria-live="polite"
           >
@@ -95,12 +95,12 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
       </div>
 
       {/* History Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {error ? (
           <div className="p-6 text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <svg
-                className="w-6 h-6 text-red-600"
+                className="h-6 w-6 text-red-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -113,31 +113,31 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                 />
               </svg>
             </div>
-            <h4 className="text-sm font-semibold text-foreground mb-2">
+            <h4 className="text-foreground mb-2 text-sm font-semibold">
               Failed to load history
             </h4>
-            <p className="text-xs text-muted-foreground mb-3">
+            <p className="text-muted-foreground mb-3 text-xs">
               {error.message || 'Unable to fetch evaluation history'}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="text-xs text-blue-600 hover:text-blue-700 underline"
+              className="text-xs text-blue-600 underline hover:text-blue-700"
             >
               Reload page
             </button>
           </div>
         ) : isLoading ? (
-          <div className="flex items-center justify-center h-32">
+          <div className="flex h-32 items-center justify-center">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-              <span className="text-sm text-muted-foreground">Loading...</span>
+              <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
+              <span className="text-muted-foreground text-sm">Loading...</span>
             </div>
           </div>
         ) : history.length === 0 ? (
           <div className="p-6 text-center">
-            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="bg-muted mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
               <svg
-                className="w-6 h-6 text-muted-foreground"
+                className="text-muted-foreground h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -150,17 +150,17 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                 />
               </svg>
             </div>
-            <h3 className="text-sm font-medium text-foreground mb-1">
+            <h3 className="text-foreground mb-1 text-sm font-medium">
               No history yet
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Run your first evaluation to see results here
             </p>
           </div>
         ) : (
           <div
             ref={jobListRef}
-            className="p-3 space-y-2"
+            className="space-y-2 p-3"
             tabIndex={0}
             role="listbox"
             aria-label="Job history list. Use arrow keys to navigate, Enter to select, Delete to remove"
@@ -197,8 +197,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
 
       {/* History Footer */}
       {compareMode && comparison.baseJobId && (
-        <div className="p-3 bg-muted/30 border-t border-border flex-shrink-0">
-          <div className="text-xs text-muted-foreground text-center">
+        <div className="bg-muted/30 border-border flex-shrink-0 border-t p-3">
+          <div className="text-muted-foreground text-center text-xs">
             {comparison.compareJobId
               ? 'Both jobs selected. Compare view will appear in main area.'
               : 'Select a second job to compare.'}

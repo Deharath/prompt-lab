@@ -15,13 +15,13 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   if (!deleteConfirmation) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-card border-border mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border shadow-xl">
         <div className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+          <div className="mb-4 flex items-center space-x-3">
+            <div className="bg-destructive/10 flex h-12 w-12 items-center justify-center rounded-full">
               <svg
-                className="w-6 h-6 text-destructive"
+                className="text-destructive h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -35,16 +35,16 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-foreground text-lg font-semibold">
                 Delete Job #{deleteConfirmation.shortId}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 This action cannot be undone
               </p>
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-muted-foreground mb-6 text-sm">
             Are you sure you want to delete this job? All associated data
             including results and metrics will be permanently removed.
           </p>
@@ -52,13 +52,13 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           <div className="flex space-x-3">
             <button
               onClick={onCancel}
-              className="flex-1 px-4 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 border border-border rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="text-foreground bg-muted hover:bg-muted/80 border-border focus-visible:ring-primary flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-4 py-2 text-sm font-medium text-destructive-foreground bg-destructive hover:bg-destructive/90 border border-destructive rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90 border-destructive focus-visible:ring-destructive flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
             >
               Delete Job
             </button>

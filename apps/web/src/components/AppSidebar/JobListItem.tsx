@@ -31,11 +31,11 @@ const JobListItem: React.FC<JobListItemProps> = ({
   return (
     <div
       key={job.id}
-      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
+      className={`group relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all ${
         isSelected
-          ? 'bg-primary/8 border-primary/40 shadow-lg ring-2 ring-primary/30'
+          ? 'bg-primary/8 border-primary/40 ring-primary/30 shadow-lg ring-2'
           : isFocused
-            ? 'bg-primary/4 border-primary/20 shadow-md ring-1 ring-primary/20'
+            ? 'bg-primary/4 border-primary/20 ring-primary/20 shadow-md ring-1'
             : 'bg-card border-border/60 hover:bg-muted/30 hover:border-border hover:shadow-md'
       }`}
       role="option"
@@ -47,7 +47,7 @@ const JobListItem: React.FC<JobListItemProps> = ({
     >
       {/* Status stripe */}
       <div
-        className={`absolute left-0 top-0 w-1 h-full ${
+        className={`absolute top-0 left-0 h-full w-1 ${
           job.status === 'completed'
             ? 'bg-success'
             : job.status === 'running'
@@ -60,44 +60,44 @@ const JobListItem: React.FC<JobListItemProps> = ({
 
       <div className="p-4 pl-6">
         {/* Header row */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-bold text-foreground">
+            <span className="text-foreground text-sm font-bold">
               #{shortId}
             </span>
             <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                 job.status === 'completed'
-                  ? 'bg-success/15 text-success border border-success/20'
+                  ? 'bg-success/15 text-success border-success/20 border'
                   : job.status === 'running'
-                    ? 'bg-primary/15 text-primary border border-primary/20'
+                    ? 'bg-primary/15 text-primary border-primary/20 border'
                     : job.status === 'failed'
-                      ? 'bg-destructive/15 text-destructive border border-destructive/20'
-                      : 'bg-muted text-muted-foreground border border-border'
+                      ? 'bg-destructive/15 text-destructive border-destructive/20 border'
+                      : 'bg-muted text-muted-foreground border-border border'
               }`}
             >
               {job.status}
             </span>
             {selectionType && (
-              <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/20 text-primary border border-primary/30">
+              <div className="bg-primary/20 text-primary border-primary/30 inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium">
                 {selectionType}
               </div>
             )}
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
             <div onClick={(e) => e.stopPropagation()}>
               <ShareRunButton jobId={job.id} as="span" />
             </div>
 
             <button
               onClick={(e) => onDelete(job.id, e)}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20 cursor-pointer"
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20 cursor-pointer rounded-md p-1.5 transition-colors focus:outline-none focus-visible:ring-2"
               aria-label={`Delete job ${shortId}`}
             >
               <svg
-                className="w-4 h-4"
+                className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -115,11 +115,11 @@ const JobListItem: React.FC<JobListItemProps> = ({
 
         {/* Response content snippet - Issue #1 fix */}
         {job.resultSnippet && (
-          <div className="mb-3 p-3 bg-muted/30 rounded-lg border border-border/40">
-            <div className="text-xs text-muted-foreground/80 font-medium mb-1 uppercase tracking-wide">
+          <div className="bg-muted/30 border-border/40 mb-3 rounded-lg border p-3">
+            <div className="text-muted-foreground/80 mb-1 text-xs font-medium tracking-wide uppercase">
               Response
             </div>
-            <div className="text-sm text-foreground/90 leading-relaxed font-mono">
+            <div className="text-foreground/90 font-mono text-sm leading-relaxed">
               "{job.resultSnippet}"
             </div>
           </div>
@@ -139,7 +139,7 @@ const JobListItem: React.FC<JobListItemProps> = ({
               {job.costUsd && (
                 <div className="flex items-center space-x-1">
                   <span className="text-muted-foreground/70">Cost:</span>
-                  <span className="font-medium text-foreground/80">
+                  <span className="text-foreground/80 font-medium">
                     ${job.costUsd.toFixed(4)}
                   </span>
                 </div>
@@ -147,7 +147,7 @@ const JobListItem: React.FC<JobListItemProps> = ({
               {job.avgScore && (
                 <div className="flex items-center space-x-1">
                   <span className="text-muted-foreground/70">Score:</span>
-                  <span className="font-medium text-foreground/80">
+                  <span className="text-foreground/80 font-medium">
                     {job.avgScore.toFixed(1)}
                   </span>
                 </div>

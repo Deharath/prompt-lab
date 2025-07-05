@@ -49,7 +49,7 @@ export const ProgressBar = ({
   return (
     <div className={`w-full ${className}`}>
       {(label || showValue) && (
-        <div className="flex justify-between items-center mb-1">
+        <div className="mb-1 flex items-center justify-between">
           {label && (
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {label}
@@ -64,7 +64,7 @@ export const ProgressBar = ({
       )}
 
       <div
-        className={`w-full bg-gray-200 dark:bg-gray-700 rounded-full ${sizeClasses[size]}`}
+        className={`w-full rounded-full bg-gray-200 dark:bg-gray-700 ${sizeClasses[size]}`}
       >
         <div
           className={`${sizeClasses[size]} ${variantClasses[variant]} rounded-full transition-all duration-300 ease-out ${animated ? 'animate-pulse' : ''}`}
@@ -109,7 +109,7 @@ export const CircularProgress = ({
       <svg
         width={size}
         height={size}
-        className="transform -rotate-90"
+        className="-rotate-90 transform"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -174,24 +174,21 @@ export const StepProgress = ({
           const isLast = index === steps.length - 1;
 
           return (
-            <div key={index} className="flex items-center flex-1">
+            <div key={index} className="flex flex-1 items-center">
               {/* Step circle */}
               <div className="flex items-center">
                 <div
-                  className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 transition-all duration-200
-                    ${
-                      isCompleted
-                        ? 'bg-green-600 text-white border-green-600'
-                        : isActive
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-400 border-gray-300 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-600'
-                    }
-                  `}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200 ${
+                    isCompleted
+                      ? 'border-green-600 bg-green-600 text-white'
+                      : isActive
+                        ? 'border-blue-600 bg-blue-600 text-white'
+                        : 'border-gray-300 bg-white text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500'
+                  } `}
                 >
                   {isCompleted ? (
                     <svg
-                      className="w-4 h-4"
+                      className="h-4 w-4"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -220,7 +217,7 @@ export const StepProgress = ({
               {/* Connector line */}
               {!isLast && (
                 <div
-                  className={`flex-1 h-0.5 mx-2 ${isCompleted ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  className={`mx-2 h-0.5 flex-1 ${isCompleted ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
                 />
               )}
             </div>

@@ -7,8 +7,8 @@ interface ErrorStateProps {
 
 export const ErrorState = ({ error }: ErrorStateProps) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-900 dark:to-black transition-colors duration-300">
-      <div className="text-center space-y-4">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 transition-colors duration-300 dark:from-gray-900 dark:via-slate-900 dark:to-black">
+      <div className="space-y-4 text-center">
         <ErrorMessage message={error || 'Run not found'} />
         <Button onClick={() => (window.location.href = '/')} variant="primary">
           Back to Home

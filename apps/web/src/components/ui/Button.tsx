@@ -56,28 +56,22 @@ const Button = ({
   return (
     <button
       disabled={isDisabled}
-      className={`
-        ${baseClasses}
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
+      className={` ${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? 'w-full' : ''} ${className} `}
       {...props}
     >
       {loading ? (
         <>
           <div className="flex gap-1" role="status" aria-label="Loading">
             <div
-              className="w-2 h-2 bg-current rounded-full animate-pulse"
+              className="h-2 w-2 animate-pulse rounded-full bg-current"
               style={{ animationDelay: '0ms' }}
             />
             <div
-              className="w-2 h-2 bg-current rounded-full animate-pulse"
+              className="h-2 w-2 animate-pulse rounded-full bg-current"
               style={{ animationDelay: '150ms' }}
             />
             <div
-              className="w-2 h-2 bg-current rounded-full animate-pulse"
+              className="h-2 w-2 animate-pulse rounded-full bg-current"
               style={{ animationDelay: '300ms' }}
             />
           </div>

@@ -29,14 +29,14 @@ const HeaderWithTokenSummary: React.FC<HeaderWithTokenSummaryProps> = ({
   const [mobileMenuOpen, toggleMobileMenu] = useToggle(false);
 
   return (
-    <header className="sticky top-0 z-40 flex-shrink-0 border-b border-border bg-card/50 backdrop-blur-sm">
+    <header className="border-border bg-card/50 sticky top-0 z-40 flex-shrink-0 border-b backdrop-blur-sm">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left Side - Title and Mobile Toggle */}
-        <div className="flex items-center space-x-4 flex-1">
+        <div className="flex flex-1 items-center space-x-4">
           {/* Mobile sidebar toggle */}
           <button
             onClick={onToggleSidebar}
-            className="p-2 rounded-lg hover:bg-muted/50 transition-colors lg:hidden"
+            className="hover:bg-muted/50 rounded-lg p-2 transition-colors lg:hidden"
             aria-label="Toggle job history sidebar"
             aria-expanded={!sidebarCollapsed}
           >
@@ -58,20 +58,20 @@ const HeaderWithTokenSummary: React.FC<HeaderWithTokenSummaryProps> = ({
 
           {/* Title - Only visible on small screens */}
           <div className="flex items-center md:hidden">
-            <h1 className="text-lg font-semibold text-foreground">
+            <h1 className="text-foreground text-lg font-semibold">
               Prompt evaluation workspace
             </h1>
           </div>
         </div>
 
         {/* Fixed Navigation - Always centered relative to viewport */}
-        <div className="fixed left-1/2 transform -translate-x-1/2 top-4 hidden md:flex z-50">
+        <div className="fixed top-4 left-1/2 z-50 hidden -translate-x-1/2 transform md:flex">
           <nav className="flex items-center space-x-1">
             {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   location.pathname === item.href
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -99,40 +99,40 @@ const HeaderWithTokenSummary: React.FC<HeaderWithTokenSummaryProps> = ({
         </div>
 
         {/* Spacer for desktop navigation (fixed positioning) */}
-        <div className="hidden md:block flex-1" />
+        <div className="hidden flex-1 md:block" />
 
         {/* Right Side - Token Info and Controls */}
-        <div className="flex items-center space-x-3 flex-1 justify-end">
+        <div className="flex flex-1 items-center justify-end space-x-3">
           {/* Always visible Token Summary */}
-          <div className="hidden sm:flex items-center gap-6 text-sm bg-muted/30 px-4 py-2 rounded-lg border border-border/50">
+          <div className="bg-muted/30 border-border/50 hidden items-center gap-6 rounded-lg border px-4 py-2 text-sm sm:flex">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Prompt Tokens:
               </span>
-              <span className="font-mono font-semibold text-foreground">
+              <span className="text-foreground font-mono font-semibold">
                 {promptTokens > 0 ? promptTokens.toLocaleString() : '-'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Est. Output:
               </span>
-              <span className="font-mono font-semibold text-foreground">
+              <span className="text-foreground font-mono font-semibold">
                 {estimatedCompletionTokens > 0
                   ? estimatedCompletionTokens.toLocaleString()
                   : '-'}
               </span>
             </div>
-            <div className="flex items-center gap-2 border-l border-border pl-6">
-              <span className="text-xs font-medium text-muted-foreground">
+            <div className="border-border flex items-center gap-2 border-l pl-6">
+              <span className="text-muted-foreground text-xs font-medium">
                 Total Tokens:
               </span>
-              <span className="font-mono font-bold text-primary">
+              <span className="text-primary font-mono font-bold">
                 {totalTokens > 0 ? totalTokens.toLocaleString() : '-'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Estimated Cost:
               </span>
               <span className="font-mono font-bold text-green-600 dark:text-green-400">
@@ -150,7 +150,7 @@ const HeaderWithTokenSummary: React.FC<HeaderWithTokenSummaryProps> = ({
             variant="ghost"
             size="sm"
             onClick={toggleMobileMenu}
-            className="md:hidden h-10 w-10"
+            className="h-10 w-10 md:hidden"
             aria-label="Toggle navigation menu"
           >
             <svg
@@ -179,14 +179,14 @@ const HeaderWithTokenSummary: React.FC<HeaderWithTokenSummaryProps> = ({
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="border-t border-border bg-card md:hidden">
-          <nav className="px-4 py-3 space-y-1">
+        <div className="border-border bg-card border-t md:hidden">
+          <nav className="space-y-1 px-4 py-3">
             {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
                 onClick={toggleMobileMenu}
-                className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   location.pathname === item.href
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'

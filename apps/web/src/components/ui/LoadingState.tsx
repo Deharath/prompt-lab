@@ -99,11 +99,11 @@ export const LoadingSpinner = ({
 };
 
 export const LoadingDots = () => (
-  <div className="flex space-x-1 justify-center">
+  <div className="flex justify-center space-x-1">
     {[0, 1, 2].map((i) => (
       <div
         key={i}
-        className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"
+        className="h-2 w-2 animate-pulse rounded-full bg-gray-500"
         style={{ animationDelay: `${i * 150}ms` }}
       />
     ))}

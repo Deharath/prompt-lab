@@ -20,12 +20,12 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
   if (!onRunEvaluation) return null;
 
   return (
-    <div className="border-t border-border bg-card flex-shrink-0">
+    <div className="border-border bg-card flex-shrink-0 border-t">
       <div className="p-4">
         <button
           onClick={onRunEvaluation}
           disabled={!canRunEvaluation || isRunning}
-          className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed ${
+          className={`focus-visible:ring-primary w-full rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
             canRunEvaluation && !isRunning
               ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
               : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -40,13 +40,13 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
         >
           {isRunning ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2" />
               <span>Running...</span>
             </div>
           ) : (
             <div className="flex items-center justify-center space-x-2">
               <svg
-                className="w-4 h-4"
+                className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

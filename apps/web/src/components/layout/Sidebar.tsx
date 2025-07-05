@@ -95,12 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Desktop Sidebar */}
       <div
-        className={`
-          hidden lg:flex lg:flex-col lg:fixed lg:inset-y-16 lg:z-50
-          transition-all duration-300 ease-in-out
-          ${collapsed ? 'lg:w-16' : 'lg:w-80'}
-          ${className}
-        `}
+        className={`hidden transition-all duration-300 ease-in-out lg:fixed lg:inset-y-16 lg:z-50 lg:flex lg:flex-col ${collapsed ? 'lg:w-16' : 'lg:w-80'} ${className} `}
         {...props}
       >
         <AppSidebar
@@ -127,11 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Mobile Sidebar */}
       <div
-        className={`
-          lg:hidden fixed inset-y-16 left-0 z-50 w-80
-          transform transition-transform duration-300 ease-in-out
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+        className={`fixed inset-y-16 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} `}
       >
         <AppSidebar
           isCollapsed={false}

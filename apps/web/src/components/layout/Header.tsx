@@ -42,10 +42,10 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
-      className={`h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 sticky top-0 z-50 ${className}`}
+      className={`bg-card border-border sticky top-0 z-50 flex h-16 items-center justify-between border-b px-4 lg:px-6 ${className}`}
       {...props}
     >
-      <div className="flex items-center space-x-4 flex-1">
+      <div className="flex flex-1 items-center space-x-4">
         {/* Sidebar Toggle */}
         {!hideSidebarToggle && (
           <>
@@ -106,9 +106,9 @@ const Header: React.FC<HeaderProps> = ({
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          className="flex items-center space-x-2 transition-opacity hover:opacity-80"
         >
-          <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -124,19 +124,19 @@ const Header: React.FC<HeaderProps> = ({
             </svg>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold text-foreground">PromptLab</h1>
+            <h1 className="text-foreground text-lg font-bold">PromptLab</h1>
           </div>
         </Link>
       </div>
 
       {/* Absolutely Centered Navigation - Always in center of screen */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex">
+      <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:flex">
         <nav className="flex items-center space-x-1">
           {navigationItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname === item.href
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -164,13 +164,13 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right Side Controls */}
-      <div className="flex items-center space-x-2 flex-1 justify-end">
+      <div className="flex flex-1 items-center justify-end space-x-2">
         {/* Mobile Menu Toggle */}
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleMobileMenu}
-          className="md:hidden h-10 w-10"
+          className="h-10 w-10 md:hidden"
           aria-label="Toggle navigation menu"
         >
           <svg
@@ -198,14 +198,14 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="absolute top-16 left-0 right-0 bg-card border-b border-border shadow-lg md:hidden">
-          <nav className="px-4 py-3 space-y-1">
+        <div className="bg-card border-border absolute top-16 right-0 left-0 border-b shadow-lg md:hidden">
+          <nav className="space-y-1 px-4 py-3">
             {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
                 onClick={toggleMobileMenu}
-                className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   location.pathname === item.href
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'

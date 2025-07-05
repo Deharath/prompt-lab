@@ -13,7 +13,7 @@ const DarkModeToggle: React.FC<DarkModeToggleProps> = ({
     <button
       type="button"
       onClick={onToggle}
-      className={`group flex items-center justify-center w-10 h-10 rounded-xl shadow-md ring-1 transition-all focus-ring ${
+      className={`group focus-ring flex h-10 w-10 items-center justify-center rounded-xl shadow-md ring-1 transition-all ${
         darkMode
           ? 'bg-gray-700/80 ring-gray-600/50 hover:bg-gray-700 hover:ring-blue-400/50'
           : 'bg-white/80 ring-gray-200/50 hover:bg-white hover:ring-blue-300/50'
@@ -22,7 +22,7 @@ const DarkModeToggle: React.FC<DarkModeToggleProps> = ({
     >
       {darkMode ? (
         <svg
-          className="h-5 w-5 text-yellow-400 group-hover:text-yellow-300 transition-colors"
+          className="h-5 w-5 text-yellow-400 transition-colors group-hover:text-yellow-300"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -36,7 +36,7 @@ const DarkModeToggle: React.FC<DarkModeToggleProps> = ({
         </svg>
       ) : (
         <svg
-          className="h-5 w-5 text-gray-700 group-hover:text-blue-600 transition-colors"
+          className="h-5 w-5 text-gray-700 transition-colors group-hover:text-blue-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

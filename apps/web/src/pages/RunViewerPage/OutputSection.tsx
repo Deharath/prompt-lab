@@ -13,7 +13,7 @@ export const OutputSection = ({ job, darkMode }: OutputSectionProps) => {
   return (
     <Card>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-green-500 to-emerald-600 text-white shadow-md">
               <svg
@@ -42,10 +42,10 @@ export const OutputSection = ({ job, darkMode }: OutputSectionProps) => {
         </div>
 
         <div
-          className={`w-full min-h-[200px] p-4 rounded-xl border-2 font-mono text-sm whitespace-pre-wrap transition-colors duration-300 ${
+          className={`min-h-[200px] w-full rounded-xl border-2 p-4 font-mono text-sm whitespace-pre-wrap transition-colors duration-300 ${
             darkMode
-              ? 'bg-gray-800/50 border-gray-600/50 text-gray-300'
-              : 'bg-gray-50/50 border-gray-200/50 text-gray-700'
+              ? 'border-gray-600/50 bg-gray-800/50 text-gray-300'
+              : 'border-gray-200/50 bg-gray-50/50 text-gray-700'
           }`}
           role="region"
           aria-label="Job output"

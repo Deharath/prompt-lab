@@ -30,10 +30,10 @@ const UnifiedInputEditor = ({
   if (isEmptyState) {
     return (
       <Card>
-        <div className="text-center py-8">
+        <div className="py-8 text-center">
           <div className="text-muted mb-4" aria-hidden="true">
             <svg
-              className="h-12 w-12 mx-auto mb-4"
+              className="mx-auto mb-4 h-12 w-12"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -46,12 +46,12 @@ const UnifiedInputEditor = ({
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-foreground mb-2 text-lg font-semibold">
             Create your first prompt
           </h3>
-          <p className="text-base text-muted mb-4 px-2">
+          <p className="text-muted mb-4 px-2 text-base">
             Write a prompt template with input placeholders like{' '}
-            <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
+            <code className="bg-muted/50 border-border text-foreground rounded border px-2 py-1 font-mono text-xs">
               {'{{input}}'}
             </code>
           </p>
@@ -71,12 +71,12 @@ const UnifiedInputEditor = ({
   return (
     <Card>
       {/* Tab Navigation */}
-      <div className="flex border-b border-border">
+      <div className="border-border flex border-b">
         <button
           onClick={() => setActiveTab('prompt')}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'prompt'
-              ? 'border-b-2 border-primary text-primary'
+              ? 'border-primary text-primary border-b-2'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -86,7 +86,7 @@ const UnifiedInputEditor = ({
           onClick={() => setActiveTab('input')}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'input'
-              ? 'border-b-2 border-primary text-primary'
+              ? 'border-primary text-primary border-b-2'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -104,9 +104,9 @@ const UnifiedInputEditor = ({
               model={model}
             />
             <div className="px-4 pb-4">
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 text-sm">
                 Use{' '}
-                <code className="px-2 py-1 text-xs font-mono bg-muted/50 border border-border rounded text-foreground">
+                <code className="bg-muted/50 border-border text-foreground rounded border px-2 py-1 font-mono text-xs">
                   {'{{input}}'}
                 </code>{' '}
                 as a placeholder for data that will be replaced during

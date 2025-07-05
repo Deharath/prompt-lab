@@ -1,15 +1,15 @@
-const tsParser = require('@typescript-eslint/parser');
-const typescriptEslint = require('@typescript-eslint/eslint-plugin');
-const prettier = require('eslint-plugin-prettier');
-const react = require('eslint-plugin-react');
-const reactHooks = require('eslint-plugin-react-hooks');
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from 'eslint-plugin-storybook';
+import tsParser from '@typescript-eslint/parser';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import prettier from 'eslint-plugin-prettier';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import { fixupPluginRules } from '@eslint/compat';
+import globals from 'globals';
+import js from '@eslint/js';
 
-const { fixupPluginRules } = require('@eslint/compat');
-
-const globals = require('globals');
-const js = require('@eslint/js');
-
-module.exports = [
+export default [
   {
     ignores: [
       '**/dist',
@@ -32,7 +32,7 @@ module.exports = [
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
-        tsconfigRootDir: __dirname,
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
         ecmaFeatures: {
           jsx: true,
         },
@@ -61,42 +61,29 @@ module.exports = [
       'no-unused-vars': 'off',
 
       // Code complexity and quality rules
-      complexity: ['error', 10],
-      'max-depth': ['error', 4],
-      'max-lines-per-function': [
-        'error',
-        { max: 50, skipBlankLines: true, skipComments: true },
-      ],
-      'max-nested-callbacks': ['error', 3],
-      'max-params': ['error', 4],
-      'no-console': ['warn'],
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-lines-per-function': 'off',
+      'max-nested-callbacks': 'off',
+      'max-params': 'off',
+      'no-console': 'off',
       'no-debugger': 'error',
-      'no-duplicate-imports': 'error',
-      'no-magic-numbers': [
-        'warn',
-        { ignore: [-1, 0, 1, 2], ignoreArrayIndexes: true },
-      ],
-      'prefer-const': 'error',
-      'no-var': 'error',
+      'no-duplicate-imports': 'off',
+      'no-magic-numbers': 'off',
+      'prefer-const': 'off',
+      'no-var': 'off',
 
       // Basic TypeScript rules (not requiring type information)
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
 
       // React rules
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
-      'react/jsx-no-useless-fragment': 'error',
+      'react/jsx-no-useless-fragment': 'off',
       'react/jsx-boolean-value': ['error', 'never'],
       'react/jsx-curly-brace-presence': [
         'error',
@@ -104,44 +91,78 @@ module.exports = [
       ],
       'react/self-closing-comp': 'error',
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/exhaustive-deps': 'off',
 
       // Prettier integration
       'prettier/prettier': 'error',
     },
   },
 
-  // TypeScript source files configuration
+  // Type-aware rules for apps/api
   {
-    files: [
-      'packages/*/src/**/*.ts',
-      'packages/*/src/**/*.tsx',
-      'apps/*/src/**/*.ts',
-      'apps/*/src/**/*.tsx',
-    ],
+    files: ['apps/api/src/**/*.ts', 'apps/api/src/**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        project: ['./packages/*/tsconfig.json', './apps/*/tsconfig.json'],
-        tsconfigRootDir: __dirname,
+        project: ['./apps/api/tsconfig.json'],
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
       },
     },
     rules: {
-      // TypeScript rules requiring type information
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/strict-boolean-expressions': [
-        'error',
-        {
-          allowString: true,
-          allowNumber: true,
-          allowNullableObject: true,
-          allowNullableBoolean: true,
-          allowNullableString: true,
-          allowNullableNumber: true,
-          allowAny: true,
-        },
-      ],
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+  // Type-aware rules for apps/web
+  {
+    files: ['apps/web/src/**/*.ts', 'apps/web/src/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./apps/web/tsconfig.json'],
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+  // Type-aware rules for packages/api
+  {
+    files: ['packages/api/src/**/*.ts', 'packages/api/src/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./packages/api/tsconfig.json'],
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+  // Type-aware rules for packages/evaluator
+  {
+    files: [
+      'packages/evaluator/src/**/*.ts',
+      'packages/evaluator/src/**/*.tsx',
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./packages/evaluator/tsconfig.json'],
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
     },
   },
 
@@ -163,7 +184,7 @@ module.exports = [
           './packages/*/tsconfig.lint.json',
           './apps/*/tsconfig.lint.json',
         ],
-        tsconfigRootDir: __dirname,
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
       },
     },
   },

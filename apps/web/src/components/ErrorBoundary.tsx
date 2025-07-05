@@ -74,10 +74,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
       // Default fallback UI
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <div className="max-w-md w-full text-center">
+        <div className="bg-background flex min-h-screen items-center justify-center p-4">
+          <div className="w-full max-w-md text-center">
             <div className="mb-6">
-              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                 <svg
                   className="h-8 w-8 text-red-600"
                   fill="none"
@@ -92,7 +92,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">
+              <h1 className="text-foreground mb-2 text-2xl font-bold">
                 Something went wrong
               </h1>
               <p className="text-muted-foreground mb-6">
@@ -103,18 +103,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
             {/* Error details (development only) */}
             {import.meta.env.DEV && this.state.error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left">
-                <h3 className="text-sm font-semibold text-red-800 mb-2">
+              <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-left">
+                <h3 className="mb-2 text-sm font-semibold text-red-800">
                   Error Details (Development)
                 </h3>
-                <pre className="text-xs text-red-700 overflow-auto max-h-32">
+                <pre className="max-h-32 overflow-auto text-xs text-red-700">
                   {this.state.error.stack}
                 </pre>
               </div>
             )}
 
             {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
               <Button onClick={this.handleReset} variant="primary" size="md">
                 Try Again
               </Button>
@@ -124,8 +124,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             </div>
 
             {/* Additional help */}
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-xs text-muted-foreground">
+            <div className="border-border mt-6 border-t pt-6">
+              <p className="text-muted-foreground text-xs">
                 If this problem persists, please{' '}
                 <a
                   href="mailto:support@promptlab.dev"

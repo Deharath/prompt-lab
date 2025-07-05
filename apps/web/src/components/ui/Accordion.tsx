@@ -21,17 +21,17 @@ const AccordionItem = ({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-border rounded-lg">
+    <div className="border-border rounded-lg border">
       <button
-        className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-t-lg"
+        className="hover:bg-muted/50 focus-visible:ring-primary flex w-full items-center justify-between rounded-t-lg px-4 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-controls={`accordion-content-${id}`}
         id={`accordion-trigger-${id}`}
       >
-        <span className="font-medium text-foreground">{title}</span>
+        <span className="text-foreground font-medium">{title}</span>
         <svg
-          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+          className={`text-muted-foreground h-4 w-4 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : 'rotate-0'
           }`}
           fill="none"
@@ -48,7 +48,7 @@ const AccordionItem = ({
       </button>
       {isOpen && (
         <div
-          className="px-4 pb-4 border-t border-border"
+          className="border-border border-t px-4 pb-4"
           id={`accordion-content-${id}`}
           role="region"
           aria-labelledby={`accordion-trigger-${id}`}

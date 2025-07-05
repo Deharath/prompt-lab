@@ -5,10 +5,10 @@ interface ErrorMessageProps {
 const ErrorMessage = ({ message }: ErrorMessageProps) => {
   return (
     <div
-      className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-6 text-center"
+      className="rounded-xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-800/50 dark:bg-red-900/20"
       data-testid="error-message"
     >
-      <div className="flex items-center justify-center space-x-2 mb-2">
+      <div className="mb-2 flex items-center justify-center space-x-2">
         <svg
           className="h-5 w-5 text-red-500"
           fill="none"

@@ -1,59 +1,44 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import UnifiedPanel from './UnifiedPanel.js';
 import ModernLiveOutput from './ModernLiveOutput.js';
 import ErrorAlert from './ui/ErrorAlert.js';
 import { useJobStore } from '../store/jobStore.js';
+import { useWorkspaceStore } from '../store/workspaceStore.js';
 import { useJobStreaming } from '../hooks/useJobStreaming.js';
-import { ApiClient } from '../api.js';
-import { SAMPLE_PROMPT, SAMPLE_INPUT } from '../constants/app.js';
-import {
-  countTokens,
-  estimateCompletionTokens,
-  estimateCost,
-} from '../utils/tokenCounter.js';
 
 interface PromptWorkspaceProps {
   onJobSelect?: (jobId: string) => void;
-  onStateChange?: (state: {
-    template: string;
-    inputData: string;
-    provider: string;
-    model: string;
-    promptTokens: number;
-    estimatedCompletionTokens: number;
-    totalTokens: number;
-    estimatedCost: number;
-    canRunEvaluation: boolean;
-    handleJobSelect: (jobId: string) => Promise<void>;
-    handleRun: () => Promise<void>;
-    setProvider: (provider: string) => void;
-    setModel: (model: string) => void;
-    setTemplate: (template: string) => void;
-  }) => void;
 }
 
 /**
  * PromptWorkspace component encapsulates the core interactive area of the application
  * including the UnifiedPanel and ModernLiveOutput sections with their related logic
  */
-const PromptWorkspace: React.FC<PromptWorkspaceProps> = ({
-  onJobSelect,
-  onStateChange,
-}) => {
-  // Internal state management - moved from Home.tsx
-  const [template, setTemplateState] = useState('');
-  const [inputData, setInputDataState] = useState('');
-  const [provider, setProviderState] = useState('openai');
-  const [model, setModelState] = useState('gpt-4o-mini');
+const PromptWorkspace: React.FC<PromptWorkspaceProps> = ({ onJobSelect }) => {
+  // Get workspace data from store
+  const {
+    template,
+    inputData,
+    provider,
+    model,
+    setTemplate,
+    setInputData,
+    startWithExample,
+    loadJobData,
+  } = useWorkspaceStore();
 
-  // Create stable setter functions
-  const setTemplate = useCallback((value: string) => setTemplateState(value), []);
-  const setInputData = useCallback((value: string) => setInputDataState(value), []);
-  const setProvider = useCallback((value: string) => setProviderState(value), []);
-  const setModel = useCallback((value: string) => setModelState(value), []);
+  const isEmptyState = !template && !inputData;
 
-  const { log, metrics, temperature, topP, maxTokens, selectedMetrics, hasUserData, setUserData } =
-    useJobStore();
+  const {
+    log,
+    metrics,
+    temperature,
+    topP,
+    maxTokens,
+    selectedMetrics,
+    hasUserData,
+    setUserData,
+  } = useJobStore();
 
   // Update user data state
   useEffect(() => {
@@ -67,26 +52,7 @@ const PromptWorkspace: React.FC<PromptWorkspaceProps> = ({
   const displayOutputText =
     log.length > 0 ? log.map((l) => l.text).join('') : outputText;
 
-  // Calculate live token counts and cost estimates
-  const promptTokens = useMemo(() => {
-    if (!template || !inputData) return 0;
-    // Build the final prompt by replacing {{input}} with actual input data
-    const finalPrompt = template.replace(/\{\{\s*input\s*\}\}/g, inputData);
-    return countTokens(finalPrompt, model);
-  }, [template, inputData, model]);
-
-  const estimatedCompletionTokens = useMemo(() => {
-    if (!template || !inputData) return 0;
-    const finalPrompt = template.replace(/\{\{\s*input\s*\}\}/g, inputData);
-    return estimateCompletionTokens(finalPrompt, model);
-  }, [template, inputData, model]);
-
-  const estimatedCost = useMemo(() => {
-    if (!promptTokens) return 0;
-    return estimateCost(promptTokens, estimatedCompletionTokens, model);
-  }, [promptTokens, estimatedCompletionTokens]);
-
-  const handleRun = useCallback(async () => {
+  const handleRun = async () => {
     await executeJob({
       template,
       inputData,
@@ -97,32 +63,11 @@ const PromptWorkspace: React.FC<PromptWorkspaceProps> = ({
       maxTokens,
       selectedMetrics,
     });
-  }, [executeJob, template, inputData, provider, model, temperature, topP, maxTokens, selectedMetrics]);
+  };
 
-  const handleStartWithExample = useCallback(() => {
-    setTemplate(SAMPLE_PROMPT);
-    setInputData(SAMPLE_INPUT);
-  }, []);
-
-  const handleJobSelect = useCallback(async (jobId: string) => {
+  const handleJobSelect = async (jobId: string) => {
     try {
-      // Fetch the job details to get the template and input data
-      const jobDetails = await ApiClient.fetchJob(jobId);
-
-      // Load the job's template and input data if available
-      if (jobDetails.template && jobDetails.inputData) {
-        // Use the stored template and input data directly
-        setTemplate(jobDetails.template);
-        setInputData(jobDetails.inputData);
-      } else if (jobDetails.prompt) {
-        // Fallback: if template/input not stored, use the prompt as template
-        setTemplate(jobDetails.prompt);
-        setInputData('');
-      }
-
-      // Update the provider and model to match the job
-      setProvider(jobDetails.provider);
-      setModel(jobDetails.model);
+      await loadJobData(jobId);
 
       // Notify parent component if callback provided
       if (onJobSelect) {
@@ -131,105 +76,76 @@ const PromptWorkspace: React.FC<PromptWorkspaceProps> = ({
     } catch (error) {
       console.error('Failed to load job details:', error);
     }
-  }, [onJobSelect]);
-
-  const isEmptyState = !template && !inputData && !hasUserData;
-
-  // Notify parent component of state changes
-  useEffect(() => {
-    if (onStateChange) {
-      const totalTokens = promptTokens + estimatedCompletionTokens;
-      onStateChange({
-        template,
-        inputData,
-        provider,
-        model,
-        promptTokens,
-        estimatedCompletionTokens,
-        totalTokens,
-        estimatedCost,
-        canRunEvaluation: !!(template && inputData),
-        handleJobSelect,
-        handleRun,
-        setProvider,
-        setModel,
-        setTemplate,
-      });
-    }
-  }, [template, inputData, provider, model, promptTokens, estimatedCompletionTokens, estimatedCost, onStateChange]);
+  };
 
   return (
     <>
       {/* Error Alert */}
       {error && (
-        <div className="p-4 sm:p-6 pb-0" role="alert" aria-live="polite">
+        <div className="p-4 pb-0 sm:p-6" role="alert" aria-live="polite">
           <ErrorAlert error={error} />
         </div>
       )}
-      
+
       <section
-        className="flex flex-col lg:flex-row gap-6 lg:gap-8 p-4 sm:p-6 items-start min-h-0 w-full max-w-full"
+        className="flex min-h-0 w-full max-w-full flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row lg:gap-8"
         aria-label="Prompt evaluation workspace"
       >
-      {/* Left Column - Unified Input & Results Panel */}
-      <div className="w-full lg:w-2/5 lg:max-w-[40%] flex-shrink-0 min-w-0">
-        <UnifiedPanel
-          template={template}
-          inputData={inputData}
-          onTemplateChange={setTemplate}
-          onInputDataChange={setInputData}
-          model={model}
-          onStartWithExample={handleStartWithExample}
-          isEmptyState={isEmptyState}
-          metrics={metrics}
-          hasResults={!!(metrics && Object.keys(metrics).length > 0)}
-        />
-      </div>
+        {/* Left Column - Unified Input & Results Panel */}
+        <div className="w-full min-w-0 flex-shrink-0 lg:w-2/5 lg:max-w-[40%]">
+          <UnifiedPanel
+            template={template}
+            inputData={inputData}
+            onTemplateChange={setTemplate}
+            onInputDataChange={setInputData}
+            model={model}
+            onStartWithExample={startWithExample}
+            isEmptyState={isEmptyState}
+            metrics={metrics}
+            hasResults={!!(metrics && Object.keys(metrics).length > 0)}
+          />
+        </div>
 
-      {/* Right Column - Modern Live Output */}
-      <div className="w-full lg:w-3/5 lg:max-w-[60%] space-y-4 sm:space-y-6 min-w-0">
-        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div className="p-6 h-[600px]">
-            {displayOutputText || streamStatus === 'streaming' ? (
-              <ModernLiveOutput
-                outputText={displayOutputText}
-                status={streamStatus}
-              />
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center">
-                <div className="text-muted-foreground mb-4" aria-hidden="true">
-                  <svg
-                    className="h-16 w-16 mx-auto mb-4 opacity-60"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+        {/* Right Column - Modern Live Output */}
+        <div className="w-full min-w-0 space-y-4 sm:space-y-6 lg:w-3/5 lg:max-w-[60%]">
+          <div className="bg-card border-border overflow-hidden rounded-xl border shadow-sm">
+            <div className="h-[600px] p-6">
+              {displayOutputText || streamStatus === 'streaming' ? (
+                <ModernLiveOutput
+                  outputText={displayOutputText}
+                  status={streamStatus}
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                  <div
+                    className="text-muted-foreground mb-4"
+                    aria-hidden="true"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                    <svg
+                      className="mx-auto mb-4 h-16 w-16 opacity-60"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-foreground mb-2 text-lg font-semibold">
+                    Ready to stream
+                  </h3>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Ready to stream
-                </h3>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 };
 
 export default PromptWorkspace;
-
-// Export getter functions for parent components that need access to state
-export const usePromptWorkspaceState = () => {
-  // This is a utility hook that could be used by Home.tsx if needed
-  // Currently not used but provides access pattern for future needs
-  return null;
-};

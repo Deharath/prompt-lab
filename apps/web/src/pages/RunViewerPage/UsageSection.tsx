@@ -13,7 +13,7 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
   return (
     <Card>
       <div className="p-6">
-        <div className="flex items-center space-x-3 mb-4">
+        <div className="mb-4 flex items-center space-x-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-pink-500 to-rose-600 text-white shadow-md">
             <svg
               className="h-4 w-4"
@@ -38,17 +38,17 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {job.tokensUsed && (
             <div
-              className={`p-4 rounded-xl border transition-colors duration-300 ${
+              className={`rounded-xl border p-4 transition-colors duration-300 ${
                 darkMode
-                  ? 'bg-gray-800/30 border-gray-700/50'
-                  : 'bg-gray-50/30 border-gray-200/50'
+                  ? 'border-gray-700/50 bg-gray-800/30'
+                  : 'border-gray-200/50 bg-gray-50/30'
               }`}
             >
               <div
-                className={`text-sm font-medium mb-1 transition-colors duration-300 ${
+                className={`mb-1 text-sm font-medium transition-colors duration-300 ${
                   darkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}
               >
@@ -65,14 +65,14 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
           )}
           {job.costUsd && (
             <div
-              className={`p-4 rounded-xl border transition-colors duration-300 ${
+              className={`rounded-xl border p-4 transition-colors duration-300 ${
                 darkMode
-                  ? 'bg-gray-800/30 border-gray-700/50'
-                  : 'bg-gray-50/30 border-gray-200/50'
+                  ? 'border-gray-700/50 bg-gray-800/30'
+                  : 'border-gray-200/50 bg-gray-50/30'
               }`}
             >
               <div
-                className={`text-sm font-medium mb-1 transition-colors duration-300 ${
+                className={`mb-1 text-sm font-medium transition-colors duration-300 ${
                   darkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}
               >

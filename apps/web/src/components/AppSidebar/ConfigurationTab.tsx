@@ -42,15 +42,15 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
 }) => {
   return (
     <div
-      className="h-full p-4 min-w-0 max-w-full"
+      className="h-full max-w-full min-w-0 p-4"
       role="tabpanel"
       id="configuration-panel"
       aria-labelledby="configuration-tab"
     >
-      <div className="space-y-4 min-w-0">
+      <div className="min-w-0 space-y-4">
         {/* Model Selection Section */}
         <div className="min-w-0">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
+          <h3 className="text-muted-foreground mb-3 text-sm font-medium">
             Model
           </h3>
           <ModelSelector
@@ -64,7 +64,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
 
         {/* Run Configuration Section */}
         <div className="min-w-0">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
+          <h3 className="text-muted-foreground mb-3 text-sm font-medium">
             Parameters
           </h3>
           <RunConfiguration

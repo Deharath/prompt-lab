@@ -40,11 +40,11 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   ];
 
   return (
-    <header className="p-4 border-b border-border flex-shrink-0">
+    <header className="border-border flex-shrink-0 border-b p-4">
       {/* Logo and Title */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -63,12 +63,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
         </div>
         <button
           onClick={onToggle}
-          className="w-8 h-8 flex items-center justify-center rounded-md bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground focus-visible:ring-primary flex h-8 w-8 items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-2"
           aria-label="Collapse sidebar"
           title="Collapse Sidebar"
         >
           <svg
-            className="w-4 h-4"
+            className="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -86,7 +86,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
 
       {/* Tab Navigation */}
       <div
-        className="flex rounded-lg bg-muted p-1"
+        className="bg-muted flex rounded-lg p-1"
         role="tablist"
         aria-label="Sidebar sections"
       >
@@ -94,7 +94,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-md text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`focus-visible:ring-primary flex flex-1 items-center justify-center space-x-1 rounded-md px-3 py-2 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 ${
               activeTab === tab.id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -106,7 +106,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
             title={tab.ariaLabel}
           >
             <svg
-              className="w-4 h-4"
+              className="h-4 w-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

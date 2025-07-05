@@ -112,7 +112,7 @@ const MetricSelector = ({
                       id={`metric-${metric.id}`}
                       checked={isChecked}
                       onChange={() => handleToggleMetric(metric)}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
                     />
                     <label
                       htmlFor={`metric-${metric.id}`}
@@ -122,7 +122,7 @@ const MetricSelector = ({
                     </label>
                     <Tooltip content={metric.description}>
                       <span
-                        className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground"
+                        className="bg-muted text-muted-foreground ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-xs"
                         aria-hidden="true"
                       >
                         ?
@@ -145,7 +145,7 @@ const MetricSelector = ({
                         data-testid={
                           metric.id === 'keywords' ? 'keyword-input' : undefined
                         }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                        className="focus:border-primary focus:ring-primary mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
                         placeholder={metric.inputPlaceholder || ''}
                         value={userInputs[metric.id] || ''}
                         onChange={(e) =>
@@ -159,7 +159,7 @@ const MetricSelector = ({
             })}
 
             {metrics.length === 0 && (
-              <p className="text-sm text-muted">No metrics available</p>
+              <p className="text-muted text-sm">No metrics available</p>
             )}
           </div>
         </Card>
@@ -175,11 +175,11 @@ const MetricSelector = ({
                     id={`metric-${metric.id}`}
                     checked={isChecked}
                     onChange={() => handleToggleMetric(metric)}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
                   />
                   <label
                     htmlFor={`metric-${metric.id}`}
-                    className="text-sm font-medium flex-1"
+                    className="flex-1 text-sm font-medium"
                   >
                     {metric.name}
                   </label>
@@ -189,7 +189,7 @@ const MetricSelector = ({
                     aria-label={`Help for ${metric.name}`}
                   >
                     <svg
-                      className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground h-3.5 w-3.5"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -199,9 +199,9 @@ const MetricSelector = ({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 w-max max-w-[200px] text-left pointer-events-none break-words">
+                    <div className="pointer-events-none absolute right-0 bottom-full z-50 mb-2 w-max max-w-[200px] rounded bg-gray-900 px-3 py-1.5 text-left text-xs break-words text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                       {metric.description}
-                      <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+                      <div className="absolute top-full right-2 h-0 w-0 border-t-4 border-r-4 border-l-4 border-transparent border-t-gray-900" />
                     </div>
                   </button>
                 </div>
@@ -215,7 +215,7 @@ const MetricSelector = ({
                       data-testid={
                         metric.id === 'keywords' ? 'keyword-input' : undefined
                       }
-                      className="block w-full px-3 py-1.5 rounded border border-border text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary bg-background"
+                      className="border-border focus:border-primary focus:ring-primary bg-background block w-full rounded border px-3 py-1.5 text-sm shadow-sm focus:ring-1"
                       placeholder={metric.inputPlaceholder || ''}
                       value={userInputs[metric.id] || ''}
                       onChange={(e) =>
@@ -229,7 +229,7 @@ const MetricSelector = ({
           })}
 
           {metrics.length === 0 && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               No metrics available
             </p>
           )}

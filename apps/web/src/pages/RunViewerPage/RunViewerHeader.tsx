@@ -16,10 +16,10 @@ const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({
 }) => {
   return (
     <div
-      className={`shadow-lg border-b transition-colors duration-300 ${
+      className={`border-b shadow-lg transition-colors duration-300 ${
         darkMode
-          ? 'bg-gray-800/90 backdrop-blur-sm border-gray-700/50'
-          : 'bg-white/80 backdrop-blur-sm border-white/20'
+          ? 'border-gray-700/50 bg-gray-800/90 backdrop-blur-sm'
+          : 'border-white/20 bg-white/80 backdrop-blur-sm'
       }`}
     >
       <div className="mx-auto max-w-7xl px-6 py-6">

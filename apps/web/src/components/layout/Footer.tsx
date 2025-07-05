@@ -22,15 +22,15 @@ interface FooterProps extends BaseComponentProps {}
 const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
   return (
     <footer
-      className={`mt-auto bg-card/50 border-t border-border py-6 px-4 lg:px-6 ${className}`}
+      className={`bg-card/50 border-border mt-auto border-t px-4 py-6 lg:px-6 ${className}`}
       {...props}
     >
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
           {/* Left section - App info */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="h-6 w-6 bg-linear-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center text-white shadow-sm">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-sm">
                 <svg
                   className="h-3 w-3"
                   fill="none"
@@ -45,19 +45,19 @@ const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
                   />
                 </svg>
               </div>
-              <span className="text-sm font-semibold text-foreground">
+              <span className="text-foreground text-sm font-semibold">
                 PromptLab
               </span>
             </div>
-            <div className="h-4 w-px bg-border" />
-            <span className="text-xs text-muted-foreground">v1.0.0</span>
+            <div className="bg-border h-4 w-px" />
+            <span className="text-muted-foreground text-xs">v1.0.0</span>
           </div>
 
           {/* Center section - Links */}
           <div className="flex items-center space-x-6">
             <Link
               to="/dashboard"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
             >
               Dashboard
             </Link>
@@ -65,13 +65,13 @@ const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
               href="https://github.com/your-repo"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
             >
               GitHub
             </a>
             <a
               href="/docs"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
             >
               Documentation
             </a>
@@ -80,8 +80,8 @@ const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
           {/* Right section - Status */}
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-xs text-muted-foreground">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+              <span className="text-muted-foreground text-xs">
                 All systems operational
               </span>
             </div>
@@ -89,8 +89,8 @@ const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
         </div>
 
         {/* Bottom row - Copyright */}
-        <div className="mt-4 pt-4 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground">
+        <div className="border-border mt-4 border-t pt-4 text-center">
+          <p className="text-muted-foreground text-xs">
             © {new Date().getFullYear()} PromptLab. Built with React,
             TypeScript, and Tailwind CSS.
           </p>

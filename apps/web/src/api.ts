@@ -2,7 +2,7 @@ import type { DashboardStats } from './types/dashboard.js';
 import type { QualitySummaryData } from './hooks/useQualitySummary.js';
 
 // Helper function to parse dates from JSON
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function parseDatesInObject<T>(obj: any): T {
   if (obj === null || typeof obj !== 'object') {
     return obj;
@@ -275,4 +275,3 @@ export class ApiClient {
     return result;
   }
 }
-

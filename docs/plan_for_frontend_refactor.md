@@ -20,7 +20,6 @@ The work is broken down into three phases:
 
 #### **Action Item 1.1: Decompose `Home.tsx` into Logical Components & Hooks**
 
-
 - **Objective:** Break down the monolithic `Home.tsx` into smaller, single-responsibility components and abstract complex logic into custom hooks.
 - **Priority:** **High**
 - **Estimated Effort:** Large
@@ -66,7 +65,6 @@ The work is broken down into three phases:
 
 #### **Action Item 2.1: Standardize Component Directory Structure**
 
-
 - **Objective:** Create a predictable and consistent file structure for all components.
 - **Priority:** **Medium**
 - **Estimated Effort:** Small
@@ -83,7 +81,6 @@ The work is broken down into three phases:
 
 #### **Action Item 2.2: Centralize Application Constants**
 
-
 - **Objective:** Declutter components by moving static data to a dedicated constants file.
 - **Priority:** **High** (Easy win)
 - **Estimated Effort:** Small
@@ -98,7 +95,6 @@ The work is broken down into three phases:
 
 #### **Action Item 2.3: Review and Refine `useUtilities.ts`**
 
-
 - **Objective:** Proactively prevent `useUtilities.ts` from becoming a "junk drawer" for miscellaneous hooks.
 - **Priority:** **Low**
 - **Estimated Effort:** Small
@@ -112,7 +108,6 @@ The work is broken down into three phases:
   - The team has a clear guideline for creating future hooks.
 
 #### **Action Item 2.4: Clean Up Legacy API Exports**
-
 
 - **Objective:** Remove redundant code from the API client to simplify the codebase.
 - **Priority:** **Low**
@@ -136,7 +131,6 @@ The work is broken down into three phases:
 
 #### **Action Item 3.1: Enhance Test Coverage**
 
-
 - **Objective:** Ensure the newly refactored code is robust and maintainable by writing comprehensive tests.
 - **Priority:** **Medium**
 - **Estimated Effort:** Medium
@@ -151,7 +145,6 @@ The work is broken down into three phases:
   - Code coverage either increases or remains at an acceptable, agreed-upon level.
 
 #### **Action Item 3.2: Implement Automated Code Quality Checks**
-
 
 - **Objective:** Automatically enforce code quality standards to prevent issues like high complexity from recurring.
 - **Priority:** **Medium**

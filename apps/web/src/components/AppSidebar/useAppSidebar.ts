@@ -53,7 +53,11 @@ export const useAppSidebar = (
   const jobListRef = useRef<HTMLDivElement>(null);
 
   // Use TanStack Query for history data with auto-refresh
-  const { data: history = [], isLoading, error } = useQuery<JobSummary[]>({
+  const {
+    data: history = [],
+    isLoading,
+    error,
+  } = useQuery<JobSummary[]>({
     queryKey: ['jobs'],
     queryFn: () => {
       if (!ApiClient) {

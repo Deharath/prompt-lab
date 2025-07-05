@@ -23,7 +23,7 @@ const ModelSelector = ({
     <div className={compact ? 'flex items-center gap-3' : 'space-y-3'}>
       <label
         htmlFor="provider-select"
-        className={`${compact ? 'text-sm font-medium text-foreground whitespace-nowrap min-w-[4rem]' : 'block font-semibold text-sm text-foreground'} transition-colors duration-300`}
+        className={`${compact ? 'text-foreground min-w-[4rem] text-sm font-medium whitespace-nowrap' : 'text-foreground block text-sm font-semibold'} transition-colors duration-300`}
       >
         Provider
       </label>
@@ -42,7 +42,7 @@ const ModelSelector = ({
               onModelChange(availableModels[0]);
             }
           }}
-          className={`w-full appearance-none border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400 dark:[color-scheme:dark] min-w-0 ${
+          className={`w-full min-w-0 appearance-none rounded-xl border-2 border-gray-200 bg-white/80 text-gray-900 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:border-gray-600 dark:bg-gray-800/80 dark:text-gray-100 dark:[color-scheme:dark] dark:hover:border-gray-500 dark:focus:ring-blue-400 ${
             compact ? 'px-3 py-2 text-sm' : 'px-4 py-3'
           }`}
           aria-describedby="provider-help"
@@ -53,11 +53,11 @@ const ModelSelector = ({
 
         {/* Custom dropdown arrow */}
         <div
-          className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+          className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"
           aria-hidden="true"
         >
           <svg
-            className="h-4 w-4 transition-colors duration-300 text-gray-400 dark:text-gray-500"
+            className="h-4 w-4 text-gray-400 transition-colors duration-300 dark:text-gray-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -83,7 +83,7 @@ const ModelSelector = ({
     <div className={compact ? 'flex items-center gap-3' : 'space-y-3'}>
       <label
         htmlFor="model-select"
-        className={`${compact ? 'text-sm font-medium text-foreground whitespace-nowrap min-w-[4rem]' : 'block font-semibold text-sm text-foreground'} transition-colors duration-300`}
+        className={`${compact ? 'text-foreground min-w-[4rem] text-sm font-medium whitespace-nowrap' : 'text-foreground block text-sm font-semibold'} transition-colors duration-300`}
       >
         Model
       </label>
@@ -94,7 +94,7 @@ const ModelSelector = ({
           data-testid="model-select"
           value={model}
           onChange={(e) => onModelChange(e.target.value)}
-          className={`w-full appearance-none border-2 rounded-xl backdrop-blur-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus:ring-2 transition-all duration-200 border-gray-200 bg-white/80 hover:border-gray-300 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:border-gray-600 dark:bg-gray-800/80 dark:hover:border-gray-500 dark:text-gray-100 dark:focus:ring-blue-400 dark:[color-scheme:dark] min-w-0 ${
+          className={`w-full min-w-0 appearance-none rounded-xl border-2 border-gray-200 bg-white/80 text-gray-900 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:border-gray-600 dark:bg-gray-800/80 dark:text-gray-100 dark:[color-scheme:dark] dark:hover:border-gray-500 dark:focus:ring-blue-400 ${
             compact ? 'px-3 py-2 text-sm' : 'px-4 py-3'
           }`}
           aria-describedby="model-help"
@@ -110,11 +110,11 @@ const ModelSelector = ({
 
         {/* Custom dropdown arrow */}
         <div
-          className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+          className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"
           aria-hidden="true"
         >
           <svg
-            className="h-4 w-4 transition-colors duration-300 text-gray-400 dark:text-gray-500"
+            className="h-4 w-4 text-gray-400 transition-colors duration-300 dark:text-gray-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -139,10 +139,10 @@ const ModelSelector = ({
 
     {/* Model Info - Only show in non-compact mode */}
     {!compact && (
-      <div className="p-3 rounded-lg border backdrop-blur-sm transition-colors duration-300 bg-blue-50/80 border-blue-200/50 dark:bg-blue-900/30 dark:border-blue-700/50">
+      <div className="rounded-lg border border-blue-200/50 bg-blue-50/80 p-3 backdrop-blur-sm transition-colors duration-300 dark:border-blue-700/50 dark:bg-blue-900/30">
         <div className="flex items-center space-x-2">
-          <div className="h-2 w-2 rounded-full transition-colors duration-300 bg-blue-500 dark:bg-blue-400" />
-          <span className="text-xs font-medium transition-colors duration-300 text-blue-800 dark:text-blue-300">
+          <div className="h-2 w-2 rounded-full bg-blue-500 transition-colors duration-300 dark:bg-blue-400" />
+          <span className="text-xs font-medium text-blue-800 transition-colors duration-300 dark:text-blue-300">
             {provider === 'openai' ? 'OpenAI' : 'Google'} • {model}
           </span>
         </div>

@@ -51,9 +51,9 @@ const DiffPage = () => {
 
   if (!diff) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2" />
           <span className="text-muted-foreground">Loading diff...</span>
         </div>
       </div>
@@ -73,7 +73,7 @@ const DiffPage = () => {
     >
       {/* Header */}
       <div
-        className={`shadow-lg border-b transition-colors duration-300 ${darkMode ? 'bg-gray-800/90 backdrop-blur-sm border-gray-700/50' : 'bg-white/80 backdrop-blur-sm border-white/20'}`}
+        className={`border-b shadow-lg transition-colors duration-300 ${darkMode ? 'border-gray-700/50 bg-gray-800/90 backdrop-blur-sm' : 'border-white/20 bg-white/80 backdrop-blur-sm'}`}
       >
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
@@ -114,12 +114,12 @@ const DiffPage = () => {
             <button
               type="button"
               onClick={toggleDarkMode}
-              className={`group flex items-center justify-center w-10 h-10 rounded-xl shadow-md ring-1 transition-all focus-ring ${darkMode ? 'bg-gray-700/80 ring-gray-600/50 hover:bg-gray-700 hover:ring-blue-400/50' : 'bg-white/80 ring-gray-200/50 hover:bg-white hover:ring-blue-300/50'}`}
+              className={`group focus-ring flex h-10 w-10 items-center justify-center rounded-xl shadow-md ring-1 transition-all ${darkMode ? 'bg-gray-700/80 ring-gray-600/50 hover:bg-gray-700 hover:ring-blue-400/50' : 'bg-white/80 ring-gray-200/50 hover:bg-white hover:ring-blue-300/50'}`}
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {darkMode ? (
                 <svg
-                  className="h-5 w-5 text-yellow-400 group-hover:text-yellow-300 transition-colors"
+                  className="h-5 w-5 text-yellow-400 transition-colors group-hover:text-yellow-300"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -133,7 +133,7 @@ const DiffPage = () => {
                 </svg>
               ) : (
                 <svg
-                  className="h-5 w-5 text-gray-700 group-hover:text-blue-600 transition-colors"
+                  className="h-5 w-5 text-gray-700 transition-colors group-hover:text-blue-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -152,11 +152,11 @@ const DiffPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-6xl p-6 space-y-8">
+      <div className="mx-auto max-w-6xl space-y-8 p-6">
         {/* Diff Viewer */}
         <Card>
           <div
-            className={`px-6 py-4 border-b transition-colors duration-300 ${darkMode ? 'border-gray-700/50 bg-gray-800/80' : 'border-gray-200/50 bg-gray-50/80'}`}
+            className={`border-b px-6 py-4 transition-colors duration-300 ${darkMode ? 'border-gray-700/50 bg-gray-800/80' : 'border-gray-200/50 bg-gray-50/80'}`}
           >
             <h2
               className={`text-lg font-semibold transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}
@@ -202,7 +202,7 @@ const DiffPage = () => {
         {/* Metrics Comparison */}
         <Card>
           <div
-            className={`px-6 py-4 border-b transition-colors duration-300 ${darkMode ? 'border-gray-700/50 bg-gray-800/80' : 'border-gray-200/50 bg-gray-50/80'}`}
+            className={`border-b px-6 py-4 transition-colors duration-300 ${darkMode ? 'border-gray-700/50 bg-gray-800/80' : 'border-gray-200/50 bg-gray-50/80'}`}
           >
             <h3
               className={`text-lg font-semibold transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}
@@ -217,29 +217,29 @@ const DiffPage = () => {
               >
                 <tr>
                   <th
-                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                    className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
                   >
                     Metric
                   </th>
                   <th
-                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                    className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
                   >
                     Base
                   </th>
                   <th
-                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                    className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
                   >
                     Compare
                   </th>
                   <th
-                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                    className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase transition-colors duration-300 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
                   >
                     Delta
                   </th>
                 </tr>
               </thead>
               <tbody
-                className={`divide-y transition-colors duration-300 ${darkMode ? 'bg-gray-800/50 divide-gray-700' : 'bg-white divide-gray-200'}`}
+                className={`divide-y transition-colors duration-300 ${darkMode ? 'divide-gray-700 bg-gray-800/50' : 'divide-gray-200 bg-white'}`}
               >
                 {metricKeys.map((key) => {
                   const baseVal = baseMetrics[key];

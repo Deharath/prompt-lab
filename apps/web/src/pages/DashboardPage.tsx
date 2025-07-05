@@ -35,10 +35,10 @@ const DashboardPage = () => {
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-linear-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-gray-100 dark:via-blue-300 dark:to-purple-300 bg-clip-text text-transparent">
+          <h1 className="bg-linear-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-3xl font-bold text-transparent dark:from-gray-100 dark:via-blue-300 dark:to-purple-300">
             Analytics Dashboard
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
             View your job performance metrics and model costs over time
           </p>
         </div>
@@ -66,13 +66,13 @@ const DashboardPage = () => {
           <>
             {/* Quality Summary Dashboard - New Metrics System */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Quality Metrics Summary
               </h2>
               <QualitySummaryDashboard />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               {/* Average Score Over Time Chart */}
               <Card title="Average Score Over Time" className="p-6">
                 <div className="h-80">

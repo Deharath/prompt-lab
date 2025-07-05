@@ -46,9 +46,9 @@ const DiffPage = () => {
 
   if (!diff) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2" />
           <span className="text-muted-foreground">Loading diff...</span>
         </div>
       </div>
@@ -94,7 +94,7 @@ const DiffPage = () => {
               >
                 Back to Lab
               </Button>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-foreground text-2xl font-bold">
                 Job Comparison
               </h1>
             </div>
@@ -102,7 +102,7 @@ const DiffPage = () => {
         </div>
 
         {/* Comparison Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
           <Card title={`Base Job (${baseJob.id})`}>
             <div className="space-y-2 text-sm">
               <div>
@@ -161,21 +161,21 @@ const DiffPage = () => {
               <table className="min-w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                       Metric
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                       Base
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                       Compare
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">
                       Change
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-border divide-y">
                   {metricKeys.map((key) => {
                     const baseVal = baseMetrics[key];
                     const compareVal = compareMetrics[key];
@@ -184,18 +184,18 @@ const DiffPage = () => {
 
                     return (
                       <tr key={key} className="hover:bg-muted/30">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
+                        <td className="text-foreground px-6 py-4 text-sm font-medium whitespace-nowrap">
                           {key}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        <td className="text-muted-foreground px-6 py-4 text-sm whitespace-nowrap">
                           {format(baseVal)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        <td className="text-muted-foreground px-6 py-4 text-sm whitespace-nowrap">
                           {format(compareVal)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 text-sm whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                               improvement
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                 : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'

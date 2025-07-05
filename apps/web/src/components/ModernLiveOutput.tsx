@@ -125,7 +125,7 @@ export function ModernLiveOutput({
     if (status === 'streaming') {
       return (
         <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-          <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+          <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
           <span className="text-xs font-medium">Streaming...</span>
         </div>
       );
@@ -133,7 +133,7 @@ export function ModernLiveOutput({
     if (status === 'complete') {
       return (
         <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
-          <div className="h-2 w-2 bg-green-500 rounded-full" />
+          <div className="h-2 w-2 rounded-full bg-green-500" />
           <span className="text-xs font-medium">Complete</span>
         </div>
       );
@@ -141,7 +141,7 @@ export function ModernLiveOutput({
     if (status === 'error') {
       return (
         <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
-          <div className="h-2 w-2 bg-red-500 rounded-full" />
+          <div className="h-2 w-2 rounded-full bg-red-500" />
           <span className="text-xs font-medium">Error</span>
         </div>
       );
@@ -159,11 +159,11 @@ export function ModernLiveOutput({
   }, []);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Modern Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-border/50">
+      <div className="border-border/50 flex items-center justify-between border-b pb-4">
         <div className="flex items-center space-x-3">
-          <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
             <svg
               className="h-4 w-4 text-purple-600 dark:text-purple-400"
               fill="none"
@@ -178,7 +178,7 @@ export function ModernLiveOutput({
               />
             </svg>
           </div>
-          <h2 className="text-sm font-semibold text-foreground">Live Output</h2>
+          <h2 className="text-foreground text-sm font-semibold">Live Output</h2>
           <div aria-live="polite" aria-label="Output status">
             {statusIndicator()}
           </div>
@@ -186,11 +186,11 @@ export function ModernLiveOutput({
 
         <div className="flex items-center space-x-2">
           {/* View toggle - Modern pill design */}
-          <div className="flex bg-muted/50 rounded-lg overflow-hidden border border-border/50">
+          <div className="bg-muted/50 border-border/50 flex overflow-hidden rounded-lg border">
             <button
               className={`px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                 viewMode === 'rendered'
-                  ? 'bg-background text-foreground shadow-sm border-r border-border/50'
+                  ? 'bg-background text-foreground border-border/50 border-r shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
               }`}
               onClick={() => setViewMode('rendered')}
@@ -211,7 +211,7 @@ export function ModernLiveOutput({
 
           {/* Copy button - Modern design */}
           <button
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-medium transition-all duration-200 border border-border/50"
+            className="bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50 flex items-center space-x-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200"
             onClick={handleCopy}
             aria-label={
               copied ? 'Output copied to clipboard' : 'Copy output to clipboard'
@@ -260,7 +260,7 @@ export function ModernLiveOutput({
       <div className="flex-1 pt-4">
         <div
           ref={outputRef}
-          className="h-full overflow-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/40 transition-all duration-200"
+          className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/40 h-full overflow-auto transition-all duration-200"
           aria-live="polite"
           aria-label={`Live output stream in ${viewMode} mode`}
           role="log"
@@ -276,7 +276,7 @@ export function ModernLiveOutput({
                         // Modern typography components matching the new design
                         h1: ({ children, ...props }) => (
                           <h1
-                            className="text-foreground text-xl font-bold mb-4 pb-2 border-b border-border/50"
+                            className="text-foreground border-border/50 mb-4 border-b pb-2 text-xl font-bold"
                             {...props}
                           >
                             {children}
@@ -284,7 +284,7 @@ export function ModernLiveOutput({
                         ),
                         h2: ({ children, ...props }) => (
                           <h2
-                            className="text-foreground text-lg font-semibold mb-3"
+                            className="text-foreground mb-3 text-lg font-semibold"
                             {...props}
                           >
                             {children}
@@ -292,7 +292,7 @@ export function ModernLiveOutput({
                         ),
                         h3: ({ children, ...props }) => (
                           <h3
-                            className="text-foreground text-base font-semibold mb-2"
+                            className="text-foreground mb-2 text-base font-semibold"
                             {...props}
                           >
                             {children}
@@ -300,7 +300,7 @@ export function ModernLiveOutput({
                         ),
                         h4: ({ children, ...props }) => (
                           <h4
-                            className="text-foreground text-sm font-semibold mb-2"
+                            className="text-foreground mb-2 text-sm font-semibold"
                             {...props}
                           >
                             {children}
@@ -308,7 +308,7 @@ export function ModernLiveOutput({
                         ),
                         h5: ({ children, ...props }) => (
                           <h5
-                            className="text-foreground text-sm font-medium mb-2"
+                            className="text-foreground mb-2 text-sm font-medium"
                             {...props}
                           >
                             {children}
@@ -316,7 +316,7 @@ export function ModernLiveOutput({
                         ),
                         h6: ({ children, ...props }) => (
                           <h6
-                            className="text-foreground text-xs font-medium mb-2"
+                            className="text-foreground mb-2 text-xs font-medium"
                             {...props}
                           >
                             {children}
@@ -345,7 +345,7 @@ export function ModernLiveOutput({
                         ),
                         code: ({ children, ...props }) => (
                           <code
-                            className="bg-muted text-foreground px-2 py-0.5 rounded text-sm font-mono border border-border/50"
+                            className="bg-muted text-foreground border-border/50 rounded border px-2 py-0.5 font-mono text-sm"
                             {...props}
                           >
                             {children}
@@ -353,7 +353,7 @@ export function ModernLiveOutput({
                         ),
                         pre: ({ children, ...props }) => (
                           <pre
-                            className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto mb-4 border border-border/50"
+                            className="bg-muted text-foreground border-border/50 mb-4 overflow-x-auto rounded-lg border p-4"
                             {...props}
                           >
                             {children}
@@ -361,7 +361,7 @@ export function ModernLiveOutput({
                         ),
                         blockquote: ({ children, ...props }) => (
                           <blockquote
-                            className="border-l-4 border-primary/50 pl-4 italic text-muted-foreground mb-4 bg-muted/20 py-2 rounded-r"
+                            className="border-primary/50 text-muted-foreground bg-muted/20 mb-4 rounded-r border-l-4 py-2 pl-4 italic"
                             {...props}
                           >
                             {children}
@@ -403,7 +403,7 @@ export function ModernLiveOutput({
                   );
                 } catch (_err) {
                   return (
-                    <div className="text-red-500 text-sm">
+                    <div className="text-sm text-red-500">
                       Markdown render error
                     </div>
                   );
@@ -411,7 +411,7 @@ export function ModernLiveOutput({
               })()}
             </div>
           ) : (
-            <pre className="text-xs text-foreground font-mono whitespace-pre-wrap leading-relaxed">
+            <pre className="text-foreground font-mono text-xs leading-relaxed whitespace-pre-wrap">
               <code>{outputText}</code>
             </pre>
           )}

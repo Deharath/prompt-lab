@@ -152,18 +152,18 @@ Analyze the following text and provide a summary:
 {{input}}
 
 Please focus on the key points and main themes."
-          className="w-full px-4 py-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none font-mono text-sm transition-all duration-200 bg-background text-foreground placeholder-muted-foreground/80 border border-border/50"
+          className="focus:ring-primary/50 bg-background text-foreground placeholder-muted-foreground/80 border-border/50 w-full resize-none rounded-lg border px-4 py-3 font-mono text-sm shadow-sm transition-all duration-200 focus:ring-2 focus:outline-none"
           style={{ minHeight: '128px' }}
         />
       </div>
 
       <div className="flex items-center justify-end">
         <div className="flex items-center space-x-2">
-          <div className="text-xs px-2 py-1 rounded-md bg-muted/70 text-foreground font-medium">
+          <div className="bg-muted/70 text-foreground rounded-md px-2 py-1 text-xs font-medium">
             {value.length} chars
           </div>
           {value.length > 0 && (
-            <div className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+            <div className="bg-primary/10 text-primary rounded-md px-2 py-1 text-xs font-medium">
               {formatTokenCount(tokenCount)} tokens
             </div>
           )}

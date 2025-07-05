@@ -11,11 +11,11 @@ const Card = ({ title, children, className = '', id }: CardProps) => {
   return (
     <div
       id={id}
-      className={`bg-card border border-border rounded-lg shadow-sm transition-colors duration-200 ${className}`}
+      className={`bg-card border-border rounded-lg border shadow-sm transition-colors duration-200 ${className}`}
     >
       {title && (
-        <div className="px-6 py-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <div className="border-border border-b px-6 py-4">
+          <h3 className="text-foreground text-lg font-semibold">{title}</h3>
         </div>
       )}
       <div className="p-6">{children}</div>

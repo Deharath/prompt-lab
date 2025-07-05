@@ -38,19 +38,19 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
 
   return (
     <aside
-      className="w-16 bg-card border-r border-border flex flex-col h-full"
+      className="bg-card border-border flex h-full w-16 flex-col border-r"
       aria-label="Collapsed sidebar with tab buttons"
     >
       {/* Prominent Expand Button */}
-      <div className="p-2 border-b border-border">
+      <div className="border-border border-b p-2">
         <button
           onClick={onToggle}
-          className="w-full h-12 flex items-center justify-center text-muted hover:text-foreground transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg bg-background hover:bg-primary/10 border-2 border-muted hover:border-primary/50 hover:shadow-lg transform hover:scale-105"
+          className="text-muted hover:text-foreground focus-visible:ring-primary bg-background hover:bg-primary/10 border-muted hover:border-primary/50 flex h-12 w-full transform items-center justify-center rounded-lg border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2"
           aria-label="Expand sidebar"
           title="Expand Sidebar"
         >
           <svg
-            className="w-6 h-6"
+            className="h-6 w-6"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -67,17 +67,17 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
       </div>
 
       {/* Tab Buttons */}
-      <div className="flex-1 p-2 space-y-3 pt-4">
+      <div className="flex-1 space-y-3 p-2 pt-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onOpenTab(tab.id)}
-            className="w-full h-12 rounded-lg border-2 border-muted hover:border-primary/50 cursor-pointer transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary bg-background hover:bg-primary/10 hover:shadow-lg transform hover:scale-105 flex flex-col items-center justify-center group"
+            className="border-muted hover:border-primary/50 focus-visible:ring-primary bg-background hover:bg-primary/10 group flex h-12 w-full transform cursor-pointer flex-col items-center justify-center rounded-lg border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2"
             aria-label={`Open ${tab.label} tab - ${tab.description}`}
             title={`${tab.label}\n${tab.description}`}
           >
             <svg
-              className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-200"
+              className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors duration-200"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -89,7 +89,7 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
                 d={tab.icon}
               />
             </svg>
-            <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors duration-200 mt-1">
+            <span className="text-muted-foreground group-hover:text-primary mt-1 text-[10px] font-medium transition-colors duration-200">
               {tab.label}
             </span>
           </button>
@@ -98,13 +98,13 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
 
       {/* Run Evaluation Button */}
       {onRunEvaluation && (
-        <div className="p-2 border-t border-border">
+        <div className="border-border border-t p-2">
           <button
             onClick={onRunEvaluation}
             disabled={!canRunEvaluation || isRunning}
-            className={`w-full h-12 rounded-lg border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary flex flex-col items-center justify-center group ${
+            className={`focus-visible:ring-primary group flex h-12 w-full flex-col items-center justify-center rounded-lg border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 ${
               canRunEvaluation && !isRunning
-                ? 'border-primary bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-lg transform hover:scale-105'
+                ? 'border-primary bg-primary hover:bg-primary/90 text-primary-foreground transform hover:scale-105 hover:shadow-lg'
                 : 'border-muted bg-muted/50 text-muted-foreground cursor-not-allowed'
             }`}
             aria-label={
@@ -124,13 +124,13 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
           >
             {isRunning ? (
               <>
-                <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                <span className="text-[10px] font-medium mt-1">Running</span>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <span className="mt-1 text-[10px] font-medium">Running</span>
               </>
             ) : (
               <>
                 <svg
-                  className="w-5 h-5 transition-colors duration-200"
+                  className="h-5 w-5 transition-colors duration-200"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -142,7 +142,7 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
                     d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="text-[10px] font-medium mt-1">Run</span>
+                <span className="mt-1 text-[10px] font-medium">Run</span>
               </>
             )}
           </button>

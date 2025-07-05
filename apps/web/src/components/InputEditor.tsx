@@ -164,20 +164,20 @@ const InputEditor = ({
             placeholder ||
             'Enter the data you want to analyze or process...\n\nFor example:\n- News articles for summarization\n- Customer reviews for sentiment analysis\n- Code snippets for review\n- Any text content for your prompt template'
           }
-          className="w-full px-4 py-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none font-mono text-sm transition-all duration-200 bg-background text-foreground placeholder-muted-foreground/80 border border-border/50"
+          className="focus:ring-primary/50 bg-background text-foreground placeholder-muted-foreground/80 border-border/50 w-full resize-none rounded-lg border px-4 py-3 font-mono text-sm shadow-sm transition-all duration-200 focus:ring-2 focus:outline-none"
           style={{ minHeight: '96px' }}
         />
       </div>
 
       <div className="flex items-center justify-end">
         <div className="flex items-center space-x-2">
-          <div className="text-xs px-2 py-1 rounded-md bg-muted/70 text-foreground font-medium">
+          <div className="bg-muted/70 text-foreground rounded-md px-2 py-1 text-xs font-medium">
             {value.length} chars
           </div>
           {value.length > 0 && (
-            <div className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+            <div className="bg-primary/10 text-primary rounded-md px-2 py-1 text-xs font-medium">
               {isCalculatingTokens ? (
-                <LoadingSkeleton className="w-20 h-4" />
+                <LoadingSkeleton className="h-4 w-20" />
               ) : (
                 `${tokenCount} tokens`
               )}
@@ -190,7 +190,7 @@ const InputEditor = ({
         <div className="flex justify-end pt-2">
           <button
             onClick={insertSampleText}
-            className="text-xs px-3 py-1.5 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground rounded-md transition-colors border border-border/50"
+            className="bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50 rounded-md border px-3 py-1.5 text-xs transition-colors"
             title="Insert sample text"
           >
             Add Sample

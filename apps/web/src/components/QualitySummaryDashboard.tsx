@@ -48,20 +48,20 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className={`relative p-6 rounded-lg border transition-all duration-200 hover:shadow-lg ${colorClasses[color]}`}
+      className={`relative rounded-lg border p-6 transition-all duration-200 hover:shadow-lg ${colorClasses[color]}`}
       title={tooltip}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <h3 className="text-sm font-medium opacity-75">{title}</h3>
-          <p className="text-2xl font-bold mt-1">{value}</p>
-          {subtitle && <p className="text-xs opacity-60 mt-1">{subtitle}</p>}
+          <p className="mt-1 text-2xl font-bold">{value}</p>
+          {subtitle && <p className="mt-1 text-xs opacity-60">{subtitle}</p>}
         </div>
         {icon && <div className="ml-4 opacity-40">{icon}</div>}
       </div>
 
       {tooltip && (
-        <div className="absolute bottom-2 right-2 opacity-30 hover:opacity-100 transition-opacity">
+        <div className="absolute right-2 bottom-2 opacity-30 transition-opacity hover:opacity-100">
           <span className="text-xs">?</span>
         </div>
       )}
@@ -108,11 +108,11 @@ const QualitySummaryTile: React.FC<QualitySummaryTileProps> = ({
 
   return (
     <div
-      className={`p-6 rounded-xl border ${
+      className={`rounded-xl border p-6 ${
         darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white'
       } shadow-lg`}
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h2
             className={`text-xl font-bold ${
@@ -131,10 +131,10 @@ const QualitySummaryTile: React.FC<QualitySummaryTileProps> = ({
         </div>
         {cached && (
           <span
-            className={`px-2 py-1 text-xs rounded ${
+            className={`rounded px-2 py-1 text-xs ${
               darkMode
-                ? 'bg-blue-900/30 text-blue-300 border border-blue-700'
-                : 'bg-blue-100 text-blue-700 border border-blue-200'
+                ? 'border border-blue-700 bg-blue-900/30 text-blue-300'
+                : 'border border-blue-200 bg-blue-100 text-blue-700'
             }`}
           >
             Cached
@@ -142,7 +142,7 @@ const QualitySummaryTile: React.FC<QualitySummaryTileProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <MetricCard
           title="Overall Score"
           value={formatValue(data.metrics.avgScore, 'score')}
@@ -243,7 +243,7 @@ export const QualitySummaryDashboard: React.FC<
   if (loading) {
     return (
       <div
-        className={`p-8 rounded-xl border ${
+        className={`rounded-xl border p-8 ${
           darkMode
             ? 'border-gray-700 bg-gray-800/50'
             : 'border-gray-200 bg-white'
@@ -251,11 +251,11 @@ export const QualitySummaryDashboard: React.FC<
       >
         <div className="animate-pulse">
           <div
-            className={`h-6 rounded mb-4 ${
+            className={`mb-4 h-6 rounded ${
               darkMode ? 'bg-gray-700' : 'bg-gray-200'
             }`}
           />
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
@@ -273,7 +273,7 @@ export const QualitySummaryDashboard: React.FC<
   if (error) {
     return (
       <div
-        className={`p-8 rounded-xl border ${
+        className={`rounded-xl border p-8 ${
           darkMode
             ? 'border-red-700 bg-red-900/20 text-red-100'
             : 'border-red-200 bg-red-50 text-red-900'
@@ -282,14 +282,14 @@ export const QualitySummaryDashboard: React.FC<
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium">Failed to load quality summary</h3>
-            <p className="text-sm opacity-75 mt-1">{error}</p>
+            <p className="mt-1 text-sm opacity-75">{error}</p>
           </div>
           <button
             onClick={refresh}
-            className={`px-4 py-2 rounded ${
+            className={`rounded px-4 py-2 ${
               darkMode
-                ? 'bg-red-800 hover:bg-red-700 text-red-100'
-                : 'bg-red-100 hover:bg-red-200 text-red-800'
+                ? 'bg-red-800 text-red-100 hover:bg-red-700'
+                : 'bg-red-100 text-red-800 hover:bg-red-200'
             } transition-colors`}
           >
             Retry
@@ -302,7 +302,7 @@ export const QualitySummaryDashboard: React.FC<
   if (!data) {
     return (
       <div
-        className={`p-8 rounded-xl border ${
+        className={`rounded-xl border p-8 ${
           darkMode
             ? 'border-gray-700 bg-gray-800/50 text-gray-400'
             : 'border-gray-200 bg-gray-50 text-gray-600'
@@ -325,10 +325,10 @@ export const QualitySummaryDashboard: React.FC<
         </h2>
         <button
           onClick={refresh}
-          className={`px-4 py-2 rounded ${
+          className={`rounded px-4 py-2 ${
             darkMode
-              ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           } transition-colors`}
         >
           Refresh

@@ -14,14 +14,14 @@ const DarkModeToggle = ({ compact = false }: DarkModeToggleProps) => {
   return (
     <button
       onClick={toggleDarkMode}
-      className={`group flex ${buttonSize} items-center justify-center rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-background hover:bg-muted border-2 border-muted hover:border-accent hover:shadow-lg transform hover:scale-105`}
+      className={`group flex ${buttonSize} bg-background hover:bg-muted border-muted hover:border-accent transform items-center justify-center rounded-lg border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none`}
       aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDarkMode ? (
         // Sun icon for switching to light mode
         <svg
-          className={`${iconSize} text-amber-500 group-hover:text-amber-400 transition-colors duration-200`}
+          className={`${iconSize} text-amber-500 transition-colors duration-200 group-hover:text-amber-400`}
           fill="currentColor"
           viewBox="0 0 24 24"
           aria-hidden="true"
@@ -35,7 +35,7 @@ const DarkModeToggle = ({ compact = false }: DarkModeToggleProps) => {
       ) : (
         // Moon icon for switching to dark mode
         <svg
-          className={`${iconSize} text-slate-700 group-hover:text-slate-600 transition-colors duration-200`}
+          className={`${iconSize} text-slate-700 transition-colors duration-200 group-hover:text-slate-600`}
           fill="currentColor"
           viewBox="0 0 24 24"
           aria-hidden="true"

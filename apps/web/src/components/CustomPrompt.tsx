@@ -165,16 +165,16 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-foreground">
+      <div className="border-border flex-shrink-0 border-b p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-foreground text-sm font-semibold">
             Prompt Templates
           </h3>
           <button
             onClick={() => setShowCustomEditor(!showCustomEditor)}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`focus-visible:ring-primary rounded-md px-3 py-1.5 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 ${
               showCustomEditor
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -187,9 +187,9 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
         {/* Search */}
         <div className="space-y-3">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <svg
-                className="h-4 w-4 text-muted-foreground"
+                className="text-muted-foreground h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -207,7 +207,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
               placeholder="Search templates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="border-border bg-background text-foreground placeholder-muted-foreground focus:ring-primary w-full rounded-md border py-2 pr-3 pl-10 text-sm focus:border-transparent focus:ring-2 focus:outline-none"
             />
           </div>
 
@@ -217,7 +217,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`focus-visible:ring-primary inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 ${
                   selectedCategory === category.id
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -237,7 +237,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
           /* Custom Template Editor */
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+              <label className="text-muted-foreground mb-2 block text-xs font-medium tracking-wide uppercase">
                 Custom Template
               </label>
               <textarea
@@ -245,7 +245,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
                 onChange={(e) => setCustomTemplate(e.target.value)}
                 placeholder="Write your custom prompt template here...&#10;&#10;Use {{input}} as a placeholder for user input.&#10;&#10;Example:&#10;Analyze the following text:&#10;&#10;{{input}}&#10;&#10;Please provide:&#10;1. Main themes&#10;2. Key insights&#10;3. Recommendations"
                 rows={12}
-                className="w-full px-3 py-3 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none font-mono"
+                className="border-border bg-background text-foreground placeholder-muted-foreground focus:ring-primary w-full resize-none rounded-md border px-3 py-3 font-mono text-sm focus:border-transparent focus:ring-2 focus:outline-none"
               />
             </div>
             <div className="flex gap-2">
@@ -260,7 +260,7 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
               >
                 {loadingTemplate === customTemplate ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <div className="border-primary-foreground/30 border-t-primary-foreground h-3 w-3 animate-spin rounded-full border" />
                     <span>Loading...</span>
                   </div>
                 ) : (
@@ -281,10 +281,10 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
           /* Template Gallery */
           <div className="space-y-4">
             {filteredTemplates.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="py-12 text-center">
+                <div className="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
                   <svg
-                    className="w-8 h-8 text-muted-foreground"
+                    className="text-muted-foreground h-8 w-8"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -297,10 +297,10 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
                     />
                   </svg>
                 </div>
-                <h3 className="text-sm font-medium text-foreground mb-1">
+                <h3 className="text-foreground mb-1 text-sm font-medium">
                   No templates found
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Try adjusting your search or filter criteria
                 </p>
               </div>
@@ -309,20 +309,20 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
                 {filteredTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="group p-4 border border-border rounded-lg bg-card hover:shadow-md hover:border-border/80 transition-all"
+                    className="group border-border bg-card hover:border-border/80 rounded-lg border p-4 transition-all hover:shadow-md"
                   >
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-foreground truncate">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-foreground truncate text-sm font-medium">
                             {template.name}
                           </h4>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
                             {template.description}
                           </p>
                         </div>
                         <div className="ml-3 flex-shrink-0">
-                          <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                          <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                             <span className="text-sm">
                               {categories.find(
                                 (c) => c.id === template.category,
@@ -336,13 +336,13 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
                         {template.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="inline-block px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded"
+                            className="bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-xs"
                           >
                             {tag}
                           </span>
                         ))}
                         {template.tags.length > 3 && (
-                          <span className="inline-block px-2 py-0.5 text-xs text-muted-foreground">
+                          <span className="text-muted-foreground inline-block px-2 py-0.5 text-xs">
                             +{template.tags.length - 3} more
                           </span>
                         )}
@@ -357,13 +357,13 @@ const CustomPrompt: React.FC<CustomPromptProps> = ({ onLoadTemplate }) => {
                       >
                         {loadingTemplate === template.template ? (
                           <div className="flex items-center justify-center space-x-2">
-                            <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                            <div className="border-primary-foreground/30 border-t-primary-foreground h-3 w-3 animate-spin rounded-full border" />
                             <span>Loading...</span>
                           </div>
                         ) : (
                           <div className="flex items-center justify-center space-x-2">
                             <svg
-                              className="w-3 h-3"
+                              className="h-3 w-3"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"

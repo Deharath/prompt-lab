@@ -38,7 +38,7 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
 
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
-  }, []);
+  }, [handleShare]);
 
   return (
     <>
@@ -70,7 +70,7 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
       ) : (
         <span
           onClick={handleShare}
-          className="inline-flex items-center justify-center p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-200 cursor-pointer"
+          className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-gray-100 p-1.5 text-gray-600 transition-all duration-200 hover:bg-gray-200 hover:text-gray-800"
           title="Share this run (Alt+C)"
           aria-label="Share this run"
           role="button"
@@ -101,7 +101,7 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
       {/* Success Toast */}
       {showToast && (
         <div
-          className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 animate-slide-up"
+          className="animate-slide-up fixed top-4 right-4 z-50 rounded-lg bg-green-600 px-4 py-2 text-white shadow-lg transition-all duration-300"
           role="status"
           aria-live="polite"
         >
@@ -131,10 +131,10 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4"
+            className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Share Run
               </h3>
@@ -159,7 +159,7 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
               </button>
             </div>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
               Copy the link below to share this run:
             </p>
 
@@ -168,11 +168,11 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
               value={shareUrl}
               readOnly
               autoFocus
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-mono"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 font-mono text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               onFocus={(e) => e.target.select()}
             />
 
-            <div className="flex justify-end space-x-3 mt-4">
+            <div className="mt-4 flex justify-end space-x-3">
               <Button
                 onClick={() => setShowModal(false)}
                 variant="secondary"

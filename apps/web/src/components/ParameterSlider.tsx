@@ -116,7 +116,7 @@ const ParameterSlider = ({
         <div className="flex items-center gap-1.5">
           <label
             htmlFor={id}
-            className={`block font-medium ${compact ? 'text-sm text-muted-foreground' : 'text-sm'}`}
+            className={`block font-medium ${compact ? 'text-muted-foreground text-sm' : 'text-sm'}`}
           >
             {label}
           </label>
@@ -127,7 +127,7 @@ const ParameterSlider = ({
               aria-label={`Help for ${label}`}
             >
               <svg
-                className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground h-3.5 w-3.5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -137,9 +137,9 @@ const ParameterSlider = ({
                   clipRule="evenodd"
                 />
               </svg>
-              <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 w-max max-w-[180px] text-center pointer-events-none break-words whitespace-normal">
+              <div className="pointer-events-none absolute right-0 bottom-full z-50 mb-2 w-max max-w-[180px] rounded bg-gray-900 px-3 py-1.5 text-center text-xs break-words whitespace-normal text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                 {description}
-                <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+                <div className="absolute top-full right-2 h-0 w-0 border-t-4 border-r-4 border-l-4 border-transparent border-t-gray-900" />
               </div>
             </button>
           )}
@@ -147,7 +147,7 @@ const ParameterSlider = ({
         <input
           type="number"
           id={`${id}-number`}
-          className={`rounded border border-border text-right shadow-sm focus:border-primary focus:ring-1 focus:ring-primary bg-background min-w-0 ${
+          className={`border-border focus:border-primary focus:ring-primary bg-background min-w-0 rounded border text-right shadow-sm focus:ring-1 ${
             compact ? 'w-16 px-2 py-1 text-sm' : 'w-16 px-2 py-1 text-sm'
           }`}
           value={inputValue}
@@ -162,7 +162,7 @@ const ParameterSlider = ({
       <input
         type="range"
         id={id}
-        className={`w-full bg-gray-200 rounded-lg appearance-none cursor-pointer min-w-0 ${
+        className={`w-full min-w-0 cursor-pointer appearance-none rounded-lg bg-gray-200 ${
           compact ? 'h-1.5' : 'h-2'
         }`}
         min={min}
@@ -173,14 +173,14 @@ const ParameterSlider = ({
       />
 
       <div
-        className={`flex justify-between text-muted-foreground ${compact ? 'text-xs' : 'text-xs'}`}
+        className={`text-muted-foreground flex justify-between ${compact ? 'text-xs' : 'text-xs'}`}
       >
         <span>{min}</span>
         <span>{max}</span>
       </div>
 
       {!compact && description && (
-        <p className="text-xs text-muted mt-1">{description}</p>
+        <p className="text-muted mt-1 text-xs">{description}</p>
       )}
     </div>
   );

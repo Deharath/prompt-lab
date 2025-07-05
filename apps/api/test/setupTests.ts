@@ -52,14 +52,14 @@ export const mockGetEvaluator = vi.fn();
 export const mockCreateJob = vi.fn();
 export const mockGetJob = vi.fn();
 export const mockUpdateJob = vi.fn();
-export const mockJobStore = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+export const mockJobStore = new Map<string, any>();
 export const mockListJobs = vi.fn();
 export const mockGetPreviousJob = vi.fn();
 export const mockSetProvider = vi.fn();
 export const mockResetProviders = vi.fn();
 
 // Mock provider registry for tests
-export const mockProviderRegistry = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+export const mockProviderRegistry = new Map<string, any>();
 
 /**
  * Exported mock config object - the control panel for all tests

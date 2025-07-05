@@ -97,7 +97,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   // Main sidebar component with tabs
   return (
     <aside
-      className="w-80 bg-card border-r border-border flex flex-col h-screen sticky top-0 overflow-hidden"
+      className="bg-card border-border sticky top-0 flex h-screen w-80 flex-col overflow-hidden border-r"
       aria-label="Sidebar with history, configuration, and custom prompt tabs"
       id="sidebar"
     >
@@ -109,9 +109,9 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       />
 
       {/* Tab Content Container */}
-      <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Scrollable Tab Content Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 relative">
+        <div className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           {activeTab === 'history' && (
             <HistoryTab
               history={history}

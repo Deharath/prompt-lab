@@ -2,15 +2,31 @@
  * Comprehensive tests for quality summary endpoint
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  vi,
+  beforeAll,
+  afterAll,
+} from 'vitest';
 import { Request, Response } from 'express';
 import {
   getQualitySummary,
   qualitySummaryHandler,
   type QualitySummaryQuery,
 } from '../src/routes/quality-summary.js';
+import { initDb } from '../src/db/index.js';
 
 describe('Quality Summary Service', () => {
+  beforeAll(async () => {
+    await initDb();
+  });
+
+  afterAll(async () => {
+    // Close the database connection
+  });
   describe('getQualitySummary', () => {
     it('should return summary with default parameters', async () => {
       const query: QualitySummaryQuery = {};
