@@ -5,7 +5,7 @@ import { useJobStore } from '../store/jobStore.js';
 export interface JobStreamingState {
   outputText: string;
   streamStatus: 'streaming' | 'complete' | 'error';
-  error: string;
+  error: string | null;
   isExecuting: boolean;
 }
 
