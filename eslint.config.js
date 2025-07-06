@@ -104,8 +104,8 @@ export default [
     files: ['apps/api/src/**/*.ts', 'apps/api/src/**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        project: ['./apps/api/tsconfig.json'],
-        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
     rules: {
@@ -120,8 +120,8 @@ export default [
     files: ['apps/web/src/**/*.ts', 'apps/web/src/**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        project: ['./apps/web/tsconfig.json'],
-        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
     rules: {
@@ -139,8 +139,8 @@ export default [
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./packages/evaluation-engine/tsconfig.json'],
-        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
     rules: {
@@ -158,8 +158,8 @@ export default [
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./packages/evaluator/tsconfig.json'],
-        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
     rules: {
@@ -184,11 +184,8 @@ export default [
     ],
     languageOptions: {
       parserOptions: {
-        project: [
-          './packages/*/tsconfig.lint.json',
-          './apps/*/tsconfig.lint.json',
-        ],
-        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
+        project: ['tsconfig.lint.json', 'tsconfig.lint.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
   },
