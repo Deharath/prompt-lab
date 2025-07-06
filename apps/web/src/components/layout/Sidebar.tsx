@@ -10,7 +10,7 @@
 
 import React from 'react';
 import type { BaseComponentProps } from '../../types/global.js';
-import AppSidebar from '../AppSidebar/index.js';
+import AppSidebar from '../features/sidebar/AppSidebar/index.js';
 import { useNavigate } from 'react-router-dom';
 import { useJobStore } from '../../store/jobStore.js';
 

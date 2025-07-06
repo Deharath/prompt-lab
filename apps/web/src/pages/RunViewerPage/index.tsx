@@ -8,9 +8,11 @@ import ConfigurationSection from './ConfigurationSection.js';
 import { OutputSection } from './OutputSection.js';
 import ResultsSection from './ResultsSection.js';
 import UsageSection from './UsageSection.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 const RunViewerPage = () => {
-  const { job, loading, error, darkMode, toggleDarkMode } = useRunViewer();
+  const { job, loading, error } = useRunViewer();
+  const { isDarkMode } = useDarkModeStore();
 
   if (loading) {
     return <LoadingState />;
@@ -23,37 +25,33 @@ const RunViewerPage = () => {
   return (
     <div
       className={`min-h-screen transition-colors duration-300 ${
-        darkMode
+        isDarkMode
           ? 'dark bg-linear-to-br from-gray-900 via-slate-900 to-black'
           : 'bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50'
       }`}
     >
       {/* Header */}
-      <RunViewerHeader
-        jobId={job.id}
-        darkMode={darkMode}
-        onToggleDarkMode={toggleDarkMode}
-      />
+      <RunViewerHeader jobId={job.id} />
 
       {/* Main Content */}
       <div className="mx-auto max-w-6xl space-y-6 p-6">
         {/* Job Info Header */}
-        <JobInfoSection job={job} darkMode={darkMode} />
+        <JobInfoSection job={job} />
 
         {/* Prompt Section */}
-        <PromptSection job={job} darkMode={darkMode} />
+        <PromptSection job={job} />
 
         {/* Configuration Section */}
-        <ConfigurationSection job={job} darkMode={darkMode} />
+        <ConfigurationSection job={job} />
 
         {/* Results/Output Section */}
-        <OutputSection job={job} darkMode={darkMode} />
+        <OutputSection job={job} />
 
         {/* Metrics Section */}
-        <ResultsSection job={job} darkMode={darkMode} />
+        <ResultsSection job={job} />
 
         {/* Usage Info */}
-        <UsageSection job={job} darkMode={darkMode} />
+        <UsageSection job={job} />
       </div>
     </div>
   );

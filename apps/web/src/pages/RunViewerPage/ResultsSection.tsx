@@ -1,15 +1,16 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
-import ShareRunButton from '../../components/ShareRunButton.js';
-import ResultsPanel from '../../components/ResultsPanelV2.js';
+import ShareRunButton from '../../components/shared/ShareRunButton.js';
+import ResultsPanel from '../../components/features/metrics/ResultsPanel.js';
 import type { JobDetails } from './types.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface ResultsSectionProps {
   job: JobDetails;
-  darkMode: boolean;
 }
 
-const ResultsSection: React.FC<ResultsSectionProps> = ({ job, darkMode }) => {
+const ResultsSection: React.FC<ResultsSectionProps> = ({ job }) => {
+  const { isDarkMode } = useDarkModeStore();
   if (!job.result) return null;
 
   return (
@@ -36,7 +37,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ job, darkMode }) => {
               </div>
               <h3
                 className={`text-lg font-semibold transition-colors duration-300 ${
-                  darkMode ? 'text-gray-200' : 'text-gray-900'
+                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
                 }`}
               >
                 Output
@@ -47,7 +48,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ job, darkMode }) => {
 
           <div
             className={`min-h-[200px] w-full rounded-xl border-2 p-4 font-mono text-sm whitespace-pre-wrap transition-colors duration-300 ${
-              darkMode
+              isDarkMode
                 ? 'border-gray-600/50 bg-gray-800/50 text-gray-300'
                 : 'border-gray-200/50 bg-gray-50/50 text-gray-700'
             }`}

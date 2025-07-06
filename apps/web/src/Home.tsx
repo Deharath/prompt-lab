@@ -3,12 +3,12 @@ import { useJobStore } from './store/jobStore.js';
 import { useWorkspaceStore } from './store/workspaceStore.js';
 import { useDarkModeStore } from './store/darkModeStore.js';
 import { useToggle } from './hooks/useToggle.js';
-import AppSidebar from './components/AppSidebar.js';
-import DiffView from './components/DiffView.js';
-import HeaderWithTokenSummary from './components/layout/HeaderWithTokenSummary.js';
+import AppSidebar from './components/features/sidebar/AppSidebar/index.js';
+import DiffView from './components/features/diff/DiffView.js';
+import Header from './components/layout/Header.js';
 import PromptWorkspace, {
   type PromptWorkspaceRef,
-} from './components/PromptWorkspace.js';
+} from './components/features/prompt/PromptWorkspace.js';
 
 const Home = () => {
   // Layout-only state
@@ -60,72 +60,76 @@ const Home = () => {
   };
 
   return (
-    <div className="bg-background flex h-screen overflow-hidden">
-      {/* Sticky Sidebar - Always visible on desktop, overlay on mobile */}
-      <div
-        className={`sticky top-0 z-30 h-screen flex-shrink-0 transform transition-transform duration-300 ease-in-out lg:static lg:z-auto ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-80 lg:w-80'} ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'} bg-background border-border border-r lg:translate-x-0`}
-      >
-        <AppSidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onSelectJob={handleJobSelect}
-          onCompareJobs={handleCompareJobs}
-          provider={provider}
-          model={model}
-          onProviderChange={setProvider}
-          onModelChange={setModel}
-          onLoadTemplate={setTemplate}
-          onRunEvaluation={handleRun}
-          canRunEvaluation={canRunEvaluation}
-          // Token summary data
-          promptTokens={promptTokens}
-          estimatedCompletionTokens={estimatedCompletionTokens}
-          totalTokens={totalTokens}
-          estimatedCost={estimatedCost}
-          template={template}
-          inputData={inputData}
-        />
-      </div>
+    <div className="bg-background flex h-screen flex-col overflow-hidden">
+      {/* Full-width Header at top */}
+      <Header
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onToggleMobileSidebar={toggleMobileMenu}
+        promptTokens={promptTokens}
+        estimatedCompletionTokens={estimatedCompletionTokens}
+        totalTokens={totalTokens}
+        estimatedCost={estimatedCost}
+      />
 
-      {/* Mobile overlay */}
-      {!sidebarCollapsed && (
+      {/* Main Content Area with Sidebar and Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Below header, left side */}
         <div
-          className="bg-opacity-50 fixed inset-0 z-20 bg-black lg:hidden"
-          onClick={() => setSidebarCollapsed(true)}
-          aria-label="Close sidebar"
-        />
-      )}
+          className={`flex-shrink-0 transform transition-transform duration-300 ease-in-out ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-80 lg:w-80'} ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'} bg-background border-border border-r lg:translate-x-0`}
+        >
+          <AppSidebar
+            isCollapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onSelectJob={handleJobSelect}
+            onCompareJobs={handleCompareJobs}
+            provider={provider}
+            model={model}
+            onProviderChange={setProvider}
+            onModelChange={setModel}
+            onLoadTemplate={setTemplate}
+            onRunEvaluation={handleRun}
+            canRunEvaluation={canRunEvaluation}
+            // Token summary data
+            promptTokens={promptTokens}
+            estimatedCompletionTokens={estimatedCompletionTokens}
+            totalTokens={totalTokens}
+            estimatedCost={estimatedCost}
+            template={template}
+            inputData={inputData}
+          />
+        </div>
 
-      {/* Main Content Area */}
-      <div className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Header with Token Summary */}
-        <HeaderWithTokenSummary
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-          promptTokens={promptTokens}
-          estimatedCompletionTokens={estimatedCompletionTokens}
-          totalTokens={totalTokens}
-          estimatedCost={estimatedCost}
-        />
+        {/* Mobile overlay */}
+        {!sidebarCollapsed && (
+          <div
+            className="bg-opacity-50 fixed inset-0 z-20 bg-black lg:hidden"
+            onClick={() => setSidebarCollapsed(true)}
+            aria-label="Close sidebar"
+          />
+        )}
 
-        {/* Single Scrollable Content Container */}
-        <div className="flex-1 overflow-x-hidden overflow-y-auto">
-          {showComparison ? (
-            // Show comparison view when comparing jobs
-            <section className="p-4 sm:p-6" aria-label="Job comparison view">
-              <DiffView
-                baseJobId={comparison.baseJobId!}
-                compareJobId={comparison.compareJobId!}
-                onClose={() => {}}
+        {/* Main Content - Right side of sidebar */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {/* Single Scrollable Content Container */}
+          <div className="flex-1 overflow-x-hidden overflow-y-auto">
+            {showComparison ? (
+              // Show comparison view when comparing jobs
+              <section className="p-4 sm:p-6" aria-label="Job comparison view">
+                <DiffView
+                  baseJobId={comparison.baseJobId!}
+                  compareJobId={comparison.compareJobId!}
+                  onClose={() => {}}
+                />
+              </section>
+            ) : (
+              // Use the new PromptWorkspace component
+              <PromptWorkspace
+                ref={promptWorkspaceRef}
+                onJobSelect={handleJobSelect}
               />
-            </section>
-          ) : (
-            // Use the new PromptWorkspace component
-            <PromptWorkspace
-              ref={promptWorkspaceRef}
-              onJobSelect={handleJobSelect}
-            />
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

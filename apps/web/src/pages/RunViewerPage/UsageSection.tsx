@@ -1,13 +1,14 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
 import type { JobDetails } from './types.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface UsageSectionProps {
   job: JobDetails;
-  darkMode: boolean;
 }
 
-const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
+const UsageSection: React.FC<UsageSectionProps> = ({ job }) => {
+  const { isDarkMode } = useDarkModeStore();
   if (!job.tokensUsed && !job.costUsd) return null;
 
   return (
@@ -31,7 +32,7 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
           </div>
           <h3
             className={`text-lg font-semibold transition-colors duration-300 ${
-              darkMode ? 'text-gray-200' : 'text-gray-900'
+              isDarkMode ? 'text-gray-200' : 'text-gray-900'
             }`}
           >
             Usage
@@ -42,21 +43,21 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
           {job.tokensUsed && (
             <div
               className={`rounded-xl border p-4 transition-colors duration-300 ${
-                darkMode
+                isDarkMode
                   ? 'border-gray-700/50 bg-gray-800/30'
                   : 'border-gray-200/50 bg-gray-50/30'
               }`}
             >
               <div
                 className={`mb-1 text-sm font-medium transition-colors duration-300 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}
               >
                 Tokens Used
               </div>
               <div
                 className={`text-xl font-bold transition-colors duration-300 ${
-                  darkMode ? 'text-gray-200' : 'text-gray-900'
+                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
                 }`}
               >
                 {job.tokensUsed.toLocaleString()}
@@ -66,21 +67,21 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job, darkMode }) => {
           {job.costUsd && (
             <div
               className={`rounded-xl border p-4 transition-colors duration-300 ${
-                darkMode
+                isDarkMode
                   ? 'border-gray-700/50 bg-gray-800/30'
                   : 'border-gray-200/50 bg-gray-50/30'
               }`}
             >
               <div
                 className={`mb-1 text-sm font-medium transition-colors duration-300 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}
               >
                 Cost (USD)
               </div>
               <div
                 className={`text-xl font-bold transition-colors duration-300 ${
-                  darkMode ? 'text-gray-200' : 'text-gray-900'
+                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
                 }`}
               >
                 ${job.costUsd.toFixed(4)}

@@ -1,13 +1,14 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
 import type { JobDetails } from './types.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface JobInfoSectionProps {
   job: JobDetails;
-  darkMode: boolean;
 }
 
-const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job, darkMode }) => {
+const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job }) => {
+  const { isDarkMode } = useDarkModeStore();
   return (
     <Card>
       <div className="p-6">
@@ -26,7 +27,7 @@ const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job, darkMode }) => {
             />
             <h2
               className={`text-xl font-semibold transition-colors duration-300 ${
-                darkMode ? 'text-gray-200' : 'text-gray-900'
+                isDarkMode ? 'text-gray-200' : 'text-gray-900'
               }`}
             >
               Run #{job.id.substring(0, 8)}
@@ -48,7 +49,7 @@ const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job, darkMode }) => {
           <div className="flex items-center space-x-2">
             <span
               className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                darkMode
+                isDarkMode
                   ? 'bg-blue-900/50 text-blue-400'
                   : 'bg-blue-100 text-blue-800'
               }`}
@@ -57,7 +58,7 @@ const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job, darkMode }) => {
             </span>
             <span
               className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                darkMode
+                isDarkMode
                   ? 'bg-purple-900/50 text-purple-400'
                   : 'bg-purple-100 text-purple-800'
               }`}
@@ -70,7 +71,7 @@ const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job, darkMode }) => {
         {/* Created Date */}
         <div
           className={`text-sm transition-colors duration-300 ${
-            darkMode ? 'text-gray-400' : 'text-gray-600'
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
           }`}
         >
           Created:{' '}

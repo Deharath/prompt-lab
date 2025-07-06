@@ -82,19 +82,22 @@ dashboardRouter.get(
         );
       }
 
-      // Create prepared statements for better performance and to get actual results
-      let scoreHistoryStmt, costByModelStmt;
+      let scoreHistoryStmt,
+        costByModelStmt,
+        tokensByModelStmt,
+        estimatedCostByModelStmt;
       try {
         scoreHistoryStmt = sqlite.prepare(`
           SELECT 
             DATE(created_at, 'unixepoch') as date,
             AVG(
               CASE 
-                WHEN json_extract(metrics, '$.avgScore') IS NOT NULL 
-                THEN json_extract(metrics, '$.avgScore')
+                WHEN json_extract(metrics, '$.flesch_reading_ease') IS NOT NULL 
+                THEN json_extract(metrics, '$.flesch_reading_ease')
                 ELSE NULL
               END
-            ) as avgScore
+            ) as avgReadability,
+            COUNT(*) as totalJobs
           FROM jobs 
           WHERE created_at >= ?
           GROUP BY DATE(created_at, 'unixepoch')
@@ -110,6 +113,26 @@ dashboardRouter.get(
           GROUP BY model
           ORDER BY model
         `);
+
+        tokensByModelStmt = sqlite.prepare(`
+          SELECT 
+            model,
+            SUM(COALESCE(tokens_used, 0)) as totalTokens
+          FROM jobs 
+          WHERE created_at >= ?
+          GROUP BY model
+          ORDER BY model
+        `);
+
+        estimatedCostByModelStmt = sqlite.prepare(`
+          SELECT 
+            model,
+            SUM(COALESCE(cost_usd, 0)) as estimatedCost
+          FROM jobs 
+          WHERE created_at >= ?
+          GROUP BY model
+          ORDER BY model
+        `);
       } catch (prepareError) {
         throw new Error(
           `Failed to prepare database statements: ${prepareError instanceof Error ? prepareError.message : 'Unknown error'}`,
@@ -117,10 +140,16 @@ dashboardRouter.get(
       }
 
       // Execute queries with error handling
-      let scoreHistoryQuery, costByModelQuery;
+      let scoreHistoryQuery,
+        costByModelQuery,
+        tokensByModelQuery,
+        estimatedCostByModelQuery;
       try {
         scoreHistoryQuery = scoreHistoryStmt.all(dateThresholdUnix);
         costByModelQuery = costByModelStmt.all(dateThresholdUnix);
+        tokensByModelQuery = tokensByModelStmt.all(dateThresholdUnix);
+        estimatedCostByModelQuery =
+          estimatedCostByModelStmt.all(dateThresholdUnix);
       } catch (queryError) {
         throw new Error(
           `Failed to execute dashboard queries: ${queryError instanceof Error ? queryError.message : 'Unknown error'}`,
@@ -133,17 +162,23 @@ dashboardRouter.get(
           typeof row === 'object' &&
           row !== null &&
           'date' in row &&
-          'avgScore' in row
+          'avgReadability' in row &&
+          'totalJobs' in row
         ) {
           return {
             date: (row as { date: string }).date,
-            avgScore:
-              typeof (row as { avgScore: unknown }).avgScore === 'number'
-                ? (row as { avgScore: number }).avgScore
+            avgReadability:
+              typeof (row as { avgReadability: unknown }).avgReadability ===
+              'number'
+                ? (row as { avgReadability: number }).avgReadability
+                : 0,
+            totalJobs:
+              typeof (row as { totalJobs: unknown }).totalJobs === 'number'
+                ? (row as { totalJobs: number }).totalJobs
                 : 0,
           };
         }
-        return { date: '', avgScore: 0 };
+        return { date: '', avgReadability: 0, totalJobs: 0 };
       });
 
       const costByModel = costByModelQuery.map((row: unknown) => {
@@ -164,9 +199,50 @@ dashboardRouter.get(
         return { model: '', totalCost: 0 };
       });
 
+      const tokensByModel = tokensByModelQuery.map((row: unknown) => {
+        if (
+          typeof row === 'object' &&
+          row !== null &&
+          'model' in row &&
+          'totalTokens' in row
+        ) {
+          return {
+            model: (row as { model: string }).model,
+            totalTokens:
+              typeof (row as { totalTokens: unknown }).totalTokens === 'number'
+                ? (row as { totalTokens: number }).totalTokens
+                : 0,
+          };
+        }
+        return { model: '', totalTokens: 0 };
+      });
+
+      const estimatedCostByModel = estimatedCostByModelQuery.map(
+        (row: unknown) => {
+          if (
+            typeof row === 'object' &&
+            row !== null &&
+            'model' in row &&
+            'estimatedCost' in row
+          ) {
+            return {
+              model: (row as { model: string }).model,
+              estimatedCost:
+                typeof (row as { estimatedCost: unknown }).estimatedCost ===
+                'number'
+                  ? (row as { estimatedCost: number }).estimatedCost
+                  : 0,
+            };
+          }
+          return { model: '', estimatedCost: 0 };
+        },
+      );
+
       res.json({
         scoreHistory,
         costByModel,
+        tokensByModel,
+        estimatedCostByModel,
       });
     } catch (error) {
       next(error);

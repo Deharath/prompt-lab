@@ -22,6 +22,12 @@ interface HeaderProps extends BaseComponentProps {
   onToggleSidebar: () => void;
   onToggleMobileSidebar: () => void;
   hideSidebarToggle?: boolean;
+  hideNavigation?: boolean; // Option to hide main navigation
+  // Optional token summary props
+  promptTokens?: number;
+  estimatedCompletionTokens?: number;
+  totalTokens?: number;
+  estimatedCost?: number;
 }
 
 /**
@@ -34,6 +40,11 @@ const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   onToggleMobileSidebar,
   hideSidebarToggle = false,
+  hideNavigation = false,
+  promptTokens,
+  estimatedCompletionTokens,
+  totalTokens,
+  estimatedCost,
   className = '',
   ...props
 }) => {
@@ -130,41 +141,89 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Absolutely Centered Navigation - Always in center of screen */}
-      <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:flex">
-        <nav className="flex items-center space-x-1">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                location.pathname === item.href
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={item.icon}
-                  />
-                </svg>
-                <span>{item.label}</span>
-              </div>
-            </Link>
-          ))}
-        </nav>
-      </div>
+      {!hideNavigation && (
+        <div className="absolute left-1/2 hidden -translate-x-1/2 transform md:flex">
+          <nav className="flex items-center space-x-1">
+            {navigationItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname === item.href
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d={item.icon}
+                    />
+                  </svg>
+                  <span>{item.label}</span>
+                </div>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
 
       {/* Right Side Controls */}
       <div className="flex flex-1 items-center justify-end space-x-2">
+        {/* Token Summary - Only show if token props are provided */}
+        {promptTokens !== undefined && (
+          <div className="bg-muted/30 border-border/50 hidden items-center gap-6 rounded-lg border px-4 py-2 text-sm sm:flex">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs font-medium">
+                Prompt Tokens:
+              </span>
+              <span className="text-foreground font-mono font-semibold">
+                {promptTokens > 0 ? promptTokens.toLocaleString() : '-'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs font-medium">
+                Est. Output:
+              </span>
+              <span className="text-foreground font-mono font-semibold">
+                {(estimatedCompletionTokens || 0) > 0
+                  ? (estimatedCompletionTokens || 0).toLocaleString()
+                  : '-'}
+              </span>
+            </div>
+            <div className="border-border flex items-center gap-2 border-l pl-6">
+              <span className="text-muted-foreground text-xs font-medium">
+                Total Tokens:
+              </span>
+              <span className="text-primary font-mono font-bold">
+                {(totalTokens || 0) > 0
+                  ? (totalTokens || 0).toLocaleString()
+                  : '-'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs font-medium">
+                Estimated Cost:
+              </span>
+              <span className="font-mono font-bold text-green-600 dark:text-green-400">
+                {(estimatedCost || 0) > 0
+                  ? (estimatedCost || 0) < 0.01
+                    ? '<$0.01'
+                    : `$${(estimatedCost || 0).toFixed(4)}`
+                  : '-'}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Menu Toggle */}
         <Button
           variant="ghost"

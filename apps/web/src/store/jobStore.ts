@@ -8,7 +8,7 @@ interface LogLine {
 }
 
 // Import types from MetricSelector
-import type { SelectedMetric } from '../components/MetricSelector.js';
+import type { SelectedMetric } from '../components/features/metrics/MetricSelector.js';
 
 interface JobState {
   current?: JobSummary;

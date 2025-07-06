@@ -18,7 +18,7 @@ import Header from './Header.js';
 import Sidebar from './Sidebar.js';
 import Footer from './Footer.js';
 import { LoadingSpinner } from '../ui/LoadingState.js';
-import ErrorBoundary from '../ErrorBoundary.js';
+import ErrorBoundary from '../shared/ErrorBoundary.js';
 
 interface MainLayoutProps extends BaseComponentProps {
   children?: React.ReactNode;

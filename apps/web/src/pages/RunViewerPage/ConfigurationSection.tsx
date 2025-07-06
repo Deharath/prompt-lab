@@ -2,16 +2,14 @@ import React from 'react';
 import Card from '../../components/ui/Card.js';
 import Button from '../../components/ui/Button.js';
 import type { JobDetails } from './types.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface ConfigurationSectionProps {
   job: JobDetails;
-  darkMode: boolean;
 }
 
-const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({
-  job,
-  darkMode,
-}) => {
+const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({ job }) => {
+  const { isDarkMode } = useDarkModeStore();
   return (
     <Card>
       <div className="p-6">
@@ -39,7 +37,7 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({
           </div>
           <h3
             className={`text-lg font-semibold transition-colors duration-300 ${
-              darkMode ? 'text-gray-200' : 'text-gray-900'
+              isDarkMode ? 'text-gray-200' : 'text-gray-900'
             }`}
           >
             Configuration
@@ -51,7 +49,7 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({
           <div>
             <label
               className={`mb-2 block text-sm font-medium transition-colors duration-300 ${
-                darkMode ? 'text-gray-300' : 'text-gray-700'
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}
             >
               Provider
@@ -61,7 +59,7 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({
               disabled
               aria-disabled="true"
               className={`w-full cursor-not-allowed rounded-xl border-2 px-4 py-3 font-medium opacity-60 transition-colors duration-300 ${
-                darkMode
+                isDarkMode
                   ? 'border-gray-600/50 bg-gray-800/50 text-gray-400'
                   : 'border-gray-200/50 bg-gray-50/50 text-gray-500'
               }`}
@@ -74,7 +72,7 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({
           <div>
             <label
               className={`mb-2 block text-sm font-medium transition-colors duration-300 ${
-                darkMode ? 'text-gray-300' : 'text-gray-700'
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}
             >
               Model
@@ -84,7 +82,7 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({
               disabled
               aria-disabled="true"
               className={`w-full cursor-not-allowed rounded-xl border-2 px-4 py-3 font-medium opacity-60 transition-colors duration-300 ${
-                darkMode
+                isDarkMode
                   ? 'border-gray-600/50 bg-gray-800/50 text-gray-400'
                   : 'border-gray-200/50 bg-gray-50/50 text-gray-500'
               }`}

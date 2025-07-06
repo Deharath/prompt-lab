@@ -1,5 +1,5 @@
 import Button from '../../components/ui/Button.js';
-import ErrorMessage from '../../components/ErrorMessage.js';
+import ErrorMessage from '../../components/shared/ErrorMessage.js';
 
 interface ErrorStateProps {
   error: string | null;

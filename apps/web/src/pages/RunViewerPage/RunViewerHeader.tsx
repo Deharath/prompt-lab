@@ -1,23 +1,19 @@
 import React from 'react';
 import Button from '../../components/ui/Button.js';
-import ShareRunButton from '../../components/ShareRunButton.js';
-import DarkModeToggle from './DarkModeToggle.js';
+import ShareRunButton from '../../components/shared/ShareRunButton.js';
+import DarkModeToggle from '../../components/ui/DarkModeToggle.js';
+import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface RunViewerHeaderProps {
   jobId: string;
-  darkMode: boolean;
-  onToggleDarkMode: () => void;
 }
 
-const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({
-  jobId,
-  darkMode,
-  onToggleDarkMode,
-}) => {
+const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({ jobId }) => {
+  const { isDarkMode } = useDarkModeStore();
   return (
     <div
       className={`border-b shadow-lg transition-colors duration-300 ${
-        darkMode
+        isDarkMode
           ? 'border-gray-700/50 bg-gray-800/90 backdrop-blur-sm'
           : 'border-white/20 bg-white/80 backdrop-blur-sm'
       }`}
@@ -50,7 +46,7 @@ const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({
             <div>
               <h1
                 className={`text-2xl font-bold transition-colors duration-300 ${
-                  darkMode ? 'text-gray-200' : 'text-gray-900'
+                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
                 }`}
               >
                 Run Viewer
@@ -63,7 +59,7 @@ const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({
             <ShareRunButton jobId={jobId} />
 
             {/* Dark Mode Toggle */}
-            <DarkModeToggle darkMode={darkMode} onToggle={onToggleDarkMode} />
+            <DarkModeToggle />
           </div>
         </div>
       </div>

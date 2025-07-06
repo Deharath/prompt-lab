@@ -236,7 +236,7 @@ export class ApiClient {
   }
 
   static async fetchDashboardStats(days: number = 30): Promise<DashboardStats> {
-    const endpoint = `/dashboard/stats?days=${days}`;
+    const endpoint = `/api/dashboard/stats?days=${days}`;
     const result = await this.makeRequest<DashboardStats>(endpoint);
     return result;
   }
