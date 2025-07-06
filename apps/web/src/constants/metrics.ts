@@ -1,4 +1,4 @@
-import { MetricOption } from '../components/features/metrics/MetricSelector.js';
+import { MetricOption } from '../types/metrics.js';
 
 /**
  * Available metrics that can be selected for evaluation.

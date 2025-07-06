@@ -1,3 +1,4 @@
+import type { SelectedMetric } from '../types/metrics.js';
 import { create } from 'zustand';
 import { ApiClient } from '../api.js';
 import type { JobSummary } from '../api.js';
@@ -6,9 +7,6 @@ interface LogLine {
   ts: number;
   text: string;
 }
-
-// Import types from MetricSelector
-import type { SelectedMetric } from '../components/features/metrics/MetricSelector.js';
 
 interface JobState {
   current?: JobSummary;
