@@ -2,6 +2,7 @@
   "name": "@prompt-lab/app-api",
   "private": true,
   "version": "0.0.0",
+  "description": "Backend API for Prompt Lab - handles AI model integrations and job processing",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {

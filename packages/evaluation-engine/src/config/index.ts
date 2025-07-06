@@ -34,7 +34,7 @@ function createConfigSchema() {
           ENVIRONMENTS.PRODUCTION,
         ] as const)
         .default(ENVIRONMENTS.DEVELOPMENT),
-      host: z.string().default(isTestEnv || isCIEnv ? '0.0.0.0' : 'localhost'),
+      host: z.string().default('0.0.0.0'),
     }),
 
     // Database configuration

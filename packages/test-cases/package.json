@@ -1,6 +1,7 @@
 {
   "name": "@prompt-lab/test-cases",
   "version": "0.0.0",
+  "description": "Test cases and sample data for evaluating AI model performance",
   "scripts": {
     "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
     "build": "tsc",

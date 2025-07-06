@@ -2,6 +2,7 @@
   "name": "@prompt-lab/web",
   "private": true,
   "version": "0.0.0",
+  "description": "React web interface for Prompt Lab - AI model testing and evaluation platform",
   "type": "module",
   "main": "src/main.tsx",
   "scripts": {

@@ -104,3 +104,9 @@ packages/evaluation-engine/drizzle/
 
 # Log directory
 /logs/
+
+# Claude AI settings
+.claude/
+
+# Vite artifacts
+**/*.timestamp-*.mjs
