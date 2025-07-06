@@ -4,7 +4,9 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useJobStreaming } from '../../src/hooks/useJobStreaming.js';
+import { createElement, type ReactNode } from 'react';
 
 // Mock API
 vi.mock('../../src/api.js', () => ({
@@ -26,13 +28,32 @@ vi.mock('../../src/store/jobStore.js', () => ({
   useJobStore: () => mockJobStore,
 }));
 
+// Create a wrapper component with QueryClient
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+  return ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children);
+};
+
 describe('useJobStreaming', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
   });
 
   it('has correct initial state', () => {
-    const { result } = renderHook(() => useJobStreaming());
+    const { result } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.outputText).toBe('');
     expect(result.current.streamStatus).toBe('complete');
@@ -41,7 +62,9 @@ describe('useJobStreaming', () => {
   });
 
   it('provides executeJob and reset functions', () => {
-    const { result } = renderHook(() => useJobStreaming());
+    const { result } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     expect(typeof result.current.executeJob).toBe('function');
     expect(typeof result.current.reset).toBe('function');
@@ -49,7 +72,9 @@ describe('useJobStreaming', () => {
   });
 
   it('reset clears state correctly', () => {
-    const { result } = renderHook(() => useJobStreaming());
+    const { result } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.reset();
@@ -66,7 +91,9 @@ describe('useJobStreaming', () => {
     const { ApiClient } = await import('../../src/api.js');
     vi.mocked(ApiClient.createJob).mockRejectedValue(new Error('API Error'));
 
-    const { result } = renderHook(() => useJobStreaming());
+    const { result } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     const jobParams = {
       template: 'Hello {{input}}',
@@ -89,7 +116,9 @@ describe('useJobStreaming', () => {
   });
 
   it('cleans up EventSource on unmount', () => {
-    const { unmount } = renderHook(() => useJobStreaming());
+    const { unmount } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     unmount();
 

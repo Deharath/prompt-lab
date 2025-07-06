@@ -9,6 +9,8 @@ import { useWorkspaceStore } from '../../src/store/workspaceStore.js';
 import { useJobStore } from '../../src/store/jobStore.js';
 import { useJobStreaming } from '../../src/hooks/useJobStreaming.js';
 import { renderHook } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createElement, type ReactNode } from 'react';
 import type { JobSummary, JobDetails } from '../../src/api.js';
 
 // Mock the API client
@@ -22,6 +24,23 @@ vi.mock('../../src/api.js', () => ({
 
 // Import the mocked ApiClient
 import { ApiClient } from '../../src/api.js';
+
+// Create a wrapper component with QueryClient
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+  return ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children);
+};
 
 // Mock EventSource for SSE streaming
 class MockEventSource {
@@ -111,7 +130,9 @@ describe('Run Job Workflow Integration', () => {
     });
 
     // Step 2: Set up job streaming
-    const { result: jobStreamingResult } = renderHook(() => useJobStreaming());
+    const { result: jobStreamingResult } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     // Step 3: Execute the job
     const jobParams = {
@@ -189,7 +210,9 @@ describe('Run Job Workflow Integration', () => {
     });
 
     // Set up job streaming
-    const { result: jobStreamingResult } = renderHook(() => useJobStreaming());
+    const { result: jobStreamingResult } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     // Execute job
     const jobParams = {
@@ -243,7 +266,9 @@ describe('Run Job Workflow Integration', () => {
 
     // Set up workspace and job streaming
     const { result: workspaceResult } = renderHook(() => useWorkspaceStore());
-    const { result: jobStreamingResult } = renderHook(() => useJobStreaming());
+    const { result: jobStreamingResult } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       workspaceResult.current.setTemplate('Test prompt');
@@ -289,7 +314,9 @@ describe('Run Job Workflow Integration', () => {
 
     // Set up workspace and job streaming
     const { result: workspaceResult } = renderHook(() => useWorkspaceStore());
-    const { result: jobStreamingResult } = renderHook(() => useJobStreaming());
+    const { result: jobStreamingResult } = renderHook(() => useJobStreaming(), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       workspaceResult.current.setTemplate('Long running prompt');
