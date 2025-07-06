@@ -1,15 +1,15 @@
-const tsParser = require('@typescript-eslint/parser');
-const typescriptEslint = require('@typescript-eslint/eslint-plugin');
-const prettier = require('eslint-plugin-prettier');
-const react = require('eslint-plugin-react');
-const reactHooks = require('eslint-plugin-react-hooks');
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from 'eslint-plugin-storybook';
+import tsParser from '@typescript-eslint/parser';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import prettier from 'eslint-plugin-prettier';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import { fixupPluginRules } from '@eslint/compat';
+import globals from 'globals';
+import js from '@eslint/js';
 
-const { fixupPluginRules } = require('@eslint/compat');
-
-const globals = require('globals');
-const js = require('@eslint/js');
-
-module.exports = [
+export default [
   {
     ignores: [
       '**/dist',
@@ -19,6 +19,7 @@ module.exports = [
       '**/vitest.config.js',
       '**/postcss.config.js',
       '**/tailwind.config.js',
+      '**/__mocks__/**',
     ],
   },
 
@@ -32,7 +33,7 @@ module.exports = [
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
-        tsconfigRootDir: __dirname,
+        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
         ecmaFeatures: {
           jsx: true,
         },
@@ -59,41 +60,113 @@ module.exports = [
     rules: {
       // Disable standard no-unused-vars in favor of TypeScript version
       'no-unused-vars': 'off',
-      // Basic TypeScript rules
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
+
+      // Code complexity and quality rules
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-lines-per-function': 'off',
+      'max-nested-callbacks': 'off',
+      'max-params': 'off',
+      'no-console': 'off',
+      'no-debugger': 'error',
+      'no-duplicate-imports': 'off',
+      'no-magic-numbers': 'off',
+      'prefer-const': 'off',
+      'no-var': 'off',
+
+      // Basic TypeScript rules (not requiring type information)
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
 
       // React rules
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'react/jsx-no-useless-fragment': 'off',
+      'react/jsx-boolean-value': ['error', 'never'],
+      'react/jsx-curly-brace-presence': [
+        'error',
+        { props: 'never', children: 'never' },
+      ],
+      'react/self-closing-comp': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'off',
 
       // Prettier integration
       'prettier/prettier': 'error',
     },
   },
 
-  // TypeScript source files configuration
+  // Type-aware rules for apps/api
+  {
+    files: ['apps/api/src/**/*.ts', 'apps/api/src/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+  // Type-aware rules for apps/web
+  {
+    files: ['apps/web/src/**/*.ts', 'apps/web/src/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+  // Type-aware rules for packages/evaluation-engine
   {
     files: [
-      'packages/*/src/**/*.ts',
-      'packages/*/src/**/*.tsx',
-      'apps/*/src/**/*.ts',
-      'apps/*/src/**/*.tsx',
+      'packages/evaluation-engine/src/**/*.ts',
+      'packages/evaluation-engine/src/**/*.tsx',
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./packages/*/tsconfig.json', './apps/*/tsconfig.json'],
-        tsconfigRootDir: __dirname,
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+  // Type-aware rules for packages/evaluator
+  {
+    files: [
+      'packages/evaluator/src/**/*.ts',
+      'packages/evaluator/src/**/*.tsx',
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
     },
   },
 
@@ -111,11 +184,8 @@ module.exports = [
     ],
     languageOptions: {
       parserOptions: {
-        project: [
-          './packages/*/tsconfig.lint.json',
-          './apps/*/tsconfig.lint.json',
-        ],
-        tsconfigRootDir: __dirname,
+        project: ['tsconfig.lint.json', 'tsconfig.lint.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
   },

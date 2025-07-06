@@ -1,31 +1,52 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+/* TailwindCSS v4.1+ Dark Mode Configuration - Manual Toggle */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @plugin "@tailwindcss/typography";
+
+/* Tailwind v4 Dark Mode Configuration */
+@theme {
+  --default-transition-duration: 300ms;
+}
 
 /* Design System Color Palette - Tailwind v4.1 CSS-first configuration */
 @theme {
-  --color-background: #111827;
-  --color-foreground: #f3f4f6;
+  --color-background: #f9fafb;
+  --color-foreground: #111827;
   --color-primary: #818cf8;
-  --color-card: #1f2937;
-  --color-border: #374151;
+  --color-card: #ffffff;
+  --color-border: #e5e7eb;
   --color-success: #4ade80;
   --color-error: #f87171;
-  --color-muted: #6b7280;
+  --color-muted: #9ca3af;
   --color-accent: #a855f7;
 }
 
-/* Light mode color palette - outside @theme block */
-@media (prefers-color-scheme: light) {
-  :root {
-    --color-background: #f9fafb;
-    --color-foreground: #111827;
-    --color-card: #ffffff;
-    --color-border: #e5e7eb;
-    --color-muted: #9ca3af;
+/* Dark mode color palette */
+.dark {
+  --color-background: #0f172a;
+  --color-foreground: #f1f5f9;
+  --color-primary: #818cf8;
+  --color-card: #1e293b;
+  --color-border: #334155;
+  --color-success: #4ade80;
+  --color-error: #f87171;
+  --color-muted: #64748b;
+  --color-accent: #a855f7;
+}
+
+
+
+/* Custom animations and styles */
+@layer utilities {
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
   }
 }
 
-/* Custom animations and styles */
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -192,9 +213,31 @@
   color: inherit;
 }
 
+/* Dropdown option styling for dark mode */
+.dark select option {
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
+/* Enhanced dropdown support for browsers that support color-scheme */
+.dark select {
+  color-scheme: dark;
+}
+
 /* Focus styles */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none;
+}
+
+/* Recharts library overrides to fix Tailwind conflicts */
+.recharts-bar-rectangle path {
+  fill: var(--color-primary);
+}
+.dark .recharts-bar-rectangle path {
+  fill: var(--color-primary);
+}
+.recharts-surface:hover {
+  cursor: default;
 }
 
 /* Loading shimmer effect */

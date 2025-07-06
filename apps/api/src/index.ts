@@ -1,13 +1,18 @@
 import express, { type Express } from 'express';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import { log, config } from '@prompt-lab/api';
-import { ApiError } from '@prompt-lab/api';
+import { log, config } from '@prompt-lab/evaluation-engine';
+import { ApiError } from '@prompt-lab/evaluation-engine';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
 import dashboardRouter from './routes/dashboard.js';
+import {
+  qualitySummaryRouter,
+  initializeCache,
+} from '@prompt-lab/evaluation-engine';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
@@ -42,40 +47,51 @@ app.use((req, res, next) => {
 // Security middleware
 app.use(express.json({ limit: config.security.requestSizeLimit })); // Limit request size
 
-// Rate limiting for jobs API
-const jobsRateLimit = rateLimit({
+// Rate limiting for jobs API - stricter for writes, more permissive for reads
+const jobsWriteRateLimit = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.jobsMax,
   message: { error: 'Too many job requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'GET', // Skip rate limiting for GET requests (reading history)
 });
 
-// Global rate limiting (more permissive)
-const globalRateLimit = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.globalMax,
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(globalRateLimit);
+// Remove global and read rate limits, only apply write rate limit to POST /jobs
 
 app.use('/health', healthRouter);
 app.get('/health', (_req, res) => {
   res.redirect('/health/');
 });
 
-app.use('/jobs', jobsRateLimit, jobsRouter);
+// Apply jobsWriteRateLimit only to POST /jobs
+app.post('/jobs', jobsWriteRateLimit);
+app.use('/jobs', jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api', qualitySummaryRouter);
 
-// Serve built web UI from /public when present
+// Serve built web UI from /public when present (production only)
 app.use(express.static(join(rootDir, 'public')));
 
-// Fallback to index.html for SPA routing
+// Fallback to index.html for SPA routing (only if index.html exists)
 app.get('*', (_req, res) => {
-  res.sendFile(join(rootDir, 'public', 'index.html'));
+  const indexPath = join(rootDir, 'public', 'index.html');
+  if (existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // In development mode, return a simple API-only response
+    res.status(404).json({
+      error: 'Not Found',
+      message:
+        'This is the API server. Frontend is served separately in development mode.',
+      availableEndpoints: [
+        '/health',
+        '/jobs',
+        '/api/dashboard',
+        '/api/quality-summary',
+      ],
+    });
+  }
 });
 
 app.use(
@@ -128,20 +144,35 @@ app.use(
 
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  const server = app.listen(config.server.port, config.server.host, () => {
-    log.info(`API server started`, {
-      port: config.server.port,
-      env: config.server.env,
-      host: config.server.host,
-    });
-    log.info(
-      `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
-    );
-  });
+  try {
+    // Initialize quality summary cache
+    initializeCache();
 
-  server.on('error', (error) => {
-    log.error('Server failed to start', { error: error.message });
-  });
+    const server = app.listen(config.server.port, config.server.host, () => {
+      log.info(`API server started`, {
+        port: config.server.port,
+        env: config.server.env,
+        host: config.server.host,
+      });
+      log.info(
+        `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
+      );
+    });
+
+    server.on('error', (error) => {
+      log.error('Server failed to start', { error: error.message });
+      console.error('Full server error:', error);
+      process.exit(1);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    log.error(
+      'Startup error',
+      {},
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    process.exit(1);
+  }
 }
 
 export default app;

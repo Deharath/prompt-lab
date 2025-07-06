@@ -11,14 +11,16 @@ const Card = ({ title, children, className = '', id }: CardProps) => {
   return (
     <div
       id={id}
-      className={`bg-card border border-border rounded-lg shadow-sm transition-colors duration-200 ${className}`}
+      className={`rounded-lg border border-gray-200 bg-white shadow-sm transition-colors duration-200 dark:border-gray-600 dark:bg-gray-800 ${className}`}
     >
       {title && (
-        <div className="px-6 py-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-600">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            {title}
+          </h3>
         </div>
       )}
-      <div className="p-6">{children}</div>
+      <div className="p-0">{children}</div>
     </div>
   );
 };

@@ -1,27 +1,74 @@
 import type { DashboardStats } from './types/dashboard.js';
+import type { QualitySummaryData } from './hooks/useQualitySummary.js';
+
+// Helper function to parse dates from JSON
+
+function parseDatesInObject<T>(obj: any): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => parseDatesInObject(item)) as T;
+  }
+
+  const result = { ...obj };
+  for (const key in result) {
+    if (key === 'createdAt' || key === 'updatedAt') {
+      if (typeof result[key] === 'string') {
+        result[key] = new Date(result[key]);
+      }
+    } else if (typeof result[key] === 'object') {
+      result[key] = parseDatesInObject(result[key]);
+    }
+  }
+
+  return result as T;
+}
 
 export interface JobRequest {
   prompt: string;
+  template?: string;
+  inputData?: string;
   provider: string;
   model: string;
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
+  metrics?: Array<{ id: string; input?: string }>;
 }
 
 export interface JobSummary {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
+  createdAt: Date;
+  provider: string;
+  model: string;
+  costUsd?: number | null;
+  avgScore?: number | null;
+  resultSnippet?: string | null;
 }
 
 export interface JobResult {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
   result?: string;
   metrics?: Record<string, unknown>;
   tokensUsed?: number;
   costUsd?: number;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_tokens?: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface JobDetails extends JobResult {
   prompt: string;
+  template?: string;
+  inputData?: string;
   provider: string;
   model: string;
 }
@@ -51,13 +98,22 @@ export class ApiClient {
         let errorMessage = 'An error occurred';
         let errorCode: string | undefined;
 
+        // Clone the response first, before any attempts to read the body
+        const responseForJson = response.clone();
+        const responseForText = response.clone();
+
         try {
-          const errorData: ApiError = await response.json();
+          const errorData: ApiError = await responseForJson.json();
           errorMessage = errorData.error || errorMessage;
           errorCode = errorData.code;
         } catch {
-          // If we can't parse JSON, use the response text
-          errorMessage = (await response.text()) || `HTTP ${response.status}`;
+          // If we can't parse JSON, try to get plain text
+          try {
+            errorMessage =
+              (await responseForText.text()) || `HTTP ${response.status}`;
+          } catch {
+            errorMessage = `HTTP ${response.status}`;
+          }
         }
 
         const error = new Error(errorMessage) as Error & {
@@ -69,7 +125,8 @@ export class ApiClient {
         throw error;
       }
 
-      return response.json();
+      const jsonData = await response.json();
+      return parseDatesInObject<T>(jsonData);
     } catch (error) {
       clearTimeout(timeoutId);
       throw error;
@@ -77,24 +134,18 @@ export class ApiClient {
   }
 
   static async createJob(body: JobRequest): Promise<JobSummary> {
-    console.log('🚀 Creating job with:', body);
-
     const result = await this.makeRequest<JobSummary>('/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
 
-    console.log('✅ Job created:', result);
     return result;
   }
 
-  static async fetchJob(id: string): Promise<JobResult> {
-    console.log('📊 Fetching job:', id);
+  static async fetchJob(id: string): Promise<JobDetails> {
+    const result = await this.makeRequest<JobDetails>(`/jobs/${id}`);
 
-    const result = await this.makeRequest<JobResult>(`/jobs/${id}`);
-
-    console.log('✅ Job fetched:', result);
     return result;
   }
 
@@ -105,28 +156,25 @@ export class ApiClient {
     onError?: (error: Error) => void,
     onMetrics?: (metrics: Record<string, unknown>) => void,
   ): EventSource {
-    console.log('🌊 Starting EventSource for job:', id);
     const es = new EventSource(`/jobs/${id}/stream`);
     let done = false;
 
     es.onopen = () => {
-      console.log('🔗 EventSource connection opened');
+      // intentionally empty: event stream open handler
     };
 
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        console.log('📡 SSE event received:', { type: e.type, data });
 
         if (data.token) {
           onMessage(data.token);
         }
         if (data.error && onError) {
-          console.log('❌ Stream error:', data.error);
           onError(new Error(data.error));
         }
       } catch (_err) {
-        console.warn('Non-JSON SSE event:', e.data);
+        // intentionally empty: ignore parse errors in event stream
       }
     };
 
@@ -134,56 +182,49 @@ export class ApiClient {
     es.addEventListener('metrics', (e: MessageEvent) => {
       try {
         const data = JSON.parse(e.data);
-        console.log('📊 Metrics received:', data);
         if (onMetrics) {
           onMetrics(data);
         }
       } catch (_err) {
-        console.warn('Failed to parse metrics event:', e.data);
+        // intentionally empty: ignore parse errors in event stream
       }
     });
 
     es.addEventListener('done', (e: MessageEvent) => {
       try {
-        const data = JSON.parse(e.data);
-        console.log('✅ Done event received:', data);
+        JSON.parse(e.data);
         done = true;
         onDone();
         es.close();
       } catch (_err) {
-        console.warn('Failed to parse done event:', e.data);
+        // intentionally empty: ignore parse errors in event stream
       }
     });
 
-    es.addEventListener('error', (e: MessageEvent) => {
+    es.addEventListener('error', (_e: MessageEvent) => {
       try {
-        const data = JSON.parse(e.data);
-        console.log('❌ Error event received:', data);
+        // Only call onError if the stream didn't complete normally
         if (onError) {
-          onError(new Error(data.error || 'Stream error'));
+          onError(new Error('Stream error'));
         }
       } catch (_err) {
-        console.warn('Failed to parse error event:', e.data);
+        // intentionally empty: ignore parse errors in event stream
       }
     });
 
-    es.onerror = (e) => {
-      console.error('❌ EventSource connection error:', e);
+    es.onerror = (_e) => {
       // Only call onError if the stream didn't complete normally
       if (!done && onError) {
         const error = new Error('Stream connection failed');
         onError(error);
       }
-      es.close();
     };
 
     return es;
   }
 
   static async listJobs(): Promise<JobSummary[]> {
-    console.log('📜 Fetching job history');
     const result = await this.makeRequest<JobSummary[]>('/jobs');
-    console.log('✅ Job history fetched:', result);
     return result;
   }
 
@@ -191,30 +232,51 @@ export class ApiClient {
     baseId: string,
     compareId: string,
   ): Promise<{ baseJob: JobDetails; compareJob: JobDetails }> {
-    console.log('📊 Diffing jobs:', baseId, compareId);
     const endpoint = `/jobs/${baseId}/diff?otherId=${compareId}`;
     const result = await this.makeRequest<{
       baseJob: JobDetails;
       compareJob: JobDetails;
     }>(endpoint);
-    console.log('✅ Jobs diff fetched:', result);
     return result;
   }
 
   static async fetchDashboardStats(days: number = 30): Promise<DashboardStats> {
-    console.log('📊 Fetching dashboard stats for days:', days);
-    const endpoint = `/dashboard/stats?days=${days}`;
+    const endpoint = `/api/dashboard/stats?days=${days}`;
     const result = await this.makeRequest<DashboardStats>(endpoint);
-    console.log('✅ Dashboard stats fetched:', result);
+    return result;
+  }
+
+  static async deleteJob(id: string): Promise<void> {
+    await this.makeRequest(`/jobs/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  static async fetchQualitySummary(
+    params: {
+      model?: string;
+      since?: string;
+      until?: string;
+      windowDays?: number;
+    } = {},
+  ): Promise<{
+    success: boolean;
+    data: QualitySummaryData;
+    cached: boolean;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params.model) queryParams.append('model', params.model);
+    if (params.since) queryParams.append('since', params.since);
+    if (params.until) queryParams.append('until', params.until);
+    if (params.windowDays)
+      queryParams.append('windowDays', params.windowDays.toString());
+
+    const endpoint = `/api/quality-summary?${queryParams.toString()}`;
+    const result = await this.makeRequest<{
+      success: boolean;
+      data: QualitySummaryData;
+      cached: boolean;
+    }>(endpoint);
     return result;
   }
 }
-
-// Legacy exports for backward compatibility
-export const createJob = ApiClient.createJob.bind(ApiClient);
-export const fetchJob = ApiClient.fetchJob.bind(ApiClient);
-export const streamJob = ApiClient.streamJob.bind(ApiClient);
-export const listJobs = ApiClient.listJobs.bind(ApiClient);
-export const diffJobs = ApiClient.diffJobs.bind(ApiClient);
-export const fetchDashboardStats =
-  ApiClient.fetchDashboardStats.bind(ApiClient);

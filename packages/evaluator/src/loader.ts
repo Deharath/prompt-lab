@@ -48,14 +48,16 @@ export function discoverMetrics(): Map<string, MetricFn> {
   return new Map(Object.entries(metricMap));
 }
 
+const DEFAULT_CONCURRENCY = 5;
+
 export async function runMetric(
   name: string,
   openai: OpenAI,
   items: MetricInput[],
-  concurrency = 5,
+  concurrency = DEFAULT_CONCURRENCY,
 ): Promise<number[]> {
   const metric = metricMap[name];
-  if (!metric) {
+  if (metric === undefined) {
     throw new Error(`Unknown metric: ${name}`);
   }
   const limit = pLimit(concurrency);

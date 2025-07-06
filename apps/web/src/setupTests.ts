@@ -1,6 +1,25 @@
-import 'eventsource-polyfill';
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
+
+// Properly mock EventSource instead of using polyfill
+Object.defineProperty(globalThis, 'EventSource', {
+  value: vi.fn().mockImplementation((url: string) => ({
+    url,
+    readyState: 1,
+    CONNECTING: 0,
+    OPEN: 1,
+    CLOSED: 2,
+    onopen: null,
+    onmessage: null,
+    onerror: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    close: vi.fn(),
+  })),
+  writable: true,
+  configurable: true,
+});
 
 // Mock EventSource for tests
 class MockEventSource extends EventTarget {
@@ -24,7 +43,7 @@ class MockEventSource extends EventTarget {
 }
 
 // Replace global EventSource in test environment
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (globalThis as any).EventSource = MockEventSource;
 
 // Mock ResizeObserver for Recharts
@@ -34,11 +53,24 @@ class MockResizeObserver {
   disconnect() {}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).ResizeObserver = MockResizeObserver;
 
 // Mock window.scrollTo for JSDOM
 Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
   writable: true,
+});
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
 });

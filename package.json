@@ -12,8 +12,8 @@
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "tsc": "pnpm -r tsc",
     "build": "pnpm -r --sort build",
-    "test": "vitest run --coverage --config vitest.config.mts",
-    "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts",
+    "test": "vitest run --coverage --config vitest.config.mts --reporter=dot",
+    "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts --reporter=dot",
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "lint:data": "node scripts/lint-jsonl.cjs",
@@ -25,7 +25,10 @@
     "deps:check": "depcheck --ignores='@types/*,@testing-library/*,@vitejs/*,@vitest/*,eslint-*,@eslint/*,typescript,react-dom,better-sqlite3,get-port,rimraf,supertest,@jridgewell/set-array' --ignore-patterns='scripts/**/*'",
     "deps:update": "pnpm update --recursive --latest",
     "prepare": "husky",
-    "migrate": "pnpm exec tsx scripts/migrate.ts"
+    "migrate": "pnpm exec tsx scripts/migrate.ts",
+    "quality:check": "pnpm lint && pnpm tsc && pnpm test",
+    "quality:fix": "pnpm format && pnpm lint --fix",
+    "pre-push": "pnpm quality:check"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -65,6 +68,7 @@
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.13",
     "rimraf": "^6.0.1",
     "supertest": "^7.1.1",
     "tsx": "^4.20.3",
@@ -104,7 +108,16 @@
         "@typescript-eslint/eslint-plugin": "8",
         "@typescript-eslint/parser": "8"
       }
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "sharp"
+    ]
   },
-  "//": "Ensure only @types/express@4.17.21 is used for Express 4.x compatibility"
+  "//": "Ensure only @types/express@4.17.21 is used for Express 4.x compatibility",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.2"
+  },
+  "type": "module"
 }

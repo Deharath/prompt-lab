@@ -32,17 +32,17 @@ const StatCard = ({
 
   return (
     <div
-      className={`bg-card border border-border rounded-lg p-4 shadow-sm transition-colors duration-200 ${className}`}
+      className={`bg-card border-border rounded-lg border p-4 shadow-sm transition-colors duration-200 ${className}`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-medium text-muted uppercase tracking-wide">
+      <div className="mb-2 flex items-center justify-between">
+        <h4 className="text-muted text-sm font-medium tracking-wide uppercase">
           {title}
         </h4>
         {icon && <div className="text-muted">{icon}</div>}
       </div>
 
       <div className="flex items-baseline justify-between">
-        <div className="text-2xl font-bold text-foreground">
+        <div className="text-foreground text-2xl font-bold">
           {typeof value === 'number' ? value.toFixed(3) : value}
         </div>
 

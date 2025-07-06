@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
     "build": "tsc",
-    "test": "vitest run",
+    "test": "vitest run --reporter=dot",
     "lint": "eslint . --max-warnings 0",
     "tsc": "tsc -p tsconfig.lint.json --noEmit"
   },

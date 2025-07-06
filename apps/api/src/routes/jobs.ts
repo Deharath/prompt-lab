@@ -7,23 +7,110 @@ import {
   listJobs,
   getPreviousJob,
   getProvider,
+  deleteJob,
   type Job,
-} from '@prompt-lab/api';
+} from '@prompt-lab/evaluation-engine';
 import {
   ValidationError,
   NotFoundError,
   ServiceUnavailableError,
 } from '../errors/ApiError.js';
 
+// Import NEW metric calculation system
+import {
+  calculateMetrics,
+  type MetricInput,
+} from '@prompt-lab/evaluation-engine';
+
+// Default metrics that are always calculated as per plan_for_metrics_upgrade.md
+const DEFAULT_METRICS: MetricInput[] = [
+  { id: 'flesch_reading_ease' },
+  { id: 'flesch_kincaid' },
+  { id: 'sentiment' },
+  { id: 'word_count' },
+  { id: 'sentence_count' },
+  { id: 'avg_words_per_sentence' },
+  { id: 'vocab_diversity' },
+  { id: 'completeness_score' },
+];
+
+// Helper function to calculate metrics with new upgraded system
+async function calculateJobMetrics(
+  output: string,
+  selectedMetrics?: unknown,
+  jobContext?: { prompt?: string; inputData?: unknown; template?: string },
+): Promise<Record<string, unknown>> {
+  if (!output || typeof output !== 'string') {
+    return {};
+  }
+
+  // Start with default metrics that are always calculated
+  let allMetrics = [...DEFAULT_METRICS];
+
+  // Add any additional selected metrics
+  if (selectedMetrics && Array.isArray(selectedMetrics)) {
+    const additionalMetrics = selectedMetrics as Array<{
+      id: string;
+      input?: string;
+    }>;
+    const additionalInputs: MetricInput[] = additionalMetrics
+      .filter((m) => !DEFAULT_METRICS.some((d) => d.id === m.id)) // Avoid duplicates
+      .map((m) => ({ id: m.id, input: m.input }));
+    allMetrics = [...allMetrics, ...additionalInputs];
+  }
+
+  // For precision, recall, f_score: if no explicit input provided, use job context as reference
+  if (jobContext) {
+    ['precision', 'recall', 'f_score'].forEach((metricId) => {
+      const metric = allMetrics.find((m) => m.id === metricId);
+      if (metric && !metric.input) {
+        // Build reference text from input data (the article/content to summarize)
+        let referenceText = '';
+
+        // Primary source: inputData (the actual content being processed)
+        if (jobContext.inputData) {
+          if (typeof jobContext.inputData === 'string') {
+            referenceText = jobContext.inputData;
+          } else if (typeof jobContext.inputData === 'object') {
+            referenceText = JSON.stringify(jobContext.inputData);
+          }
+        }
+
+        // Fallback: use prompt if no inputData
+        if (!referenceText && jobContext.prompt) {
+          referenceText = jobContext.prompt;
+        }
+
+        // Set the reference text for comparison
+        if (referenceText.trim()) {
+          metric.input = referenceText.trim();
+        }
+      }
+    });
+  }
+
+  return await calculateMetrics(output, allMetrics);
+}
+
 const jobsRouter = createRouter();
 
 // POST /jobs - Create a new job
 jobsRouter.post(
-  '/',
+  '/', // ...existing code...
 
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { prompt, provider: providerName, model } = req.body;
+      const {
+        prompt,
+        template,
+        inputData,
+        provider: providerName,
+        model,
+        temperature,
+        topP,
+        maxTokens,
+        metrics: selectedMetrics,
+      } = req.body;
 
       // Enhanced validation
       if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
@@ -36,6 +123,34 @@ jobsRouter.post(
 
       if (!model || typeof model !== 'string') {
         throw new ValidationError('model must be a non-empty string.');
+      }
+
+      // Validate optional model parameters
+      if (
+        temperature !== undefined &&
+        (typeof temperature !== 'number' || temperature < 0 || temperature > 2)
+      ) {
+        throw new ValidationError(
+          'temperature must be a number between 0 and 2.',
+        );
+      }
+
+      if (
+        topP !== undefined &&
+        (typeof topP !== 'number' || topP < 0 || topP > 1)
+      ) {
+        throw new ValidationError('topP must be a number between 0 and 1.');
+      }
+
+      if (
+        maxTokens !== undefined &&
+        (typeof maxTokens !== 'number' || maxTokens < 0)
+      ) {
+        throw new ValidationError('maxTokens must be a positive number.');
+      }
+
+      if (selectedMetrics !== undefined && !Array.isArray(selectedMetrics)) {
+        throw new ValidationError('metrics must be an array of metric IDs.');
       }
 
       // Limit prompt length for security and cost control
@@ -67,11 +182,20 @@ jobsRouter.post(
         );
       }
 
-      const job = await createJob({
+      // Build the job creation payload with optional parameters
+      const jobData = {
         prompt,
+        ...(template && { template }),
+        ...(inputData && { inputData }),
         provider: providerName,
         model,
-      });
+        ...(temperature !== undefined && { temperature }),
+        ...(topP !== undefined && { topP }),
+        ...(maxTokens !== undefined && { maxTokens }),
+        ...(selectedMetrics !== undefined && { selectedMetrics }),
+      };
+
+      const job = await createJob(jobData);
 
       res.status(202).json(job);
     } catch (error) {
@@ -101,7 +225,7 @@ jobsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
       throw new ValidationError('offset must be a non-negative integer.');
     }
 
-    const options: import('@prompt-lab/api').ListJobsOptions = {
+    const options: import('@prompt-lab/evaluation-engine').ListJobsOptions = {
       limit: limitNum,
       offset: offsetNum,
     };
@@ -110,7 +234,8 @@ jobsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
       options.provider = provider;
     }
     if (status) {
-      options.status = status as import('@prompt-lab/api').JobStatus;
+      options.status =
+        status as import('@prompt-lab/evaluation-engine').JobStatus;
     }
     if (since) {
       const date = new Date(since);
@@ -182,11 +307,10 @@ jobsRouter.get(
             sseString += `event: ${event}\n`;
           }
           sseString += `data: ${jsonData}\n\n`;
-          console.log('SSE WRITE:', JSON.stringify(sseString)); // TEMP DEBUG
           res.write(sseString);
           if (typeof res.flush === 'function') res.flush(); // Ensure immediate delivery
-        } catch (error) {
-          console.error('Failed to send SSE event:', error);
+        } catch {
+          // error intentionally ignored
         }
       };
 
@@ -197,6 +321,9 @@ jobsRouter.get(
         if (provider.stream) {
           const streamIterator = provider.stream(job.prompt, {
             model: job.model,
+            ...(job.temperature !== null && { temperature: job.temperature }),
+            ...(job.topP !== null && { topP: job.topP }),
+            ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
           });
           try {
             while (true) {
@@ -227,27 +354,45 @@ jobsRouter.get(
                 sendEvent({ token: result.value.content });
               }
             }
-            sendEvent({ done: true }, 'done');
-            // Only send metrics if streaming completed without error
+            // Streaming is complete, transition to evaluating state
+            await updateJob(id, { status: 'evaluating' });
+
+            // Don't send 'done' event yet - calculate metrics first
             const endTime = Date.now();
             tokens = Math.floor(output.length / 4);
             const pricePerK = 0.002;
             cost = (tokens / 1000) * pricePerK;
-            const metrics: import('@prompt-lab/api').JobMetrics = {
-              totalTokens: tokens,
-              avgCosSim: 0,
-              meanLatencyMs: endTime - startTime,
-              costUsd: cost,
-              evaluationCases: 0,
-              startTime,
-              endTime,
-            };
+
+            // Calculate metrics including defaults
+            const customMetrics = await calculateJobMetrics(
+              output,
+              job.selectedMetrics,
+              {
+                prompt: job.prompt,
+                inputData: job.inputData,
+                template: job.template || undefined,
+              },
+            );
+
+            // Only include meaningful metrics - remove obsolete ones
+            const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
+              {
+                ...customMetrics, // Our valuable metrics from metrics.ts
+                response_time_ms: endTime - startTime,
+                // Only include cost if it's actually valuable for the use case
+                ...(cost > 0 && { estimated_cost_usd: cost }),
+              };
+
+            // Update database with final result and metrics
             await updateJob(id, {
               status: 'completed',
               result: output,
               metrics,
             });
+
+            // Send metrics first, then done event
             sendEvent(metrics, 'metrics');
+            sendEvent({ done: true }, 'done');
             return;
           } catch (streamError) {
             // Defensive: should never reach here, but just in case
@@ -272,40 +417,43 @@ jobsRouter.get(
           // Fallback to non-streaming
           const result = await provider.complete(job.prompt, {
             model: job.model,
+            ...(job.temperature !== null && { temperature: job.temperature }),
+            ...(job.topP !== null && { topP: job.topP }),
+            ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
           });
           output = result.output;
           tokens = result.tokens;
           cost = result.cost;
           sendEvent({ token: output });
           sendEvent({ done: true }, 'done');
+
+          const endTime = Date.now();
+
+          // Calculate metrics for non-streaming responses
+          const customMetrics = await calculateJobMetrics(
+            output,
+            job.selectedMetrics,
+            {
+              prompt: job.prompt,
+              inputData: job.inputData,
+              template: job.template || undefined,
+            },
+          );
+
+          const metrics: import('@prompt-lab/evaluation-engine').JobMetrics = {
+            ...customMetrics, // Our valuable metrics from metrics.ts
+            response_time_ms: endTime - startTime,
+            // Only include cost if it's actually valuable for the use case
+            ...(cost > 0 && { estimated_cost_usd: cost }),
+          };
+
+          await updateJob(id, {
+            status: 'completed',
+            result: output,
+            metrics,
+          });
+          sendEvent(metrics, 'metrics');
         }
-
-        const endTime = Date.now();
-
-        // For streaming, we need to get final metrics from the completed job
-        if (provider.stream) {
-          // Try to estimate tokens for streaming (rough approximation)
-          tokens = Math.floor(output.length / 4); // Rough token estimation
-          const pricePerK = 0.002; // Default pricing, should be provider-specific
-          cost = (tokens / 1000) * pricePerK;
-        }
-
-        const metrics: import('@prompt-lab/api').JobMetrics = {
-          totalTokens: tokens,
-          avgCosSim: 0, // Not applicable for streaming jobs
-          meanLatencyMs: endTime - startTime,
-          costUsd: cost,
-          evaluationCases: 0, // Not applicable for streaming jobs
-          startTime,
-          endTime,
-        };
-
-        await updateJob(id, {
-          status: 'completed',
-          result: output,
-          metrics,
-        });
-        sendEvent(metrics, 'metrics');
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -359,6 +507,26 @@ jobsRouter.get(
       }
 
       res.json({ baseJob, compareJob });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// DELETE /jobs/:id - Delete a job
+jobsRouter.delete(
+  '/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const deleted = await deleteJob(id);
+
+      if (!deleted) {
+        throw new NotFoundError('Job not found');
+      }
+
+      res.status(204).send(); // 204 No Content for successful deletion
     } catch (error) {
       next(error);
     }

@@ -1,5 +1,6 @@
+import type { SelectedMetric } from '../types/metrics.js';
 import { create } from 'zustand';
-import { listJobs } from '../api.js';
+import { ApiClient } from '../api.js';
 import type { JobSummary } from '../api.js';
 
 interface LogLine {
@@ -11,22 +12,31 @@ interface JobState {
   current?: JobSummary;
   log: LogLine[];
   history: JobSummary[];
-  metrics?: Record<string, number>;
+  metrics?: Record<string, unknown>;
   running: boolean;
   hasUserData: boolean; // Track if user has any prompt/input data
+  // Model parameters
+  temperature: number;
+  topP: number;
+  maxTokens: number;
+  selectedMetrics: SelectedMetric[];
   comparison: {
     baseJobId?: string;
     compareJobId?: string;
   };
   start(job: JobSummary): void;
   append(text: string): void;
-  finish(metrics: Record<string, number>): void;
+  finish(metrics: Record<string, unknown>): void;
   reset(): void;
   setUserData(hasData: boolean): void;
   setBaseJob(id: string): void;
   setCompareJob(id: string): void;
   clearComparison(): void;
   loadHistory(): Promise<void>;
+  setTemperature(value: number): void;
+  setTopP(value: number): void;
+  setMaxTokens(value: number): void;
+  setSelectedMetrics(metrics: SelectedMetric[]): void;
 }
 
 export const useJobStore = create<JobState>((set) => ({
@@ -34,9 +44,21 @@ export const useJobStore = create<JobState>((set) => ({
   history: [],
   running: false,
   hasUserData: false,
+  // Default parameter values
+  temperature: 0.7,
+  topP: 1.0,
+  maxTokens: 0, // 0 means use model default
+  selectedMetrics: [
+    { id: 'flesch_reading_ease' },
+    { id: 'sentiment' },
+    { id: 'sentiment_detailed' },
+    { id: 'word_count' },
+    { id: 'precision' },
+    { id: 'recall' },
+    { id: 'f_score' },
+  ] as SelectedMetric[],
   comparison: {},
   start: (job) => {
-    console.log('🏁 Store: Starting job', job);
     set({
       current: job,
       log: [],
@@ -46,15 +68,12 @@ export const useJobStore = create<JobState>((set) => ({
     });
   },
   append: (text) => {
-    console.log('📝 Store: Appending text', text);
     set((s) => ({ log: [...s.log, { ts: Date.now(), text }] }));
   },
   finish: (metrics) => {
-    console.log('🎯 Store: Finishing with metrics', metrics);
     set({ metrics, running: false });
   },
   reset: () => {
-    console.log('🔄 Store: Resetting');
     set({ current: undefined, log: [], metrics: undefined, running: false });
     // Note: We intentionally do NOT reset hasUserData here to preserve the user's input between evaluations
   },
@@ -71,12 +90,23 @@ export const useJobStore = create<JobState>((set) => ({
     set(() => ({ comparison: {} }));
   },
   loadHistory: async () => {
-    console.log('📜 Store: Loading history');
     try {
-      const history = await listJobs();
+      const history = await ApiClient.listJobs();
       set({ history });
     } catch (err) {
       console.error('Failed to load history', err);
     }
+  },
+  setTemperature: (value) => {
+    set({ temperature: value });
+  },
+  setTopP: (value) => {
+    set({ topP: value });
+  },
+  setMaxTokens: (value) => {
+    set({ maxTokens: value });
+  },
+  setSelectedMetrics: (metrics) => {
+    set({ selectedMetrics: metrics });
   },
 }));

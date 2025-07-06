@@ -10,11 +10,11 @@
     "lint": "eslint . --max-warnings 0",
     "tsc": "tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('fs'); const path = require('path'); function rmSync(p) { try { fs.rmSync(p, {recursive: true, force: true}); } catch {} } function findAndRemove(dir, exts) { if (!fs.existsSync(dir)) return; fs.readdirSync(dir, {withFileTypes: true}).forEach(dirent => { const fullPath = path.join(dir, dirent.name); if (dirent.isDirectory()) findAndRemove(fullPath, exts); else if (exts.some(ext => fullPath.endsWith(ext))) rmSync(fullPath); }); } findAndRemove('src', ['.js', '.d.ts']); rmSync('dist');\"",
-    "test": "node --require ./test/load-test-env.ts ../../node_modules/vitest/vitest.mjs run"
+    "test": "node --require ./test/load-test-env.ts ../../node_modules/vitest/vitest.mjs run --reporter=dot"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@prompt-lab/api": "workspace:*",
+    "@prompt-lab/evaluation-engine": "workspace:*",
     "@prompt-lab/evaluator": "workspace:*",
     "compression": "^1.8.0",
     "dotenv": "^16.4.5",

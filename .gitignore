@@ -71,3 +71,27 @@ COMMIT_MSG.tmp
 .github/copilot_instructions.md
 .github/old_copilot-instructions.md
 .github/potential_new.md
+
+*storybook.log
+storybook-static
+
+# Local development, test, and debug scripts
+/debug-sentiment-frontend.js
+/test-backend-sentiment.mjs
+/test-commit.tmp
+/test-real-job.js
+/test-sentiment-direct.mjs
+/test-sentiment-update.mjs
+/test-updated-metrics.mjs
+
+# Temporary files
+/commit_message.txt
+
+# Drizzle ORM artifacts
+/drizzle/
+
+# Local database directory
+/db/
+
+# Log directory
+/logs/

@@ -4,13 +4,15 @@ import { resolve } from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@prompt-lab/api': resolve('packages/api/src/index.ts'),
+      '@prompt-lab/evaluation-engine': resolve('packages/evaluation-engine/src/index.ts'),
       '@prompt-lab/evaluator': resolve('packages/evaluator/src/index.ts'),
     },
   },
   test: {
-    environment: 'node',
-    exclude: ['node_modules/**', '**/dist/**', 'apps/web/**'],
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: 'apps/web/src/setupTests.ts',
+    exclude: ['node_modules/**', '**/dist/**'],
     coverage: {
       provider: 'v8',
       exclude: [

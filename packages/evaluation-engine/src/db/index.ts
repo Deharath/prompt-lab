@@ -1,0 +1,93 @@
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
+import { config } from '../config/index.js';
+import { log } from '../utils/logger.js';
+import { runMigrations, runMigrationsOnConnection } from './migrations.js';
+import * as schema from './schema.js';
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+
+let _db: ReturnType<typeof drizzle> | null = null;
+
+async function initializeDb() {
+  if (!_db) {
+    try {
+      // Parse database URL to get file path
+      let dbPath = config.database.url;
+      if (dbPath.startsWith('sqlite://')) {
+        dbPath = dbPath.replace('sqlite://', '');
+      }
+
+      // Always resolve relative to monorepo root
+      const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
+      if (dbPath !== ':memory:') {
+        dbPath = resolve(rootDir, dbPath);
+      }
+
+      // Initialize database connection first
+      const sqlite = new Database(dbPath);
+
+      // Enable WAL mode for better performance
+      if (dbPath !== ':memory:' && typeof sqlite.pragma === 'function') {
+        sqlite.pragma('journal_mode = WAL');
+        sqlite.pragma('synchronous = NORMAL');
+        sqlite.pragma('cache_size = 1000');
+        sqlite.pragma('foreign_keys = ON');
+      }
+
+      // Run migrations on the SAME connection we'll use for Drizzle
+      await runMigrationsOnConnection(sqlite);
+
+      _db = drizzle(sqlite, { schema });
+
+      // Attach raw methods for test setup compatibility
+      Object.assign(_db, {
+        run: (sql: string) => sqlite.prepare(sql).run(),
+        exec: sqlite.exec.bind(sqlite),
+      });
+
+      log.info('Database initialized successfully', {
+        url: dbPath,
+        mode: dbPath === ':memory:' ? 'memory' : 'file',
+      });
+    } catch (error) {
+      log.error(
+        'Database initialization failed',
+        {},
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      throw error;
+    }
+  }
+  return _db;
+}
+
+// Initialize database eagerly for better error handling
+let dbInitPromise: Promise<ReturnType<typeof drizzle>> | null = null;
+
+function getDb() {
+  if (!dbInitPromise) {
+    dbInitPromise = initializeDb();
+  }
+  return dbInitPromise;
+}
+
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+  get(target, prop: string | symbol) {
+    if (!_db) {
+      throw new Error('Database not initialized. Call await getDb() first.');
+    }
+    return (_db as never)[prop];
+  },
+});
+
+/**
+ * Reset the database connection - useful for testing
+ * This will force the next call to getDb() to create a new connection
+ */
+export function resetDb() {
+  _db = null;
+  dbInitPromise = null;
+}
+
+export { getDb, runMigrations };

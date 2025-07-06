@@ -6,7 +6,7 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../../packages/api" },
+    { "path": "../../packages/evaluation-engine" },
     { "path": "../../packages/evaluator" },
     { "path": "../../packages/test-cases" }
   ],
