@@ -42,11 +42,38 @@ const calculateStat = (
 };
 
 export const calculateMetricStats = (baseJob: any, compareJob: any) => {
+  // Guard against missing job data
+  if (!baseJob || !compareJob) {
+    return [];
+  }
+
+  // Extract metrics with proper fallbacks
   const baseMetrics = (baseJob.metrics as Record<string, number>) || {};
   const compareMetrics = (compareJob.metrics as Record<string, number>) || {};
-  const metricKeys = getMetricKeys(baseMetrics, compareMetrics);
+
+  // Filter out non-numeric values and null/undefined values
+  const cleanBaseMetrics: Record<string, number> = {};
+  const cleanCompareMetrics: Record<string, number> = {};
+
+  Object.entries(baseMetrics).forEach(([key, value]) => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      cleanBaseMetrics[key] = value;
+    }
+  });
+
+  Object.entries(compareMetrics).forEach(([key, value]) => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      cleanCompareMetrics[key] = value;
+    }
+  });
+
+  const metricKeys = getMetricKeys(cleanBaseMetrics, cleanCompareMetrics);
+
+  if (metricKeys.length === 0) {
+    return [];
+  }
 
   return metricKeys.map((key) =>
-    calculateStat(key, baseMetrics, compareMetrics),
+    calculateStat(key, cleanBaseMetrics, cleanCompareMetrics),
   );
 };

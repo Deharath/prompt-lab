@@ -65,8 +65,8 @@ export const useAppSidebar = (
       }
       return ApiClient.listJobs();
     },
-    staleTime: 1000 * 5, // 5 seconds
-    refetchInterval: 1000 * 15, // Refetch every 15 seconds for live updates
+    staleTime: 1000 * 10, // 10 seconds - reduced since we have real-time updates
+    refetchInterval: 1000 * 30, // Refetch every 30 seconds as fallback - reduced frequency
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchOnMount: true, // Always refetch on mount
   });

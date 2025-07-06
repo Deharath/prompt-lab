@@ -29,24 +29,6 @@ try {
   console.log(`❌ text-readability-ts failed: ${error.message}`);
 }
 
-// Test vader-sentiment
-console.log('\n😊 Testing vader-sentiment...');
-const vaderStart = performance.now();
-try {
-  const vader = await import('vader-sentiment');
-  const vaderEnd = performance.now();
-
-  const sampleText = 'I love this amazing product!';
-  const scores = vader.SentimentIntensityAnalyzer.polarity_scores(sampleText);
-
-  console.log(
-    `✅ vader-sentiment loaded in ${(vaderEnd - vaderStart).toFixed(2)}ms`,
-  );
-  console.log(`   VADER scores: ${JSON.stringify(scores)}`);
-} catch (error) {
-  console.log(`❌ vader-sentiment failed: ${error.message}`);
-}
-
 // Test wink-tokenizer
 console.log('\n🔤 Testing wink-tokenizer...');
 const tokenStart = performance.now();

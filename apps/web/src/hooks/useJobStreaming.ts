@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '../api.js';
 import { useJobStore } from '../store/jobStore.js';
+import type { JobSummary } from '../api.js';
 
 export interface JobStreamingState {
   outputText: string;
@@ -36,6 +38,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
   const currentEventSourceRef = useRef<EventSource | null>(null);
 
   const { start, finish, reset: resetJobStore } = useJobStore();
+  const queryClient = useQueryClient();
 
   // Cleanup function to close any active EventSource
   const closeCurrentStream = () => {
@@ -116,13 +119,37 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
         metrics: metricsToSend, // Send full metric objects with potential input data
       });
 
+      // Immediately add the new job to the history cache for instant UI feedback
+      queryClient.setQueryData(
+        ['jobs'],
+        (oldJobs: JobSummary[] | undefined) => {
+          const updatedJobs = oldJobs ? [...oldJobs] : [];
+          // Add the new job at the beginning (most recent first)
+          updatedJobs.unshift(job);
+          return updatedJobs;
+        },
+      );
+
       start(job);
       let fullText = '';
+      let metricsReceived = false;
 
       // Store the new EventSource reference for future cancellation
       const eventSource = ApiClient.streamJob(
         job.id,
         (token) => {
+          // Update job status to 'running' when first token arrives
+          if (fullText === '') {
+            queryClient.setQueryData(
+              ['jobs'],
+              (oldJobs: JobSummary[] | undefined) => {
+                if (!oldJobs) return oldJobs;
+                return oldJobs.map((j) =>
+                  j.id === job.id ? { ...j, status: 'running' as const } : j,
+                );
+              },
+            );
+          }
           fullText += token;
           setOutputText(fullText);
         },
@@ -130,11 +157,59 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setStreamStatus('complete');
           setIsExecuting(false);
           currentEventSourceRef.current = null;
+
+          // Update job status in history cache to 'evaluating' when stream completes
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: 'evaluating' as const } : j,
+              );
+            },
+          );
+
           try {
             const final = await ApiClient.fetchJob(job.id);
-            finish((final.metrics as Record<string, unknown>) || {});
+            // Only set metrics if we haven't received them via the metrics event
+            if (!metricsReceived) {
+              finish((final.metrics as Record<string, unknown>) || {});
+            }
+
+            // Update job status in history cache to final status
+            queryClient.setQueryData(
+              ['jobs'],
+              (oldJobs: JobSummary[] | undefined) => {
+                if (!oldJobs) return oldJobs;
+                return oldJobs.map((j) =>
+                  j.id === job.id
+                    ? {
+                        ...j,
+                        status: final.status,
+                        costUsd: final.costUsd,
+                        // Add a result snippet for preview
+                        resultSnippet: final.result
+                          ? final.result.substring(0, 100) + '...'
+                          : null,
+                      }
+                    : j,
+                );
+              },
+            );
           } catch (_err) {
-            finish({});
+            if (!metricsReceived) {
+              finish({});
+            }
+            // Update job status to failed in history cache
+            queryClient.setQueryData(
+              ['jobs'],
+              (oldJobs: JobSummary[] | undefined) => {
+                if (!oldJobs) return oldJobs;
+                return oldJobs.map((j) =>
+                  j.id === job.id ? { ...j, status: 'failed' as const } : j,
+                );
+              },
+            );
           }
         },
         (streamError) => {
@@ -142,10 +217,33 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setIsExecuting(false);
           currentEventSourceRef.current = null;
           setError(`Stream error: ${streamError.message}`);
+
+          // Update job status to failed in history cache
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: 'failed' as const } : j,
+              );
+            },
+          );
         },
         (metrics) => {
           // Don't cast to Record<string, number> as metrics can include complex objects
+          metricsReceived = true;
           finish(metrics || {});
+
+          // Update job status to completed when metrics are received
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: 'completed' as const } : j,
+              );
+            },
+          );
         },
       );
 

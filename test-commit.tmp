@@ -1,1 +1,12 @@
-test
+feat(engine): Rename api to evaluation-engine and enhance UI
+
+This commit refactors the core API package and improves the frontend user experience.
+
+The `@prompt-lab/api` package has been renamed to `@prompt-lab/evaluation-engine` to better reflect its purpose of running evaluations and calculating metrics. This decoupling improves modularity and clarifies the architecture.
+
+Key changes:
+- Renamed `packages/api` to `packages/evaluation-engine` and updated all imports, configurations, and dependencies accordingly.
+- Introduced a new `evaluating` job status to provide more granular feedback in the UI between the response streaming and metrics calculation phases.
+- Implemented real-time UI updates in the job history list using `react-query`'s cache. The UI now instantly reflects job creation and status changes (`pending`, `running`, `evaluating`, `completed`/`failed`).
+- Refactored frontend components, removing several unused custom hooks and improving the robustness of the metrics comparison view.
+- Removed the `vader-sentiment` dependency, standardizing on the transformers.js library for all sentiment analysis.

@@ -38,7 +38,7 @@ beforeAll(async () => {
   // Optionally log success
   // console.log('✅ DB migrations completed for test environment');
 });
-import type { LLMProvider } from '@prompt-lab/api';
+import type { LLMProvider } from '@prompt-lab/evaluation-engine';
 
 // =================================================================  mockGetPreviousJob.mockImplementation(getPreviousJobImpl);usJob.mockImplementation(getPreviousJobImpl);================
 // CRITICAL CI FIX: PACKAGE-LEVEL MOCKING STRATEGY
@@ -107,12 +107,12 @@ export const mockConfig = {
   },
 };
 
-// --- MOCK THE ENTIRE @prompt-lab/api PACKAGE ---
+// --- MOCK THE ENTIRE @prompt-lab/evaluation-engine PACKAGE ---
 // This is the single most important change. We are intercepting the package
 // that the application code actually imports.
-vi.mock('@prompt-lab/api', async (importOriginal) => {
+vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
   const originalModule =
-    await importOriginal<typeof import('@prompt-lab/api')>();
+    await importOriginal<typeof import('@prompt-lab/evaluation-engine')>();
 
   // Set up the job store and mock implementations
   let jobIdCounter = 1;

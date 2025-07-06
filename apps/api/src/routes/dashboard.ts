@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
-import { getDb } from '@prompt-lab/api';
+import { getDb } from '@prompt-lab/evaluation-engine';
 import { ValidationError } from '../errors/ApiError.js';
 
 const dashboardRouter = createRouter();

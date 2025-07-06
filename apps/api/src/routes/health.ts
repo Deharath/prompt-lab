@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { config, log } from '@prompt-lab/api';
-import { getDb } from '@prompt-lab/api';
+import { config, log } from '@prompt-lab/evaluation-engine';
+import { getDb } from '@prompt-lab/evaluation-engine';
 import OpenAI from 'openai';
 
 const router = Router();

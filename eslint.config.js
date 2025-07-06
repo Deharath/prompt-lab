@@ -131,12 +131,15 @@ export default [
       '@typescript-eslint/strict-boolean-expressions': 'off',
     },
   },
-  // Type-aware rules for packages/api
+  // Type-aware rules for packages/evaluation-engine
   {
-    files: ['packages/api/src/**/*.ts', 'packages/api/src/**/*.tsx'],
+    files: [
+      'packages/evaluation-engine/src/**/*.ts',
+      'packages/evaluation-engine/src/**/*.tsx',
+    ],
     languageOptions: {
       parserOptions: {
-        project: ['./packages/api/tsconfig.json'],
+        project: ['./packages/evaluation-engine/tsconfig.json'],
         tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
       },
     },

@@ -149,9 +149,9 @@ importers:
       '@google/generative-ai':
         specifier: ^0.24.1
         version: 0.24.1
-      '@prompt-lab/api':
+      '@prompt-lab/evaluation-engine':
         specifier: workspace:*
-        version: link:../../packages/api
+        version: link:../../packages/evaluation-engine
       '@prompt-lab/evaluator':
         specifier: workspace:*
         version: link:../../packages/evaluator
@@ -299,7 +299,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.0.8)(@vitest/browser@3.2.4)(jsdom@26.1.0)(lightningcss@1.30.1)
 
-  packages/api:
+  packages/evaluation-engine:
     dependencies:
       '@google/generative-ai':
         specifier: ^0.24.1
@@ -334,9 +334,6 @@ importers:
       text-readability:
         specifier: ^1.1.1
         version: 1.1.1
-      vader-sentiment:
-        specifier: ^1.1.3
-        version: 1.1.3
       wink-tokenizer:
         specifier: ^5.3.0
         version: 5.3.0
@@ -349,7 +346,7 @@ importers:
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
-        version: 4.17.23
+        version: 4.17.21
       '@types/node-cache':
         specifier: ^4.2.5
         version: 4.2.5
@@ -8479,12 +8476,6 @@ packages:
       }
     hasBin: true
 
-  vader-sentiment@1.1.3:
-    resolution:
-      {
-        integrity: sha512-z9ys48I7pd3ngy/YzYDCTcOp6//z96wiXaJnQnuyxiPT3PTU0mWLWVCKvips11S5euvHfXsr0ahsmWT2oeXcUw==,
-      }
-
   vary@1.1.2:
     resolution:
       {
@@ -14012,8 +14003,6 @@ snapshots:
   utils-merge@1.0.1: {}
 
   uuid@10.0.0: {}
-
-  vader-sentiment@1.1.3: {}
 
   vary@1.1.2: {}
 

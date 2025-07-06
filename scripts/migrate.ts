@@ -1,4 +1,4 @@
-import { runMigrations } from '@prompt-lab/api';
+import { runMigrations } from '@prompt-lab/evaluation-engine';
 
 runMigrations().catch((err) => {
   console.error(err);

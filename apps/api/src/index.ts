@@ -4,12 +4,15 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import { log, config } from '@prompt-lab/api';
-import { ApiError } from '@prompt-lab/api';
+import { log, config } from '@prompt-lab/evaluation-engine';
+import { ApiError } from '@prompt-lab/evaluation-engine';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
 import dashboardRouter from './routes/dashboard.js';
-import { qualitySummaryRouter, initializeCache } from '@prompt-lab/api';
+import {
+  qualitySummaryRouter,
+  initializeCache,
+} from '@prompt-lab/evaluation-engine';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));

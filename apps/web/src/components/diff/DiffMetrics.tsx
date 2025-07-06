@@ -13,7 +13,40 @@ export const DiffMetrics: React.FC<DiffMetricsProps> = ({
   baseJob,
   compareJob,
 }) => {
-  const metricStats = calculateMetricStats(baseJob, compareJob);
+  // Add error handling for missing job data
+  if (!baseJob || !compareJob) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <h3 className="text-foreground mb-1 text-sm font-medium">
+            Missing Job Data
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            Unable to load job comparison data
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  let metricStats;
+  try {
+    metricStats = calculateMetricStats(baseJob, compareJob);
+  } catch (error) {
+    console.error('Error calculating metric stats:', error);
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <h3 className="text-foreground mb-1 text-sm font-medium">
+            Metrics Calculation Error
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            Unable to calculate metrics comparison
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="metrics-panel" role="tabpanel" aria-labelledby="metrics-tab">
@@ -48,11 +81,24 @@ export const DiffMetrics: React.FC<DiffMetricsProps> = ({
           role="region"
           aria-label="Detailed metrics comparison table"
         >
-          <DiffMetricsTable
-            metricStats={metricStats}
-            baseJob={baseJob}
-            compareJob={compareJob}
-          />
+          {metricStats.length > 0 ? (
+            <DiffMetricsTable
+              metricStats={metricStats}
+              baseJob={baseJob}
+              compareJob={compareJob}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <h3 className="text-foreground mb-1 text-sm font-medium">
+                  No Metrics Available
+                </h3>
+                <p className="text-muted-foreground text-xs">
+                  These jobs don't have comparable metrics data
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
     </div>

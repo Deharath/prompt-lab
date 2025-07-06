@@ -1,7 +1,7 @@
 /**
  * Test readability with simple vs complex text to verify the scores make sense
  */
-import { calculateReadabilityScores } from '../../packages/api/dist/src/lib/readabilityService.js';
+import { calculateReadabilityScores } from '../../packages/evaluation-engine/dist/src/lib/readabilityService.js';
 
 const verySimpleText =
   'The cat is happy. The dog is running. This is easy to read.';

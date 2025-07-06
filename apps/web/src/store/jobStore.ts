@@ -53,6 +53,7 @@ export const useJobStore = create<JobState>((set) => ({
   selectedMetrics: [
     { id: 'flesch_reading_ease' },
     { id: 'sentiment' },
+    { id: 'sentiment_detailed' },
     { id: 'word_count' },
     { id: 'precision' },
     { id: 'recall' },

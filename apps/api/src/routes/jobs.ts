@@ -9,7 +9,7 @@ import {
   getProvider,
   deleteJob,
   type Job,
-} from '@prompt-lab/api';
+} from '@prompt-lab/evaluation-engine';
 import {
   ValidationError,
   NotFoundError,
@@ -17,7 +17,10 @@ import {
 } from '../errors/ApiError.js';
 
 // Import NEW metric calculation system
-import { calculateMetrics, type MetricInput } from '@prompt-lab/api';
+import {
+  calculateMetrics,
+  type MetricInput,
+} from '@prompt-lab/evaluation-engine';
 
 // Default metrics that are always calculated as per plan_for_metrics_upgrade.md
 const DEFAULT_METRICS: MetricInput[] = [
@@ -222,7 +225,7 @@ jobsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
       throw new ValidationError('offset must be a non-negative integer.');
     }
 
-    const options: import('@prompt-lab/api').ListJobsOptions = {
+    const options: import('@prompt-lab/evaluation-engine').ListJobsOptions = {
       limit: limitNum,
       offset: offsetNum,
     };
@@ -231,7 +234,8 @@ jobsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
       options.provider = provider;
     }
     if (status) {
-      options.status = status as import('@prompt-lab/api').JobStatus;
+      options.status =
+        status as import('@prompt-lab/evaluation-engine').JobStatus;
     }
     if (since) {
       const date = new Date(since);
@@ -350,6 +354,9 @@ jobsRouter.get(
                 sendEvent({ token: result.value.content });
               }
             }
+            // Streaming is complete, transition to evaluating state
+            await updateJob(id, { status: 'evaluating' });
+
             // Don't send 'done' event yet - calculate metrics first
             const endTime = Date.now();
             tokens = Math.floor(output.length / 4);
@@ -368,12 +375,13 @@ jobsRouter.get(
             );
 
             // Only include meaningful metrics - remove obsolete ones
-            const metrics: import('@prompt-lab/api').JobMetrics = {
-              ...customMetrics, // Our valuable metrics from metrics.ts
-              response_time_ms: endTime - startTime,
-              // Only include cost if it's actually valuable for the use case
-              ...(cost > 0 && { estimated_cost_usd: cost }),
-            };
+            const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
+              {
+                ...customMetrics, // Our valuable metrics from metrics.ts
+                response_time_ms: endTime - startTime,
+                // Only include cost if it's actually valuable for the use case
+                ...(cost > 0 && { estimated_cost_usd: cost }),
+              };
 
             // Update database with final result and metrics
             await updateJob(id, {
@@ -432,7 +440,7 @@ jobsRouter.get(
             },
           );
 
-          const metrics: import('@prompt-lab/api').JobMetrics = {
+          const metrics: import('@prompt-lab/evaluation-engine').JobMetrics = {
             ...customMetrics, // Our valuable metrics from metrics.ts
             response_time_ms: endTime - startTime,
             // Only include cost if it's actually valuable for the use case

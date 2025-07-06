@@ -127,8 +127,16 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
 
           {/* Right Column - Modern Live Output */}
           <div className="w-full min-w-0 space-y-4 sm:space-y-6 lg:w-3/5 lg:max-w-[60%]">
-            <div className="bg-card border-border overflow-hidden rounded-xl border shadow-sm">
-              <div className="h-[600px] p-6">
+            <div className="bg-card border-border flex h-fit flex-col overflow-hidden rounded-xl border shadow-sm">
+              <div
+                className="flex flex-col p-6"
+                style={{
+                  height:
+                    displayOutputText || streamStatus === 'streaming'
+                      ? '100%'
+                      : 'auto',
+                }}
+              >
                 {displayOutputText || streamStatus === 'streaming' ? (
                   <ModernLiveOutput
                     outputText={displayOutputText}

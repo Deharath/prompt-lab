@@ -1,7 +1,7 @@
 /**
  * Test ALL metrics to see which ones are affected by markdown
  */
-import { calculateMetrics } from '../../packages/api/dist/src/lib/metrics.js';
+import { calculateMetrics } from '../../packages/evaluation-engine/dist/src/lib/metrics.js';
 
 const markdownText = `### Main Topic
 Recent developments in artificial intelligence technology and their implications for various industries.

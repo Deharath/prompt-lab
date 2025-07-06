@@ -25,9 +25,22 @@ const DiffView = ({ baseJobId, compareJobId, onClose }: DiffViewProps) => {
     error,
   } = useQuery({
     queryKey: ['diff', baseJobId, compareJobId],
-    queryFn: () => ApiClient.diffJobs(baseJobId, compareJobId),
+    queryFn: () => {
+      console.log('Fetching diff for jobs:', baseJobId, compareJobId);
+      return ApiClient.diffJobs(baseJobId, compareJobId);
+    },
     enabled: !!(baseJobId && compareJobId),
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Add debugging logs
+  console.log('DiffView render:', {
+    baseJobId,
+    compareJobId,
+    diff,
+    isLoading,
+    error,
+    activeTab,
   });
 
   const handleClose = () => {
@@ -92,11 +105,11 @@ const DiffView = ({ baseJobId, compareJobId, onClose }: DiffViewProps) => {
       />
       <DiffTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {activeTab === 'output' && (
+      {activeTab === 'output' && diff && (
         <DiffOutput baseJob={diff.baseJob} compareJob={diff.compareJob} />
       )}
 
-      {activeTab === 'metrics' && (
+      {activeTab === 'metrics' && diff && (
         <DiffMetrics baseJob={diff.baseJob} compareJob={diff.compareJob} />
       )}
     </div>

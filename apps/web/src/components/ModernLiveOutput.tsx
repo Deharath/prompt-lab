@@ -159,9 +159,9 @@ export function ModernLiveOutput({
   }, []);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Modern Header */}
-      <div className="border-border/50 flex items-center justify-between border-b pb-4">
+      <div className="border-border/50 flex shrink-0 items-center justify-between border-b pb-4">
         <div className="flex items-center space-x-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
             <svg
@@ -256,11 +256,11 @@ export function ModernLiveOutput({
         </div>
       </div>
 
-      {/* Modern Output Area - No more window-in-window */}
-      <div className="flex-1 pt-4">
+      {/* Modern Output Area - Dynamic height with proper scrolling */}
+      <div className="min-h-0 flex-1 pt-4">
         <div
           ref={outputRef}
-          className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/40 h-full overflow-auto transition-all duration-200"
+          className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/40 h-full min-h-0 overflow-auto transition-all duration-200"
           aria-live="polite"
           aria-label={`Live output stream in ${viewMode} mode`}
           role="log"

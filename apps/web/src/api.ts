@@ -40,7 +40,7 @@ export interface JobRequest {
 
 export interface JobSummary {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
   createdAt: Date;
   provider: string;
   model: string;
@@ -51,7 +51,7 @@ export interface JobSummary {
 
 export interface JobResult {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
   result?: string;
   metrics?: Record<string, unknown>;
   tokensUsed?: number;
