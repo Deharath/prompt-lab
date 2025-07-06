@@ -10,6 +10,7 @@ lerna-debug.log*
 # Dependencies
 node_modules/
 /node_modules
+.pnpm-store/
 
 # Build artifacts
 dist
@@ -40,6 +41,7 @@ packages/*/src/**/*.d.ts.map
 
 # Test & Coverage
 coverage/
+**/coverage/
 .nyc_output
 *.lcov
 
@@ -58,6 +60,9 @@ Thumbs.db
 *.db
 sqlite.db
 **/sqlite.db
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
 # Local database directories
 apps/api/db/
@@ -83,12 +88,16 @@ storybook-static
 /test-sentiment-direct.mjs
 /test-sentiment-update.mjs
 /test-updated-metrics.mjs
+scripts/metrics-debug/
 
 # Temporary files
 /commit_message.txt
 
 # Drizzle ORM artifacts
 /drizzle/
+drizzle/migrations/meta/
+apps/api/drizzle/meta/
+packages/evaluation-engine/drizzle/
 
 # Local database directory
 /db/
