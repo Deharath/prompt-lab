@@ -11,10 +11,8 @@ const EXPECTED_TOTAL_CALLS = 4;
 class MockOpenAI {
   embeddings = {
     create: vi.fn(async ({ input }: { input: string }) => {
-      const vec = this._map[input as keyof typeof this._map] || [0, 0];
-      return { data: [{ embedding: vec }] } as {
-        data: { embedding: number[] }[];
-      };
+      const vec = this._map[input] || [0, 0];
+      return { data: [{ embedding: vec }] };
     }),
   };
 

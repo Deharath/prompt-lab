@@ -8,6 +8,11 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import { fixupPluginRules } from '@eslint/compat';
 import globals from 'globals';
 import js from '@eslint/js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default [
   {
@@ -33,7 +38,6 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
-        tsconfigRootDir: new URL('.', import.meta.url).pathname.slice(1),
         ecmaFeatures: {
           jsx: true,
         },
@@ -101,65 +105,12 @@ export default [
 
   // Type-aware rules for apps/api
   {
-    files: ['apps/api/src/**/*.ts', 'apps/api/src/**/*.tsx'],
+    files: ['apps/api/src/**/*.{ts,tsx}', 'apps/api/test/**/*.{ts,tsx}'],
     languageOptions: {
+      parser: tsParser,
       parserOptions: {
-        project: ['tsconfig.json'],
-        tsconfigRootDir: process.cwd(),
-      },
-    },
-    rules: {
-      '@typescript-eslint/prefer-nullish-coalescing': 'off',
-      '@typescript-eslint/prefer-optional-chain': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'off',
-    },
-  },
-  // Type-aware rules for apps/web
-  {
-    files: ['apps/web/src/**/*.ts', 'apps/web/src/**/*.tsx'],
-    languageOptions: {
-      parserOptions: {
-        project: ['tsconfig.json'],
-        tsconfigRootDir: process.cwd(),
-      },
-    },
-    rules: {
-      '@typescript-eslint/prefer-nullish-coalescing': 'off',
-      '@typescript-eslint/prefer-optional-chain': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'off',
-    },
-  },
-  // Type-aware rules for packages/evaluation-engine
-  {
-    files: [
-      'packages/evaluation-engine/src/**/*.ts',
-      'packages/evaluation-engine/src/**/*.tsx',
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['tsconfig.json'],
-        tsconfigRootDir: process.cwd(),
-      },
-    },
-    rules: {
-      '@typescript-eslint/prefer-nullish-coalescing': 'off',
-      '@typescript-eslint/prefer-optional-chain': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'off',
-    },
-  },
-  // Type-aware rules for packages/evaluator
-  {
-    files: [
-      'packages/evaluator/src/**/*.ts',
-      'packages/evaluator/src/**/*.tsx',
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['tsconfig.json'],
-        tsconfigRootDir: process.cwd(),
+        project: path.resolve(__dirname, 'apps/api/tsconfig.lint.json'),
+        tsconfigRootDir: __dirname,
       },
     },
     rules: {
@@ -170,23 +121,89 @@ export default [
     },
   },
 
-  // Test and config files configuration
+  // Type-aware rules for apps/web
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}', 'apps/web/test/**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: path.resolve(__dirname, 'apps/web/tsconfig.lint.json'),
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+
+  // Type-aware rules for packages/evaluation-engine
   {
     files: [
-      'packages/*/test/**/*.ts',
-      'packages/*/test/**/*.tsx',
-      'apps/*/test/**/*.ts',
-      'apps/*/test/**/*.tsx',
-      'packages/*/tsconfig*.ts',
-      'apps/*/tsconfig*.ts',
-      'packages/*/drizzle.config.ts',
-      'apps/*/drizzle.config.ts',
+      'packages/evaluation-engine/src/**/*.{ts,tsx}',
+      'packages/evaluation-engine/test/**/*.{ts,tsx}',
     ],
     languageOptions: {
+      parser: tsParser,
       parserOptions: {
-        project: ['tsconfig.lint.json', 'tsconfig.lint.json'],
-        tsconfigRootDir: process.cwd(),
+        project: path.resolve(
+          __dirname,
+          'packages/evaluation-engine/tsconfig.lint.json',
+        ),
+        tsconfigRootDir: __dirname,
       },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+
+  // Type-aware rules for packages/evaluator
+  {
+    files: [
+      'packages/evaluator/src/**/*.{ts,tsx}',
+      'packages/evaluator/test/**/*.{ts,tsx}',
+    ],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: path.resolve(
+          __dirname,
+          'packages/evaluator/tsconfig.lint.json',
+        ),
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+    },
+  },
+
+  // Non-type-aware rules for config files and other packages
+  {
+    files: [
+      'packages/test-cases/**/*.{ts,tsx}',
+      '**/*.config.{js,ts}',
+      '**/*.config.{mjs,mts}',
+    ],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 
