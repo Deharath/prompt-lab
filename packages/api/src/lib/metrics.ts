@@ -6,7 +6,7 @@
 
 import { textWorker } from './textWorker.js';
 import { calculateReadabilityScores } from './readabilityService.js';
-import { analyzeSentiment } from './sentimentService.js';
+import { analyzeSentiment, type SentimentScore } from './sentimentService.js';
 import {
   calculateKeywordMetrics,
   type KeywordWeight,
@@ -58,9 +58,16 @@ export async function calculateMetrics(
         }
 
         case 'sentiment': {
-          const sentimentResult = await analyzeSentiment(text);
-          results.sentiment = sentimentResult; // Store full sentiment object
-          results.sentiment_detailed = sentimentResult;
+          const sentimentResult = (await analyzeSentiment(
+            text,
+            true,
+          )) as SentimentScore;
+          results.sentiment = sentimentResult.compound; // Store just the compound score (-1 to 1)
+          break;
+        }
+
+        case 'sentiment_detailed': {
+          results.sentiment_detailed = await analyzeSentiment(text, true);
           break;
         }
 
@@ -352,6 +359,7 @@ export function getAvailableMetrics(): Array<{
       id: 'precision',
       name: 'Content Precision',
       description: 'Measures focus and relevance (unique words vs repetition).',
+      requiresInput: true,
     },
     {
       id: 'recall',

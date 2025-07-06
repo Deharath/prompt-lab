@@ -9,9 +9,7 @@ import { ApiError } from '@prompt-lab/api';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
 import dashboardRouter from './routes/dashboard.js';
-import qualitySummaryRouter, {
-  initializeCache,
-} from './routes/quality-summary.js';
+import { qualitySummaryRouter, initializeCache } from '@prompt-lab/api';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../..', import.meta.url));

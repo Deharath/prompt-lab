@@ -42,6 +42,12 @@ export function validateTextSize(
   next: NextFunction,
 ) {
   const text = req.body.text || '';
+
+  // Ensure text is a string before calculating byte length
+  if (typeof text !== 'string') {
+    return next(); // Let other validation middleware handle type checking
+  }
+
   const sizeInBytes = Buffer.byteLength(text, 'utf8');
   const maxSize = 20 * 1024; // 20 kB
 

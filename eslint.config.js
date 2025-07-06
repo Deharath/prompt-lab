@@ -19,6 +19,7 @@ export default [
       '**/vitest.config.js',
       '**/postcss.config.js',
       '**/tailwind.config.js',
+      '**/__mocks__/**',
     ],
   },
 

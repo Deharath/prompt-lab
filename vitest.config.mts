@@ -9,8 +9,10 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
-    exclude: ['node_modules/**', '**/dist/**', 'apps/web/**'],
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: 'apps/web/src/setupTests.ts',
+    exclude: ['node_modules/**', '**/dist/**'],
     coverage: {
       provider: 'v8',
       exclude: [

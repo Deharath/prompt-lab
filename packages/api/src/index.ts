@@ -20,3 +20,13 @@ export {
   type MetricInput,
   type MetricResult,
 } from './lib/metrics.js';
+
+// Quality summary exports
+export {
+  default as qualitySummaryRouter,
+  initializeCache,
+  getQualitySummary,
+  createQualitySummaryRouter,
+  type QualitySummaryQuery,
+  type QualitySummaryResponse,
+} from './routes/quality-summary.js';

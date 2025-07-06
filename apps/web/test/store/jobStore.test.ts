@@ -1,18 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useJobStore } from '../src/store/jobStore.js';
+import { useJobStore } from '../../src/store/jobStore.js';
 import { act } from '@testing-library/react';
 
 // Mock listJobs API
-vi.mock('../src/api.js', () => ({
-  listJobs: vi.fn().mockResolvedValue([
-    {
-      id: '1',
-      prompt: 'test',
-      provider: 'openai',
-      model: 'gpt-4',
-      status: 'completed',
-    },
-  ]),
+vi.mock('../../src/api.js', () => ({
+  ApiClient: {
+    listJobs: vi
+      .fn()
+      .mockResolvedValue([{ id: '1', status: 'completed' as const }]),
+  },
 }));
 
 describe('jobStore', () => {

@@ -81,17 +81,14 @@ function findKeywordMatches(text: string, keyword: string): string[] {
 
   variations.forEach((variation) => {
     words.forEach((word) => {
-      if (
-        word === variation ||
-        word.includes(variation) ||
-        variation.includes(word)
-      ) {
+      // Use exact word matching
+      if (word === variation) {
         matches.push(word);
       }
     });
   });
 
-  return [...new Set(matches)]; // Remove duplicates
+  return matches; // Don't remove duplicates - we want to count all occurrences
 }
 
 /**

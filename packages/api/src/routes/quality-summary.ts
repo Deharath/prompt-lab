@@ -285,3 +285,6 @@ export function createQualitySummaryRouter(): Router {
 
   return router;
 }
+
+// Default export for use in apps
+export default createQualitySummaryRouter();

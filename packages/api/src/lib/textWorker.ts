@@ -128,7 +128,20 @@ export function createTextWorker() {
 
     // Add common verb tense variations
     if (normalized.endsWith('ing') && normalized.length > 4) {
-      const base = normalized.slice(0, -3);
+      let base = normalized.slice(0, -3);
+
+      // Handle double consonants (running -> run, sitting -> sit)
+      if (base.length >= 2) {
+        const lastChar = base[base.length - 1];
+        const secondLastChar = base[base.length - 2];
+        if (
+          lastChar === secondLastChar &&
+          'bcdfghjklmnpqrstvwxyz'.includes(lastChar)
+        ) {
+          base = base.slice(0, -1); // Remove one of the double consonants
+        }
+      }
+
       variations.push(base, base + 'ed', base + 's');
     }
     if (normalized.endsWith('ed') && normalized.length > 3) {

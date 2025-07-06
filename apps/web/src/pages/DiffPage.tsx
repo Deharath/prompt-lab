@@ -158,7 +158,10 @@ const DiffPage = () => {
         {metricKeys.length > 0 && (
           <Card title="Metrics Comparison" className="mb-8">
             <div className="overflow-hidden">
-              <table className="min-w-full">
+              <table
+                className="min-w-full"
+                aria-label="Metrics Comparison Table"
+              >
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="text-muted-foreground px-6 py-3 text-left text-xs font-medium tracking-wider uppercase">

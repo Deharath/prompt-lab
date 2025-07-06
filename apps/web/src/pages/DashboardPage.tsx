@@ -58,7 +58,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Content */}
-        {isLoading && <LoadingSpinner />}
+        {isLoading && <LoadingSpinner data-testid="loading-spinner" />}
 
         {error && <ErrorMessage message={error} />}
 

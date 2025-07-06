@@ -1,6 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 import PromptWorkspace from './PromptWorkspace.js';
+
+// Mock the stores and hooks for Storybook
+vi.mock('../store/jobStore.js', () => ({
+  useJobStore: () => mockJobStore,
+}));
+
+vi.mock('../store/workspaceStore.js', () => ({
+  useWorkspaceStore: () => mockWorkspaceStore,
+}));
+
+vi.mock('../hooks/useJobStreaming.js', () => ({
+  useJobStreaming: () => mockJobStreaming,
+}));
 
 // Mock function for Storybook
 const mockFn = () => {};
@@ -61,22 +75,6 @@ const meta: Meta<typeof PromptWorkspace> = {
   ],
   args: {
     onJobSelect: mockFn,
-  },
-  beforeEach: () => {
-    // Mock the hooks for Storybook
-    const { vi } = require('vitest');
-
-    vi.doMock('../store/jobStore.js', () => ({
-      useJobStore: () => mockJobStore,
-    }));
-
-    vi.doMock('../store/workspaceStore.js', () => ({
-      useWorkspaceStore: () => mockWorkspaceStore,
-    }));
-
-    vi.doMock('../hooks/useJobStreaming.js', () => ({
-      useJobStreaming: () => mockJobStreaming,
-    }));
   },
 };
 

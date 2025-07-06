@@ -64,8 +64,10 @@ export const LoadingState = ({
 // Specific loading components for common use cases
 export const LoadingSpinner = ({
   size = 'md',
+  ...props
 }: {
   size?: 'sm' | 'md' | 'lg';
+  [key: string]: any;
 }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -74,7 +76,7 @@ export const LoadingSpinner = ({
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center" {...props}>
       <svg
         className={`${sizeClasses[size]} animate-spin text-gray-500`}
         fill="none"

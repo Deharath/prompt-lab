@@ -29,7 +29,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
   const [streamStatus, setStreamStatus] = useState<
     'streaming' | 'complete' | 'error'
   >('complete');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
 
   // Track the current EventSource to allow cancellation
@@ -77,13 +77,25 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
     // Close any existing stream before starting a new one
     closeCurrentStream();
 
-    setError('');
+    setError(null);
     setOutputText('');
     setStreamStatus('streaming');
     setIsExecuting(true);
 
-    // Build the final prompt by replacing {{input}} with actual input data
-    const finalPrompt = template.replace(/\{\{\s*input\s*\}\}/g, inputData);
+    // Build the final prompt by replacing {{key}} with actual input data
+    let finalPrompt = template;
+    try {
+      const inputs = JSON.parse(inputData);
+      for (const key in inputs) {
+        finalPrompt = finalPrompt.replace(
+          new RegExp(`{{\\s*${key}\\s*}}`, 'g'),
+          inputs[key],
+        );
+      }
+    } catch (e) {
+      // ignore json parsing errors
+    }
+    finalPrompt = finalPrompt.replace(/\{\{\s*input\s*\}\}/g, inputData);
 
     try {
       resetJobStore();
@@ -150,7 +162,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
     closeCurrentStream();
     setOutputText('');
     setStreamStatus('complete');
-    setError('');
+    setError(null);
     setIsExecuting(false);
     resetJobStore();
   };

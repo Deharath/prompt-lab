@@ -41,7 +41,10 @@ const AppContent = () => {
   }, [setDarkMode]);
 
   return (
-    <div className="bg-background text-foreground min-h-screen w-full max-w-full overflow-x-hidden transition-colors duration-200">
+    <div
+      data-testid="app-container"
+      className="bg-background text-foreground min-h-screen w-full max-w-full overflow-x-hidden transition-colors duration-200"
+    >
       <Routes>
         {/* Home page manages its own layout */}
         <Route path="/" element={<Home />} />

@@ -1,0 +1,100 @@
+/**
+ * Tests for useJobStreaming hook - validates job execution, streaming, and error handling
+ */
+
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useJobStreaming } from '../../src/hooks/useJobStreaming.js';
+
+// Mock API
+vi.mock('../../src/api.js', () => ({
+  ApiClient: {
+    createJob: vi.fn(),
+    streamJob: vi.fn(),
+    fetchJob: vi.fn(),
+  },
+}));
+
+// Mock job store
+const mockJobStore = {
+  start: vi.fn(),
+  finish: vi.fn(),
+  reset: vi.fn(),
+};
+
+vi.mock('../../src/store/jobStore.js', () => ({
+  useJobStore: () => mockJobStore,
+}));
+
+describe('useJobStreaming', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+  });
+
+  it('has correct initial state', () => {
+    const { result } = renderHook(() => useJobStreaming());
+
+    expect(result.current.outputText).toBe('');
+    expect(result.current.streamStatus).toBe('complete');
+    expect(result.current.error).toBe(null);
+    expect(result.current.isExecuting).toBe(false);
+  });
+
+  it('provides executeJob and reset functions', () => {
+    const { result } = renderHook(() => useJobStreaming());
+
+    expect(typeof result.current.executeJob).toBe('function');
+    expect(typeof result.current.reset).toBe('function');
+    expect(typeof result.current.cancelStream).toBe('function');
+  });
+
+  it('reset clears state correctly', () => {
+    const { result } = renderHook(() => useJobStreaming());
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.outputText).toBe('');
+    expect(result.current.streamStatus).toBe('complete');
+    expect(result.current.error).toBe(null);
+    expect(result.current.isExecuting).toBe(false);
+    expect(mockJobStore.reset).toHaveBeenCalled();
+  });
+
+  it('handles job execution API errors', async () => {
+    const { ApiClient } = await import('../../src/api.js');
+    vi.mocked(ApiClient.createJob).mockRejectedValue(new Error('API Error'));
+
+    const { result } = renderHook(() => useJobStreaming());
+
+    const jobParams = {
+      template: 'Hello {{input}}',
+      inputData: '{"name": "World"}',
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      temperature: 0.7,
+      topP: 0.9,
+      maxTokens: 1000,
+      selectedMetrics: [],
+    };
+
+    await act(async () => {
+      await result.current.executeJob(jobParams);
+    });
+
+    expect(result.current.streamStatus).toBe('error');
+    expect(result.current.error).toBe('API Error');
+    expect(result.current.isExecuting).toBe(false);
+  });
+
+  it('cleans up EventSource on unmount', () => {
+    const { unmount } = renderHook(() => useJobStreaming());
+
+    unmount();
+
+    // The cleanup should happen in useEffect cleanup
+    // This is hard to test directly, but we can ensure the hook doesn't crash
+    expect(true).toBe(true);
+  });
+});

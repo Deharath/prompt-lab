@@ -25,62 +25,13 @@ export interface SentimentError {
 const SENTIMENT_MODE = process.env.SENTIMENT_MODE || 'fast';
 
 // Dynamic imports to handle typing issues
-let vader: any;
 let transformers: any;
 
 /**
- * Fast sentiment analysis using VADER
+ * Reset the transformers cache (for testing)
  */
-async function analyzeVaderSentiment(text: string): Promise<SentimentScore> {
-  if (!text || text.trim().length === 0) {
-    return {
-      compound: 0,
-      positive: 0,
-      negative: 0,
-      neutral: 1,
-      label: 'neutral',
-      confidence: 1,
-      mode: 'fast',
-    };
-  }
-
-  try {
-    // Lazy load VADER with dynamic import for ESM compatibility
-    if (!vader) {
-      vader = await import('vader-sentiment');
-    }
-
-    const result = vader.SentimentIntensityAnalyzer.polarity_scores(text);
-
-    // Determine label and confidence from VADER scores
-    let label: 'positive' | 'negative' | 'neutral';
-    let confidence: number;
-
-    if (result.compound >= 0.05) {
-      label = 'positive';
-      confidence = result.pos;
-    } else if (result.compound <= -0.05) {
-      label = 'negative';
-      confidence = result.neg;
-    } else {
-      label = 'neutral';
-      confidence = result.neu;
-    }
-
-    return {
-      compound: result.compound,
-      positive: result.pos,
-      negative: result.neg,
-      neutral: result.neu,
-      label,
-      confidence,
-      mode: 'fast',
-    };
-  } catch (error) {
-    console.error('VADER sentiment analysis error:', error);
-    // Fallback to simple analysis
-    return analyzeSimpleSentiment(text, 'fast');
-  }
+export function resetTransformersCache() {
+  transformers = null;
 }
 
 /**
@@ -185,100 +136,7 @@ async function analyzeTransformersSentiment(
     };
   } catch (error) {
     console.error('DistilBERT sentiment analysis error:', error);
-    // Fallback to VADER or simple analysis
-    if (SENTIMENT_MODE !== 'fast') {
-      return analyzeVaderSentiment(text);
-    }
-    return analyzeSimpleSentiment(text, 'accurate');
-  }
-}
-
-/**
- * Simple fallback sentiment analysis
- */
-function analyzeSimpleSentiment(
-  text: string,
-  mode: 'fast' | 'accurate',
-): SentimentScore {
-  const positiveWords = [
-    'love',
-    'amazing',
-    'great',
-    'excellent',
-    'wonderful',
-    'fantastic',
-    'good',
-    'happy',
-    'joy',
-    'perfect',
-    'awesome',
-    'brilliant',
-    'outstanding',
-  ];
-  const negativeWords = [
-    'hate',
-    'terrible',
-    'awful',
-    'horrible',
-    'bad',
-    'worst',
-    'sad',
-    'angry',
-    'disgusting',
-    'poor',
-    'disappointing',
-    'annoying',
-  ];
-
-  const words = text.toLowerCase().split(/\s+/);
-  let positiveCount = 0;
-  let negativeCount = 0;
-
-  words.forEach((word) => {
-    if (positiveWords.includes(word)) {
-      positiveCount++;
-    } else if (negativeWords.includes(word)) {
-      negativeCount++;
-    }
-  });
-
-  const totalSentiment = positiveCount + negativeCount;
-  const positive = totalSentiment > 0 ? positiveCount / totalSentiment : 0;
-  const negative = totalSentiment > 0 ? negativeCount / totalSentiment : 0;
-  const neutral = 1 - positive - negative;
-  const compound = positive - negative;
-
-  // Determine label and confidence
-  let label: 'positive' | 'negative' | 'neutral';
-  let confidence: number;
-
-  if (compound > 0.1) {
-    label = 'positive';
-    confidence = positive;
-  } else if (compound < -0.1) {
-    label = 'negative';
-    confidence = negative;
-  } else {
-    label = 'neutral';
-    confidence = neutral;
-  }
-
-  return {
-    compound: Math.max(-1, Math.min(1, compound)),
-    positive,
-    negative,
-    neutral: Math.max(0, neutral),
-    label,
-    confidence,
-    mode,
-  };
-}
-
-/**
- * Main sentiment analysis function
- */
-export async function analyzeSentiment(text: string): Promise<SentimentScore> {
-  if (!text || text.trim().length === 0) {
+    // Return neutral sentiment as fallback
     return {
       compound: 0,
       positive: 0,
@@ -286,50 +144,33 @@ export async function analyzeSentiment(text: string): Promise<SentimentScore> {
       neutral: 1,
       label: 'neutral',
       confidence: 1,
-      mode: SENTIMENT_MODE as 'fast' | 'accurate',
+      mode: 'accurate',
     };
   }
+}
 
-  // Prioritize Twitter RoBERTa (more accurate) over VADER (faster but less accurate)
-  if (SENTIMENT_MODE === 'fast') {
-    // Fast mode: Try VADER first, fallback to RoBERTa if needed
-    try {
-      return await analyzeVaderSentiment(text);
-    } catch (vaderError) {
-      console.warn(
-        'VADER sentiment failed, trying Twitter RoBERTa:',
-        vaderError,
-      );
-      try {
-        return await analyzeTransformersSentiment(text);
-      } catch (transformersError) {
-        console.warn(
-          'Twitter RoBERTa sentiment failed, using simple fallback:',
-          transformersError,
-        );
-        return analyzeSimpleSentiment(text, 'fast');
-      }
-    }
-  } else {
-    // Accurate mode: Try Twitter RoBERTa first for better accuracy
-    try {
-      return await analyzeTransformersSentiment(text);
-    } catch (transformersError) {
-      console.warn(
-        'Twitter RoBERTa sentiment failed, trying VADER:',
-        transformersError,
-      );
-      try {
-        return await analyzeVaderSentiment(text);
-      } catch (vaderError) {
-        console.warn(
-          'Both Twitter RoBERTa and VADER failed, using simple fallback:',
-          vaderError,
-        );
-        return analyzeSimpleSentiment(text, 'accurate');
-      }
-    }
+/**
+ * Main sentiment analysis function
+ */
+export async function analyzeSentiment(
+  text: string,
+  detailed = false,
+): Promise<SentimentScore | number> {
+  if (!text || text.trim().length === 0) {
+    const neutralScore: SentimentScore = {
+      compound: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 1,
+      label: 'neutral',
+      confidence: 1,
+      mode: 'accurate',
+    };
+    return detailed ? neutralScore : neutralScore.compound;
   }
+
+  const result = await analyzeTransformersSentiment(text);
+  return detailed ? result : result.compound;
 }
 
 /**
@@ -346,7 +187,7 @@ export async function sentimentHandler(req: Request, res: Response) {
       });
     }
 
-    const sentiment = await analyzeSentiment(text);
+    const sentiment = await analyzeSentiment(text, true);
 
     res.json({
       success: true,
