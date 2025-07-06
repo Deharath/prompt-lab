@@ -1,59 +1,63 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dark Mode Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            content: ["*"],
-        }
+      tailwind.config = {
+        content: ['*'],
+      };
     </script>
     <style>
-        @import 'tailwindcss';
-        @custom-variant dark (&:where(.dark, .dark *));
+      @import 'tailwindcss';
+      @custom-variant dark (&:where(.dark, .dark *));
     </style>
-</head>
-<body class="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+  </head>
+  <body class="min-h-screen bg-white transition-colors dark:bg-gray-900">
     <div class="container mx-auto p-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Dark Mode Test
-        </h1>
-        
-        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6 mb-4">
-            <p class="text-gray-700 dark:text-gray-300">
-                This is a test card to verify dark mode is working correctly.
-            </p>
-        </div>
-        
-        <button 
-            onclick="toggleDarkMode()"
-            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-        >
-            Toggle Dark Mode
-        </button>
-        
-        <div class="mt-4">
-            <p class="text-gray-600 dark:text-gray-400">
-                Current class on html element: <span id="current-class" class="font-mono"></span>
-            </p>
-        </div>
+      <h1 class="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
+        Dark Mode Test
+      </h1>
+
+      <div
+        class="mb-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-600 dark:bg-gray-800"
+      >
+        <p class="text-gray-700 dark:text-gray-300">
+          This is a test card to verify dark mode is working correctly.
+        </p>
+      </div>
+
+      <button
+        onclick="toggleDarkMode()"
+        class="rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
+      >
+        Toggle Dark Mode
+      </button>
+
+      <div class="mt-4">
+        <p class="text-gray-600 dark:text-gray-400">
+          Current class on html element:
+          <span id="current-class" class="font-mono"></span>
+        </p>
+      </div>
     </div>
-    
+
     <script>
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            updateClassDisplay();
-        }
-        
-        function updateClassDisplay() {
-            const classList = document.documentElement.classList.toString();
-            document.getElementById('current-class').textContent = classList || '(none)';
-        }
-        
-        // Initial display
+      function toggleDarkMode() {
+        document.documentElement.classList.toggle('dark');
         updateClassDisplay();
+      }
+
+      function updateClassDisplay() {
+        const classList = document.documentElement.classList.toString();
+        document.getElementById('current-class').textContent =
+          classList || '(none)';
+      }
+
+      // Initial display
+      updateClassDisplay();
     </script>
-</body>
+  </body>
 </html>

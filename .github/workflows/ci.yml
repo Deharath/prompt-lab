@@ -84,7 +84,7 @@ jobs:
 
           # Simple health check
           for i in {1..12}; do
-            if docker logs test-container 2>&1 | grep -q "Server running on\|listening on"; then
+            if docker logs test-container 2>&1 | grep -q "API server started\|Health endpoints available"; then
               echo "✅ Container started successfully"
               docker rm -f test-container
               exit 0

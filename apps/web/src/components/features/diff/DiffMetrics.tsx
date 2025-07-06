@@ -3,10 +3,11 @@ import Card from '../../ui/Card.js';
 import StatCard from '../../ui/StatCard.js';
 import { calculateMetricStats } from './metrics-calculator.js';
 import { DiffMetricsTable } from './DiffMetricsTable.js';
+import { JobDetails } from '../../../api.js';
 
 interface DiffMetricsProps {
-  baseJob: any; // TODO: Add proper Job type
-  compareJob: any; // TODO: Add proper Job type
+  baseJob: JobDetails;
+  compareJob: JobDetails;
 }
 
 export const DiffMetrics: React.FC<DiffMetricsProps> = ({
