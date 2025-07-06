@@ -27,20 +27,7 @@
   --color-accent: #a855f7;
 }
 
-/* System dark mode preference fallback */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --color-background: #0f172a;
-    --color-foreground: #f1f5f9;
-    --color-primary: #818cf8;
-    --color-card: #1e293b;
-    --color-border: #334155;
-    --color-success: #4ade80;
-    --color-error: #f87171;
-    --color-muted: #64748b;
-    --color-accent: #a855f7;
-  }
-}
+
 
 /* Custom animations and styles */
 @layer utilities {

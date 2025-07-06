@@ -15,11 +15,13 @@ import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/TimeRangeSelector.js';
 import { LoadingSpinner } from '../components/ui/LoadingState.js';
 import ErrorMessage from '../components/ErrorMessage.js';
+import { useDarkModeStore } from '../store/darkModeStore.js';
 import { QualitySummaryDashboard } from '../components/QualitySummaryDashboard.js';
 
 const DashboardPage = () => {
   const { isLoading, error, data, days, fetchDashboardStats } =
     useDashboardStore();
+  const { isDarkMode } = useDarkModeStore();
 
   useEffect(() => {
     // Fetch initial data on component mount
@@ -69,7 +71,7 @@ const DashboardPage = () => {
               <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Quality Metrics Summary
               </h2>
-              <QualitySummaryDashboard />
+              <QualitySummaryDashboard darkMode={isDarkMode} />
             </div>
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">

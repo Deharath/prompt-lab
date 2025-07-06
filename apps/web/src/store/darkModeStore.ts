@@ -29,7 +29,7 @@ const getSystemPreference = (): boolean => {
 export const useDarkModeStore = create<DarkModeState>()(
   persist(
     (set) => ({
-      isDarkMode: true, // Default to dark mode
+      isDarkMode: getSystemPreference(), // Initialize with system preference
       toggleDarkMode: () =>
         set((state) => {
           const newMode = !state.isDarkMode;
@@ -44,31 +44,26 @@ export const useDarkModeStore = create<DarkModeState>()(
     }),
     {
       name: 'dark-mode-storage',
-      // Initialize dark mode from localStorage on hydration
-      onRehydrateStorage: () => (state) => {
-        if (typeof document !== 'undefined' && state) {
-          updateDocumentClass(state.isDarkMode);
-        }
+      // Persist state to localStorage and update document class
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (str) {
+            const { state } = JSON.parse(str);
+            updateDocumentClass(state.isDarkMode);
+            return { state };
+          }
+          // If no stored state, use system preference
+          const isSystemDark = getSystemPreference();
+          updateDocumentClass(isSystemDark);
+          return { state: { isDarkMode: isSystemDark } };
+        },
+        setItem: (name, newValue) => {
+          localStorage.setItem(name, JSON.stringify(newValue));
+          updateDocumentClass(newValue.state.isDarkMode);
+        },
+        removeItem: (name) => localStorage.removeItem(name),
       },
     },
   ),
 );
-
-// Initialize dark mode on app start
-if (typeof document !== 'undefined') {
-  const stored = localStorage.getItem('dark-mode-storage');
-  let shouldUseDark = getSystemPreference();
-
-  if (stored) {
-    try {
-      const { state } = JSON.parse(stored);
-      if (state && typeof state.isDarkMode === 'boolean') {
-        shouldUseDark = state.isDarkMode;
-      }
-    } catch (error) {
-      console.warn('Failed to parse dark mode storage:', error);
-    }
-  }
-
-  updateDocumentClass(shouldUseDark);
-}

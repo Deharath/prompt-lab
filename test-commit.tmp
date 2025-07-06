@@ -1,12 +1,12 @@
-feat(engine): Rename api to evaluation-engine and enhance UI
+fix(ui): Resolve dark mode initialization and styling conflicts
 
-This commit refactors the core API package and improves the frontend user experience.
+This commit addresses two issues related to the dark mode functionality:
 
-The `@prompt-lab/api` package has been renamed to `@prompt-lab/evaluation-engine` to better reflect its purpose of running evaluations and calculating metrics. This decoupling improves modularity and clarifies the architecture.
+1.  **Initialization Logic:** The dark mode toggle was not functioning correctly on the first click because the Zustand store's initial state was not being properly hydrated from local storage or the user's system preferences. The `onRehydrateStorage` function was not sufficient to handle this.
 
-Key changes:
-- Renamed `packages/api` to `packages/evaluation-engine` and updated all imports, configurations, and dependencies accordingly.
-- Introduced a new `evaluating` job status to provide more granular feedback in the UI between the response streaming and metrics calculation phases.
-- Implemented real-time UI updates in the job history list using `react-query`'s cache. The UI now instantly reflects job creation and status changes (`pending`, `running`, `evaluating`, `completed`/`failed`).
-- Refactored frontend components, removing several unused custom hooks and improving the robustness of the metrics comparison view.
-- Removed the `vader-sentiment` dependency, standardizing on the transformers.js library for all sentiment analysis.
+2.  **CSS Override:** A CSS rule using `@media (prefers-color-scheme: dark)` was forcing dark mode based on the operating system's theme, overriding the user's selected preference.
+
+These issues have been resolved by:
+- Refactoring the `darkModeStore` to correctly initialize its state from local storage or system preference at the time of creation.
+- Removing the conflicting CSS media query to ensure that the JavaScript-based theme toggle has full control.
+- Passing the `isDarkMode` state to the `QualitySummaryDashboard` component to enable dark mode styling.
