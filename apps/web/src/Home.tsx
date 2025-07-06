@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { useJobStore } from './store/jobStore.js';
 import { useWorkspaceStore } from './store/workspaceStore.js';
-import { useDarkModeStore } from './store/darkModeStore.js';
 import { useToggle } from './hooks/useToggle.js';
 import AppSidebar from './components/features/sidebar/AppSidebar/index.js';
 import DiffView from './components/features/diff/DiffView.js';
@@ -38,9 +37,6 @@ const Home = () => {
 
   // Reference to PromptWorkspace component
   const promptWorkspaceRef = useRef<PromptWorkspaceRef>(null);
-
-  // Get dark mode state (HTML class sync is handled by the store)
-  useDarkModeStore();
 
   const showComparison = comparison.baseJobId && comparison.compareJobId;
 

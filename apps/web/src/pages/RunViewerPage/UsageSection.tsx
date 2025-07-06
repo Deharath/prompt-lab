@@ -1,21 +1,17 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
 import type { JobDetails } from './types.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface UsageSectionProps {
   job: JobDetails;
 }
 
 const UsageSection: React.FC<UsageSectionProps> = ({ job }) => {
-  const { isDarkMode } = useDarkModeStore();
-  if (!job.tokensUsed && !job.costUsd) return null;
-
   return (
     <Card>
       <div className="p-6">
         <div className="mb-4 flex items-center space-x-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-pink-500 to-rose-600 text-white shadow-md">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500 text-white shadow-md">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -26,69 +22,48 @@ const UsageSection: React.FC<UsageSectionProps> = ({ job }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
               />
             </svg>
           </div>
-          <h3
-            className={`text-lg font-semibold transition-colors duration-300 ${
-              isDarkMode ? 'text-gray-200' : 'text-gray-900'
-            }`}
-          >
+          <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 dark:text-gray-200">
             Usage
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {job.tokensUsed && (
-            <div
-              className={`rounded-xl border p-4 transition-colors duration-300 ${
-                isDarkMode
-                  ? 'border-gray-700/50 bg-gray-800/30'
-                  : 'border-gray-200/50 bg-gray-50/30'
-              }`}
-            >
-              <div
-                className={`mb-1 text-sm font-medium transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}
-              >
-                Tokens Used
-              </div>
-              <div
-                className={`text-xl font-bold transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
-                }`}
-              >
-                {job.tokensUsed.toLocaleString()}
+        {job.usage ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Input Tokens
+                </span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-200">
+                  {job.usage.input_tokens?.toLocaleString() || 'N/A'}
+                </span>
               </div>
             </div>
-          )}
-          {job.costUsd && (
-            <div
-              className={`rounded-xl border p-4 transition-colors duration-300 ${
-                isDarkMode
-                  ? 'border-gray-700/50 bg-gray-800/30'
-                  : 'border-gray-200/50 bg-gray-50/30'
-              }`}
-            >
-              <div
-                className={`mb-1 text-sm font-medium transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}
-              >
-                Cost (USD)
-              </div>
-              <div
-                className={`text-xl font-bold transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
-                }`}
-              >
-                ${job.costUsd.toFixed(4)}
+
+            <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Output Tokens
+                </span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-200">
+                  {job.usage.output_tokens?.toLocaleString() || 'N/A'}
+                </span>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                No usage data available
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );

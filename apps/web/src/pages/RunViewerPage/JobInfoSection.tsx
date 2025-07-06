@@ -1,14 +1,12 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
 import type { JobDetails } from './types.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface JobInfoSectionProps {
   job: JobDetails;
 }
 
 const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job }) => {
-  const { isDarkMode } = useDarkModeStore();
   return (
     <Card>
       <div className="p-6">
@@ -25,11 +23,7 @@ const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job }) => {
                       : 'bg-gray-400'
               }`}
             />
-            <h2
-              className={`text-xl font-semibold transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-200' : 'text-gray-900'
-              }`}
-            >
+            <h2 className="text-xl font-semibold text-gray-900 transition-colors duration-300 dark:text-gray-200">
               Run #{job.id.substring(0, 8)}
             </h2>
             <span
@@ -47,33 +41,17 @@ const JobInfoSection: React.FC<JobInfoSectionProps> = ({ job }) => {
             </span>
           </div>
           <div className="flex items-center space-x-2">
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                isDarkMode
-                  ? 'bg-blue-900/50 text-blue-400'
-                  : 'bg-blue-100 text-blue-800'
-              }`}
-            >
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/50 dark:text-blue-400">
               {job.provider}
             </span>
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                isDarkMode
-                  ? 'bg-purple-900/50 text-purple-400'
-                  : 'bg-purple-100 text-purple-800'
-              }`}
-            >
+            <span className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800 dark:bg-purple-900/50 dark:text-purple-400">
               {job.model}
             </span>
           </div>
         </div>
 
         {/* Created Date */}
-        <div
-          className={`text-sm transition-colors duration-300 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-          }`}
-        >
+        <div className="text-sm text-gray-600 transition-colors duration-300 dark:text-gray-400">
           Created:{' '}
           {new Date(
             parseInt(job.id.substring(0, 8), 16) * 1000,

@@ -8,11 +8,9 @@ import ConfigurationSection from './ConfigurationSection.js';
 import { OutputSection } from './OutputSection.js';
 import ResultsSection from './ResultsSection.js';
 import UsageSection from './UsageSection.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 const RunViewerPage = () => {
   const { job, loading, error } = useRunViewer();
-  const { isDarkMode } = useDarkModeStore();
 
   if (loading) {
     return <LoadingState />;
@@ -23,13 +21,7 @@ const RunViewerPage = () => {
   }
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        isDarkMode
-          ? 'dark bg-linear-to-br from-gray-900 via-slate-900 to-black'
-          : 'bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50'
-      }`}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 transition-colors duration-300 dark:bg-gradient-to-br dark:from-gray-900 dark:via-slate-900 dark:to-black">
       {/* Header */}
       <RunViewerHeader jobId={job.id} />
 

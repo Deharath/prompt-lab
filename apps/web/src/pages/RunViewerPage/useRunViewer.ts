@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ApiClient } from '../../api.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 import type { JobDetails } from './types.js';
 
 export const useRunViewer = () => {
@@ -9,7 +8,6 @@ export const useRunViewer = () => {
   const [job, setJob] = useState<JobDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isDarkMode, toggleDarkMode } = useDarkModeStore();
 
   useEffect(() => {
     // Scroll to top on mount

@@ -2,14 +2,12 @@ import React from 'react';
 import Card from '../../components/ui/Card.js';
 import Button from '../../components/ui/Button.js';
 import type { JobDetails } from './types.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface ConfigurationSectionProps {
   job: JobDetails;
 }
 
 const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({ job }) => {
-  const { isDarkMode } = useDarkModeStore();
   return (
     <Card>
       <div className="p-6">
@@ -35,11 +33,7 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({ job }) => {
               />
             </svg>
           </div>
-          <h3
-            className={`text-lg font-semibold transition-colors duration-300 ${
-              isDarkMode ? 'text-gray-200' : 'text-gray-900'
-            }`}
-          >
+          <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 dark:text-gray-200">
             Configuration
           </h3>
         </div>
@@ -47,22 +41,14 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({ job }) => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Provider Selector (Disabled) */}
           <div>
-            <label
-              className={`mb-2 block text-sm font-medium transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}
-            >
+            <label className="mb-2 block text-sm font-medium text-gray-700 transition-colors duration-300 dark:text-gray-300">
               Provider
             </label>
             <select
               value={job.provider}
               disabled
               aria-disabled="true"
-              className={`w-full cursor-not-allowed rounded-xl border-2 px-4 py-3 font-medium opacity-60 transition-colors duration-300 ${
-                isDarkMode
-                  ? 'border-gray-600/50 bg-gray-800/50 text-gray-400'
-                  : 'border-gray-200/50 bg-gray-50/50 text-gray-500'
-              }`}
+              className="w-full cursor-not-allowed rounded-xl border-2 border-gray-200/50 bg-gray-50/50 px-4 py-3 font-medium text-gray-500 opacity-60 transition-colors duration-300 dark:border-gray-600/50 dark:bg-gray-800/50 dark:text-gray-400"
             >
               <option value={job.provider}>{job.provider}</option>
             </select>
@@ -70,22 +56,14 @@ const ConfigurationSection: React.FC<ConfigurationSectionProps> = ({ job }) => {
 
           {/* Model Selector (Disabled) */}
           <div>
-            <label
-              className={`mb-2 block text-sm font-medium transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}
-            >
+            <label className="mb-2 block text-sm font-medium text-gray-700 transition-colors duration-300 dark:text-gray-300">
               Model
             </label>
             <select
               value={job.model}
               disabled
               aria-disabled="true"
-              className={`w-full cursor-not-allowed rounded-xl border-2 px-4 py-3 font-medium opacity-60 transition-colors duration-300 ${
-                isDarkMode
-                  ? 'border-gray-600/50 bg-gray-800/50 text-gray-400'
-                  : 'border-gray-200/50 bg-gray-50/50 text-gray-500'
-              }`}
+              className="w-full cursor-not-allowed rounded-xl border-2 border-gray-200/50 bg-gray-50/50 px-4 py-3 font-medium text-gray-500 opacity-60 transition-colors duration-300 dark:border-gray-600/50 dark:bg-gray-800/50 dark:text-gray-400"
             >
               <option value={job.model}>{job.model}</option>
             </select>

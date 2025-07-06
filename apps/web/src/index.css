@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+/* TailwindCSS v4.1+ Dark Mode Configuration - Manual Toggle */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @plugin "@tailwindcss/typography";
 
 /* Tailwind v4 Dark Mode Configuration */

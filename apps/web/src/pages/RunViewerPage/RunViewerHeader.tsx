@@ -2,22 +2,14 @@ import React from 'react';
 import Button from '../../components/ui/Button.js';
 import ShareRunButton from '../../components/shared/ShareRunButton.js';
 import DarkModeToggle from '../../components/ui/DarkModeToggle.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface RunViewerHeaderProps {
   jobId: string;
 }
 
 const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({ jobId }) => {
-  const { isDarkMode } = useDarkModeStore();
   return (
-    <div
-      className={`border-b shadow-lg transition-colors duration-300 ${
-        isDarkMode
-          ? 'border-gray-700/50 bg-gray-800/90 backdrop-blur-sm'
-          : 'border-white/20 bg-white/80 backdrop-blur-sm'
-      }`}
-    >
+    <div className="border-b border-white/20 bg-white/80 shadow-lg backdrop-blur-sm transition-colors duration-300 dark:border-gray-700/50 dark:bg-gray-800/90 dark:backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-6 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -44,11 +36,7 @@ const RunViewerHeader: React.FC<RunViewerHeaderProps> = ({ jobId }) => {
               Back to Lab
             </Button>
             <div>
-              <h1
-                className={`text-2xl font-bold transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
-                }`}
-              >
+              <h1 className="text-2xl font-bold text-gray-900 transition-colors duration-300 dark:text-gray-200">
                 Run Viewer
               </h1>
             </div>

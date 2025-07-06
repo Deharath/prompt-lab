@@ -1,14 +1,12 @@
 import React from 'react';
 import Card from '../../components/ui/Card.js';
 import type { JobDetails } from './types.js';
-import { useDarkModeStore } from '../../store/darkModeStore.js';
 
 interface PromptSectionProps {
   job: JobDetails;
 }
 
 const PromptSection: React.FC<PromptSectionProps> = ({ job }) => {
-  const { isDarkMode } = useDarkModeStore();
   return (
     <Card>
       <div className="p-6">
@@ -28,20 +26,12 @@ const PromptSection: React.FC<PromptSectionProps> = ({ job }) => {
               />
             </svg>
           </div>
-          <h3
-            className={`text-lg font-semibold transition-colors duration-300 ${
-              isDarkMode ? 'text-gray-200' : 'text-gray-900'
-            }`}
-          >
+          <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 dark:text-gray-200">
             Prompt
           </h3>
         </div>
         <div
-          className={`min-h-[120px] w-full rounded-xl border-2 p-4 font-mono text-sm transition-colors duration-300 ${
-            isDarkMode
-              ? 'border-gray-600/50 bg-gray-800/50 text-gray-300'
-              : 'border-gray-200/50 bg-gray-50/50 text-gray-700'
-          }`}
+          className="min-h-[120px] w-full rounded-xl border-2 border-gray-200/50 bg-gray-50/50 p-4 font-mono text-sm text-gray-700 transition-colors duration-300 dark:border-gray-600/50 dark:bg-gray-800/50 dark:text-gray-300"
           aria-disabled="true"
         >
           {job.prompt || 'No prompt available'}
