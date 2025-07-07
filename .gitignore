@@ -105,8 +105,24 @@ packages/evaluation-engine/drizzle/
 # Log directory
 /logs/
 
-# Claude AI settings
-.claude/*
+# Claude AI settings and artifacts
+.claude/
+.claude-*
+*.claude-session
+claude-*.json
+
+# GitHub Copilot settings and instructions
+copilot-instructions*
+.copilot-instructions*
+*copilot-instructions*
+.github/copilot-instructions.md
+
+# Other AI assistant files
+.cursor/
+.anthropic/
+.openai/
+.codeium/
+.tabnine/
 
 # Vite artifacts
 **/*.timestamp-*.mjs
