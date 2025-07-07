@@ -6,7 +6,7 @@ import MainLayout from './components/layout/MainLayout.js';
 import Home from './Home.js';
 import DiffPage from './pages/DiffPage.js';
 import DashboardPage from './pages/DashboardPage.js';
-import RunViewerPage from './pages/RunViewerPage.js';
+import RunViewerPage from './pages/RunViewerPage/index.js';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({

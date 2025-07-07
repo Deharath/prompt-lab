@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from '../../ui/Card.js';
 import StatCard from '../../ui/StatCard.js';
-import { calculateMetricStats } from './metrics-calculator.js';
+import { calculateMetricStats } from './metricsCalculator.js';
 import { DiffMetricsTable } from './DiffMetricsTable.js';
 import { JobDetails } from '../../../api.js';
 

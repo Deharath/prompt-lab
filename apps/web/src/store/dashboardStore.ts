@@ -16,13 +16,10 @@ export const useDashboardStore = create<DashboardState>((set, _get) => ({
   data: null,
   days: 30,
   fetchDashboardStats: async (days: number) => {
-    console.log('fetchDashboardStats called with days:', days);
     set({ isLoading: true, error: null, days });
 
     try {
-      console.log('Calling ApiClient.fetchDashboardStats...');
       const data = await ApiClient.fetchDashboardStats(days);
-      console.log('Dashboard data received:', data);
       set({ data, isLoading: false });
     } catch (error) {
       console.error('Dashboard fetch error:', error);
