@@ -56,6 +56,9 @@ Thumbs.db
 # Local development & test files
 **/jobs.json
 
+# Documentation and audit files (keep local only)
+/docs/
+
 # SQLite databases (local artifacts)
 *.db
 sqlite.db
