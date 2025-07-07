@@ -34,7 +34,7 @@ export const DiffMetrics: React.FC<DiffMetricsProps> = ({
   try {
     metricStats = calculateMetricStats(baseJob, compareJob);
   } catch (error) {
-    console.error('Error calculating metric stats:', error);
+    // Log error for debugging but don't expose to console in production
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">

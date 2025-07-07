@@ -93,8 +93,9 @@ export const useJobStore = create<JobState>((set) => ({
     try {
       const history = await ApiClient.listJobs();
       set({ history });
-    } catch (err) {
-      console.error('Failed to load history', err);
+    } catch (error) {
+      // History loading is not critical, silently fail or set empty history
+      set({ history: [] });
     }
   },
   setTemperature: (value) => {

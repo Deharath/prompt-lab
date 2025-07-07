@@ -89,14 +89,17 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
     let finalPrompt = template;
     try {
       const inputs = JSON.parse(inputData);
-      for (const key in inputs) {
-        finalPrompt = finalPrompt.replace(
-          new RegExp(`{{\\s*${key}\\s*}}`, 'g'),
-          inputs[key],
-        );
+      if (inputs && typeof inputs === 'object') {
+        for (const key in inputs) {
+          finalPrompt = finalPrompt.replace(
+            new RegExp(`{{\\s*${key}\\s*}}`, 'g'),
+            String(inputs[key]),
+          );
+        }
       }
-    } catch (e) {
-      // ignore json parsing errors
+    } catch {
+      // If inputData is not valid JSON, treat it as plain text
+      // This is expected for simple text inputs
     }
     finalPrompt = finalPrompt.replace(/\{\{\s*input\s*\}\}/g, inputData);
 
