@@ -22,6 +22,14 @@ async function initializeDb() {
       const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
       if (dbPath !== ':memory:') {
         dbPath = resolve(rootDir, dbPath);
+
+        // Ensure the database directory exists
+        const dbDir = dbPath.substring(0, dbPath.lastIndexOf('/'));
+        if (dbDir) {
+          await import('fs').then((fs) =>
+            fs.promises.mkdir(dbDir, { recursive: true }),
+          );
+        }
       }
 
       // Initialize database connection first

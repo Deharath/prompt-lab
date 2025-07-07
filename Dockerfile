@@ -39,6 +39,7 @@ COPY --from=builder /app/packages/test-cases/src ./packages/test-cases/src
 RUN pnpm install --frozen-lockfile
 
 ENV NODE_ENV=production
+RUN mkdir -p /app/db
 EXPOSE 3000
 
 # start the API (entrypoint produced by tsc)

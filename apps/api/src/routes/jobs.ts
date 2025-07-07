@@ -282,6 +282,16 @@ jobsRouter.get(
         throw new NotFoundError('Job not found');
       }
 
+      // Prevent streaming if job is already completed or failed
+      if (job.status === 'completed' || job.status === 'failed') {
+        res.status(200).json({
+          status: job.status,
+          result: job.result,
+          metrics: job.metrics,
+        });
+        return;
+      }
+
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
@@ -296,10 +306,36 @@ jobsRouter.get(
         );
       }
 
+      // Track if client disconnected
+      let clientDisconnected = false;
+      const cleanup = () => {
+        clientDisconnected = true;
+      };
+
+      // Handle client disconnect
+      req.on('close', cleanup);
+      req.on('aborted', cleanup);
+      res.on('close', cleanup);
+
       await updateJob(id, { status: 'running' });
       const startTime = Date.now();
 
+      // Check memory usage to prevent OOM kills
+      const memoryCheck = () => {
+        const memUsage = process.memoryUsage();
+        const memUsedMB = memUsage.rss / 1024 / 1024;
+        // If using more than 800MB on a 1GB instance, we're in danger
+        if (memUsedMB > 800) {
+          console.warn(`⚠️ High memory usage: ${memUsedMB.toFixed(0)}MB`);
+          return false;
+        }
+        return true;
+      };
+
       const sendEvent = (data: object, event?: string) => {
+        if (clientDisconnected || res.writableEnded) {
+          return false;
+        }
         try {
           const jsonData = JSON.stringify(data);
           let sseString = '';
@@ -308,9 +344,11 @@ jobsRouter.get(
           }
           sseString += `data: ${jsonData}\n\n`;
           res.write(sseString);
-          if (typeof res.flush === 'function') res.flush(); // Ensure immediate delivery
+          if (typeof res.flush === 'function') res.flush();
+          return true;
         } catch {
-          // error intentionally ignored
+          clientDisconnected = true;
+          return false;
         }
       };
 
@@ -327,6 +365,33 @@ jobsRouter.get(
           });
           try {
             while (true) {
+              // Check for client disconnect and memory usage before processing
+              if (clientDisconnected) {
+                await updateJob(id, {
+                  status: 'failed',
+                  result: 'Client disconnected during streaming',
+                });
+                return;
+              }
+
+              if (!memoryCheck()) {
+                await updateJob(id, {
+                  status: 'failed',
+                  result: 'Job aborted due to memory constraints',
+                });
+                if (!clientDisconnected) {
+                  sendEvent(
+                    { error: 'Job aborted due to memory constraints' },
+                    'error',
+                  );
+                  sendEvent({ done: true }, 'done');
+                }
+                if (!res.writableEnded) {
+                  res.end();
+                }
+                return;
+              }
+
               let result;
               try {
                 result = await streamIterator.next();
@@ -339,8 +404,10 @@ jobsRouter.get(
                   status: 'failed',
                   result: errorMessage,
                 });
-                sendEvent({ error: errorMessage }, 'error');
-                sendEvent({ done: true }, 'done');
+                if (!clientDisconnected) {
+                  sendEvent({ error: errorMessage }, 'error');
+                  sendEvent({ done: true }, 'done');
+                }
                 if (!res.writableEnded) {
                   if (typeof res.flush === 'function') res.flush();
                   await new Promise((r) => setTimeout(r, 10));
@@ -351,9 +418,26 @@ jobsRouter.get(
               if (result.done) break;
               if (result.value && result.value.content) {
                 output += result.value.content;
-                sendEvent({ token: result.value.content });
+                if (!sendEvent({ token: result.value.content })) {
+                  // Client disconnected while sending
+                  await updateJob(id, {
+                    status: 'failed',
+                    result: 'Client disconnected during streaming',
+                  });
+                  return;
+                }
               }
             }
+
+            // Check one more time before finalizing
+            if (clientDisconnected) {
+              await updateJob(id, {
+                status: 'failed',
+                result: 'Client disconnected before completion',
+              });
+              return;
+            }
+
             // Streaming is complete, transition to evaluating state
             await updateJob(id, { status: 'evaluating' });
 
@@ -391,8 +475,10 @@ jobsRouter.get(
             });
 
             // Send metrics first, then done event
-            sendEvent(metrics, 'metrics');
-            sendEvent({ done: true }, 'done');
+            if (!clientDisconnected) {
+              sendEvent(metrics, 'metrics');
+              sendEvent({ done: true }, 'done');
+            }
             return;
           } catch (streamError) {
             // Defensive: should never reach here, but just in case
@@ -404,8 +490,10 @@ jobsRouter.get(
               status: 'failed',
               result: errorMessage,
             });
-            sendEvent({ error: errorMessage }, 'error');
-            sendEvent({ done: true }, 'done');
+            if (!clientDisconnected) {
+              sendEvent({ error: errorMessage }, 'error');
+              sendEvent({ done: true }, 'done');
+            }
             if (!res.writableEnded) {
               if (typeof res.flush === 'function') res.flush();
               await new Promise((r) => setTimeout(r, 10));
@@ -424,8 +512,11 @@ jobsRouter.get(
           output = result.output;
           tokens = result.tokens;
           cost = result.cost;
-          sendEvent({ token: output });
-          sendEvent({ done: true }, 'done');
+
+          if (!clientDisconnected) {
+            sendEvent({ token: output });
+            sendEvent({ done: true }, 'done');
+          }
 
           const endTime = Date.now();
 
@@ -452,7 +543,10 @@ jobsRouter.get(
             result: output,
             metrics,
           });
-          sendEvent(metrics, 'metrics');
+
+          if (!clientDisconnected) {
+            sendEvent(metrics, 'metrics');
+          }
         }
       } catch (error) {
         const errorMessage =
@@ -462,11 +556,13 @@ jobsRouter.get(
           result: errorMessage,
         });
         // Always use sendEvent for error event
-        sendEvent({ error: errorMessage }, 'error');
-        sendEvent({ done: true }, 'done');
+        if (!clientDisconnected) {
+          sendEvent({ error: errorMessage }, 'error');
+          sendEvent({ done: true }, 'done');
+        }
       } finally {
         // Only end the response if not already ended
-        if (!res.writableEnded) {
+        if (!res.writableEnded && !clientDisconnected) {
           res.end();
         }
       }

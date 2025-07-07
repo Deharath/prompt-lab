@@ -150,6 +150,23 @@ async function analyzeTransformersSentiment(
   }
 
   try {
+    // Check if ML models are disabled due to resource constraints
+    if (
+      process.env.DISABLE_SENTIMENT_ANALYSIS === 'true' ||
+      process.env.ENABLE_ML_MODELS === 'false'
+    ) {
+      console.log('ℹ️ Sentiment analysis disabled due to resource constraints');
+      return {
+        compound: 0,
+        positive: 0,
+        negative: 0,
+        neutral: 1,
+        label: 'neutral',
+        confidence: 1,
+        mode: 'accurate',
+      };
+    }
+
     // Lazy load transformers with CardiffNLP Twitter RoBERTa model
     if (!transformers) {
       const { pipeline } = await import('@huggingface/transformers');

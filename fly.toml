@@ -21,3 +21,17 @@ primary_region = 'fra'
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
+
+[[mounts]]
+  source = 'prompt_lab_data'
+  destination = '/app/db'
+  processes = ['app']
+
+[env]
+  DATABASE_URL = 'sqlite:///app/db/app.sqlite'
+  DISABLE_SENTIMENT_ANALYSIS = 'true'
+  ENABLE_ML_MODELS = 'false'
+  TRUST_PROXY = 'true'
+  EVALUATION_CONCURRENCY = '2'
+  EVALUATION_MAX_CASES = '100'
+  DB_MAX_CONNECTIONS = '5'
