@@ -7,6 +7,7 @@ import Home from './Home.js';
 import DiffPage from './pages/DiffPage.js';
 import DashboardPage from './pages/DashboardPage.js';
 import RunViewerPage from './pages/RunViewerPage/index.js';
+import ErrorBoundary from './components/ui/ErrorBoundary.js';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -47,31 +48,44 @@ const AppContent = () => {
     >
       <Routes>
         {/* Home page manages its own layout */}
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={
+            <ErrorBoundary>
+              <Home />
+            </ErrorBoundary>
+          }
+        />
 
         {/* Other pages use MainLayout */}
         <Route
           path="/diff"
           element={
-            <MainLayout>
-              <DiffPage />
-            </MainLayout>
+            <ErrorBoundary>
+              <MainLayout>
+                <DiffPage />
+              </MainLayout>
+            </ErrorBoundary>
           }
         />
         <Route
           path="/dashboard"
           element={
-            <MainLayout>
-              <DashboardPage />
-            </MainLayout>
+            <ErrorBoundary>
+              <MainLayout>
+                <DashboardPage />
+              </MainLayout>
+            </ErrorBoundary>
           }
         />
         <Route
           path="/run/:id"
           element={
-            <MainLayout>
-              <RunViewerPage />
-            </MainLayout>
+            <ErrorBoundary>
+              <MainLayout>
+                <RunViewerPage />
+              </MainLayout>
+            </ErrorBoundary>
           }
         />
       </Routes>

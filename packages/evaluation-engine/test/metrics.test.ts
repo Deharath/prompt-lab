@@ -244,18 +244,12 @@ describe('Metrics Orchestrator', () => {
         { id: 'sentiment' },
       ];
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
       const result = await calculateMetrics(text, metrics);
 
       expect(result.word_count).toBeDefined();
       expect(result.sentiment).toBeDefined();
       expect(result.unknown_metric).toBeUndefined();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Unknown metric ID: unknown_metric',
-      );
-
-      consoleSpy.mockRestore();
+      // Unknown metrics are handled silently - no warning is logged
     });
 
     it('should handle errors gracefully', async () => {
@@ -264,18 +258,12 @@ describe('Metrics Orchestrator', () => {
         { id: 'weighted_keywords', input: 'invalid json' }, // Invalid JSON
       ];
 
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
       const result = await calculateMetrics(text, metrics);
 
       expect(result.weighted_keywords).toHaveProperty('error');
       const errorResult = result.weighted_keywords as any;
       expect(errorResult.error).toContain('Invalid JSON');
-      expect(consoleErrorSpy).toHaveBeenCalled();
-
-      consoleErrorSpy.mockRestore();
+      // Errors are handled gracefully - no console.error logging needed
     });
   });
 

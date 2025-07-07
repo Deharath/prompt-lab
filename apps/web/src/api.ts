@@ -1,5 +1,6 @@
 import type { DashboardStats } from './types/dashboard.js';
 import type { QualitySummaryData } from './hooks/useQualitySummary.js';
+import { withRetry } from './hooks/useRetry.js';
 
 // Helper function to parse dates from JSON
 
@@ -224,8 +225,11 @@ export class ApiClient {
   }
 
   static async listJobs(): Promise<JobSummary[]> {
-    const result = await this.makeRequest<JobSummary[]>('/jobs');
-    return result;
+    const listJobsWithRetry = withRetry(
+      () => this.makeRequest<JobSummary[]>('/jobs'),
+      { maxAttempts: 2, initialDelay: 500 },
+    );
+    return await listJobsWithRetry();
   }
 
   static async diffJobs(
@@ -233,17 +237,24 @@ export class ApiClient {
     compareId: string,
   ): Promise<{ baseJob: JobDetails; compareJob: JobDetails }> {
     const endpoint = `/jobs/${baseId}/diff?otherId=${compareId}`;
-    const result = await this.makeRequest<{
-      baseJob: JobDetails;
-      compareJob: JobDetails;
-    }>(endpoint);
-    return result;
+    const diffJobsWithRetry = withRetry(
+      () =>
+        this.makeRequest<{
+          baseJob: JobDetails;
+          compareJob: JobDetails;
+        }>(endpoint),
+      { maxAttempts: 2, initialDelay: 500 },
+    );
+    return await diffJobsWithRetry();
   }
 
   static async fetchDashboardStats(days: number = 30): Promise<DashboardStats> {
     const endpoint = `/api/dashboard/stats?days=${days}`;
-    const result = await this.makeRequest<DashboardStats>(endpoint);
-    return result;
+    const fetchStatsWithRetry = withRetry(
+      () => this.makeRequest<DashboardStats>(endpoint),
+      { maxAttempts: 2, initialDelay: 500 },
+    );
+    return await fetchStatsWithRetry();
   }
 
   static async deleteJob(id: string): Promise<void> {
