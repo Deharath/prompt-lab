@@ -13,26 +13,7 @@ This directory contains utility and maintenance scripts for the Prompt Lab proje
 - **Requirements:** None - uses default database configuration
 - **Description:** Executes pending database migrations using the migration system from `@prompt-lab/evaluation-engine`
 
-#### `migrate-metrics.ts`
-
-- **Purpose:** Migration script for metrics system upgrade (v1 to v2)
-- **Usage:** `npx tsx scripts/migrate-metrics.ts`
-- **Requirements:** Backup existing data before running
-- **Description:** Handles the transition from the old DIY metrics system to the new professional metrics architecture
-- **Features:**
-  - Backs up existing metrics data
-  - Updates environment variables
-  - Tests new system functionality
-  - Optional cleanup of legacy code
-
 ### Health Check Scripts
-
-#### `health-check.sh`
-
-- **Purpose:** Basic health check for Docker containers in CI
-- **Usage:** `./scripts/health-check.sh`
-- **Requirements:** Docker container named "promptlab" must be running
-- **Description:** Polls health endpoints to verify API readiness, with basic error reporting
 
 #### `health-check-enhanced.sh`
 
@@ -67,35 +48,12 @@ This directory contains utility and maintenance scripts for the Prompt Lab proje
 
 ### Development & Testing Scripts
 
-#### `library-spike.mjs`
-
-- **Purpose:** Library cold-start timing and compatibility testing
-- **Usage:** `node scripts/library-spike.mjs`
-- **Requirements:** Node.js 18+
-- **Description:** Tests loading times and functionality of key libraries:
-  - text-readability-ts
-  - Performance benchmarking
-  - Library compatibility verification
-
 #### `lint-jsonl.cjs`
 
 - **Purpose:** Validates JSONL file format across the project
 - **Usage:** `node scripts/lint-jsonl.cjs`
 - **Requirements:** Node.js
 - **Description:** Recursively finds and validates all `.jsonl` files in the project directory
-
-### Metrics Debug Scripts
-
-#### `metrics-debug/`
-
-- **Purpose:** Debug and testing scripts for the metrics system
-- **Usage:** See `scripts/metrics-debug/README.md` for detailed documentation
-- **Description:** Contains specialized scripts for:
-  - End-to-end metrics testing
-  - Sentiment analysis debugging
-  - Readability testing at various complexity levels
-  - Direct API testing
-  - Real-world response testing
 
 ## Usage Guidelines
 
@@ -135,9 +93,7 @@ The health check and Docker scripts are specifically designed for CI/CD pipeline
 For development and debugging:
 
 1. Use `migrate.ts` after schema changes
-2. Use `library-spike.mjs` when adding new dependencies
-3. Use scripts in `metrics-debug/` when working on metrics features
-4. Use `lint-jsonl.cjs` before committing JSONL files
+2. Use `lint-jsonl.cjs` before committing JSONL files
 
 ## Troubleshooting
 
@@ -150,6 +106,5 @@ For development and debugging:
 
 ### Getting Help
 
-- For metrics-specific issues: See `scripts/metrics-debug/README.md`
 - For Docker issues: Check container logs with `docker logs <container-name>`
 - For database issues: Verify database file permissions and schema version

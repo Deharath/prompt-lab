@@ -126,3 +126,10 @@ copilot-instructions*
 
 # Vite artifacts
 **/*.timestamp-*.mjs
+
+# Auto-generated TypeScript declaration files (keep only hand-written type definitions)
+*.config.d.ts
+*.config.d.mts
+**/src/**/*.d.ts
+!**/src/types/**/*.d.ts
+!vitest.shims.d.ts
