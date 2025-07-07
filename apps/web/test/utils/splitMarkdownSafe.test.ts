@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitMarkdownSafe } from '../utils/splitMarkdownSafe.js';
+import { splitMarkdownSafe } from '../../src/utils/splitMarkdownSafe.js';
 
 describe('splitMarkdownSafe', () => {
   it('should return all for plain text', () => {
