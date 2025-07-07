@@ -14,6 +14,18 @@ export const formatSentiment = (value: any) => {
     }
   }
 
+  // Check if sentiment analysis was disabled
+  if (sentimentObj && 'disabled' in sentimentObj && sentimentObj.disabled) {
+    const reason =
+      (sentimentObj.disabledReason as string) ||
+      'Disabled due to memory limitations of machine';
+    return {
+      formattedValue: reason,
+      unit: '',
+      isDisabled: true,
+    };
+  }
+
   if (sentimentObj && 'label' in sentimentObj && 'confidence' in sentimentObj) {
     const label = sentimentObj.label as string;
     const confidence = sentimentObj.confidence as number;

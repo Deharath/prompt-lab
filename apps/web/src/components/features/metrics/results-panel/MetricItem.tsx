@@ -12,6 +12,7 @@ interface MetricItemProps {
   originalValue?: any;
   originalKey?: string;
   index?: number;
+  isDisabled?: boolean;
 }
 
 export const MetricItem: React.FC<MetricItemProps> = ({
@@ -22,14 +23,25 @@ export const MetricItem: React.FC<MetricItemProps> = ({
   originalValue,
   originalKey,
   index,
+  isDisabled,
 }) => (
   <div
     key={`${name}-${index || 0}`}
-    className="bg-muted/20 dark:bg-muted/10 border-border/50 flex items-center justify-between rounded-md border px-3 py-2"
+    className={`border-border/50 flex items-center justify-between rounded-md border px-3 py-2 ${
+      isDisabled
+        ? 'bg-muted/10 dark:bg-muted/5 opacity-75'
+        : 'bg-muted/20 dark:bg-muted/10'
+    }`}
     title={description}
   >
     <div className="flex items-center space-x-2">
-      <span className="text-foreground/80 text-xs font-medium">{name}</span>
+      <span
+        className={`text-xs font-medium ${
+          isDisabled ? 'text-muted-foreground' : 'text-foreground/80'
+        }`}
+      >
+        {name}
+      </span>
       {description && (
         <div className="group relative">
           <span className="text-muted-foreground h-3 w-3 cursor-help text-xs">
@@ -43,10 +55,14 @@ export const MetricItem: React.FC<MetricItemProps> = ({
     </div>
     <div className="flex items-center space-x-1">
       <span
-        className={`text-xs font-semibold ${getScoreColor(
-          originalValue || value,
-          originalKey || name.toLowerCase(),
-        )}`}
+        className={`text-xs font-semibold ${
+          isDisabled
+            ? 'text-muted-foreground italic'
+            : getScoreColor(
+                originalValue || value,
+                originalKey || name.toLowerCase(),
+              )
+        }`}
       >
         {value}
       </span>

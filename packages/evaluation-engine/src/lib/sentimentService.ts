@@ -16,6 +16,8 @@ export interface SentimentScore {
   label: 'positive' | 'negative' | 'neutral'; // Predicted sentiment class
   confidence: number; // Confidence of the prediction 0 to 1
   mode: 'accurate'; // Only accurate mode available
+  disabled?: boolean; // Whether sentiment analysis was disabled
+  disabledReason?: string; // Reason for disabling
 }
 
 export interface SentimentError {
@@ -164,6 +166,9 @@ async function analyzeTransformersSentiment(
         label: 'neutral',
         confidence: 1,
         mode: 'accurate',
+        disabled: true,
+        disabledReason:
+          'Disabled due to memory constraints on production server',
       };
     }
 
