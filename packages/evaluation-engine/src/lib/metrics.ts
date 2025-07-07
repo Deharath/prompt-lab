@@ -140,7 +140,7 @@ export async function calculateMetrics(
               );
               results.weighted_keywords = keywordResult;
             } catch (error) {
-              console.error('Invalid weighted keywords JSON:', error);
+              // Invalid JSON format for weighted keywords - return error result
               results.weighted_keywords = {
                 error: 'Invalid JSON format for weighted keywords',
               };
@@ -157,9 +157,7 @@ export async function calculateMetrics(
               metric.input,
             );
           } else {
-            console.warn(
-              'Precision metric requires input data (reference text)',
-            );
+            // Precision metric requires input data (reference text)
             results.precision = 0;
           }
           break;
@@ -170,7 +168,7 @@ export async function calculateMetrics(
           if (metric.input) {
             results.recall = calculateContentBasedRecall(text, metric.input);
           } else {
-            console.warn('Recall metric requires input data (reference text)');
+            // Recall metric requires input data (reference text)
             results.recall = 0;
           }
           break;
@@ -191,7 +189,7 @@ export async function calculateMetrics(
               results.f_score = (2 * precision * recall) / (precision + recall);
             }
           } else {
-            console.warn('F-score metric requires input data (reference text)');
+            // F-score metric requires input data (reference text)
             results.f_score = 0;
           }
           break;
@@ -250,11 +248,11 @@ export async function calculateMetrics(
         }
 
         default:
-          console.warn(`Unknown metric ID: ${metric.id}`);
+          // Unknown metric ID - skip silently
           break;
       }
     } catch (error) {
-      console.error(`Error calculating metric ${metric.id}:`, error);
+      // Error calculating metric - store error result for debugging
       results[`${metric.id}_error`] =
         error instanceof Error ? error.message : 'Unknown error';
     }
