@@ -62,7 +62,13 @@ export async function calculateMetrics(
             text,
             true,
           )) as SentimentScore;
-          results.sentiment = sentimentResult.compound; // Store just the compound score (-1 to 1)
+
+          // If sentiment analysis is disabled, store the entire object to show disabled message
+          if (sentimentResult.disabled) {
+            results.sentiment = sentimentResult;
+          } else {
+            results.sentiment = sentimentResult.compound; // Store just the compound score (-1 to 1)
+          }
           break;
         }
 
