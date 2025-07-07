@@ -9,7 +9,7 @@ interface ResultsPanelProps {
   showInsights?: boolean;
 }
 
-const ResultsPanelV2 = ({
+const ResultsPanel = ({
   metrics,
   jobId: _jobId,
   title = 'Evaluation Results',
@@ -124,4 +124,4 @@ const ResultsPanelV2 = ({
   );
 };
 
-export default ResultsPanelV2;
+export default ResultsPanel;
