@@ -4,7 +4,7 @@ import { formatSentiment, formatNumber, formatObject } from './formatters.js';
 export const processMetrics = (metrics: Record<string, unknown>) => {
   const categories: Record<
     string,
-    Array<[string, string, string?, string?, unknown?, string?]>
+    Array<[string, string, string?, string?, unknown?, string?, boolean?]>
   > = {
     quality: [],
     readability: [],
@@ -39,11 +39,13 @@ export const processMetrics = (metrics: Record<string, unknown>) => {
 
     let formattedValue: string | number = '';
     let unit = '';
+    let isDisabled = false;
 
     if (key === 'sentiment') {
       const result = formatSentiment(value);
       formattedValue = result.formattedValue;
       unit = result.unit;
+      isDisabled = result.isDisabled || false;
     } else if (typeof value === 'number') {
       const result = formatNumber(key, value);
       formattedValue = result.formattedValue;
@@ -67,6 +69,7 @@ export const processMetrics = (metrics: Record<string, unknown>) => {
       description,
       value,
       key,
+      isDisabled,
     ]);
   });
 

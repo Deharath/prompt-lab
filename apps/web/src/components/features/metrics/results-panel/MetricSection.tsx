@@ -17,6 +17,7 @@ export type MetricTuple = [
   description?: string,
   originalValue?: unknown,
   originalKey?: string,
+  isDisabled?: boolean,
 ];
 
 interface MetricSectionProps {
@@ -48,6 +49,7 @@ export const MetricSection: React.FC<MetricSectionProps> = ({
               description,
               originalValue,
               originalKey,
+              isDisabled,
             ]: MetricTuple,
             index: number,
           ) => (
@@ -60,6 +62,7 @@ export const MetricSection: React.FC<MetricSectionProps> = ({
               originalValue={originalValue}
               originalKey={originalKey}
               index={index}
+              isDisabled={isDisabled}
             />
           ),
         )}
