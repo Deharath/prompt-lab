@@ -317,7 +317,24 @@ async function analyzeTransformersSentiment(
 export async function analyzeSentiment(
   text: string,
   detailed = false,
+  forceDisable = false,
 ): Promise<SentimentScore | number> {
+  // Return disabled sentiment analysis for low-memory systems
+  if (forceDisable) {
+    const disabledScore: SentimentScore = {
+      compound: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 1,
+      label: 'neutral',
+      confidence: 0,
+      mode: 'accurate',
+      disabled: true,
+      disabledReason: 'Sentiment Analysis disabled due to memory constraints',
+    };
+    return detailed ? disabledScore : disabledScore.compound;
+  }
+
   if (!text || text.trim().length === 0) {
     const neutralScore: SentimentScore = {
       compound: 0,

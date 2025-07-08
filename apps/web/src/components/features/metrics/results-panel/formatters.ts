@@ -18,9 +18,9 @@ export const formatSentiment = (value: any) => {
   if (sentimentObj && 'disabled' in sentimentObj && sentimentObj.disabled) {
     const reason =
       (sentimentObj.disabledReason as string) ||
-      'Disabled due to memory limitations of machine';
+      'Disabled due to memory constraints';
     return {
-      formattedValue: reason,
+      formattedValue: `💭 ${reason}`,
       unit: '',
       isDisabled: true,
     };
@@ -102,9 +102,11 @@ export const formatObject = (key: string, value: object) => {
   if (key === 'keywords' && typeof value === 'object') {
     const kw = value as Record<string, unknown>;
     if ('foundCount' in kw && 'missingCount' in kw) {
-      formattedValue = `${(kw.foundCount as number) || 0}/$ {
-        ((kw.foundCount as number) || 0) + ((kw.missingCount as number) || 0)
-      } found`;
+      const foundCount = (kw.foundCount as number) || 0;
+      const missingCount = (kw.missingCount as number) || 0;
+      const totalCount = foundCount + missingCount;
+
+      formattedValue = `${foundCount}/${totalCount} found`;
       unit =
         'matchPercentage' in kw && typeof kw.matchPercentage === 'number'
           ? `(${(kw.matchPercentage || 0).toFixed(1)}%)`

@@ -1,5 +1,33 @@
 import type { Request, Response, NextFunction, Router } from 'express';
 import { Router as createRouter } from 'express';
+import * as os from 'os';
+
+/**
+ * Memory cleanup utility for post-job execution
+ * Forces garbage collection if memory growth was significant
+ */
+function cleanupJobMemory(jobId: string, baselineMemoryMB: number): void {
+  const currentMemoryMB = process.memoryUsage().rss / 1024 / 1024;
+  const memoryGrowthMB = currentMemoryMB - baselineMemoryMB;
+
+  console.log(
+    `[Memory Cleanup] Job ${jobId}: Growth=+${memoryGrowthMB.toFixed(0)}MB, Final=${currentMemoryMB.toFixed(0)}MB`,
+  );
+
+  // Force garbage collection if available and growth was significant
+  if (global.gc && memoryGrowthMB > 50) {
+    console.log(
+      `[Memory Cleanup] Job ${jobId}: Forcing GC due to ${memoryGrowthMB.toFixed(0)}MB growth`,
+    );
+    global.gc();
+
+    const afterGcMemoryMB = process.memoryUsage().rss / 1024 / 1024;
+    const freedMemoryMB = currentMemoryMB - afterGcMemoryMB;
+    console.log(
+      `[Memory Cleanup] Job ${jobId}: GC freed ${freedMemoryMB.toFixed(0)}MB (${afterGcMemoryMB.toFixed(0)}MB remaining)`,
+    );
+  }
+}
 import {
   createJob,
   getJob,
@@ -22,17 +50,35 @@ import {
   type MetricInput,
 } from '@prompt-lab/evaluation-engine';
 
-// Default metrics that are always calculated as per plan_for_metrics_upgrade.md
-const DEFAULT_METRICS: MetricInput[] = [
-  { id: 'flesch_reading_ease' },
-  { id: 'flesch_kincaid' },
-  { id: 'sentiment' },
-  { id: 'word_count' },
-  { id: 'sentence_count' },
-  { id: 'avg_words_per_sentence' },
-  { id: 'vocab_diversity' },
-  { id: 'completeness_score' },
-];
+/**
+ * Get default metrics based on system memory constraints
+ * Disables sentiment analysis on low-memory systems (< 2GB RAM)
+ */
+function getDefaultMetrics(): MetricInput[] {
+  const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
+  const isLowMemorySystem = totalSystemMemoryGB < 2;
+
+  const baseMetrics: MetricInput[] = [
+    { id: 'flesch_reading_ease' },
+    { id: 'flesch_kincaid' },
+    { id: 'word_count' },
+    { id: 'sentence_count' },
+    { id: 'avg_words_per_sentence' },
+    { id: 'vocab_diversity' },
+    { id: 'completeness_score' },
+  ];
+
+  // Only include sentiment analysis on systems with sufficient memory
+  if (!isLowMemorySystem) {
+    baseMetrics.push({ id: 'sentiment' });
+  }
+
+  console.log(
+    `[Memory Management] System RAM: ${totalSystemMemoryGB.toFixed(1)}GB, Sentiment Analysis: ${isLowMemorySystem ? 'DISABLED' : 'ENABLED'}`,
+  );
+
+  return baseMetrics;
+}
 
 // Helper function to calculate metrics with new upgraded system
 async function calculateJobMetrics(
@@ -44,8 +90,9 @@ async function calculateJobMetrics(
     return {};
   }
 
-  // Start with default metrics that are always calculated
-  let allMetrics = [...DEFAULT_METRICS];
+  // Start with default metrics that are dynamically calculated based on system memory
+  const defaultMetrics = getDefaultMetrics();
+  let allMetrics = [...defaultMetrics];
 
   // Add any additional selected metrics
   if (selectedMetrics && Array.isArray(selectedMetrics)) {
@@ -54,7 +101,7 @@ async function calculateJobMetrics(
       input?: string;
     }>;
     const additionalInputs: MetricInput[] = additionalMetrics
-      .filter((m) => !DEFAULT_METRICS.some((d) => d.id === m.id)) // Avoid duplicates
+      .filter((m) => !defaultMetrics.some((d: MetricInput) => d.id === m.id)) // Avoid duplicates
       .map((m) => ({ id: m.id, input: m.input }));
     allMetrics = [...allMetrics, ...additionalInputs];
   }
@@ -89,7 +136,31 @@ async function calculateJobMetrics(
     });
   }
 
-  return await calculateMetrics(output, allMetrics);
+  return await calculateMetrics(
+    output,
+    allMetrics,
+    getDisabledMetricsForSystem(),
+  );
+}
+
+/**
+ * Get set of metrics to disable based on system memory constraints
+ */
+function getDisabledMetricsForSystem(): Set<string> {
+  const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
+  const isLowMemorySystem = totalSystemMemoryGB < 2;
+
+  const disabledMetrics = new Set<string>();
+
+  if (isLowMemorySystem) {
+    disabledMetrics.add('sentiment');
+    disabledMetrics.add('sentiment_detailed');
+    console.log(
+      `[Memory Management] Disabled sentiment analysis on ${totalSystemMemoryGB.toFixed(1)}GB system`,
+    );
+  }
+
+  return disabledMetrics;
 }
 
 const jobsRouter = createRouter();
@@ -320,15 +391,39 @@ jobsRouter.get(
       await updateJob(id, { status: 'running' });
       const startTime = Date.now();
 
-      // Check memory usage to prevent OOM kills
+      // PROPER memory management: measure growth from baseline, not absolute usage
+      const baselineMemoryMB = process.memoryUsage().rss / 1024 / 1024;
+      const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
+
+      // Dynamic memory growth limits based on system capabilities
+      const memoryGrowthLimitMB =
+        totalSystemMemoryGB < 2
+          ? Math.floor(totalSystemMemoryGB * 1024 * 0.6) // 60% of total for small VPS (e.g., 600MB on 1GB system)
+          : 2048; // 2GB growth allowance for development machines (16GB+)
+
+      console.log(
+        `[Memory Management] Job ${id}: Baseline=${baselineMemoryMB.toFixed(0)}MB, Growth_Limit=${memoryGrowthLimitMB}MB, System_Total=${totalSystemMemoryGB.toFixed(1)}GB`,
+      );
+
+      // Memory check: Only fail if THIS JOB grows memory excessively
       const memoryCheck = () => {
-        const memUsage = process.memoryUsage();
-        const memUsedMB = memUsage.rss / 1024 / 1024;
-        // If using more than 800MB on a 1GB instance, we're in danger
-        if (memUsedMB > 800) {
-          console.warn(`⚠️ High memory usage: ${memUsedMB.toFixed(0)}MB`);
+        const currentMemoryMB = process.memoryUsage().rss / 1024 / 1024;
+        const memoryGrowthMB = currentMemoryMB - baselineMemoryMB;
+
+        if (memoryGrowthMB > memoryGrowthLimitMB) {
+          console.warn(
+            `[Memory Management] ⚠️ Job ${id} exceeded growth limit: +${memoryGrowthMB.toFixed(0)}MB > ${memoryGrowthLimitMB}MB (Current: ${currentMemoryMB.toFixed(0)}MB, Baseline: ${baselineMemoryMB.toFixed(0)}MB)`,
+          );
           return false;
         }
+
+        // Log significant growth for monitoring (but don't fail)
+        if (memoryGrowthMB > 100) {
+          console.log(
+            `[Memory Management] Job ${id} growth: +${memoryGrowthMB.toFixed(0)}MB (Current: ${currentMemoryMB.toFixed(0)}MB)`,
+          );
+        }
+
         return true;
       };
 
@@ -371,6 +466,7 @@ jobsRouter.get(
                   status: 'failed',
                   result: 'Client disconnected during streaming',
                 });
+                cleanupJobMemory(id, baselineMemoryMB);
                 return;
               }
 
@@ -379,6 +475,7 @@ jobsRouter.get(
                   status: 'failed',
                   result: 'Job aborted due to memory constraints',
                 });
+                cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent(
                     { error: 'Job aborted due to memory constraints' },
@@ -404,6 +501,7 @@ jobsRouter.get(
                   status: 'failed',
                   result: errorMessage,
                 });
+                cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent({ error: errorMessage }, 'error');
                   sendEvent({ done: true }, 'done');
@@ -424,6 +522,7 @@ jobsRouter.get(
                     status: 'failed',
                     result: 'Client disconnected during streaming',
                   });
+                  cleanupJobMemory(id, baselineMemoryMB);
                   return;
                 }
               }
@@ -435,6 +534,7 @@ jobsRouter.get(
                 status: 'failed',
                 result: 'Client disconnected before completion',
               });
+              cleanupJobMemory(id, baselineMemoryMB);
               return;
             }
 
@@ -479,6 +579,9 @@ jobsRouter.get(
               sendEvent(metrics, 'metrics');
               sendEvent({ done: true }, 'done');
             }
+
+            // Clean up memory after successful completion
+            cleanupJobMemory(id, baselineMemoryMB);
             return;
           } catch (streamError) {
             // Defensive: should never reach here, but just in case
@@ -490,6 +593,7 @@ jobsRouter.get(
               status: 'failed',
               result: errorMessage,
             });
+            cleanupJobMemory(id, baselineMemoryMB);
             if (!clientDisconnected) {
               sendEvent({ error: errorMessage }, 'error');
               sendEvent({ done: true }, 'done');
@@ -547,6 +651,9 @@ jobsRouter.get(
           if (!clientDisconnected) {
             sendEvent(metrics, 'metrics');
           }
+
+          // Clean up memory after successful completion (non-streaming)
+          cleanupJobMemory(id, baselineMemoryMB);
         }
       } catch (error) {
         const errorMessage =
@@ -555,6 +662,7 @@ jobsRouter.get(
           status: 'failed',
           result: errorMessage,
         });
+        cleanupJobMemory(id, baselineMemoryMB);
         // Always use sendEvent for error event
         if (!clientDisconnected) {
           sendEvent({ error: errorMessage }, 'error');

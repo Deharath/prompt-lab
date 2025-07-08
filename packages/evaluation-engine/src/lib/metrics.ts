@@ -28,6 +28,7 @@ export interface MetricResult {
 export async function calculateMetrics(
   text: string,
   selectedMetrics: MetricInput[],
+  disabledMetrics: Set<string> = new Set(),
 ): Promise<MetricResult> {
   if (!text || !selectedMetrics || selectedMetrics.length === 0) {
     return {};
@@ -58,9 +59,11 @@ export async function calculateMetrics(
         }
 
         case 'sentiment': {
+          const isDisabled = disabledMetrics.has('sentiment');
           const sentimentResult = (await analyzeSentiment(
             text,
             true,
+            isDisabled, // Force disable if in disabled metrics set
           )) as SentimentScore;
 
           // If sentiment analysis is disabled, store the entire object to show disabled message
@@ -73,7 +76,14 @@ export async function calculateMetrics(
         }
 
         case 'sentiment_detailed': {
-          results.sentiment_detailed = await analyzeSentiment(text, true);
+          const isDisabled =
+            disabledMetrics.has('sentiment_detailed') ||
+            disabledMetrics.has('sentiment');
+          results.sentiment_detailed = await analyzeSentiment(
+            text,
+            true,
+            isDisabled,
+          );
           break;
         }
 
