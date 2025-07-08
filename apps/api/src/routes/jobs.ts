@@ -144,7 +144,7 @@ async function calculateJobMetrics(
 }
 
 /**
- * Get set of metrics to disable based on system memory constraints
+ * Get set of metrics to disable based on system memory constraints and environment config
  */
 function getDisabledMetricsForSystem(): Set<string> {
   const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
@@ -152,12 +152,26 @@ function getDisabledMetricsForSystem(): Set<string> {
 
   const disabledMetrics = new Set<string>();
 
-  if (isLowMemorySystem) {
+  // Check environment variables for explicit sentiment analysis disabling
+  const sentimentExplicitlyDisabled =
+    process.env.DISABLE_SENTIMENT_ANALYSIS === 'true' ||
+    process.env.ENABLE_ML_MODELS === 'false';
+
+  if (isLowMemorySystem || sentimentExplicitlyDisabled) {
     disabledMetrics.add('sentiment');
     disabledMetrics.add('sentiment_detailed');
-    console.log(
-      `[Memory Management] Disabled sentiment analysis on ${totalSystemMemoryGB.toFixed(1)}GB system`,
-    );
+
+    if (isLowMemorySystem) {
+      console.log(
+        `[Memory Management] Disabled sentiment analysis on ${totalSystemMemoryGB.toFixed(1)}GB system`,
+      );
+    }
+
+    if (sentimentExplicitlyDisabled) {
+      console.log(
+        `[Environment Config] Sentiment analysis disabled via environment variables`,
+      );
+    }
   }
 
   return disabledMetrics;
