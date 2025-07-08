@@ -120,6 +120,12 @@
     );
   }
 
+  /* Mobile viewport height fix for better browser compatibility */
+  .mobile-full-height {
+    height: calc(100vh - 4rem);
+    height: calc(100dvh - 4rem);
+  }
+
   /* Screen reader only text */
   .sr-only {
     position: absolute;

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useJobStore } from './store/jobStore.js';
 import { useWorkspaceStore } from './store/workspaceStore.js';
 import { useToggle } from './hooks/useToggle.js';
@@ -13,6 +13,10 @@ const Home = () => {
   // Layout-only state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, toggleMobileMenu] = useToggle(false);
+
+  // Touch handling for swipe gestures
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const { comparison, temperature, topP, maxTokens, selectedMetrics } =
     useJobStore();
@@ -55,13 +59,52 @@ const Home = () => {
     // Comparison state is managed by the store, we just need to react to it
   };
 
+  // Handle swipe gestures for mobile sidebar
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    // Only enable swipe gestures on mobile screens
+    if (window.innerWidth < 1024) {
+      // Right swipe from left edge opens sidebar (only when closed)
+      if (isRightSwipe && touchStart < 50 && sidebarCollapsed) {
+        setSidebarCollapsed(false);
+      }
+      // Left swipe closes sidebar (only when open)
+      else if (isLeftSwipe && !sidebarCollapsed) {
+        setSidebarCollapsed(true);
+      }
+    }
+
+    // Reset touch states
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   return (
-    <div className="bg-background flex h-screen flex-col overflow-hidden">
+    <div
+      className="bg-background flex h-screen flex-col overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Full-width Header at top */}
       <Header
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onToggleMobileSidebar={toggleMobileMenu}
+        onToggleMobileSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         promptTokens={promptTokens}
         estimatedCompletionTokens={estimatedCompletionTokens}
         totalTokens={totalTokens}
@@ -72,7 +115,7 @@ const Home = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Below header, left side */}
         <div
-          className={`flex-shrink-0 transform transition-transform duration-300 ease-in-out ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-80 lg:w-80'} ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'} bg-background border-border border-r lg:translate-x-0`}
+          className={`flex-shrink-0 transform transition-transform duration-300 ease-in-out ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-80 lg:w-80'} ${sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'} bg-background border-border mobile-full-height fixed top-16 bottom-0 left-0 z-30 border-r lg:relative lg:inset-auto lg:translate-x-0`}
         >
           <AppSidebar
             isCollapsed={sidebarCollapsed}
@@ -96,10 +139,10 @@ const Home = () => {
           />
         </div>
 
-        {/* Mobile overlay */}
+        {/* Mobile overlay - only show when sidebar is open on mobile */}
         {!sidebarCollapsed && (
           <div
-            className="bg-opacity-50 fixed inset-0 z-20 bg-black lg:hidden"
+            className="fixed inset-0 z-20 bg-black/50 lg:hidden"
             onClick={() => setSidebarCollapsed(true)}
             aria-label="Close sidebar"
           />

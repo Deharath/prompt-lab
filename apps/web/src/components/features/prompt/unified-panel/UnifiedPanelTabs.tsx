@@ -11,13 +11,24 @@ export const UnifiedPanelTabs = ({
   handleTabChange,
   hasResults,
 }: UnifiedPanelTabsProps) => (
-  <div className="border-border bg-muted/20 border-b">
-    <div className="flex items-center">
+  <div className="border-border bg-muted/20 relative border-b">
+    <div className="relative flex items-center">
+      {/* Background highlight that fills the entire button */}
+      <div className="absolute inset-0 bg-transparent">
+        <div
+          className={`bg-background h-full transition-all duration-300 ${
+            activeTab === 'input'
+              ? 'w-1/2 translate-x-0'
+              : 'w-1/2 translate-x-full'
+          }`}
+        />
+      </div>
+
       <button
         onClick={() => handleTabChange('input')}
-        className={`flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
+        className={`relative z-10 min-h-[48px] flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
           activeTab === 'input'
-            ? 'bg-background text-foreground border-primary border-b-2 shadow-sm'
+            ? 'text-foreground'
             : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
         }`}
       >
@@ -41,9 +52,9 @@ export const UnifiedPanelTabs = ({
       <button
         onClick={() => handleTabChange('results')}
         disabled={!hasResults}
-        className={`relative flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
+        className={`relative z-10 min-h-[48px] flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
           activeTab === 'results'
-            ? 'bg-background text-foreground border-primary border-b-2 shadow-sm'
+            ? 'text-foreground'
             : hasResults
               ? 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
               : 'text-muted-foreground/50 cursor-not-allowed'
@@ -69,6 +80,17 @@ export const UnifiedPanelTabs = ({
           )}
         </div>
       </button>
+    </div>
+
+    {/* Bottom border indicator */}
+    <div className="absolute right-0 bottom-0 left-0 h-0.5 bg-transparent">
+      <div
+        className={`bg-primary h-full transition-all duration-300 ${
+          activeTab === 'input'
+            ? 'w-1/2 translate-x-0'
+            : 'w-1/2 translate-x-full'
+        }`}
+      />
     </div>
   </div>
 );

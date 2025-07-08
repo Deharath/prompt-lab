@@ -88,29 +88,6 @@ const Header: React.FC<HeaderProps> = ({
                 />
               </svg>
             </Button>
-
-            {/* Mobile Sidebar Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleMobileSidebar}
-              className="lg:hidden"
-              aria-label="Open navigation menu"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </Button>
           </>
         )}
 
