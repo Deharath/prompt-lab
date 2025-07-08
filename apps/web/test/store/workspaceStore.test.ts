@@ -165,11 +165,17 @@ describe('workspaceStore', () => {
     const { ApiClient } = await import('../../src/api.js');
     vi.mocked(ApiClient.fetchJob).mockRejectedValue(new Error('Network error'));
 
-    await expect(async () => {
-      await act(async () => {
-        await useWorkspaceStore.getState().loadJobData('invalid-job');
-      });
-    }).rejects.toThrow('Network error');
+    const originalConsoleError = console.error;
+    console.error = vi.fn();
+    try {
+      await expect(async () => {
+        await act(async () => {
+          await useWorkspaceStore.getState().loadJobData('invalid-job');
+        });
+      }).rejects.toThrow('Network error');
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
   describe('selectors', () => {
