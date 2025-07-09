@@ -266,6 +266,11 @@ jobsRouter.post(
           'Gemini API key is not configured on the server.',
         );
       }
+      if (providerName === 'anthropic' && !process.env.ANTHROPIC_API_KEY) {
+        throw new ServiceUnavailableError(
+          'Anthropic API key is not configured on the server.',
+        );
+      }
 
       // Build the job creation payload with optional parameters
       const jobData = {

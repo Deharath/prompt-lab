@@ -14,7 +14,7 @@ Prompt Lab addresses the critical challenges in prompt engineering by providing 
 
 ### Model Integration
 
-- **Multi-Provider Support:** Seamless integration with OpenAI, Google Gemini, and extensible architecture for additional providers
+- **Multi-Provider Support:** Seamless integration with OpenAI, Google Gemini, Anthropic Claude, and extensible architecture for additional providers
 - **Unified Interface:** Consistent API abstraction across different AI models and providers
 - **Authentication Management:** Secure API key handling and provider-specific configuration
 
@@ -138,6 +138,7 @@ prompt-lab/
     ```bash
     OPENAI_API_KEY=your_openai_api_key_here
     GEMINI_API_KEY=your_gemini_api_key_here
+    ANTHROPIC_API_KEY=your_anthropic_api_key_here
     ```
 
 4.  **Initialize the database:**
@@ -166,6 +167,7 @@ docker build -t prompt-lab .
 docker run -d -p 3000:3000 \
   -e OPENAI_API_KEY=your_key \
   -e GEMINI_API_KEY=your_key \
+  -e ANTHROPIC_API_KEY=your_key \
   prompt-lab
 ```
 

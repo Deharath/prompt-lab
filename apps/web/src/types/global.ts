@@ -39,7 +39,7 @@ export interface JobSummary {
 }
 
 export type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
-export type ModelProvider = 'openai' | 'gemini';
+export type ModelProvider = 'openai' | 'gemini' | 'anthropic';
 
 // =============================================================================
 // UI COMPONENT TYPES

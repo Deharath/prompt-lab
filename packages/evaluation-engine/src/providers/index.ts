@@ -1,5 +1,6 @@
 import { OpenAIProvider } from './openai.js';
 import { GeminiProvider } from './gemini.js';
+import { AnthropicProvider } from './anthropic.js';
 
 export interface ProviderOptions {
   model: string;
@@ -38,6 +39,7 @@ export interface LLMProvider {
 let providers: Record<string, LLMProvider> = {
   openai: OpenAIProvider,
   gemini: GeminiProvider,
+  anthropic: AnthropicProvider,
 };
 
 export function getProvider(name: string): LLMProvider | undefined {

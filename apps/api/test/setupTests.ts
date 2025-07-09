@@ -5,6 +5,7 @@ process.env.DATABASE_URL = ':memory:';
 process.env.NODE_ENV = 'test';
 process.env.OPENAI_API_KEY = 'test-openai-key';
 process.env.GEMINI_API_KEY = 'test-gemini-key';
+process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
 
 // Ensure DB migrations are run before any tests
 beforeAll(async () => {

@@ -9,6 +9,10 @@ export const PRICING = {
   gemini: {
     'gemini-2.5-flash': 0, // Free tier - no cost
   },
+  anthropic: {
+    // Claude 3.5 Haiku pricing: $0.80/$4.00 per 1M tokens = $0.0024 per 1K avg
+    'claude-3-5-haiku-20241022': 0.0024,
+  },
 } as const;
 
 export type ProviderPricing = typeof PRICING;
