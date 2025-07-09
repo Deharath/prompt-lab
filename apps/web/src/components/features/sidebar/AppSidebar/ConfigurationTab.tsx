@@ -1,6 +1,8 @@
 import React from 'react';
 import ModelSelector from '../ModelSelector.js';
 import RunConfiguration from '../RunConfiguration.js';
+import MetricSelector from '../../../features/metrics/MetricSelector.js';
+import { AVAILABLE_METRICS } from '../../../../constants/metrics.js';
 
 interface ConfigurationTabProps {
   provider: string;
@@ -42,16 +44,16 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
 }) => {
   return (
     <div
-      className="h-full max-w-full min-w-0 p-4"
+      className="h-full max-w-full min-w-0 space-y-6 p-4"
       role="tabpanel"
       id="configuration-panel"
       aria-labelledby="configuration-tab"
     >
-      <div className="min-w-0 space-y-4">
+      <div className="min-w-0 space-y-6">
         {/* Model Selection Section */}
         <div className="min-w-0">
-          <h3 className="text-muted-foreground mb-3 text-sm font-medium">
-            Model
+          <h3 className="text-foreground mb-3 text-sm font-medium">
+            Model Configuration
           </h3>
           <ModelSelector
             provider={provider}
@@ -64,8 +66,8 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
 
         {/* Run Configuration Section */}
         <div className="min-w-0">
-          <h3 className="text-muted-foreground mb-3 text-sm font-medium">
-            Parameters
+          <h3 className="text-foreground mb-3 text-sm font-medium">
+            Generation Parameters
           </h3>
           <RunConfiguration
             temperature={temperature}
@@ -74,6 +76,19 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
             onTemperatureChange={setTemperature}
             onTopPChange={setTopP}
             onMaxTokensChange={setMaxTokens}
+          />
+        </div>
+
+        {/* Metrics Selection Section */}
+        <div className="min-w-0">
+          <h3 className="text-foreground mb-3 text-sm font-medium">
+            Evaluation Metrics
+          </h3>
+          <MetricSelector
+            metrics={AVAILABLE_METRICS}
+            selectedMetrics={selectedMetrics}
+            onChange={setSelectedMetrics}
+            compact
           />
         </div>
       </div>

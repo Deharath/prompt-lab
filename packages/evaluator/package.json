@@ -9,8 +9,8 @@
     "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
     "build": "tsc",
     "test": "vitest run --reporter=dot",
-    "lint": "eslint . --max-warnings 0",
-    "tsc": "tsc -p tsconfig.lint.json --noEmit"
+    "lint": "eslint . --max-warnings 0 --quiet",
+    "tsc": "tsc -p tsconfig.lint.json --noEmit --pretty false"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.0",

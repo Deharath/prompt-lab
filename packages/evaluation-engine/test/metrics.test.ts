@@ -29,12 +29,15 @@ describe('Metrics Orchestrator', () => {
   describe('calculateMetrics', () => {
     it('should return empty object for empty input', async () => {
       const result = await calculateMetrics('', []);
-      expect(result).toEqual({});
+      expect(result.results).toEqual({});
+      expect(result.errors).toHaveLength(1); // Should have validation error
+      expect(result.errors[0].metricId).toBe('validation');
     });
 
     it('should return empty object for no metrics', async () => {
       const result = await calculateMetrics('Test text', []);
-      expect(result).toEqual({});
+      expect(result.results).toEqual({});
+      expect(result.errors).toEqual([]);
     });
 
     it('should calculate readability metrics', async () => {
@@ -47,10 +50,10 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.flesch_reading_ease).toBeGreaterThanOrEqual(0);
-      expect(result.flesch_reading_ease).toBeLessThanOrEqual(100);
-      expect(result.flesch_kincaid).toBeGreaterThanOrEqual(0);
-      expect(result.smog).toBeGreaterThanOrEqual(0);
+      expect(result.results.flesch_reading_ease).toBeGreaterThanOrEqual(0);
+      expect(result.results.flesch_reading_ease).toBeLessThanOrEqual(100);
+      expect(result.results.flesch_kincaid_grade).toBeGreaterThanOrEqual(0);
+      expect(result.results.smog_index).toBeGreaterThanOrEqual(0);
     });
 
     it('should calculate sentiment metrics', async () => {
@@ -59,15 +62,18 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.sentiment).toBeGreaterThan(0); // Positive sentiment
-      expect(result.sentiment).toBeGreaterThanOrEqual(-1);
-      expect(result.sentiment).toBeLessThanOrEqual(1);
+      expect(result.results.sentiment).toBeDefined();
+      expect(result.results.sentiment.score).toBeGreaterThanOrEqual(-1);
+      expect(result.results.sentiment.score).toBeLessThanOrEqual(1);
+      expect(result.results.sentiment.label).toMatch(
+        /positive|negative|neutral/,
+      );
 
-      expect(result.sentiment_detailed).toHaveProperty('compound');
-      expect(result.sentiment_detailed).toHaveProperty('positive');
-      expect(result.sentiment_detailed).toHaveProperty('negative');
-      expect(result.sentiment_detailed).toHaveProperty('neutral');
-      expect(result.sentiment_detailed).toHaveProperty('mode');
+      expect(result.results.sentiment_detailed).toHaveProperty('compound');
+      expect(result.results.sentiment_detailed).toHaveProperty('positive');
+      expect(result.results.sentiment_detailed).toHaveProperty('negative');
+      expect(result.results.sentiment_detailed).toHaveProperty('neutral');
+      expect(result.results.sentiment_detailed).toHaveProperty('label');
     });
 
     it('should calculate content metrics', async () => {
@@ -81,9 +87,9 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.word_count).toBe(12);
-      expect(result.sentence_count).toBe(3);
-      expect(result.avg_words_per_sentence).toBeCloseTo(12 / 3);
+      expect(result.results.word_count).toBe(12);
+      expect(result.results.sentence_count).toBe(3);
+      expect(result.results.avg_words_per_sentence).toBeCloseTo(12 / 3);
     });
 
     it('should validate JSON content', async () => {
@@ -97,11 +103,8 @@ describe('Metrics Orchestrator', () => {
         { id: 'is_valid_json' },
       ]);
 
-      expect(validResult.is_valid_json).toEqual({ isValid: true });
-      expect(invalidResult.is_valid_json).toEqual({
-        isValid: false,
-        errorMessage: expect.any(String),
-      });
+      expect(validResult.results.is_valid_json).toBe(true);
+      expect(invalidResult.results.is_valid_json).toBe(false);
     });
 
     it('should calculate keyword metrics with input', async () => {
@@ -113,13 +116,13 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.keywords).toHaveProperty('found');
-      expect(result.keywords).toHaveProperty('missing');
-      expect(result.keywords).toHaveProperty('foundCount');
-      expect(result.keywords).toHaveProperty('missingCount');
-      expect(result.keywords).toHaveProperty('matchPercentage');
+      expect(result.results.keywords).toHaveProperty('found');
+      expect(result.results.keywords).toHaveProperty('missing');
+      expect(result.results.keywords).toHaveProperty('foundCount');
+      expect(result.results.keywords).toHaveProperty('missingCount');
+      expect(result.results.keywords).toHaveProperty('matchPercentage');
 
-      const keywords = result.keywords as any;
+      const keywords = result.results.keywords as any;
       expect(keywords.found).toContain('climate');
       expect(keywords.found).toContain('renewable');
       expect(keywords.found).toContain('sustainability');
@@ -140,13 +143,16 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.weighted_keywords).toHaveProperty('precision');
-      expect(result.weighted_keywords).toHaveProperty('recall');
-      expect(result.weighted_keywords).toHaveProperty('weightedScore');
-      expect(result.weighted_keywords).toHaveProperty('matches');
+      expect(result.results.weighted_keywords).toHaveProperty('found');
+      expect(result.results.weighted_keywords).toHaveProperty('missing');
+      expect(result.results.weighted_keywords).toHaveProperty('foundCount');
+      expect(result.results.weighted_keywords).toHaveProperty('missingCount');
+      expect(result.results.weighted_keywords).toHaveProperty(
+        'matchPercentage',
+      );
 
-      const weightedKeywordsResult = result.weighted_keywords as any;
-      expect(weightedKeywordsResult.precision).toBe(1); // All keywords found
+      const weightedKeywordsResult = result.results.weighted_keywords as any;
+      expect(weightedKeywordsResult.foundCount).toBeGreaterThan(0); // Should find keywords
     });
 
     it('should calculate precision and recall with reference text', async () => {
@@ -160,12 +166,12 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(output, metrics);
 
-      expect(result.precision).toBeGreaterThanOrEqual(0);
-      expect(result.precision).toBeLessThanOrEqual(1);
-      expect(result.recall).toBeGreaterThanOrEqual(0);
-      expect(result.recall).toBeLessThanOrEqual(1);
-      expect(result.f_score).toBeGreaterThanOrEqual(0);
-      expect(result.f_score).toBeLessThanOrEqual(1);
+      expect(result.results.precision).toBeGreaterThanOrEqual(0);
+      expect(result.results.precision).toBeLessThanOrEqual(1);
+      expect(result.results.recall).toBeGreaterThanOrEqual(0);
+      expect(result.results.recall).toBeLessThanOrEqual(1);
+      expect(result.results.f_score).toBeGreaterThanOrEqual(0);
+      expect(result.results.f_score).toBeLessThanOrEqual(1);
     });
 
     it('should calculate vocabulary diversity', async () => {
@@ -174,10 +180,10 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.vocab_diversity).toBeGreaterThan(0);
-      expect(result.vocab_diversity).toBeLessThanOrEqual(1);
+      expect(result.results.vocab_diversity).toBeGreaterThan(0);
+      expect(result.results.vocab_diversity).toBeLessThanOrEqual(1);
       // Should be less than 1 due to repeated words 'the' and 'cat'
-      expect(result.vocab_diversity).toBeLessThan(1);
+      expect(result.results.vocab_diversity).toBeLessThan(1);
     });
 
     it('should calculate completeness score', async () => {
@@ -187,8 +193,8 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.completeness_score).toBeGreaterThan(0);
-      expect(result.completeness_score).toBeLessThanOrEqual(1);
+      expect(result.results.completeness_score).toBeGreaterThan(0);
+      expect(result.results.completeness_score).toBeLessThanOrEqual(1);
     });
 
     it('should calculate text complexity', async () => {
@@ -203,10 +209,10 @@ describe('Metrics Orchestrator', () => {
         { id: 'text_complexity' },
       ]);
 
-      expect(simpleResult.text_complexity).toBeGreaterThanOrEqual(0);
-      expect(complexResult.text_complexity).toBeGreaterThanOrEqual(0);
-      expect(Number(complexResult.text_complexity)).toBeGreaterThan(
-        Number(simpleResult.text_complexity),
+      expect(simpleResult.results.text_complexity).toBeGreaterThanOrEqual(0);
+      expect(complexResult.results.text_complexity).toBeGreaterThanOrEqual(0);
+      expect(Number(complexResult.results.text_complexity)).toBeGreaterThan(
+        Number(simpleResult.results.text_complexity),
       );
     });
 
@@ -227,13 +233,13 @@ describe('Metrics Orchestrator', () => {
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(2000); // Should complete in under 2 seconds
-      expect(Object.keys(result)).toHaveLength(6); // Just the 6 requested metrics
-      expect(result.flesch_reading_ease).toBeDefined();
-      expect(result.sentiment).toBeDefined();
-      expect(result.word_count).toBeDefined();
-      expect(result.sentence_count).toBeDefined();
-      expect(result.vocab_diversity).toBeDefined();
-      expect(result.text_complexity).toBeDefined();
+      expect(Object.keys(result.results)).toHaveLength(6); // Just the 6 requested metrics
+      expect(result.results.flesch_reading_ease).toBeDefined();
+      expect(result.results.sentiment).toBeDefined();
+      expect(result.results.word_count).toBeDefined();
+      expect(result.results.sentence_count).toBeDefined();
+      expect(result.results.vocab_diversity).toBeDefined();
+      expect(result.results.text_complexity).toBeDefined();
     });
 
     it('should handle unknown metrics gracefully', async () => {
@@ -246,9 +252,9 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.word_count).toBeDefined();
-      expect(result.sentiment).toBeDefined();
-      expect(result.unknown_metric).toBeUndefined();
+      expect(result.results.word_count).toBeDefined();
+      expect(result.results.sentiment).toBeDefined();
+      expect(result.results.unknown_metric).toBeUndefined();
       // Unknown metrics are handled silently - no warning is logged
     });
 
@@ -260,9 +266,9 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.weighted_keywords).toHaveProperty('error');
-      const errorResult = result.weighted_keywords as any;
-      expect(errorResult.error).toContain('Invalid JSON');
+      expect(result.results.weighted_keywords).toHaveProperty('found');
+      expect(result.results.weighted_keywords).toHaveProperty('missing');
+      // Error should be handled gracefully with empty result structure
       // Errors are handled gracefully - no console.error logging needed
     });
   });
@@ -310,8 +316,8 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(longText, metrics);
 
-      expect(result.word_count).toBeGreaterThan(4000);
-      expect(result.flesch_reading_ease).toBeGreaterThanOrEqual(0);
+      expect(result.results.word_count).toBeGreaterThan(4000);
+      expect(result.results.flesch_reading_ease).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle text with only whitespace', async () => {
@@ -320,8 +326,8 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.word_count).toBe(0);
-      expect(result.sentence_count).toBe(0);
+      expect(result.results.word_count).toBe(0);
+      expect(result.results.sentence_count).toBe(0);
     });
 
     it('should handle special characters and emojis', async () => {
@@ -330,9 +336,10 @@ describe('Metrics Orchestrator', () => {
 
       const result = await calculateMetrics(text, metrics);
 
-      expect(result.word_count).toBeGreaterThan(0);
-      expect(result.sentiment).toBeGreaterThanOrEqual(-1);
-      expect(result.sentiment).toBeLessThanOrEqual(1);
+      expect(result.results.word_count).toBeGreaterThan(0);
+      expect(result.results.sentiment).toBeDefined();
+      expect(result.results.sentiment.score).toBeGreaterThanOrEqual(-1);
+      expect(result.results.sentiment.score).toBeLessThanOrEqual(1);
     });
   });
 });

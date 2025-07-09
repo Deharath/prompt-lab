@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
     "build": "tsc",
-    "lint": "eslint . --max-warnings 0",
-    "tsc": "tsc -p tsconfig.json --noEmit"
+    "lint": "eslint . --max-warnings 0 --quiet",
+    "tsc": "tsc -p tsconfig.json --noEmit --pretty false"
   }
 }

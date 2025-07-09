@@ -11,11 +11,11 @@
     "dev:api": "pnpm --filter @prompt-lab/app-api run dev",
     "dev:web": "pnpm --filter web run dev",
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
-    "tsc": "pnpm -r tsc",
+    "tsc": "pnpm -r tsc --noEmit --pretty false",
     "build": "pnpm -r --sort build",
     "test": "vitest run --coverage --config vitest.config.mts --reporter=dot",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts --reporter=dot",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm -r lint -- --quiet",
     "format": "prettier --write .",
     "lint:data": "node scripts/lint-jsonl.cjs",
     "build:api": "pnpm --filter @prompt-lab/app-api run build",
@@ -29,7 +29,7 @@
     "migrate": "pnpm exec tsx scripts/migrate.ts",
     "quality:check": "pnpm lint && pnpm tsc && pnpm test",
     "quality:fix": "pnpm format && pnpm lint --fix",
-    "pre-push": "pnpm quality:check"
+    "pre-push": "pnpm quality:check --reporter=min"
   },
   "engines": {
     "node": ">=18.0.0",

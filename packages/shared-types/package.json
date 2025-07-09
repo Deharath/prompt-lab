@@ -1,0 +1,27 @@
+{
+  "name": "@prompt-lab/shared-types",
+  "version": "0.0.0",
+  "description": "Shared TypeScript type definitions for Prompt Lab",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "lint": "eslint . --max-warnings 0 --quiet",
+    "tsc": "tsc --noEmit --pretty false"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "rimraf": "^6.0.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}

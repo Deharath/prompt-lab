@@ -11,16 +11,33 @@ import {
   calculateKeywordMetrics,
   type KeywordWeight,
 } from './keywordMetrics.js';
-
-export interface MetricInput {
-  id: string;
-  input?: string; // For keywords and other parameterized metrics
-  weight?: number; // For weighted calculations
-}
-
-export interface MetricResult {
-  [key: string]: unknown;
-}
+import {
+  type MetricInput,
+  type MetricResult,
+  type MetricsCalculationResult,
+  type MetricError,
+  type MetricContext,
+  type SentimentResult,
+  type DetailedSentimentResult,
+  type KeywordResult,
+} from '@prompt-lab/shared-types';
+import { getCachedMetrics, cacheMetrics } from './metricsCache.js';
+import {
+  calculateQualityMetrics,
+  calculateVocabularyDiversity,
+  calculateCompletenessScore,
+  calculateTextComplexity,
+  validateJsonString,
+  safeCalculateMetric,
+  type TextStatistics,
+} from './metricCalculators.js';
+import {
+  MetricsErrorHandler,
+  safeMetricCalculation,
+  safeAsyncMetricCalculation,
+  validateTextInput,
+  validateMetricInput,
+} from './errorHandling.js';
 
 /**
  * Main metrics calculation function that replaces the DIY implementation
@@ -29,19 +46,85 @@ export async function calculateMetrics(
   text: string,
   selectedMetrics: MetricInput[],
   disabledMetrics: Set<string> = new Set(),
-): Promise<MetricResult> {
-  if (!text || !selectedMetrics || selectedMetrics.length === 0) {
-    return {};
+  referenceText?: string,
+): Promise<MetricsCalculationResult> {
+  const startTime = performance.now();
+  const errorHandler = new MetricsErrorHandler();
+
+  // Validate inputs
+  try {
+    validateTextInput(text, 'calculateMetrics');
+  } catch (error) {
+    return {
+      results: {},
+      errors: [
+        {
+          metricId: 'validation',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      ],
+      processingTime: performance.now() - startTime,
+    };
+  }
+
+  if (!selectedMetrics || selectedMetrics.length === 0) {
+    return {
+      results: {},
+      errors: [],
+      processingTime: performance.now() - startTime,
+    };
+  }
+
+  // Check cache first
+  const cachedResult = getCachedMetrics(
+    text,
+    selectedMetrics,
+    disabledMetrics,
+    referenceText,
+  );
+  if (cachedResult) {
+    return {
+      ...cachedResult,
+      processingTime: performance.now() - startTime, // Update processing time for cache hit
+    };
   }
 
   const results: MetricResult = {};
 
-  // Pre-calculate common expensive operations to reuse
-  const textStats = textWorker.analyzeText(text);
-  const readabilityScores = await calculateReadabilityScores(text);
+  // Pre-calculate common expensive operations to reuse with error handling
+  const textStats = safeMetricCalculation(
+    'textStats',
+    () => textWorker.analyzeText(text),
+    {
+      tokens: [],
+      words: [],
+      sentences: [],
+      wordCount: 0,
+      sentenceCount: 0,
+      avgWordsPerSentence: 0,
+    },
+    { text: text.substring(0, 100) },
+  );
+
+  const readabilityScores = await safeAsyncMetricCalculation(
+    'readabilityScores',
+    () => calculateReadabilityScores(text),
+    { fleschReadingEase: 0, fleschKincaid: 0, smog: 0, textLength: 0 },
+    { textLength: text.length },
+  );
 
   for (const metric of selectedMetrics) {
+    // Skip disabled metrics
+    if (disabledMetrics.has(metric.id)) {
+      continue;
+    }
+
     try {
+      // Validate metric input if required
+      if (metric.input !== undefined) {
+        validateMetricInput(metric.id, metric.input);
+      }
+
       switch (metric.id) {
         case 'flesch_reading_ease': {
           results.flesch_reading_ease = readabilityScores.fleschReadingEase;
@@ -49,28 +132,50 @@ export async function calculateMetrics(
         }
 
         case 'flesch_kincaid': {
-          results.flesch_kincaid = readabilityScores.fleschKincaid;
+          results.flesch_kincaid_grade = readabilityScores.fleschKincaid;
           break;
         }
 
         case 'smog': {
-          results.smog = readabilityScores.smog;
+          results.smog_index = readabilityScores.smog;
           break;
         }
 
         case 'sentiment': {
           const isDisabled = disabledMetrics.has('sentiment');
-          const sentimentResult = (await analyzeSentiment(
+          const sentimentResult = await analyzeSentiment(
             text,
             true,
             isDisabled, // Force disable if in disabled metrics set
-          )) as SentimentScore;
+          );
 
-          // If sentiment analysis is disabled, store the entire object to show disabled message
-          if (sentimentResult.disabled) {
-            results.sentiment = sentimentResult;
+          // If sentiment analysis is disabled or returns a number
+          if (typeof sentimentResult === 'number') {
+            results.sentiment = {
+              label:
+                sentimentResult > 0
+                  ? 'positive'
+                  : sentimentResult < 0
+                    ? 'negative'
+                    : 'neutral',
+              score: sentimentResult,
+              confidence: 0.5,
+            };
+          } else if (
+            'disabled' in sentimentResult &&
+            sentimentResult.disabled
+          ) {
+            results.sentiment = {
+              label: sentimentResult.label,
+              score: sentimentResult.compound,
+              confidence: sentimentResult.confidence,
+            };
           } else {
-            results.sentiment = sentimentResult.compound; // Store just the compound score (-1 to 1)
+            results.sentiment = {
+              label: sentimentResult.label,
+              score: sentimentResult.compound,
+              confidence: sentimentResult.confidence,
+            };
           }
           break;
         }
@@ -79,25 +184,35 @@ export async function calculateMetrics(
           const isDisabled =
             disabledMetrics.has('sentiment_detailed') ||
             disabledMetrics.has('sentiment');
-          results.sentiment_detailed = await analyzeSentiment(
-            text,
-            true,
-            isDisabled,
-          );
+          const detailedResult = await analyzeSentiment(text, true, isDisabled);
+
+          if (typeof detailedResult === 'number') {
+            results.sentiment_detailed = {
+              positive: detailedResult > 0 ? detailedResult : 0,
+              negative: detailedResult < 0 ? Math.abs(detailedResult) : 0,
+              neutral: detailedResult === 0 ? 1 : 0,
+              compound: detailedResult,
+              label:
+                detailedResult > 0
+                  ? 'positive'
+                  : detailedResult < 0
+                    ? 'negative'
+                    : 'neutral',
+            };
+          } else {
+            results.sentiment_detailed = {
+              positive: detailedResult.positive,
+              negative: detailedResult.negative,
+              neutral: detailedResult.neutral,
+              compound: detailedResult.compound,
+              label: detailedResult.label,
+            };
+          }
           break;
         }
 
         case 'is_valid_json': {
-          try {
-            JSON.parse(text);
-            results.is_valid_json = { isValid: true };
-          } catch (error) {
-            results.is_valid_json = {
-              isValid: false,
-              errorMessage:
-                error instanceof Error ? error.message : 'Invalid JSON',
-            };
-          }
+          results.is_valid_json = validateJsonString(text);
           break;
         }
 
@@ -134,6 +249,15 @@ export async function calculateMetrics(
               matchPercentage: keywordResult.precision * 100,
               totalMatches: keywordResult.totalMatches,
             };
+          } else {
+            results.keywords = {
+              found: [],
+              missing: [],
+              foundCount: 0,
+              missingCount: 0,
+              matchPercentage: 0,
+              totalMatches: 0,
+            };
           }
           break;
         }
@@ -148,112 +272,94 @@ export async function calculateMetrics(
                 text,
                 weightedKeywords,
               );
-              results.weighted_keywords = keywordResult;
+              results.weighted_keywords = {
+                found: keywordResult.matches
+                  .filter((m) => m.count > 0)
+                  .map((m) => m.keyword),
+                missing: keywordResult.matches
+                  .filter((m) => m.count === 0)
+                  .map((m) => m.keyword),
+                foundCount: keywordResult.matches.filter((m) => m.count > 0)
+                  .length,
+                missingCount: keywordResult.matches.filter((m) => m.count === 0)
+                  .length,
+                matchPercentage: keywordResult.precision * 100,
+                totalMatches: keywordResult.totalMatches,
+              };
             } catch (error) {
               // Invalid JSON format for weighted keywords - return error result
               results.weighted_keywords = {
-                error: 'Invalid JSON format for weighted keywords',
+                found: [],
+                missing: [],
+                foundCount: 0,
+                missingCount: 0,
+                matchPercentage: 0,
+                totalMatches: 0,
               };
             }
-          }
-          break;
-        }
-
-        case 'precision': {
-          // Content-based precision: Compare LLM output against reference text
-          if (metric.input) {
-            results.precision = calculateContentBasedPrecision(
-              text,
-              metric.input,
-            );
           } else {
-            // Precision metric requires input data (reference text)
-            results.precision = 0;
+            results.weighted_keywords = {
+              found: [],
+              missing: [],
+              foundCount: 0,
+              missingCount: 0,
+              matchPercentage: 0,
+              totalMatches: 0,
+            };
           }
           break;
         }
 
-        case 'recall': {
-          // Content-based recall: Compare LLM output against reference text
-          if (metric.input) {
-            results.recall = calculateContentBasedRecall(text, metric.input);
-          } else {
-            // Recall metric requires input data (reference text)
-            results.recall = 0;
-          }
-          break;
-        }
-
+        case 'precision':
+        case 'recall':
         case 'f_score': {
-          // Content-based F-score: Harmonic mean of precision and recall
-          if (metric.input) {
-            const precision = calculateContentBasedPrecision(
-              text,
-              metric.input,
-            );
-            const recall = calculateContentBasedRecall(text, metric.input);
+          // Calculate quality metrics bundle to avoid duplication
+          const refText = metric.input || referenceText || '';
+          const qualityMetrics = safeCalculateMetric(
+            () => calculateQualityMetrics(text, refText, textStats),
+            { precision: 0, recall: 0, f_score: 0 },
+            'quality metrics',
+          );
 
-            if (precision + recall === 0) {
-              results.f_score = 0;
-            } else {
-              results.f_score = (2 * precision * recall) / (precision + recall);
-            }
-          } else {
-            // F-score metric requires input data (reference text)
-            results.f_score = 0;
+          // Only set the requested metric
+          if (metric.id === 'precision') {
+            results.precision = qualityMetrics.precision;
+          } else if (metric.id === 'recall') {
+            results.recall = qualityMetrics.recall;
+          } else if (metric.id === 'f_score') {
+            results.f_score = qualityMetrics.f_score;
           }
           break;
         }
 
         case 'vocab_diversity': {
-          // Vocabulary diversity: unique words vs total words
-          if (textStats.wordCount === 0) {
-            results.vocab_diversity = 0;
-          } else {
-            const uniqueWords = new Set(
-              textStats.words.map((w) => w.toLowerCase()),
-            );
-            results.vocab_diversity = uniqueWords.size / textStats.wordCount;
-          }
+          results.vocab_diversity = safeCalculateMetric(
+            () => calculateVocabularyDiversity(textStats),
+            0,
+            'vocabulary diversity',
+          );
           break;
         }
 
         case 'completeness_score': {
-          // Content completeness score based on depth and structure
-          if (textStats.wordCount === 0) {
-            results.completeness_score = 0;
-          } else {
-            const depthScore = Math.min(textStats.wordCount / 100, 1.0);
-            const structuralScore =
-              textStats.avgWordsPerSentence > 5 &&
-              textStats.avgWordsPerSentence < 25
-                ? 1.0
-                : 0.7;
-            const uniqueWords = new Set(
-              textStats.words.map((w) => w.toLowerCase()),
-            );
-            const diversityScore = uniqueWords.size / textStats.wordCount;
-
-            results.completeness_score =
-              depthScore * 0.4 + structuralScore * 0.3 + diversityScore * 0.3;
-          }
+          results.completeness_score = safeCalculateMetric(
+            () => calculateCompletenessScore(textStats),
+            0,
+            'completeness score',
+          );
           break;
         }
 
         case 'text_complexity': {
-          // Complex score based on vocabulary diversity, sentence length, and readability
-          const vocabularyDiversity =
-            textStats.wordCount > 0
-              ? new Set(textStats.words).size / textStats.wordCount
-              : 0;
-          const avgSentenceLength = textStats.avgWordsPerSentence;
-          const readabilityNormalized =
-            (100 - readabilityScores.fleschReadingEase) / 100; // Invert so higher = more complex
-
-          results.text_complexity =
-            vocabularyDiversity * 0.4 +
-            Math.min(avgSentenceLength / 20, 1) * 0.3 +
-            readabilityNormalized * 0.3;
+          results.text_complexity = safeCalculateMetric(
+            () =>
+              calculateTextComplexity(
+                textStats,
+                readabilityScores.fleschReadingEase,
+              ),
+            0,
+            'text complexity',
+          );
           break;
         }
 
@@ -262,13 +368,26 @@ export async function calculateMetrics(
           break;
       }
     } catch (error) {
-      // Error calculating metric - store error result for debugging
-      results[`${metric.id}_error`] =
-        error instanceof Error ? error.message : 'Unknown error';
+      // Use centralized error handling
+      errorHandler.handleError(
+        metric.id,
+        error instanceof Error ? error : new Error(String(error)),
+        null,
+        { text: text.substring(0, 100), metricInput: metric.input },
+      );
     }
   }
 
-  return results;
+  const result: MetricsCalculationResult = {
+    results,
+    errors: errorHandler.getErrors(),
+    processingTime: performance.now() - startTime,
+  };
+
+  // Cache the result for future use
+  cacheMetrics(text, selectedMetrics, disabledMetrics, result, referenceText);
+
+  return result;
 }
 
 /**
@@ -297,22 +416,7 @@ function parseKeywords(input: string): string[] {
 /**
  * Legacy compatibility function that returns metrics in the old format
  */
-export async function calculateSelectedMetricsLegacy(
-  output: string,
-  selectedMetrics?: unknown,
-): Promise<Record<string, unknown>> {
-  if (!selectedMetrics || !Array.isArray(selectedMetrics)) {
-    return {};
-  }
-
-  const metrics = selectedMetrics as Array<{ id: string; input?: string }>;
-  const inputs: MetricInput[] = metrics.map((m) => ({
-    id: m.id,
-    input: m.input,
-  }));
-
-  return await calculateMetrics(output, inputs);
-}
+// Legacy function removed - use calculateMetrics directly
 
 /**
  * Get available metric definitions
@@ -398,86 +502,16 @@ export function getAvailableMetrics(): Array<{
  * Content-based precision: measures how much of the prediction is relevant/accurate
  * compared to the reference text (using word overlap)
  */
-function calculateContentBasedPrecision(
-  prediction: string,
-  reference: string,
-): number {
-  if (!prediction || !reference) {
-    return 0;
-  }
+// Removed duplicate functions - now using shared metric calculators from metricCalculators.ts
 
-  // Normalize and tokenize both texts
-  const predWords = new Set(
-    prediction
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter((word) => word.length > 2), // Filter short words
-  );
-
-  const refWords = new Set(
-    reference
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter((word) => word.length > 2),
-  );
-
-  if (predWords.size === 0) {
-    return 0;
-  }
-
-  // Calculate how many prediction words are in reference
-  let relevantWords = 0;
-  for (const word of predWords) {
-    if (refWords.has(word)) {
-      relevantWords++;
-    }
-  }
-
-  return relevantWords / predWords.size;
-}
-
-/**
- * Content-based recall: measures how much of the reference content
- * is captured in the prediction (using word overlap)
- */
-function calculateContentBasedRecall(
-  prediction: string,
-  reference: string,
-): number {
-  if (!prediction || !reference) {
-    return 0;
-  }
-
-  // Normalize and tokenize both texts
-  const predWords = new Set(
-    prediction
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter((word) => word.length > 2),
-  );
-
-  const refWords = new Set(
-    reference
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter((word) => word.length > 2),
-  );
-
-  if (refWords.size === 0) {
-    return 0;
-  }
-
-  // Calculate how many reference words are captured in prediction
-  let capturedWords = 0;
-  for (const word of refWords) {
-    if (predWords.has(word)) {
-      capturedWords++;
-    }
-  }
-
-  return capturedWords / refWords.size;
-}
+// Re-export types for better TypeScript resolution
+export type {
+  MetricInput,
+  MetricResult,
+  MetricsCalculationResult,
+  MetricError,
+  MetricContext,
+  SentimentResult,
+  DetailedSentimentResult,
+  KeywordResult,
+} from '@prompt-lab/shared-types';

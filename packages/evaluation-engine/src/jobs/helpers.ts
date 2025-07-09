@@ -67,9 +67,13 @@ export function logStatusChange(
       model: job.model,
     });
   } else if (status === 'failed') {
-    logger.jobFailed(job.id, new Error(errorMessage || 'Unknown error'), {
+    const error = new Error(
+      errorMessage || 'Job failed with no error message provided',
+    );
+    logger.jobFailed(job.id, error, {
       provider: job.provider,
       model: job.model,
+      originalError: errorMessage,
     });
   } else if (status === 'running') {
     logger.jobStarted(job.id, { provider: job.provider, model: job.model });
