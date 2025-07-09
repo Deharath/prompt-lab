@@ -136,3 +136,6 @@ copilot-instructions*
 **/src/**/*.d.ts
 !**/src/types/**/*.d.ts
 !vitest.shims.d.ts
+
+claude.md
+commit_message.txt

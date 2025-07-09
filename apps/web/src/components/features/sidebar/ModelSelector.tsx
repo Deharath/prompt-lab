@@ -9,6 +9,20 @@ interface Props {
 const modelsByProvider = {
   openai: ['gpt-4o-mini', 'gpt-4.1-mini'],
   gemini: ['gemini-2.5-flash'],
+  anthropic: ['claude-3-5-haiku-20241022'],
+};
+
+const getProviderDisplayName = (provider: string): string => {
+  switch (provider) {
+    case 'openai':
+      return 'OpenAI';
+    case 'gemini':
+      return 'Google';
+    case 'anthropic':
+      return 'Anthropic';
+    default:
+      return provider;
+  }
 };
 
 const ModelSelector = ({
@@ -49,6 +63,7 @@ const ModelSelector = ({
         >
           <option value="openai">OpenAI</option>
           <option value="gemini">Gemini</option>
+          <option value="anthropic">Anthropic</option>
         </select>
 
         {/* Custom dropdown arrow */}
@@ -130,9 +145,8 @@ const ModelSelector = ({
       </div>
       {!compact && (
         <p id="model-help" className="sr-only">
-          Select a specific model from the{' '}
-          {provider === 'openai' ? 'OpenAI' : 'Google'} provider for your
-          evaluation.
+          Select a specific model from the {getProviderDisplayName(provider)}{' '}
+          provider for your evaluation.
         </p>
       )}
     </div>
@@ -143,7 +157,7 @@ const ModelSelector = ({
         <div className="flex items-center space-x-2">
           <div className="h-2 w-2 rounded-full bg-blue-500 transition-colors duration-300 dark:bg-blue-400" />
           <span className="text-xs font-medium text-blue-800 transition-colors duration-300 dark:text-blue-300">
-            {provider === 'openai' ? 'OpenAI' : 'Google'} • {model}
+            {getProviderDisplayName(provider)} • {model}
           </span>
         </div>
       </div>
