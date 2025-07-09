@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
-    "build": "tsc",
+    "build": "tsc --pretty false --noEmit",
     "test": "vitest run --reporter=dot",
     "lint": "eslint . --max-warnings 0 --quiet",
     "tsc": "tsc -p tsconfig.lint.json --noEmit --pretty false"

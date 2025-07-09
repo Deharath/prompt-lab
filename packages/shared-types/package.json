@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --pretty false --noEmit",
     "clean": "rimraf dist",
     "lint": "eslint . --max-warnings 0 --quiet",
     "tsc": "tsc --noEmit --pretty false"
