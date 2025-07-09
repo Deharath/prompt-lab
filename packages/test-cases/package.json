@@ -4,8 +4,8 @@
   "description": "Test cases and sample data for evaluating AI model performance",
   "scripts": {
     "clean": "rimraf dist && rm -f tsconfig.tsbuildinfo",
-    "build": "tsc",
-    "lint": "eslint . --max-warnings 0",
-    "tsc": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc --pretty false --noEmit",
+    "lint": "eslint . --max-warnings 0 --quiet",
+    "tsc": "tsc -p tsconfig.json --noEmit --pretty false"
   }
 }

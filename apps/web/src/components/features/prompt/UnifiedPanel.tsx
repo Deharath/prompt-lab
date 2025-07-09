@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UnifiedPanelTabs } from './unified-panel/UnifiedPanelTabs.js';
 import { UnifiedPanelInput } from './unified-panel/UnifiedPanelInput.js';
-import { UnifiedPanelResults } from './unified-panel/UnifiedPanelResults.js';
+import UnifiedPanelResults from './unified-panel/UnifiedPanelResults.js';
 
 interface UnifiedPanelProps {
   template: string;
@@ -63,7 +63,7 @@ const UnifiedPanel = ({
             isEmptyState={isEmptyState}
           />
         ) : (
-          <UnifiedPanelResults metrics={metrics} hasResults={hasResults} />
+          <UnifiedPanelResults metrics={metrics} />
         )}
       </div>
     </div>

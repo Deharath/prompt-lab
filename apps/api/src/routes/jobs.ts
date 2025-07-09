@@ -136,11 +136,12 @@ async function calculateJobMetrics(
     });
   }
 
-  return await calculateMetrics(
+  const result = await calculateMetrics(
     output,
     allMetrics,
     getDisabledMetricsForSystem(),
   );
+  return result.results;
 }
 
 /**
@@ -483,7 +484,8 @@ jobsRouter.get(
               if (clientDisconnected) {
                 await updateJob(id, {
                   status: 'failed',
-                  result: 'Client disconnected during streaming',
+                  result: '',
+                  errorMessage: 'Client disconnected during streaming',
                 });
                 cleanupJobMemory(id, baselineMemoryMB);
                 return;
@@ -492,7 +494,8 @@ jobsRouter.get(
               if (!memoryCheck()) {
                 await updateJob(id, {
                   status: 'failed',
-                  result: 'Job aborted due to memory constraints',
+                  result: '',
+                  errorMessage: 'Job aborted due to memory constraints',
                 });
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
@@ -518,7 +521,8 @@ jobsRouter.get(
                     : 'An unknown error occurred during streaming.';
                 await updateJob(id, {
                   status: 'failed',
-                  result: errorMessage,
+                  result: '',
+                  errorMessage,
                 });
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
@@ -539,7 +543,8 @@ jobsRouter.get(
                   // Client disconnected while sending
                   await updateJob(id, {
                     status: 'failed',
-                    result: 'Client disconnected during streaming',
+                    result: '',
+                    errorMessage: 'Client disconnected during streaming',
                   });
                   cleanupJobMemory(id, baselineMemoryMB);
                   return;
@@ -551,7 +556,8 @@ jobsRouter.get(
             if (clientDisconnected) {
               await updateJob(id, {
                 status: 'failed',
-                result: 'Client disconnected before completion',
+                result: '',
+                errorMessage: 'Client disconnected before completion',
               });
               cleanupJobMemory(id, baselineMemoryMB);
               return;
@@ -610,7 +616,8 @@ jobsRouter.get(
                 : 'An unknown error occurred during streaming.';
             await updateJob(id, {
               status: 'failed',
-              result: errorMessage,
+              result: '',
+              errorMessage,
             });
             cleanupJobMemory(id, baselineMemoryMB);
             if (!clientDisconnected) {
@@ -679,7 +686,8 @@ jobsRouter.get(
           error instanceof Error ? error.message : 'An unknown error occurred.';
         await updateJob(id, {
           status: 'failed',
-          result: errorMessage,
+          result: '',
+          errorMessage,
         });
         cleanupJobMemory(id, baselineMemoryMB);
         // Always use sendEvent for error event

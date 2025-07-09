@@ -97,6 +97,7 @@ function findKeywordMatches(text: string, keyword: string): string[] {
 export function calculateKeywordMetrics(
   text: string,
   keywords: string[] | KeywordWeight[],
+  weights?: KeywordWeight[],
 ): KeywordMetrics {
   if (!text || !keywords || keywords.length === 0) {
     return {

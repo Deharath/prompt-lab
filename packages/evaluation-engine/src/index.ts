@@ -15,7 +15,6 @@ export * from './errors/ApiError.js';
 // NEW metrics system exports
 export {
   calculateMetrics,
-  calculateSelectedMetricsLegacy,
   getAvailableMetrics,
   type MetricInput,
   type MetricResult,

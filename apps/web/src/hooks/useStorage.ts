@@ -165,3 +165,6 @@ export function useSessionStorage<T>(
 
   return [storedValue, setValue, removeValue];
 }
+
+// Alias for backward compatibility
+export const useStorage = useLocalStorage;

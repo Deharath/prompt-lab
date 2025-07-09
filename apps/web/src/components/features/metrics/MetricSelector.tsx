@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Card from '../../ui/Card.js';
-import Tooltip from '../../ui/Tooltip.js';
+import DebouncedInput from './DebouncedInput.js';
 
 /**
  * Interface defining a metric option that can be selected by users
@@ -73,28 +73,70 @@ const MetricSelector = ({
     onChange(newSelectedMetrics);
   };
 
-  // Handle input change for metrics that require additional data
-  const handleInputChange = (metricId: string, value: string) => {
-    // Update local state with the input
-    setUserInputs((prev) => ({
-      ...prev,
-      [metricId]: value,
-    }));
+  // Handle input change for metrics that require additional data (debounced)
+  const handleInputChange = useCallback(
+    (metricId: string, value: string) => {
+      // Update local state with the input
+      setUserInputs((prev) => ({
+        ...prev,
+        [metricId]: value,
+      }));
 
-    // Update the selected metrics if this metric is already selected
-    if (isSelected(metricId)) {
-      const newSelectedMetrics = selectedMetrics.map((m) => {
-        if (m.id === metricId) {
-          return {
-            ...m,
-            input: value,
-          };
-        }
-        return m;
-      });
+      // Update the selected metrics if this metric is already selected
+      if (isSelected(metricId)) {
+        const newSelectedMetrics = selectedMetrics.map((m) => {
+          if (m.id === metricId) {
+            return {
+              ...m,
+              input: value,
+            };
+          }
+          return m;
+        });
 
-      onChange(newSelectedMetrics);
-    }
+        onChange(newSelectedMetrics);
+      }
+    },
+    [selectedMetrics, onChange],
+  );
+
+  // Enhanced tooltip component for mobile and desktop
+  const MetricTooltip = ({
+    content,
+    children,
+  }: {
+    content: string;
+    children: React.ReactNode;
+  }) => {
+    const [isVisible, setIsVisible] = useState(false);
+
+    return (
+      <div className="relative inline-block">
+        <div
+          onMouseEnter={() => setIsVisible(true)}
+          onMouseLeave={() => setIsVisible(false)}
+          onClick={() => setIsVisible(!isVisible)}
+          onFocus={() => setIsVisible(true)}
+          onBlur={() => setIsVisible(false)}
+          role="button"
+          tabIndex={0}
+          aria-label={content}
+          className="cursor-pointer"
+        >
+          {children}
+        </div>
+
+        {isVisible && (
+          <div
+            className="absolute bottom-full left-1/2 z-50 mb-2 w-max max-w-[200px] -translate-x-1/2 transform rounded bg-gray-900 px-3 py-1.5 text-left text-xs text-white shadow-lg"
+            role="tooltip"
+          >
+            <div className="break-words">{content}</div>
+            <div className="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 transform border-t-4 border-r-4 border-l-4 border-transparent border-t-gray-900" />
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -116,18 +158,24 @@ const MetricSelector = ({
                     />
                     <label
                       htmlFor={`metric-${metric.id}`}
-                      className="text-sm font-medium"
+                      className="flex-1 text-sm font-medium"
                     >
                       {metric.name}
                     </label>
-                    <Tooltip content={metric.description}>
-                      <span
-                        className="bg-muted text-muted-foreground ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-xs"
+                    <MetricTooltip content={metric.description}>
+                      <svg
+                        className="text-muted-foreground hover:text-foreground h-4 w-4 cursor-pointer transition-colors"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
                         aria-hidden="true"
                       >
-                        ?
-                      </span>
-                    </Tooltip>
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </MetricTooltip>
                   </div>
 
                   {/* Input field for metrics that require additional input */}
@@ -139,8 +187,7 @@ const MetricSelector = ({
                       >
                         {metric.inputLabel || 'Input'}
                       </label>
-                      <input
-                        type="text"
+                      <DebouncedInput
                         id={`metric-input-${metric.id}`}
                         data-testid={
                           metric.id === 'keywords' ? 'keyword-input' : undefined
@@ -148,9 +195,10 @@ const MetricSelector = ({
                         className="focus:border-primary focus:ring-primary mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
                         placeholder={metric.inputPlaceholder || ''}
                         value={userInputs[metric.id] || ''}
-                        onChange={(e) =>
-                          handleInputChange(metric.id, e.target.value)
+                        onChange={(value) =>
+                          handleInputChange(metric.id, value)
                         }
+                        delay={500}
                       />
                     </div>
                   )}
@@ -183,15 +231,12 @@ const MetricSelector = ({
                   >
                     {metric.name}
                   </label>
-                  <button
-                    type="button"
-                    className="group relative"
-                    aria-label={`Help for ${metric.name}`}
-                  >
+                  <MetricTooltip content={metric.description}>
                     <svg
-                      className="text-muted-foreground hover:text-foreground h-3.5 w-3.5"
+                      className="text-muted-foreground hover:text-foreground h-3.5 w-3.5 cursor-pointer transition-colors"
                       fill="currentColor"
                       viewBox="0 0 20 20"
+                      aria-hidden="true"
                     >
                       <path
                         fillRule="evenodd"
@@ -199,18 +244,13 @@ const MetricSelector = ({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <div className="pointer-events-none absolute right-0 bottom-full z-50 mb-2 w-max max-w-[200px] rounded bg-gray-900 px-3 py-1.5 text-left text-xs break-words text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                      {metric.description}
-                      <div className="absolute top-full right-2 h-0 w-0 border-t-4 border-r-4 border-l-4 border-transparent border-t-gray-900" />
-                    </div>
-                  </button>
+                  </MetricTooltip>
                 </div>
 
                 {/* Input field for metrics that require additional input */}
                 {metric.requiresInput && isChecked && (
                   <div className="ml-4">
-                    <input
-                      type="text"
+                    <DebouncedInput
                       id={`metric-input-${metric.id}`}
                       data-testid={
                         metric.id === 'keywords' ? 'keyword-input' : undefined
@@ -218,9 +258,8 @@ const MetricSelector = ({
                       className="border-border focus:border-primary focus:ring-primary bg-background block w-full rounded border px-3 py-1.5 text-sm shadow-sm focus:ring-1"
                       placeholder={metric.inputPlaceholder || ''}
                       value={userInputs[metric.id] || ''}
-                      onChange={(e) =>
-                        handleInputChange(metric.id, e.target.value)
-                      }
+                      onChange={(value) => handleInputChange(metric.id, value)}
+                      delay={500}
                     />
                   </div>
                 )}

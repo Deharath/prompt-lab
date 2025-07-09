@@ -1,4 +1,8 @@
-import type { SelectedMetric } from '../types/metrics.js';
+import {
+  type SelectedMetric,
+  type MetricResult,
+  type MetricsCalculationResult,
+} from '@prompt-lab/shared-types';
 import { create } from 'zustand';
 import { ApiClient } from '../api.js';
 import type { JobSummary } from '../api.js';
@@ -12,7 +16,7 @@ interface JobState {
   current?: JobSummary;
   log: LogLine[];
   history: JobSummary[];
-  metrics?: Record<string, unknown>;
+  metrics?: MetricResult;
   running: boolean;
   hasUserData: boolean; // Track if user has any prompt/input data
   // Model parameters
@@ -26,7 +30,7 @@ interface JobState {
   };
   start(job: JobSummary): void;
   append(text: string): void;
-  finish(metrics: Record<string, unknown>): void;
+  finish(metrics: MetricResult): void;
   reset(): void;
   setUserData(hasData: boolean): void;
   setBaseJob(id: string): void;
@@ -50,8 +54,8 @@ export const useJobStore = create<JobState>((set) => ({
   maxTokens: 0, // 0 means use model default
   selectedMetrics: [
     { id: 'flesch_reading_ease' },
-    { id: 'sentiment' },
     { id: 'sentiment_detailed' },
+    { id: 'sentiment' },
     { id: 'word_count' },
     { id: 'precision' },
     { id: 'recall' },

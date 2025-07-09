@@ -13,8 +13,10 @@
   },
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "build": "tsc",
-    "clean": "node -e \"const fs = require('fs'); const path = require('path'); function rmSync(p) { try { fs.rmSync(p, {recursive: true, force: true}); } catch {} } function findAndRemove(dir, exts) { if (!fs.existsSync(dir)) return; fs.readdirSync(dir, {withFileTypes: true}).forEach(dirent => { const fullPath = path.join(dir, dirent.name); if (dirent.isDirectory()) findAndRemove(fullPath, exts); else if (exts.some(ext => fullPath.endsWith(ext))) rmSync(fullPath); }); } findAndRemove('src', ['.js', '.d.ts']); rmSync('dist'); rmSync('tsconfig.tsbuildinfo');\"",
+    "build": "tsc --pretty false",
+    "lint": "eslint . --max-warnings 0 --quiet",
+    "tsc": "tsc -p tsconfig.json --noEmit --pretty false",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
     "test": "vitest --run --reporter=dot"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
     "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^3.6.1",
     "@prompt-lab/evaluator": "workspace:*",
+    "@prompt-lab/shared-types": "workspace:*",
     "better-sqlite3": "^12.1.1",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.30.10",
