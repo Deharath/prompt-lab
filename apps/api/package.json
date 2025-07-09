@@ -7,7 +7,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc --pretty false",
     "lint": "eslint . --max-warnings 0 --quiet",
     "tsc": "tsc -p tsconfig.json --noEmit --pretty false",
     "clean": "rimraf dist",

@@ -29,7 +29,7 @@
     "migrate": "pnpm exec tsx scripts/migrate.ts",
     "quality:check": "pnpm lint && pnpm tsc && pnpm test",
     "quality:fix": "pnpm format && pnpm lint --fix",
-    "pre-push": "pnpm quality:check --reporter=dot"
+    "pre-push": "pnpm quality:check"
   },
   "engines": {
     "node": ">=18.0.0",
