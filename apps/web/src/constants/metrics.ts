@@ -83,6 +83,34 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     category: MetricCategory.QUALITY,
   },
   {
+    id: 'bleu_score',
+    name: 'BLEU Score',
+    description:
+      'Bilingual Evaluation Understudy score measuring n-gram overlap with reference text. Higher scores indicate better similarity.',
+    category: MetricCategory.QUALITY,
+  },
+  {
+    id: 'rouge_1',
+    name: 'ROUGE-1',
+    description:
+      'Recall-Oriented Understudy for Gisting Evaluation using unigram overlap. Measures word-level similarity.',
+    category: MetricCategory.QUALITY,
+  },
+  {
+    id: 'rouge_2',
+    name: 'ROUGE-2',
+    description:
+      'ROUGE score using bigram overlap. Captures phrase-level similarity and word order.',
+    category: MetricCategory.QUALITY,
+  },
+  {
+    id: 'rouge_l',
+    name: 'ROUGE-L',
+    description:
+      'ROUGE score based on longest common subsequence. Measures structural similarity and text flow.',
+    category: MetricCategory.QUALITY,
+  },
+  {
     id: 'vocab_diversity',
     name: 'Vocabulary Diversity',
     description:

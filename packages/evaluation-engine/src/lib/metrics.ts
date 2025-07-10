@@ -13,6 +13,15 @@ import {
   type KeywordWeight,
 } from './keywordMetrics.js';
 import {
+  calculatePrecision,
+  calculateRecall,
+  calculateFScore,
+  calculateVocabularyDiversity,
+  calculateCompletenessScore,
+  calculateBleuScore,
+  calculateRougeScores,
+} from './metricCalculators.js';
+import {
   type MetricInput,
   type MetricResult,
   type MetricsCalculationResult,
@@ -25,8 +34,6 @@ import {
 import { getCachedMetrics, cacheMetrics } from './metricsCache.js';
 import {
   calculateQualityMetrics,
-  calculateVocabularyDiversity,
-  calculateCompletenessScore,
   calculateTextComplexity,
   validateJsonString,
   safeCalculateMetric,
@@ -376,6 +383,54 @@ export async function calculateMetrics(
             0,
             'text complexity',
           );
+          break;
+        }
+
+        case 'bleu_score': {
+          const refText = metric.input || referenceText || '';
+          if (!refText) {
+            errorHandler.handleError(
+              metric.id,
+              new Error('BLEU score requires reference text'),
+              null,
+              { text: text.substring(0, 100) },
+            );
+          } else {
+            results.bleu_score = safeCalculateMetric(
+              () => calculateBleuScore(text, refText),
+              0,
+              'BLEU score',
+            );
+          }
+          break;
+        }
+
+        case 'rouge_1':
+        case 'rouge_2': 
+        case 'rouge_l': {
+          const refText = metric.input || referenceText || '';
+          if (!refText) {
+            errorHandler.handleError(
+              metric.id,
+              new Error('ROUGE scores require reference text'),
+              null,
+              { text: text.substring(0, 100) },
+            );
+          } else {
+            const rougeScores = safeCalculateMetric(
+              () => calculateRougeScores(text, refText),
+              { rouge1: 0, rouge2: 0, rougeL: 0 },
+              'ROUGE scores',
+            );
+            
+            if (metric.id === 'rouge_1') {
+              results.rouge_1 = rougeScores.rouge1;
+            } else if (metric.id === 'rouge_2') {
+              results.rouge_2 = rougeScores.rouge2;
+            } else if (metric.id === 'rouge_l') {
+              results.rouge_l = rougeScores.rougeL;
+            }
+          }
           break;
         }
 

@@ -67,6 +67,12 @@ export interface MetricResult {
   f_score?: number;
   completeness_score?: number;
 
+  // Advanced text similarity
+  bleu_score?: number;
+  rouge_1?: number;
+  rouge_2?: number;
+  rouge_l?: number;
+
   // Structure validation
   is_valid_json?: boolean;
 

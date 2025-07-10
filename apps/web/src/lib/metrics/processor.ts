@@ -163,6 +163,42 @@ export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> = {
     tooltip:
       'Combined complexity metric based on vocabulary, sentence length, and readability',
   },
+  bleu_score: {
+    id: 'bleu_score',
+    name: 'BLEU Score',
+    description: 'N-gram overlap similarity with reference text',
+    category: MetricCategory.QUALITY,
+    precision: 3,
+    thresholds: { good: 0.7, warning: 0.4, error: 0.2 },
+    tooltip: 'Bilingual Evaluation Understudy score measuring text similarity using n-gram overlap',
+  },
+  rouge_1: {
+    id: 'rouge_1',
+    name: 'ROUGE-1',
+    description: 'Unigram overlap with reference text',
+    category: MetricCategory.QUALITY,
+    precision: 3,
+    thresholds: { good: 0.7, warning: 0.4, error: 0.2 },
+    tooltip: 'ROUGE score using unigram overlap for word-level similarity',
+  },
+  rouge_2: {
+    id: 'rouge_2',
+    name: 'ROUGE-2',
+    description: 'Bigram overlap with reference text',
+    category: MetricCategory.QUALITY,
+    precision: 3,
+    thresholds: { good: 0.6, warning: 0.3, error: 0.1 },
+    tooltip: 'ROUGE score using bigram overlap for phrase-level similarity',
+  },
+  rouge_l: {
+    id: 'rouge_l',
+    name: 'ROUGE-L',
+    description: 'Longest common subsequence similarity',
+    category: MetricCategory.QUALITY,
+    precision: 3,
+    thresholds: { good: 0.7, warning: 0.4, error: 0.2 },
+    tooltip: 'ROUGE score based on longest common subsequence for structural similarity',
+  },
 };
 
 // Formatters for different metric types
@@ -362,6 +398,10 @@ function getMetricFormatter(metricId: string, value: unknown): MetricFormatter {
       'f_score',
       'vocab_diversity',
       'completeness_score',
+      'bleu_score',
+      'rouge_1',
+      'rouge_2',
+      'rouge_l',
     ].includes(metricId)
   ) {
     return formatters.percentage;
