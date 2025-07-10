@@ -8,8 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:api": "pnpm --filter @prompt-lab/app-api run dev --reporter=silent",
-    "dev:web": "pnpm --filter web run dev --reporter=silent",
+    "dev:api": "pnpm --filter @prompt-lab/app-api run dev",
+    "dev:web": "pnpm --filter web run dev",
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "tsc": "pnpm -r tsc --noEmit --pretty false",
     "build": "pnpm -r --sort build",
