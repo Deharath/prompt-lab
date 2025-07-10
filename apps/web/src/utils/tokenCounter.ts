@@ -12,9 +12,9 @@ const MODEL_ENCODINGS = {
 type SupportedModel = keyof typeof MODEL_ENCODINGS;
 
 // Type definitions for tiktoken module
-type TiktokenModule = typeof import('@dqbd/tiktoken');
+type TiktokenModule = typeof import('tiktoken');
 type Tiktoken = ReturnType<TiktokenModule['get_encoding']>;
-type TiktokenEncoding = import('@dqbd/tiktoken').TiktokenEncoding;
+type TiktokenEncoding = import('tiktoken').TiktokenEncoding;
 
 // Lazy loading of tiktoken to handle WASM loading issues
 let tiktokenPromise: Promise<TiktokenModule | null> | null = null;
@@ -24,7 +24,7 @@ async function getTiktoken() {
   if (!tiktokenPromise) {
     tiktokenPromise = (async () => {
       try {
-        const tiktoken = await import('@dqbd/tiktoken');
+        const tiktoken = await import('tiktoken');
         return tiktoken;
       } catch (error) {
         console.warn(
