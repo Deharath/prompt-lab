@@ -217,7 +217,7 @@ const formatters: Record<string, MetricFormatter> = {
   sentiment: (
     value: unknown,
     metricId?: string,
-  ): { displayValue: string; hasError?: boolean; errorMessage?: string } => {
+  ): { displayValue: string; hasError?: boolean; errorMessage?: string; isDisabled?: boolean } => {
     // Handle simple string sentiment (e.g., "positive", "negative", "neutral")
     if (typeof value === 'string') {
       return { displayValue: value };
@@ -232,7 +232,18 @@ const formatters: Record<string, MetricFormatter> = {
         positive?: number;
         negative?: number;
         neutral?: number;
+        disabled?: boolean;
+        disabledReason?: string;
       };
+
+      // Check if sentiment analysis was disabled
+      if (sentiment.disabled) {
+        const reason = sentiment.disabledReason || 'Disabled due to memory constraints';
+        return {
+          displayValue: `💭 ${reason}`,
+          isDisabled: true,
+        };
+      }
 
       // For detailed sentiment with multiple scores
       if (
@@ -386,7 +397,7 @@ function processMetricItem(
     tooltip: metricConfig?.tooltip,
     hasError: formatted.hasError,
     errorMessage: formatted.errorMessage,
-    isDisabled: false,
+    isDisabled: formatted.isDisabled || false,
     colSpan: metricConfig?.colSpan || 1,
   };
 }

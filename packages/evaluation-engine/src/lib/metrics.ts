@@ -112,6 +112,7 @@ export async function calculateMetrics(
       wordCount: 0,
       sentenceCount: 0,
       avgWordsPerSentence: 0,
+      tokenCount: 0,
     },
     { text: text.substring(0, 100) },
   );

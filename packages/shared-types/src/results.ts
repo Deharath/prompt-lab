@@ -80,6 +80,7 @@ export type MetricFormatter = (
   unit?: string;
   hasError?: boolean;
   errorMessage?: string;
+  isDisabled?: boolean;
 };
 
 // View state for metrics display
