@@ -145,8 +145,8 @@ export function calculateKeywordMetrics(
   // Calculate precision (how many found keywords vs total possible)
   const precision = totalKeywords > 0 ? keywordsFound / totalKeywords : 0;
 
-  // Calculate recall (how many keywords were found vs expected)
-  // For recall, we assume all keywords should be found ideally
+  // Calculate recall (how many expected keywords were found)
+  // Recall = found keywords / total expected keywords
   const recall = totalKeywords > 0 ? keywordsFound / totalKeywords : 0;
 
   // Calculate F-score

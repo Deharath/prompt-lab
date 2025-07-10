@@ -149,6 +149,7 @@ export function getMetricCategoryTitle(category: MetricCategory): string {
     [MetricCategory.QUALITY]: 'Quality Metrics',
     [MetricCategory.KEYWORDS]: 'Keywords & Terms',
     [MetricCategory.VALIDATION]: 'Validation',
+    [MetricCategory.PERFORMANCE]: 'Performance',
     [MetricCategory.CUSTOM]: 'Custom Metrics',
   };
   return titles[category];
@@ -163,6 +164,7 @@ export function getMetricCategoryDescription(category: MetricCategory): string {
     [MetricCategory.QUALITY]: 'Overall quality assessment metrics',
     [MetricCategory.KEYWORDS]: 'Keyword presence and analysis',
     [MetricCategory.VALIDATION]: 'Data validation and format checking',
+    [MetricCategory.PERFORMANCE]: 'Performance and latency metrics',
     [MetricCategory.CUSTOM]: 'User-defined custom metrics',
   };
   return descriptions[category];

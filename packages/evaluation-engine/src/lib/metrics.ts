@@ -7,6 +7,7 @@
 import { textWorker } from './textWorker.js';
 import { calculateReadabilityScores } from './readabilityService.js';
 import { analyzeSentiment, type SentimentScore } from './sentimentService.js';
+import { recordLatency } from './latencyLogger.js';
 import {
   calculateKeywordMetrics,
   type KeywordWeight,
@@ -83,9 +84,18 @@ export async function calculateMetrics(
     referenceText,
   );
   if (cachedResult) {
+    const cacheProcessingTime = performance.now() - startTime;
+    
+    // Record cache hit latency
+    recordLatency('metrics_calculation', cacheProcessingTime, {
+      metricCount: selectedMetrics.length,
+      textLength: text.length,
+      cacheHit: true,
+    });
+    
     return {
       ...cachedResult,
-      processingTime: performance.now() - startTime, // Update processing time for cache hit
+      processingTime: cacheProcessingTime,
     };
   }
 
@@ -218,6 +228,11 @@ export async function calculateMetrics(
 
         case 'word_count': {
           results.word_count = textStats.wordCount;
+          break;
+        }
+
+        case 'token_count': {
+          results.token_count = textStats.tokenCount;
           break;
         }
 
@@ -378,10 +393,19 @@ export async function calculateMetrics(
     }
   }
 
+  const processingTime = performance.now() - startTime;
+  
+  // Record latency measurement
+  recordLatency('metrics_calculation', processingTime, {
+    metricCount: selectedMetrics.length,
+    textLength: text.length,
+    cacheHit: false,
+  });
+
   const result: MetricsCalculationResult = {
     results,
     errors: errorHandler.getErrors(),
-    processingTime: performance.now() - startTime,
+    processingTime,
   };
 
   // Cache the result for future use

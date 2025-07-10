@@ -47,6 +47,12 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     category: MetricCategory.STRUCTURE,
   },
   {
+    id: 'token_count',
+    name: 'Token Count',
+    description: 'Counts the total number of tokens in the response.',
+    category: MetricCategory.STRUCTURE,
+  },
+  {
     id: 'keywords',
     name: 'Keyword Presence',
     description: 'Checks if specific keywords are present in the response.',
@@ -89,5 +95,11 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     description:
       'Measures response depth and structure. Higher values indicate more complete responses.',
     category: MetricCategory.QUALITY,
+  },
+  {
+    id: 'response_latency',
+    name: 'Response Latency',
+    description: 'Time taken to generate the response (in milliseconds).',
+    category: MetricCategory.PERFORMANCE,
   },
 ];

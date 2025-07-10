@@ -32,6 +32,7 @@ export enum MetricCategory {
   QUALITY = 'quality',
   KEYWORDS = 'keywords',
   VALIDATION = 'validation',
+  PERFORMANCE = 'performance',
   CUSTOM = 'custom',
 }
 
@@ -51,6 +52,10 @@ export interface MetricResult {
   sentence_count?: number;
   avg_words_per_sentence?: number;
   vocab_diversity?: number;
+  token_count?: number;
+
+  // Performance metrics
+  response_latency?: number;
 
   // Keywords and search
   keywords?: KeywordResult;

@@ -18,6 +18,7 @@ export interface TextStats {
   wordCount: number;
   sentenceCount: number;
   avgWordsPerSentence: number;
+  tokenCount: number;
 }
 
 /**
@@ -87,6 +88,7 @@ export function createTextWorker() {
       sentenceCount: sentences.length,
       avgWordsPerSentence:
         sentences.length > 0 ? words.length / sentences.length : 0,
+      tokenCount: tokens.length,
     };
   }
 
