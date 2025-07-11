@@ -20,6 +20,20 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     category: MetricCategory.READABILITY,
   },
   {
+    id: 'flesch_kincaid_grade',
+    name: 'Flesch-Kincaid Grade Level',
+    description:
+      'Indicates the U.S. school grade level needed to understand the text.',
+    category: MetricCategory.READABILITY,
+  },
+  {
+    id: 'smog_index',
+    name: 'SMOG Index',
+    description:
+      'Simple Measure of Gobbledygook - estimates years of education needed to understand the text.',
+    category: MetricCategory.READABILITY,
+  },
+  {
     id: 'sentiment_detailed',
     name: 'Detailed Sentiment Analysis',
     description:
@@ -53,12 +67,34 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     category: MetricCategory.STRUCTURE,
   },
   {
+    id: 'sentence_count',
+    name: 'Sentence Count',
+    description: 'Counts the number of sentences in the response.',
+    category: MetricCategory.STRUCTURE,
+  },
+  {
+    id: 'avg_words_per_sentence',
+    name: 'Average Words per Sentence',
+    description: 'Calculates the average number of words per sentence.',
+    category: MetricCategory.STRUCTURE,
+  },
+  {
     id: 'keywords',
     name: 'Keyword Presence',
     description: 'Checks if specific keywords are present in the response.',
     requiresInput: true,
     inputLabel: 'Keywords (comma-separated)',
     inputPlaceholder: 'e.g., climate, sustainability, renewable',
+    category: MetricCategory.CONTENT,
+  },
+  {
+    id: 'weighted_keywords',
+    name: 'Weighted Keywords',
+    description: 'Keyword analysis with importance weights for each keyword.',
+    requiresInput: true,
+    inputLabel: 'Weighted Keywords (JSON)',
+    inputPlaceholder:
+      '[{"keyword": "climate", "weight": 2}, {"keyword": "sustainability", "weight": 1}]',
     category: MetricCategory.CONTENT,
   },
   {
@@ -123,6 +159,13 @@ export const AVAILABLE_METRICS: MetricOption[] = [
     description:
       'Measures response depth and structure. Higher values indicate more complete responses.',
     category: MetricCategory.QUALITY,
+  },
+  {
+    id: 'text_complexity',
+    name: 'Text Complexity',
+    description:
+      'Combined complexity metric based on vocabulary, sentence length, and readability.',
+    category: MetricCategory.READABILITY,
   },
   {
     id: 'response_latency',

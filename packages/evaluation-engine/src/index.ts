@@ -9,6 +9,9 @@ export * from './types/index.js';
 export * from './constants/index.js';
 export * from './errors/ApiError.js';
 
+// Pricing exports
+export { PRICING, type ProviderPricing } from './providers/pricing.js';
+
 // Explicit metrics exports for better TypeScript resolution
 // NOTE: Metrics system consolidated in lib/metrics.js
 

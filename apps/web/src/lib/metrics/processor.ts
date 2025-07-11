@@ -87,6 +87,23 @@ export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> = {
     precision: 1,
     tooltip: 'Average number of words per sentence',
   },
+  token_count: {
+    id: 'token_count',
+    name: 'Token Count',
+    description: 'Total number of tokens in the text',
+    category: MetricCategory.STRUCTURE,
+    unit: 'tokens',
+    tooltip: 'Total number of tokens (subword units) in the text',
+  },
+  response_latency: {
+    id: 'response_latency',
+    name: 'Response Latency',
+    description: 'Time taken to generate the response',
+    category: MetricCategory.PERFORMANCE,
+    unit: 'ms',
+    precision: 0,
+    tooltip: 'Time taken to generate the response in milliseconds',
+  },
   vocab_diversity: {
     id: 'vocab_diversity',
     name: 'Vocabulary Diversity',
@@ -170,7 +187,8 @@ export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> = {
     category: MetricCategory.QUALITY,
     precision: 3,
     thresholds: { good: 0.7, warning: 0.4, error: 0.2 },
-    tooltip: 'Bilingual Evaluation Understudy score measuring text similarity using n-gram overlap',
+    tooltip:
+      'Bilingual Evaluation Understudy score measuring text similarity using n-gram overlap',
   },
   rouge_1: {
     id: 'rouge_1',
@@ -197,7 +215,8 @@ export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> = {
     category: MetricCategory.QUALITY,
     precision: 3,
     thresholds: { good: 0.7, warning: 0.4, error: 0.2 },
-    tooltip: 'ROUGE score based on longest common subsequence for structural similarity',
+    tooltip:
+      'ROUGE score based on longest common subsequence for structural similarity',
   },
 };
 
@@ -253,7 +272,12 @@ const formatters: Record<string, MetricFormatter> = {
   sentiment: (
     value: unknown,
     metricId?: string,
-  ): { displayValue: string; hasError?: boolean; errorMessage?: string; isDisabled?: boolean } => {
+  ): {
+    displayValue: string;
+    hasError?: boolean;
+    errorMessage?: string;
+    isDisabled?: boolean;
+  } => {
     // Handle simple string sentiment (e.g., "positive", "negative", "neutral")
     if (typeof value === 'string') {
       return { displayValue: value };
@@ -274,7 +298,8 @@ const formatters: Record<string, MetricFormatter> = {
 
       // Check if sentiment analysis was disabled
       if (sentiment.disabled) {
-        const reason = sentiment.disabledReason || 'Disabled due to memory constraints';
+        const reason =
+          sentiment.disabledReason || 'Disabled due to memory constraints';
         return {
           displayValue: `💭 ${reason}`,
           isDisabled: true,

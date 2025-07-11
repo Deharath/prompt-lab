@@ -33,10 +33,11 @@ async function complete(
   const promptTokens = resp.usage?.prompt_tokens ?? 0;
   const completionTokens = resp.usage?.completion_tokens ?? 0;
   const tokens = resp.usage?.total_tokens ?? 0;
-  
+
   const pricing = PRICING.openai[options.model as keyof typeof PRICING.openai];
-  const cost = pricing 
-    ? (promptTokens / 1000) * pricing.input + (completionTokens / 1000) * pricing.output
+  const cost = pricing
+    ? (promptTokens / 1000) * pricing.input +
+      (completionTokens / 1000) * pricing.output
     : 0;
 
   return { output, tokens, cost };

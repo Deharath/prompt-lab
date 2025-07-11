@@ -92,14 +92,14 @@ export async function calculateMetrics(
   );
   if (cachedResult) {
     const cacheProcessingTime = performance.now() - startTime;
-    
+
     // Record cache hit latency
     recordLatency('metrics_calculation', cacheProcessingTime, {
       metricCount: selectedMetrics.length,
       textLength: text.length,
       cacheHit: true,
     });
-    
+
     return {
       ...cachedResult,
       processingTime: cacheProcessingTime,
@@ -149,12 +149,12 @@ export async function calculateMetrics(
           break;
         }
 
-        case 'flesch_kincaid': {
+        case 'flesch_kincaid_grade': {
           results.flesch_kincaid_grade = readabilityScores.fleschKincaid;
           break;
         }
 
-        case 'smog': {
+        case 'smog_index': {
           results.smog_index = readabilityScores.smog;
           break;
         }
@@ -389,12 +389,8 @@ export async function calculateMetrics(
         case 'bleu_score': {
           const refText = metric.input || referenceText || '';
           if (!refText) {
-            errorHandler.handleError(
-              metric.id,
-              new Error('BLEU score requires reference text'),
-              null,
-              { text: text.substring(0, 100) },
-            );
+            // Skip silently if no reference text - these metrics are optional
+            results.bleu_score = undefined;
           } else {
             results.bleu_score = safeCalculateMetric(
               () => calculateBleuScore(text, refText),
@@ -406,23 +402,25 @@ export async function calculateMetrics(
         }
 
         case 'rouge_1':
-        case 'rouge_2': 
+        case 'rouge_2':
         case 'rouge_l': {
           const refText = metric.input || referenceText || '';
           if (!refText) {
-            errorHandler.handleError(
-              metric.id,
-              new Error('ROUGE scores require reference text'),
-              null,
-              { text: text.substring(0, 100) },
-            );
+            // Skip silently if no reference text - these metrics are optional
+            if (metric.id === 'rouge_1') {
+              results.rouge_1 = undefined;
+            } else if (metric.id === 'rouge_2') {
+              results.rouge_2 = undefined;
+            } else if (metric.id === 'rouge_l') {
+              results.rouge_l = undefined;
+            }
           } else {
             const rougeScores = safeCalculateMetric(
               () => calculateRougeScores(text, refText),
               { rouge1: 0, rouge2: 0, rougeL: 0 },
               'ROUGE scores',
             );
-            
+
             if (metric.id === 'rouge_1') {
               results.rouge_1 = rougeScores.rouge1;
             } else if (metric.id === 'rouge_2') {
@@ -450,7 +448,7 @@ export async function calculateMetrics(
   }
 
   const processingTime = performance.now() - startTime;
-  
+
   // Record latency measurement
   recordLatency('metrics_calculation', processingTime, {
     metricCount: selectedMetrics.length,

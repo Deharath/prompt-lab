@@ -52,10 +52,12 @@ async function complete(
 
   const inputTokens = message.usage?.input_tokens ?? 0;
   const outputTokens = message.usage?.output_tokens ?? 0;
-  
-  const pricing = PRICING.anthropic[options.model as keyof typeof PRICING.anthropic];
+
+  const pricing =
+    PRICING.anthropic[options.model as keyof typeof PRICING.anthropic];
   const cost = pricing
-    ? (inputTokens / 1000) * pricing.input + (outputTokens / 1000) * pricing.output
+    ? (inputTokens / 1000) * pricing.input +
+      (outputTokens / 1000) * pricing.output
     : 0;
 
   return { output, tokens, cost };

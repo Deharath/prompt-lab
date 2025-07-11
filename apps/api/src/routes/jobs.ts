@@ -59,18 +59,39 @@ function getDefaultMetrics(): MetricInput[] {
   const isLowMemorySystem = totalSystemMemoryGB < 2;
 
   const baseMetrics: MetricInput[] = [
+    // Readability metrics
     { id: 'flesch_reading_ease' },
-    { id: 'flesch_kincaid' },
+    { id: 'flesch_kincaid_grade' },
+    { id: 'smog_index' },
+    { id: 'text_complexity' },
+    
+    // Structure metrics
     { id: 'word_count' },
     { id: 'sentence_count' },
     { id: 'avg_words_per_sentence' },
+    { id: 'token_count' },
+    
+    // Quality metrics
     { id: 'vocab_diversity' },
     { id: 'completeness_score' },
+    { id: 'precision' },
+    { id: 'recall' },
+    { id: 'f_score' },
+    
+    // Text similarity metrics (will auto-use input data as reference)
+    { id: 'bleu_score' },
+    { id: 'rouge_1' },
+    { id: 'rouge_2' },
+    { id: 'rouge_l' },
+    
+    // Validation metrics
+    { id: 'is_valid_json' },
   ];
 
   // Only include sentiment analysis on systems with sufficient memory
   if (!isLowMemorySystem) {
     baseMetrics.push({ id: 'sentiment' });
+    baseMetrics.push({ id: 'sentiment_detailed' });
   }
 
   console.log(
@@ -106,9 +127,9 @@ async function calculateJobMetrics(
     allMetrics = [...allMetrics, ...additionalInputs];
   }
 
-  // For precision, recall, f_score: if no explicit input provided, use job context as reference
+  // For precision, recall, f_score, BLEU, and ROUGE: if no explicit input provided, use job context as reference
   if (jobContext) {
-    ['precision', 'recall', 'f_score'].forEach((metricId) => {
+    ['precision', 'recall', 'f_score', 'bleu_score', 'rouge_1', 'rouge_2', 'rouge_l'].forEach((metricId) => {
       const metric = allMetrics.find((m) => m.id === metricId);
       if (metric && !metric.input) {
         // Build reference text from input data (the article/content to summarize)

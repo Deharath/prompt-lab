@@ -44,8 +44,8 @@ describe('Metrics Orchestrator', () => {
       const text = 'This is a simple test sentence. It should be easy to read.';
       const metrics = [
         { id: 'flesch_reading_ease' },
-        { id: 'flesch_kincaid' },
-        { id: 'smog' },
+        { id: 'flesch_kincaid_grade' },
+        { id: 'smog_index' },
       ];
 
       const result = await calculateMetrics(text, metrics);

@@ -1,7 +1,19 @@
-import { metricConfig } from './metricConfig.js';
-import { formatSentiment, formatNumber, formatObject } from './formatters.js';
+/**
+ * Legacy metrics processor - now just re-exports centralized processor
+ * This file maintained for backward compatibility
+ */
+
+import { processMetrics as centralizedProcessMetrics } from '../../../../lib/metrics/processor.js';
 
 export const processMetrics = (metrics: Record<string, unknown>) => {
+  // Convert new format to legacy format for backward compatibility
+  const processed = centralizedProcessMetrics(metrics, {
+    groupByCategory: true,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+
+  // Convert to legacy format expected by existing components
   const categories: Record<
     string,
     Array<[string, string, string?, string?, unknown?, string?, boolean?]>
@@ -13,64 +25,33 @@ export const processMetrics = (metrics: Record<string, unknown>) => {
     technical: [],
   };
 
-  Object.entries(metrics).forEach(([key, value]) => {
-    if (
-      key.includes('_error') ||
-      key.includes('start') ||
-      key.includes('end') ||
-      key.includes('totalTokens') ||
-      key.includes('avgCosSim') ||
-      key.includes('meanLatencyMs') ||
-      key.includes('evaluationCases') ||
-      key.includes('avgScore') ||
-      key === 'latency'
-    ) {
-      return;
-    }
+  // Map new categories to legacy category names
+  const categoryMapping: Record<string, string> = {
+    QUALITY: 'quality',
+    READABILITY: 'readability',
+    SENTIMENT: 'sentiment',
+    STRUCTURE: 'content',
+    CONTENT: 'content',
+    KEYWORDS: 'content',
+    VALIDATION: 'technical',
+    PERFORMANCE: 'technical',
+    CUSTOM: 'technical',
+  };
 
-    const config = metricConfig[key] || {
-      category: 'technical',
-      displayName: key
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, (l) => l.toUpperCase()),
-      description: 'Custom metric',
-    };
-    const { category, displayName, description } = config;
+  processed.groups.forEach((group: any) => {
+    const legacyCategory = categoryMapping[group.category] || 'technical';
 
-    let formattedValue: string | number = '';
-    let unit = '';
-    let isDisabled = false;
-
-    if (key === 'sentiment') {
-      const result = formatSentiment(value);
-      formattedValue = result.formattedValue;
-      unit = result.unit;
-      isDisabled = result.isDisabled || false;
-    } else if (typeof value === 'number') {
-      const result = formatNumber(key, value);
-      formattedValue = result.formattedValue;
-      unit = result.unit;
-    } else if (typeof value === 'object' && value !== null) {
-      const result = formatObject(key, value);
-      formattedValue = result.formattedValue;
-      unit = result.unit;
-    } else if (typeof value === 'boolean') {
-      formattedValue = value ? 'Yes' : 'No';
-      unit = value ? '✅' : '❌';
-    } else if (typeof value === 'string') {
-      formattedValue = value;
-      unit = '';
-    }
-
-    categories[category].push([
-      displayName,
-      formattedValue.toString(),
-      unit,
-      description,
-      value,
-      key,
-      isDisabled,
-    ]);
+    group.items.forEach((item: any) => {
+      categories[legacyCategory].push([
+        item.name,
+        item.value,
+        item.unit,
+        item.description,
+        item.originalValue,
+        item.originalKey,
+        item.isDisabled,
+      ]);
+    });
   });
 
   return categories;

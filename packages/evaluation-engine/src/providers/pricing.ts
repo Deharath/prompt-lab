@@ -2,7 +2,7 @@ export const PRICING = {
   openai: {
     // Updated prices per 1K tokens with separate input/output rates
     'gpt-4.1-nano': { input: 0.0001, output: 0.0004 }, // $0.10/$0.40 per 1M
-    'gpt-4.1-mini': { input: 0.0004, output: 0.0016 }, // $0.40/$1.60 per 1M  
+    'gpt-4.1-mini': { input: 0.0004, output: 0.0016 }, // $0.40/$1.60 per 1M
     'gpt-4.1': { input: 0.002, output: 0.008 }, // $2.00/$8.00 per 1M
     'gpt-4o-mini': { input: 0.00015, output: 0.0006 }, // $0.15/$0.60 per 1M
     'gpt-4o': { input: 0.0025, output: 0.01 }, // $2.50/$10.00 per 1M
