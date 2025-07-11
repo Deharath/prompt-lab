@@ -3,8 +3,9 @@
  * metrics.test.ts - Test the main calculateMetrics orchestrator
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { calculateMetrics, getAvailableMetrics } from '../src/lib/metrics.js';
+import { initializeMetrics } from '../src/metrics/index.js';
 
 // Mock transformers module for sentiment analysis
 vi.mock('@huggingface/transformers', () => ({
@@ -12,6 +13,11 @@ vi.mock('@huggingface/transformers', () => ({
 }));
 
 describe('Metrics Orchestrator', () => {
+  beforeAll(async () => {
+    // Initialize metrics registry before running tests
+    await initializeMetrics();
+  });
+
   beforeEach(async () => {
     vi.clearAllMocks();
 
@@ -44,8 +50,8 @@ describe('Metrics Orchestrator', () => {
       const text = 'This is a simple test sentence. It should be easy to read.';
       const metrics = [
         { id: 'flesch_reading_ease' },
-        { id: 'flesch_kincaid' },
-        { id: 'smog' },
+        { id: 'flesch_kincaid_grade' },
+        { id: 'smog_index' },
       ];
 
       const result = await calculateMetrics(text, metrics);

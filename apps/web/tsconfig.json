@@ -10,7 +10,9 @@
   "include": ["src", "test"],
   "references": [
     { "path": "../../packages/evaluator" },
-    { "path": "../../packages/test-cases" }
+    { "path": "../../packages/test-cases" },
+    { "path": "../../packages/evaluation-engine" },
+    { "path": "../../packages/shared-types" }
   ],
   "exclude": ["dist", "dist/*", "dist/src", "node_modules"]
 }

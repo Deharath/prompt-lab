@@ -3,6 +3,8 @@
  */
 
 // Core metric input structure
+import type { MetricDisplayConfig } from './results.js';
+
 export interface MetricInput {
   id: string;
   input?: string; // For keywords and other parameterized metrics
@@ -32,6 +34,7 @@ export enum MetricCategory {
   QUALITY = 'quality',
   KEYWORDS = 'keywords',
   VALIDATION = 'validation',
+  PERFORMANCE = 'performance',
   CUSTOM = 'custom',
 }
 
@@ -51,6 +54,10 @@ export interface MetricResult {
   sentence_count?: number;
   avg_words_per_sentence?: number;
   vocab_diversity?: number;
+  token_count?: number;
+
+  // Performance metrics
+  response_latency?: number;
 
   // Keywords and search
   keywords?: KeywordResult;
@@ -61,6 +68,12 @@ export interface MetricResult {
   recall?: number;
   f_score?: number;
   completeness_score?: number;
+
+  // Advanced text similarity
+  bleu_score?: number;
+  rouge_1?: number;
+  rouge_2?: number;
+  rouge_l?: number;
 
   // Structure validation
   is_valid_json?: boolean;
@@ -107,6 +120,46 @@ export interface MetricContext {
   selectedMetrics: MetricInput[];
   disabledMetrics?: Set<string>;
   referenceText?: string; // For precision/recall calculations
+  inputData?: unknown; // For conditional metrics
+}
+
+// Plugin system interfaces
+export interface MetricPlugin {
+  id: string;
+  name: string;
+  description: string;
+  category: MetricCategory;
+  version: string;
+
+  // Configuration
+  requiresInput?: boolean;
+  inputLabel?: string;
+  inputPlaceholder?: string;
+
+  // Display
+  displayConfig: MetricDisplayConfig;
+
+  // Calculation
+  calculate(
+    text: string,
+    input?: string,
+    context?: MetricContext,
+  ): Promise<unknown>;
+
+  // Validation
+  validate?(input?: string): boolean;
+
+  // Dependencies (for ordering)
+  dependencies?: string[];
+
+  // Feature flags
+  isExperimental?: boolean;
+  requiresMemory?: number; // MB
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
 }
 
 // Error handling for metrics

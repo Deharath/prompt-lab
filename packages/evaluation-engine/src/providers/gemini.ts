@@ -28,9 +28,15 @@ async function complete(
     const resp = await model.generateContent(prompt);
     const output = resp.response.text();
     const tokens = getGeminiTokenCount(resp);
-    const pricePerK =
-      PRICING.gemini[options.model as keyof typeof PRICING.gemini] ?? 0;
-    const cost = (tokens / 1000) * pricePerK;
+    const pricing =
+      PRICING.gemini[options.model as keyof typeof PRICING.gemini];
+    // Gemini free tier - approximate input/output split (most tokens are typically input)
+    const inputTokens = Math.floor(tokens * 0.8);
+    const outputTokens = tokens - inputTokens;
+    const cost = pricing
+      ? (inputTokens / 1000) * pricing.input +
+        (outputTokens / 1000) * pricing.output
+      : 0;
 
     return { output, tokens, cost };
   } catch (error) {

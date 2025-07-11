@@ -1,7 +1,7 @@
 import React from 'react';
 import ModelSelector from '../ModelSelector.js';
 import RunConfiguration from '../RunConfiguration.js';
-import MetricSelector from '../../../features/metrics/MetricSelector.js';
+// MetricSelector removed - now always run all metrics
 import { AVAILABLE_METRICS } from '../../../../constants/metrics.js';
 
 interface ConfigurationTabProps {
@@ -10,13 +10,11 @@ interface ConfigurationTabProps {
   temperature: number;
   topP: number;
   maxTokens: number;
-  selectedMetrics: any[];
   onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
   setTemperature: (temp: number) => void;
   setTopP: (topP: number) => void;
   setMaxTokens: (tokens: number) => void;
-  setSelectedMetrics: (metrics: any[]) => void;
 }
 
 /**
@@ -34,13 +32,11 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
   temperature,
   topP,
   maxTokens,
-  selectedMetrics,
   onProviderChange,
   onModelChange,
   setTemperature,
   setTopP,
   setMaxTokens,
-  setSelectedMetrics,
 }) => {
   return (
     <div
@@ -79,17 +75,14 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
           />
         </div>
 
-        {/* Metrics Selection Section */}
+        {/* Metrics Section - Now always runs all metrics */}
         <div className="min-w-0">
           <h3 className="text-foreground mb-3 text-sm font-medium">
             Evaluation Metrics
           </h3>
-          <MetricSelector
-            metrics={AVAILABLE_METRICS}
-            selectedMetrics={selectedMetrics}
-            onChange={setSelectedMetrics}
-            compact
-          />
+          <p className="text-muted-foreground text-xs">
+            All available metrics will be calculated automatically
+          </p>
         </div>
       </div>
     </div>

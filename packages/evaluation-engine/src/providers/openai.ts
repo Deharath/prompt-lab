@@ -30,10 +30,15 @@ async function complete(
   });
 
   const output = resp.choices[0]?.message?.content ?? '';
+  const promptTokens = resp.usage?.prompt_tokens ?? 0;
+  const completionTokens = resp.usage?.completion_tokens ?? 0;
   const tokens = resp.usage?.total_tokens ?? 0;
-  const pricePerK =
-    PRICING.openai[options.model as keyof typeof PRICING.openai] ?? 0;
-  const cost = (tokens / 1000) * pricePerK;
+
+  const pricing = PRICING.openai[options.model as keyof typeof PRICING.openai];
+  const cost = pricing
+    ? (promptTokens / 1000) * pricing.input +
+      (completionTokens / 1000) * pricing.output
+    : 0;
 
   return { output, tokens, cost };
 }

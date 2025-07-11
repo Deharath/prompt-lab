@@ -1,3 +1,25 @@
+// Pricing data for token cost calculations
+const PRICING = {
+  openai: {
+    // Updated prices per 1K tokens with separate input/output rates
+    'gpt-4.1-nano': { input: 0.0001, output: 0.0004 }, // $0.10/$0.40 per 1M
+    'gpt-4.1-mini': { input: 0.0004, output: 0.0016 }, // $0.40/$1.60 per 1M
+    'gpt-4.1': { input: 0.002, output: 0.008 }, // $2.00/$8.00 per 1M
+    'gpt-4o-mini': { input: 0.00015, output: 0.0006 }, // $0.15/$0.60 per 1M
+    'gpt-4o': { input: 0.0025, output: 0.01 }, // $2.50/$10.00 per 1M
+    'gpt-4-turbo': { input: 0.01, output: 0.03 }, // $10.00/$30.00 per 1M
+  },
+  gemini: {
+    'gemini-2.5-flash': { input: 0, output: 0 }, // Free tier
+    'gemini-1.5-pro': { input: 0.00125, output: 0.005 }, // $1.25/$5.00 per 1M
+  },
+  anthropic: {
+    'claude-3-5-haiku-20241022': { input: 0.0008, output: 0.004 }, // $0.80/$4.00 per 1M
+    'claude-3-5-sonnet-20241022': { input: 0.003, output: 0.015 }, // $3.00/$15.00 per 1M
+    'claude-3-opus-20240229': { input: 0.015, output: 0.075 }, // $15.00/$75.00 per 1M
+  },
+} as const;
+
 // Model to encoding map for common OpenAI models
 const MODEL_ENCODINGS = {
   'gpt-4': 'cl100k_base',
@@ -12,9 +34,9 @@ const MODEL_ENCODINGS = {
 type SupportedModel = keyof typeof MODEL_ENCODINGS;
 
 // Type definitions for tiktoken module
-type TiktokenModule = typeof import('@dqbd/tiktoken');
+type TiktokenModule = typeof import('tiktoken');
 type Tiktoken = ReturnType<TiktokenModule['get_encoding']>;
-type TiktokenEncoding = import('@dqbd/tiktoken').TiktokenEncoding;
+type TiktokenEncoding = import('tiktoken').TiktokenEncoding;
 
 // Lazy loading of tiktoken to handle WASM loading issues
 let tiktokenPromise: Promise<TiktokenModule | null> | null = null;
@@ -24,7 +46,7 @@ async function getTiktoken() {
   if (!tiktokenPromise) {
     tiktokenPromise = (async () => {
       try {
-        const tiktoken = await import('@dqbd/tiktoken');
+        const tiktoken = await import('tiktoken');
         return tiktoken;
       } catch (error) {
         console.warn(
@@ -172,19 +194,32 @@ export function estimateCost(
   completionTokens: number,
   model: string,
 ): number {
-  // Pricing per 1M tokens (as of December 2024)
-  const pricing: Record<string, { input: number; output: number }> = {
-    'gpt-4o': { input: 2.5, output: 10.0 },
-    'gpt-4o-mini': { input: 0.15, output: 0.6 },
-    'gpt-4': { input: 30.0, output: 60.0 },
-    'gpt-4-turbo': { input: 10.0, output: 30.0 },
-    'gpt-3.5-turbo': { input: 0.5, output: 1.5 },
-    'claude-3-5-sonnet-20241022': { input: 3.0, output: 15.0 },
-    'claude-3-haiku-20240307': { input: 0.25, output: 1.25 },
-    'claude-3-opus-20240229': { input: 15.0, output: 75.0 },
+  // Map model name to pricing structure from shared pricing
+  const modelToPricing = (model: string) => {
+    // Try OpenAI first
+    if (PRICING.openai[model as keyof typeof PRICING.openai]) {
+      const rates = PRICING.openai[model as keyof typeof PRICING.openai];
+      return { input: rates.input * 1000, output: rates.output * 1000 }; // Convert from per 1K to per 1M
+    }
+
+    // Try Anthropic
+    if (PRICING.anthropic[model as keyof typeof PRICING.anthropic]) {
+      const rates = PRICING.anthropic[model as keyof typeof PRICING.anthropic];
+      return { input: rates.input * 1000, output: rates.output * 1000 };
+    }
+
+    // Try Gemini
+    if (PRICING.gemini[model as keyof typeof PRICING.gemini]) {
+      const rates = PRICING.gemini[model as keyof typeof PRICING.gemini];
+      return { input: rates.input * 1000, output: rates.output * 1000 };
+    }
+
+    // Fallback to gpt-4o-mini pricing
+    const fallback = PRICING.openai['gpt-4o-mini'];
+    return { input: fallback.input * 1000, output: fallback.output * 1000 };
   };
 
-  const modelPricing = pricing[model] || pricing['gpt-4o-mini'];
+  const modelPricing = modelToPricing(model);
   const inputCost = (promptTokens / 1_000_000) * modelPricing.input;
   const outputCost = (completionTokens / 1_000_000) * modelPricing.output;
 

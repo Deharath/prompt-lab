@@ -16,154 +16,149 @@ import {
   getMetricCategoryDescription,
   createEmptyMetricsResult,
 } from '@prompt-lab/shared-types';
+// MetricRegistry import removed - web app should not directly import server-side components
 
 // Centralized metric display configuration
-export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> = {
-  flesch_reading_ease: {
-    id: 'flesch_reading_ease',
-    name: 'Flesch Reading Ease',
-    description: 'Text readability score (0-100, higher = easier)',
-    category: MetricCategory.READABILITY,
-    precision: 1,
-    thresholds: { good: 60, warning: 30, error: 0 },
-    tooltip:
-      'Measures how easy text is to read. Scores: 90-100 (Very Easy), 80-89 (Easy), 70-79 (Fairly Easy), 60-69 (Standard), 50-59 (Fairly Difficult), 30-49 (Difficult), 0-29 (Very Difficult)',
-  },
-  flesch_kincaid_grade: {
-    id: 'flesch_kincaid_grade',
-    name: 'Grade Level',
-    description: 'U.S. grade level required to understand the text',
-    category: MetricCategory.READABILITY,
-    precision: 1,
-    tooltip:
-      'Indicates the U.S. school grade level needed to understand the text',
-  },
-  smog_index: {
-    id: 'smog_index',
-    name: 'SMOG Index',
-    description: 'Years of education needed to understand the text',
-    category: MetricCategory.READABILITY,
-    precision: 1,
-    tooltip:
-      'Simple Measure of Gobbledygook - estimates years of education needed to understand the text',
-  },
-  sentiment: {
-    id: 'sentiment',
-    name: 'Sentiment',
-    description: 'Overall emotional tone',
-    category: MetricCategory.SENTIMENT,
-    tooltip: "AI-powered sentiment analysis of the text's emotional tone",
-  },
-  sentiment_detailed: {
-    id: 'sentiment_detailed',
-    name: 'Detailed Sentiment',
-    description: 'Breakdown of positive, negative, and neutral sentiment',
-    category: MetricCategory.SENTIMENT,
-    tooltip:
-      'Detailed sentiment analysis with confidence scores for each emotion',
-    colSpan: 2,
-  },
-  word_count: {
-    id: 'word_count',
-    name: 'Word Count',
-    description: 'Total number of words',
-    category: MetricCategory.STRUCTURE,
-    unit: 'words',
-    tooltip: 'Total number of words in the text',
-  },
-  sentence_count: {
-    id: 'sentence_count',
-    name: 'Sentence Count',
-    description: 'Total number of sentences',
-    category: MetricCategory.STRUCTURE,
-    unit: 'sentences',
-    tooltip: 'Total number of sentences in the text',
-  },
-  avg_words_per_sentence: {
-    id: 'avg_words_per_sentence',
-    name: 'Avg Words/Sentence',
-    description: 'Average words per sentence',
-    category: MetricCategory.STRUCTURE,
-    precision: 1,
-    tooltip: 'Average number of words per sentence',
-  },
-  vocab_diversity: {
-    id: 'vocab_diversity',
-    name: 'Vocabulary Diversity',
-    description: 'Ratio of unique words to total words',
-    category: MetricCategory.QUALITY,
-    precision: 3,
-    thresholds: { good: 0.7, warning: 0.5, error: 0.3 },
-    tooltip: 'Measures vocabulary richness (unique words / total words)',
-  },
-  keywords: {
-    id: 'keywords',
-    name: 'Keywords',
-    description: 'Keyword presence analysis',
-    category: MetricCategory.KEYWORDS,
-    tooltip: 'Analysis of specified keywords found in the text',
-  },
-  weighted_keywords: {
-    id: 'weighted_keywords',
-    name: 'Weighted Keywords',
-    description: 'Weighted keyword analysis',
-    category: MetricCategory.KEYWORDS,
-    tooltip: 'Keyword analysis with importance weights',
-  },
-  precision: {
-    id: 'precision',
-    name: 'Precision',
-    description: 'Content relevance score',
-    category: MetricCategory.QUALITY,
-    precision: 3,
-    thresholds: { good: 0.8, warning: 0.6, error: 0.4 },
-    tooltip: 'Measures how much of the output is relevant to the reference',
-  },
-  recall: {
-    id: 'recall',
-    name: 'Recall',
-    description: 'Content coverage score',
-    category: MetricCategory.QUALITY,
-    precision: 3,
-    thresholds: { good: 0.8, warning: 0.6, error: 0.4 },
-    tooltip: 'Measures how much of the reference content is covered',
-  },
-  f_score: {
-    id: 'f_score',
-    name: 'F-Score',
-    description: 'Balanced precision and recall',
-    category: MetricCategory.QUALITY,
-    precision: 3,
-    thresholds: { good: 0.8, warning: 0.6, error: 0.4 },
-    tooltip: 'Harmonic mean of precision and recall',
-  },
-  completeness_score: {
-    id: 'completeness_score',
-    name: 'Completeness',
-    description: 'Overall completeness score',
-    category: MetricCategory.QUALITY,
-    precision: 3,
-    thresholds: { good: 0.8, warning: 0.6, error: 0.4 },
-    tooltip: 'Measures response depth and completeness',
-  },
-  is_valid_json: {
-    id: 'is_valid_json',
-    name: 'Valid JSON',
-    description: 'JSON format validation',
-    category: MetricCategory.VALIDATION,
-    tooltip: 'Checks if the text is valid JSON format',
-  },
-  text_complexity: {
-    id: 'text_complexity',
-    name: 'Text Complexity',
-    description: 'Overall text complexity score',
-    category: MetricCategory.READABILITY,
-    precision: 3,
-    thresholds: { good: 0.3, warning: 0.6, error: 0.8 },
-    tooltip:
-      'Combined complexity metric based on vocabulary, sentence length, and readability',
-  },
-};
+/**
+ * Generate metric display configuration from the plugin registry
+ */
+function generateMetricDisplayConfig(): Record<string, MetricDisplayConfig> {
+  // Static configuration for known metrics
+  // In a real implementation, this would fetch from the API
+  const config: Record<string, MetricDisplayConfig> = {
+    word_count: {
+      id: 'word_count',
+      name: 'Word Count',
+      description: 'Total number of words in the text',
+      category: MetricCategory.CONTENT,
+      unit: 'words',
+      colSpan: 1,
+    },
+    sentence_count: {
+      id: 'sentence_count',
+      name: 'Sentence Count',
+      description: 'Total number of sentences in the text',
+      category: MetricCategory.CONTENT,
+      unit: 'sentences',
+      colSpan: 1,
+    },
+    flesch_reading_ease: {
+      id: 'flesch_reading_ease',
+      name: 'Flesch Reading Ease',
+      description: 'Text readability score (0-100, higher = easier)',
+      category: MetricCategory.READABILITY,
+      unit: 'score',
+      colSpan: 1,
+      thresholds: { good: 70, warning: 30, error: 0 },
+    },
+    flesch_kincaid_grade: {
+      id: 'flesch_kincaid_grade',
+      name: 'Flesch-Kincaid Grade Level',
+      description: 'Grade level required to understand the text',
+      category: MetricCategory.READABILITY,
+      unit: 'grade',
+      colSpan: 1,
+    },
+    sentiment: {
+      id: 'sentiment',
+      name: 'Sentiment Analysis',
+      description:
+        'Overall sentiment of the text (positive, negative, neutral)',
+      category: MetricCategory.SENTIMENT,
+      colSpan: 1,
+    },
+    sentiment_detailed: {
+      id: 'sentiment_detailed',
+      name: 'Sentiment Detailed',
+      description: 'Detailed sentiment breakdown with percentages',
+      category: MetricCategory.SENTIMENT,
+      colSpan: 1,
+    },
+    keywords: {
+      id: 'keywords',
+      name: 'Keyword Match',
+      description: 'Check if specific keywords appear in the text',
+      category: MetricCategory.KEYWORDS,
+      colSpan: 1,
+    },
+    precision: {
+      id: 'precision',
+      name: 'Precision',
+      description: 'Precision score compared to reference text',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    recall: {
+      id: 'recall',
+      name: 'Recall',
+      description: 'Recall score compared to reference text',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    f_score: {
+      id: 'f_score',
+      name: 'F-Score',
+      description: 'F1 score combining precision and recall',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    bleu_score: {
+      id: 'bleu_score',
+      name: 'BLEU Score',
+      description: 'BLEU score for text similarity evaluation',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    rouge_1: {
+      id: 'rouge_1',
+      name: 'ROUGE-1',
+      description: 'ROUGE-1 score for summarization quality',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    rouge_2: {
+      id: 'rouge_2',
+      name: 'ROUGE-2',
+      description: 'ROUGE-2 score for summarization quality',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    rouge_l: {
+      id: 'rouge_l',
+      name: 'ROUGE-L',
+      description: 'ROUGE-L score for summarization quality',
+      category: MetricCategory.QUALITY,
+      unit: '%',
+      colSpan: 1,
+    },
+    token_count: {
+      id: 'token_count',
+      name: 'Token Count',
+      description: 'Number of tokens in the text',
+      category: MetricCategory.CONTENT,
+      unit: 'tokens',
+      colSpan: 1,
+    },
+    response_latency: {
+      id: 'response_latency',
+      name: 'Response Latency',
+      description: 'Time taken to generate the response',
+      category: MetricCategory.PERFORMANCE,
+      unit: 'ms',
+      colSpan: 1,
+    },
+  };
+
+  return config;
+}
+export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> =
+  generateMetricDisplayConfig();
 
 // Formatters for different metric types
 const formatters: Record<string, MetricFormatter> = {
@@ -217,7 +212,12 @@ const formatters: Record<string, MetricFormatter> = {
   sentiment: (
     value: unknown,
     metricId?: string,
-  ): { displayValue: string; hasError?: boolean; errorMessage?: string } => {
+  ): {
+    displayValue: string;
+    hasError?: boolean;
+    errorMessage?: string;
+    isDisabled?: boolean;
+  } => {
     // Handle simple string sentiment (e.g., "positive", "negative", "neutral")
     if (typeof value === 'string') {
       return { displayValue: value };
@@ -232,7 +232,19 @@ const formatters: Record<string, MetricFormatter> = {
         positive?: number;
         negative?: number;
         neutral?: number;
+        disabled?: boolean;
+        disabledReason?: string;
       };
+
+      // Check if sentiment analysis was disabled
+      if (sentiment.disabled) {
+        const reason =
+          sentiment.disabledReason || 'Disabled due to memory constraints';
+        return {
+          displayValue: `💭 ${reason}`,
+          isDisabled: true,
+        };
+      }
 
       // For detailed sentiment with multiple scores
       if (
@@ -254,11 +266,13 @@ const formatters: Record<string, MetricFormatter> = {
         const label =
           maxEntry[0].charAt(0).toUpperCase() + maxEntry[0].slice(1);
 
-        // For detailed sentiment, show full breakdown
+        // For detailed sentiment, show breakdown in format: "Neu:X%, Pos:X%, Neg:X%"
         if (metricId === 'sentiment_detailed') {
-          const percentage = (maxEntry[1] * 100).toFixed(1);
+          const neu = (scores.neutral * 100).toFixed(1);
+          const pos = (scores.positive * 100).toFixed(1);
+          const neg = (scores.negative * 100).toFixed(1);
           return {
-            displayValue: `${label} (${percentage}%)`,
+            displayValue: `Neu:${neu}%, Pos:${pos}%, Neg:${neg}%`,
           };
         }
 
@@ -351,6 +365,10 @@ function getMetricFormatter(metricId: string, value: unknown): MetricFormatter {
       'f_score',
       'vocab_diversity',
       'completeness_score',
+      'bleu_score',
+      'rouge_1',
+      'rouge_2',
+      'rouge_l',
     ].includes(metricId)
   ) {
     return formatters.percentage;
@@ -386,7 +404,7 @@ function processMetricItem(
     tooltip: metricConfig?.tooltip,
     hasError: formatted.hasError,
     errorMessage: formatted.errorMessage,
-    isDisabled: false,
+    isDisabled: formatted.isDisabled || false,
     colSpan: metricConfig?.colSpan || 1,
   };
 }
@@ -471,6 +489,8 @@ export function processMetrics(
       }
     });
 
+    console.log(`Total processed items: ${metricItems.length}`);
+
     // Sort metrics if requested
     if (sortBy !== 'category') {
       metricItems.sort((a, b) => {
@@ -501,13 +521,15 @@ export function processMetrics(
           },
         ];
 
-    return {
+    const result = {
       groups,
       totalMetrics: metricItems.length,
       errorCount,
       processingTime: performance.now() - startTime,
       hasData: metricItems.length > 0,
     };
+
+    return result;
   } catch (error) {
     console.error('Failed to process metrics:', error);
     return {

@@ -16,6 +16,7 @@ import type { BaseComponentProps } from '../../types/global.js';
 import Button from '../ui/Button.js';
 import DarkModeToggle from '../ui/DarkModeToggle.js';
 import { navigationItems } from '../../constants/app.js';
+import { formatTokenCount } from '../../utils/tokenCounter.js';
 
 interface HeaderProps extends BaseComponentProps {
   sidebarCollapsed: boolean;
@@ -155,47 +156,75 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Right Side Controls */}
       <div className="flex flex-1 items-center justify-end space-x-2">
-        {/* Token Summary - Only show if token props are provided */}
+        {/* Status Panel - More useful metrics, fully responsive */}
         {promptTokens !== undefined && (
-          <div className="bg-muted/30 border-border/50 hidden items-center gap-6 rounded-lg border px-4 py-2 text-sm sm:flex">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs font-medium">
-                Prompt Tokens:
-              </span>
-              <span className="text-foreground font-mono font-semibold">
-                {promptTokens > 0 ? promptTokens.toLocaleString() : '-'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs font-medium">
-                Est. Output:
-              </span>
-              <span className="text-foreground font-mono font-semibold">
-                {(estimatedCompletionTokens || 0) > 0
-                  ? (estimatedCompletionTokens || 0).toLocaleString()
-                  : '-'}
-              </span>
-            </div>
-            <div className="border-border flex items-center gap-2 border-l pl-6">
-              <span className="text-muted-foreground text-xs font-medium">
-                Total Tokens:
-              </span>
-              <span className="text-primary font-mono font-bold">
-                {(totalTokens || 0) > 0
-                  ? (totalTokens || 0).toLocaleString()
-                  : '-'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs font-medium">
-                Estimated Cost:
-              </span>
+          <div className="bg-muted/30 border-border/50 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm sm:gap-4 sm:px-4">
+            {/* Cost - Most important metric first */}
+            <div className="flex items-center gap-1.5">
+              <svg
+                className="h-3.5 w-3.5 text-green-600 dark:text-green-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                />
+              </svg>
               <span className="font-mono font-bold text-green-600 dark:text-green-400">
                 {(estimatedCost || 0) > 0
                   ? (estimatedCost || 0) < 0.01
                     ? '<$0.01'
                     : `$${(estimatedCost || 0).toFixed(4)}`
-                  : '-'}
+                  : '$0.00'}
+              </span>
+            </div>
+
+            {/* Token efficiency - Combined useful metric */}
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <svg
+                className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span className="text-muted-foreground text-xs">Tokens:</span>
+              <span className="text-foreground font-mono text-xs font-semibold">
+                {(totalTokens || 0) > 0
+                  ? formatTokenCount(totalTokens || 0)
+                  : '0'}
+              </span>
+            </div>
+
+            {/* Input length indicator - More useful than raw prompt tokens on mobile */}
+            <div className="flex items-center gap-1.5 sm:hidden">
+              <svg
+                className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="text-foreground font-mono text-xs font-semibold">
+                {promptTokens > 1000
+                  ? `${(promptTokens / 1000).toFixed(1)}k`
+                  : promptTokens}
               </span>
             </div>
           </div>

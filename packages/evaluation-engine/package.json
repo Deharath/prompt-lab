@@ -25,7 +25,7 @@
     "@huggingface/transformers": "^3.6.1",
     "@prompt-lab/evaluator": "workspace:*",
     "@prompt-lab/shared-types": "workspace:*",
-    "better-sqlite3": "^12.1.1",
+    "better-sqlite3": "^12.2.0",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.30.10",
     "express": "^4.21.2",
@@ -42,8 +42,8 @@
     "@types/node-cache": "^4.2.5",
     "drizzle-kit": "^0.31.4",
     "rimraf": "^6.0.1",
-    "supertest": "^6.3.4",
-    "typescript": "^4.9.5",
+    "supertest": "^7.1.1",
+    "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }
 }
