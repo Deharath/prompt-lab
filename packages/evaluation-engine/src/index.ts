@@ -32,3 +32,18 @@ export {
   type QualitySummaryQuery,
   type QualitySummaryResponse,
 } from './routes/quality-summary.js';
+
+// Plugin-based metrics system exports
+export {
+  MetricRegistry,
+  MetricAutoLoader,
+  PluginValidator,
+  ConditionalMetrics,
+  MetricHotReloader,
+  initializeMetrics,
+  default as MetricRegistryDefault,
+} from './metrics/index.js';
+
+// Initialize metrics on module load
+import { initializeMetrics } from './metrics/index.js';
+initializeMetrics().catch(console.error);

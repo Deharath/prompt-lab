@@ -4,6 +4,7 @@
  * Implements Tasks 2-5 functionality
  */
 
+import { MetricRegistry } from '../metrics/registry.js';
 import { textWorker } from './textWorker.js';
 import { calculateReadabilityScores } from './readabilityService.js';
 import { analyzeSentiment, type SentimentScore } from './sentimentService.js';
@@ -108,333 +109,51 @@ export async function calculateMetrics(
 
   const results: MetricResult = {};
 
-  // Pre-calculate common expensive operations to reuse with error handling
-  const textStats = safeMetricCalculation(
-    'textStats',
-    () => textWorker.analyzeText(text),
-    {
-      tokens: [],
-      words: [],
-      sentences: [],
-      wordCount: 0,
-      sentenceCount: 0,
-      avgWordsPerSentence: 0,
-      tokenCount: 0,
-    },
-    { text: text.substring(0, 100) },
-  );
+  // Sort metrics by dependencies (for future use)
+  const sortedMetrics = resolveDependencies(selectedMetrics);
 
-  const readabilityScores = await safeAsyncMetricCalculation(
-    'readabilityScores',
-    () => calculateReadabilityScores(text),
-    { fleschReadingEase: 0, fleschKincaid: 0, smog: 0, textLength: 0 },
-    { textLength: text.length },
-  );
-
-  for (const metric of selectedMetrics) {
+  // Calculate metrics using plugin system
+  for (const metric of sortedMetrics) {
     // Skip disabled metrics
     if (disabledMetrics.has(metric.id)) {
       continue;
     }
 
     try {
-      // Validate metric input if required
-      if (metric.input !== undefined) {
-        validateMetricInput(metric.id, metric.input);
+      const plugin = MetricRegistry.get(metric.id);
+      if (!plugin) {
+        // Unknown metric - skip silently for backward compatibility
+        continue;
       }
 
-      switch (metric.id) {
-        case 'flesch_reading_ease': {
-          results.flesch_reading_ease = readabilityScores.fleschReadingEase;
-          break;
-        }
+      // Validate input if required
+      if (
+        plugin.requiresInput &&
+        plugin.validate &&
+        !plugin.validate(metric.input)
+      ) {
+        continue; // Skip invalid metrics silently
+      }
 
-        case 'flesch_kincaid_grade': {
-          results.flesch_kincaid_grade = readabilityScores.fleschKincaid;
-          break;
-        }
+      // Determine input for calculation
+      let input = metric.input;
+      if (!input && plugin.requiresInput && referenceText) {
+        input = referenceText; // Auto-use reference text
+      }
 
-        case 'smog_index': {
-          results.smog_index = readabilityScores.smog;
-          break;
-        }
+      // Calculate metric with context
+      const context = {
+        text,
+        selectedMetrics,
+        disabledMetrics,
+        referenceText,
+        responseLatency: (results as any).response_latency, // For performance metrics
+      };
 
-        case 'sentiment': {
-          const isDisabled = disabledMetrics.has('sentiment');
-          const sentimentResult = await analyzeSentiment(
-            text,
-            true,
-            isDisabled, // Force disable if in disabled metrics set
-          );
+      const result = await plugin.calculate(text, input, context);
 
-          // If sentiment analysis is disabled or returns a number
-          if (typeof sentimentResult === 'number') {
-            results.sentiment = {
-              label:
-                sentimentResult > 0
-                  ? 'positive'
-                  : sentimentResult < 0
-                    ? 'negative'
-                    : 'neutral',
-              score: sentimentResult,
-              confidence: 0.5,
-            };
-          } else if (
-            'disabled' in sentimentResult &&
-            sentimentResult.disabled
-          ) {
-            results.sentiment = {
-              label: sentimentResult.label,
-              score: sentimentResult.compound,
-              confidence: sentimentResult.confidence,
-            };
-          } else {
-            results.sentiment = {
-              label: sentimentResult.label,
-              score: sentimentResult.compound,
-              confidence: sentimentResult.confidence,
-            };
-          }
-          break;
-        }
-
-        case 'sentiment_detailed': {
-          const isDisabled =
-            disabledMetrics.has('sentiment_detailed') ||
-            disabledMetrics.has('sentiment');
-          const detailedResult = await analyzeSentiment(text, true, isDisabled);
-
-          if (typeof detailedResult === 'number') {
-            results.sentiment_detailed = {
-              positive: detailedResult > 0 ? detailedResult : 0,
-              negative: detailedResult < 0 ? Math.abs(detailedResult) : 0,
-              neutral: detailedResult === 0 ? 1 : 0,
-              compound: detailedResult,
-              label:
-                detailedResult > 0
-                  ? 'positive'
-                  : detailedResult < 0
-                    ? 'negative'
-                    : 'neutral',
-            };
-          } else {
-            results.sentiment_detailed = {
-              positive: detailedResult.positive,
-              negative: detailedResult.negative,
-              neutral: detailedResult.neutral,
-              compound: detailedResult.compound,
-              label: detailedResult.label,
-            };
-          }
-          break;
-        }
-
-        case 'is_valid_json': {
-          results.is_valid_json = validateJsonString(text);
-          break;
-        }
-
-        case 'word_count': {
-          results.word_count = textStats.wordCount;
-          break;
-        }
-
-        case 'token_count': {
-          results.token_count = textStats.tokenCount;
-          break;
-        }
-
-        case 'sentence_count': {
-          results.sentence_count = textStats.sentenceCount;
-          break;
-        }
-
-        case 'avg_words_per_sentence': {
-          results.avg_words_per_sentence = textStats.avgWordsPerSentence;
-          break;
-        }
-
-        case 'keywords': {
-          if (metric.input) {
-            const keywords = parseKeywords(metric.input);
-            const keywordResult = calculateKeywordMetrics(text, keywords);
-            results.keywords = {
-              found: keywordResult.matches
-                .filter((m) => m.count > 0)
-                .map((m) => m.keyword),
-              missing: keywordResult.matches
-                .filter((m) => m.count === 0)
-                .map((m) => m.keyword),
-              foundCount: keywordResult.matches.filter((m) => m.count > 0)
-                .length,
-              missingCount: keywordResult.matches.filter((m) => m.count === 0)
-                .length,
-              matchPercentage: keywordResult.precision * 100,
-              totalMatches: keywordResult.totalMatches,
-            };
-          } else {
-            results.keywords = {
-              found: [],
-              missing: [],
-              foundCount: 0,
-              missingCount: 0,
-              matchPercentage: 0,
-              totalMatches: 0,
-            };
-          }
-          break;
-        }
-
-        case 'weighted_keywords': {
-          if (metric.input) {
-            try {
-              const weightedKeywords: KeywordWeight[] = JSON.parse(
-                metric.input,
-              );
-              const keywordResult = calculateKeywordMetrics(
-                text,
-                weightedKeywords,
-              );
-              results.weighted_keywords = {
-                found: keywordResult.matches
-                  .filter((m) => m.count > 0)
-                  .map((m) => m.keyword),
-                missing: keywordResult.matches
-                  .filter((m) => m.count === 0)
-                  .map((m) => m.keyword),
-                foundCount: keywordResult.matches.filter((m) => m.count > 0)
-                  .length,
-                missingCount: keywordResult.matches.filter((m) => m.count === 0)
-                  .length,
-                matchPercentage: keywordResult.precision * 100,
-                totalMatches: keywordResult.totalMatches,
-              };
-            } catch (error) {
-              // Invalid JSON format for weighted keywords - return error result
-              results.weighted_keywords = {
-                found: [],
-                missing: [],
-                foundCount: 0,
-                missingCount: 0,
-                matchPercentage: 0,
-                totalMatches: 0,
-              };
-            }
-          } else {
-            results.weighted_keywords = {
-              found: [],
-              missing: [],
-              foundCount: 0,
-              missingCount: 0,
-              matchPercentage: 0,
-              totalMatches: 0,
-            };
-          }
-          break;
-        }
-
-        case 'precision':
-        case 'recall':
-        case 'f_score': {
-          // Calculate quality metrics bundle to avoid duplication
-          const refText = metric.input || referenceText || '';
-          const qualityMetrics = safeCalculateMetric(
-            () => calculateQualityMetrics(text, refText, textStats),
-            { precision: 0, recall: 0, f_score: 0 },
-            'quality metrics',
-          );
-
-          // Only set the requested metric
-          if (metric.id === 'precision') {
-            results.precision = qualityMetrics.precision;
-          } else if (metric.id === 'recall') {
-            results.recall = qualityMetrics.recall;
-          } else if (metric.id === 'f_score') {
-            results.f_score = qualityMetrics.f_score;
-          }
-          break;
-        }
-
-        case 'vocab_diversity': {
-          results.vocab_diversity = safeCalculateMetric(
-            () => calculateVocabularyDiversity(textStats),
-            0,
-            'vocabulary diversity',
-          );
-          break;
-        }
-
-        case 'completeness_score': {
-          results.completeness_score = safeCalculateMetric(
-            () => calculateCompletenessScore(textStats),
-            0,
-            'completeness score',
-          );
-          break;
-        }
-
-        case 'text_complexity': {
-          results.text_complexity = safeCalculateMetric(
-            () =>
-              calculateTextComplexity(
-                textStats,
-                readabilityScores.fleschReadingEase,
-              ),
-            0,
-            'text complexity',
-          );
-          break;
-        }
-
-        case 'bleu_score': {
-          const refText = metric.input || referenceText || '';
-          if (!refText) {
-            // Skip silently if no reference text - these metrics are optional
-            results.bleu_score = undefined;
-          } else {
-            results.bleu_score = safeCalculateMetric(
-              () => calculateBleuScore(text, refText),
-              0,
-              'BLEU score',
-            );
-          }
-          break;
-        }
-
-        case 'rouge_1':
-        case 'rouge_2':
-        case 'rouge_l': {
-          const refText = metric.input || referenceText || '';
-          if (!refText) {
-            // Skip silently if no reference text - these metrics are optional
-            if (metric.id === 'rouge_1') {
-              results.rouge_1 = undefined;
-            } else if (metric.id === 'rouge_2') {
-              results.rouge_2 = undefined;
-            } else if (metric.id === 'rouge_l') {
-              results.rouge_l = undefined;
-            }
-          } else {
-            const rougeScores = safeCalculateMetric(
-              () => calculateRougeScores(text, refText),
-              { rouge1: 0, rouge2: 0, rougeL: 0 },
-              'ROUGE scores',
-            );
-
-            if (metric.id === 'rouge_1') {
-              results.rouge_1 = rougeScores.rouge1;
-            } else if (metric.id === 'rouge_2') {
-              results.rouge_2 = rougeScores.rouge2;
-            } else if (metric.id === 'rouge_l') {
-              results.rouge_l = rougeScores.rougeL;
-            }
-          }
-          break;
-        }
-
-        default:
-          // Unknown metric ID - skip silently
-          break;
+      if (result !== undefined) {
+        (results as any)[metric.id] = result;
       }
     } catch (error) {
       // Use centralized error handling
@@ -469,9 +188,44 @@ export async function calculateMetrics(
 }
 
 /**
+ * Resolve dependencies between metrics using topological sort
+ */
+function resolveDependencies(metrics: MetricInput[]): MetricInput[] {
+  const sorted: MetricInput[] = [];
+  const visited = new Set<string>();
+  const visiting = new Set<string>();
+
+  function visit(metricInput: MetricInput) {
+    if (visiting.has(metricInput.id)) {
+      throw new Error(
+        `Circular dependency detected for metric: ${metricInput.id}`,
+      );
+    }
+    if (visited.has(metricInput.id)) return;
+
+    visiting.add(metricInput.id);
+
+    const plugin = MetricRegistry.get(metricInput.id);
+    if (plugin?.dependencies) {
+      for (const depId of plugin.dependencies) {
+        const depMetric = metrics.find((m) => m.id === depId);
+        if (depMetric) visit(depMetric);
+      }
+    }
+
+    visiting.delete(metricInput.id);
+    visited.add(metricInput.id);
+    sorted.push(metricInput);
+  }
+
+  metrics.forEach(visit);
+  return sorted;
+}
+
+/**
  * Helper function to parse keywords from metric input
  */
-function parseKeywords(input: string): string[] {
+export function parseKeywords(input: string): string[] {
   try {
     // Try to parse as JSON array first
     const parsed = JSON.parse(input);
@@ -492,11 +246,6 @@ function parseKeywords(input: string): string[] {
 }
 
 /**
- * Legacy compatibility function that returns metrics in the old format
- */
-// Legacy function removed - use calculateMetrics directly
-
-/**
  * Get available metric definitions
  */
 export function getAvailableMetrics(): Array<{
@@ -505,82 +254,13 @@ export function getAvailableMetrics(): Array<{
   description: string;
   requiresInput?: boolean;
 }> {
-  return [
-    {
-      id: 'flesch_reading_ease',
-      name: 'Flesch Reading Ease',
-      description:
-        'Measures text readability. Higher scores indicate easier reading.',
-    },
-    {
-      id: 'flesch_kincaid',
-      name: 'Flesch-Kincaid Grade Level',
-      description:
-        'Indicates the U.S. grade level needed to understand the text.',
-    },
-    {
-      id: 'smog',
-      name: 'SMOG Grade',
-      description:
-        'Simple Measure of Gobbledygook - estimates years of education needed.',
-    },
-    {
-      id: 'sentiment',
-      name: 'Sentiment Analysis',
-      description:
-        'Analyzes emotional tone using transformer-based models from -1 (negative) to 1 (positive).',
-    },
-    {
-      id: 'is_valid_json',
-      name: 'JSON Validity',
-      description: 'Checks if the text is valid JSON format.',
-    },
-    {
-      id: 'word_count',
-      name: 'Word Count',
-      description: 'Counts the number of words in the text.',
-    },
-    {
-      id: 'sentence_count',
-      name: 'Sentence Count',
-      description: 'Counts the number of sentences in the text.',
-    },
-    {
-      id: 'keywords',
-      name: 'Keyword Presence',
-      description: 'Checks for specific keywords in the text.',
-      requiresInput: true,
-    },
-    {
-      id: 'precision',
-      name: 'Content Precision',
-      description: 'Measures focus and relevance (unique words vs repetition).',
-      requiresInput: true,
-    },
-    {
-      id: 'recall',
-      name: 'Content Recall',
-      description: 'Measures completeness and depth of response.',
-    },
-    {
-      id: 'f_score',
-      name: 'F-Score',
-      description: 'Balanced measure of precision and recall.',
-    },
-    {
-      id: 'text_complexity',
-      name: 'Text Complexity',
-      description:
-        'Overall complexity based on vocabulary, structure, and readability.',
-    },
-  ];
+  return MetricRegistry.getAll().map((plugin) => ({
+    id: plugin.id,
+    name: plugin.name,
+    description: plugin.description,
+    requiresInput: plugin.requiresInput,
+  }));
 }
-
-/**
- * Content-based precision: measures how much of the prediction is relevant/accurate
- * compared to the reference text (using word overlap)
- */
-// Removed duplicate functions - now using shared metric calculators from metricCalculators.ts
 
 // Re-export types for better TypeScript resolution
 export type {

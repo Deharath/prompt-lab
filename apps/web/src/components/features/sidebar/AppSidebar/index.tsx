@@ -130,13 +130,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
               temperature={temperature}
               topP={topP}
               maxTokens={maxTokens}
-              selectedMetrics={selectedMetrics}
               onProviderChange={onProviderChange}
               onModelChange={onModelChange}
               setTemperature={setTemperature}
               setTopP={setTopP}
               setMaxTokens={setMaxTokens}
-              setSelectedMetrics={setSelectedMetrics}
             />
           )}
 

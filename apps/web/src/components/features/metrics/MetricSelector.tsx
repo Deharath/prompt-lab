@@ -1,26 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import Card from '../../ui/Card.js';
 import DebouncedInput from './DebouncedInput.js';
+import type { MetricInput, MetricOption } from '@prompt-lab/shared-types';
 
-/**
- * Interface defining a metric option that can be selected by users
- */
-export interface MetricOption {
-  id: string;
-  name: string;
-  description: string;
-  requiresInput?: boolean;
-  inputLabel?: string;
-  inputPlaceholder?: string;
-}
-
-/**
- * Interface for selected metric data including any user inputs
- */
-export interface SelectedMetric {
-  id: string;
-  input?: string;
-}
+// Use shared types instead of local definitions
+export type SelectedMetric = MetricInput;
 
 interface MetricSelectorProps {
   metrics: MetricOption[];

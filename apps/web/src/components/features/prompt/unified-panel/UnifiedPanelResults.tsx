@@ -74,8 +74,8 @@ const renderSection = (
       'Content Analysis': 'content',
       'Structure & Format': 'structure',
       'Keywords & Terms': 'keywords',
-      'Validation': 'validation',
-      'Performance': 'performance',
+      Validation: 'validation',
+      Performance: 'performance',
       'Technical Metrics': 'validation',
       'Custom Metrics': 'custom',
     };

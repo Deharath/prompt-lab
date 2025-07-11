@@ -47,6 +47,7 @@ import {
 // Import NEW metric calculation system
 import {
   calculateMetrics,
+  MetricRegistry,
   type MetricInput,
 } from '@prompt-lab/evaluation-engine';
 
@@ -58,47 +59,47 @@ function getDefaultMetrics(): MetricInput[] {
   const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
   const isLowMemorySystem = totalSystemMemoryGB < 2;
 
-  const baseMetrics: MetricInput[] = [
-    // Readability metrics
-    { id: 'flesch_reading_ease' },
-    { id: 'flesch_kincaid_grade' },
-    { id: 'smog_index' },
-    { id: 'text_complexity' },
-    
-    // Structure metrics
-    { id: 'word_count' },
-    { id: 'sentence_count' },
-    { id: 'avg_words_per_sentence' },
-    { id: 'token_count' },
-    
-    // Quality metrics
-    { id: 'vocab_diversity' },
-    { id: 'completeness_score' },
-    { id: 'precision' },
-    { id: 'recall' },
-    { id: 'f_score' },
-    
-    // Text similarity metrics (will auto-use input data as reference)
-    { id: 'bleu_score' },
-    { id: 'rouge_1' },
-    { id: 'rouge_2' },
-    { id: 'rouge_l' },
-    
-    // Validation metrics
-    { id: 'is_valid_json' },
-  ];
+  try {
+    // Get defaults from registry and filter by memory requirements
+    const defaultMetrics = MetricRegistry.getDefaults()
+      .filter((plugin) => {
+        // Filter out memory-intensive metrics on low-memory systems
+        if (
+          isLowMemorySystem &&
+          plugin.requiresMemory &&
+          plugin.requiresMemory > 100
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .map((plugin) => ({ id: plugin.id }));
 
-  // Only include sentiment analysis on systems with sufficient memory
-  if (!isLowMemorySystem) {
-    baseMetrics.push({ id: 'sentiment' });
-    baseMetrics.push({ id: 'sentiment_detailed' });
+    console.log(
+      `[Memory Management] System RAM: ${totalSystemMemoryGB.toFixed(1)}GB, Loaded ${defaultMetrics.length} default metrics`,
+    );
+
+    return defaultMetrics;
+  } catch (error) {
+    console.warn(
+      'Failed to load default metrics from registry, using fallback:',
+      error,
+    );
+
+    // Fallback to hard-coded defaults if registry isn't available
+    const fallbackMetrics: MetricInput[] = [
+      { id: 'flesch_reading_ease' },
+      { id: 'word_count' },
+      { id: 'sentence_count' },
+      { id: 'vocab_diversity' },
+    ];
+
+    if (!isLowMemorySystem) {
+      fallbackMetrics.push({ id: 'sentiment' });
+    }
+
+    return fallbackMetrics;
   }
-
-  console.log(
-    `[Memory Management] System RAM: ${totalSystemMemoryGB.toFixed(1)}GB, Sentiment Analysis: ${isLowMemorySystem ? 'DISABLED' : 'ENABLED'}`,
-  );
-
-  return baseMetrics;
 }
 
 // Helper function to calculate metrics with new upgraded system
@@ -111,25 +112,38 @@ async function calculateJobMetrics(
     return {};
   }
 
-  // Start with default metrics that are dynamically calculated based on system memory
-  const defaultMetrics = getDefaultMetrics();
-  let allMetrics = [...defaultMetrics];
+  // Always run all available metrics instead of selected ones
+  const allAvailableMetrics = MetricRegistry.getAll()
+    .filter((plugin) => {
+      // Filter out memory-intensive metrics on low-memory systems
+      const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
+      const isLowMemorySystem = totalSystemMemoryGB < 2;
+      
+      if (
+        isLowMemorySystem &&
+        plugin.requiresMemory &&
+        plugin.requiresMemory > 100
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .map((plugin) => ({ id: plugin.id }));
 
-  // Add any additional selected metrics
-  if (selectedMetrics && Array.isArray(selectedMetrics)) {
-    const additionalMetrics = selectedMetrics as Array<{
-      id: string;
-      input?: string;
-    }>;
-    const additionalInputs: MetricInput[] = additionalMetrics
-      .filter((m) => !defaultMetrics.some((d: MetricInput) => d.id === m.id)) // Avoid duplicates
-      .map((m) => ({ id: m.id, input: m.input }));
-    allMetrics = [...allMetrics, ...additionalInputs];
-  }
+  // Use all available metrics instead of just defaults
+  let allMetrics = allAvailableMetrics;
 
   // For precision, recall, f_score, BLEU, and ROUGE: if no explicit input provided, use job context as reference
   if (jobContext) {
-    ['precision', 'recall', 'f_score', 'bleu_score', 'rouge_1', 'rouge_2', 'rouge_l'].forEach((metricId) => {
+    [
+      'precision',
+      'recall',
+      'f_score',
+      'bleu_score',
+      'rouge_1',
+      'rouge_2',
+      'rouge_l',
+    ].forEach((metricId) => {
       const metric = allMetrics.find((m) => m.id === metricId);
       if (metric && !metric.input) {
         // Build reference text from input data (the article/content to summarize)
