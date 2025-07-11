@@ -489,8 +489,6 @@ export function processMetrics(
       }
     });
 
-    console.log(`Total processed items: ${metricItems.length}`);
-
     // Sort metrics if requested
     if (sortBy !== 'category') {
       metricItems.sort((a, b) => {

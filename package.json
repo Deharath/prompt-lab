@@ -110,9 +110,7 @@
         "@typescript-eslint/parser": "8"
       }
     },
-    "ignoredBuiltDependencies": [
-      "sharp"
-    ]
+    "ignoredBuiltDependencies": []
   },
   "//": "Ensure only @types/express@4.17.21 is used for Express 4.x compatibility",
   "dependencies": {

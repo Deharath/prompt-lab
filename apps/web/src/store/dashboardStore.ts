@@ -27,7 +27,6 @@ export const useDashboardStore = create<DashboardState>((set, _get) => ({
         error instanceof Error
           ? error.message
           : 'Failed to fetch dashboard stats';
-      console.log('Setting error state:', errorMessage);
       set({ error: errorMessage, isLoading: false, data: null });
     }
   },
