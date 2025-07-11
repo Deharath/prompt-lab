@@ -96,6 +96,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
       get()._updateTokenData();
     } catch (error) {
+      // Job details loading error handled by user notification
       console.error('Failed to load job details:', error);
       throw error;
     }

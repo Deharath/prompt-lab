@@ -169,7 +169,7 @@ export function calculateKeywordMetrics(
  * Test function for regression testing with plurals and accents
  */
 export function runKeywordRegressionTests(): boolean {
-  console.log('Running keyword regression tests...');
+  // Keyword regression tests - remove debug logging
 
   // Test 1: Plural handling
   const pluralText =
@@ -178,7 +178,7 @@ export function runKeywordRegressionTests(): boolean {
   const pluralResult = calculateKeywordMetrics(pluralText, pluralKeywords);
 
   const pluralPass = pluralResult.precision > 0.8 && pluralResult.recall > 0.8;
-  console.log('Plural test:', { pluralResult, pass: pluralPass });
+  // Plural test logging removed
 
   // Test 2: Accent handling
   const accentText = 'José loves café and naïve résumés';
@@ -186,7 +186,7 @@ export function runKeywordRegressionTests(): boolean {
   const accentResult = calculateKeywordMetrics(accentText, accentKeywords);
 
   const accentPass = accentResult.precision >= 0.75; // Allow for some variance
-  console.log('Accent test:', { accentResult, pass: accentPass });
+  // Accent test logging removed
 
   // Test 3: Weighted keywords
   const weightedText =
@@ -203,10 +203,10 @@ export function runKeywordRegressionTests(): boolean {
   );
 
   const weightedPass = weightedResult.weightedScore > 0.6;
-  console.log('Weighted test:', { weightedResult, pass: weightedPass });
+  // Weighted test logging removed
 
   const allPass = pluralPass && accentPass && weightedPass;
-  console.log('All regression tests passed:', allPass);
+  // All regression tests logging removed
 
   return allPass;
 }

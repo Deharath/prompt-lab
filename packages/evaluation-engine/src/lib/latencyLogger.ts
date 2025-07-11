@@ -234,60 +234,6 @@ export async function flushLatencyMetrics() {
 /**
  * Start automatic flushing every hour
  */
-export function startLatencyLogger() {
-  // Flush every hour
-  setInterval(
-    async () => {
-      await flushLatencyMetrics();
-    },
-    60 * 60 * 1000,
-  );
+// Latency logger starter removed - unused orphan code
 
-  // Also flush on process exit
-  process.on('SIGINT', async () => {
-    await flushLatencyMetrics();
-    process.exit(0);
-  });
-
-  console.log(
-    'Latency logger started - metrics will be written to logs/metrics/',
-  );
-}
-
-/**
- * Test function for soak testing at 100 rps
- */
-export async function runLatencySoakTest(durationMs = 10000) {
-  console.log(`Starting latency soak test for ${durationMs}ms...`);
-
-  const startTime = Date.now();
-  let requestCount = 0;
-
-  const testOperation = async () => {
-    // Simulate some work
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
-    requestCount++;
-  };
-
-  const measuredOperation = measureLatency('soak_test', testOperation);
-
-  // Run at approximately 100 rps
-  const interval = setInterval(async () => {
-    if (Date.now() - startTime >= durationMs) {
-      clearInterval(interval);
-
-      const stats = getLatencyStats('soak_test');
-      console.log('Soak test completed:', {
-        duration: durationMs,
-        requests: requestCount,
-        rps: requestCount / (durationMs / 1000),
-        stats,
-      });
-
-      await flushLatencyMetrics();
-      return;
-    }
-
-    await measuredOperation();
-  }, 10); // ~100 rps
-}
+// Latency soak test removed - unused orphan code

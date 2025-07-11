@@ -10,22 +10,16 @@ function cleanupJobMemory(jobId: string, baselineMemoryMB: number): void {
   const currentMemoryMB = process.memoryUsage().rss / 1024 / 1024;
   const memoryGrowthMB = currentMemoryMB - baselineMemoryMB;
 
-  console.log(
-    `[Memory Cleanup] Job ${jobId}: Growth=+${memoryGrowthMB.toFixed(0)}MB, Final=${currentMemoryMB.toFixed(0)}MB`,
-  );
+  // Memory growth logged by service layer
 
   // Force garbage collection if available and growth was significant
   if (global.gc && memoryGrowthMB > 50) {
-    console.log(
-      `[Memory Cleanup] Job ${jobId}: Forcing GC due to ${memoryGrowthMB.toFixed(0)}MB growth`,
-    );
+    // GC forced due to memory growth - logged by service layer
     global.gc();
 
     const afterGcMemoryMB = process.memoryUsage().rss / 1024 / 1024;
     const freedMemoryMB = currentMemoryMB - afterGcMemoryMB;
-    console.log(
-      `[Memory Cleanup] Job ${jobId}: GC freed ${freedMemoryMB.toFixed(0)}MB (${afterGcMemoryMB.toFixed(0)}MB remaining)`,
-    );
+    // GC memory freed - logged by service layer
   }
 }
 import {
@@ -75,16 +69,11 @@ function getDefaultMetrics(): MetricInput[] {
       })
       .map((plugin) => ({ id: plugin.id }));
 
-    console.log(
-      `[Memory Management] System RAM: ${totalSystemMemoryGB.toFixed(1)}GB, Loaded ${defaultMetrics.length} default metrics`,
-    );
+    // Memory management metrics loading - logged by service layer
 
     return defaultMetrics;
   } catch (error) {
-    console.warn(
-      'Failed to load default metrics from registry, using fallback:',
-      error,
-    );
+    // Fallback metrics warning - logged by service layer
 
     // Fallback to hard-coded defaults if registry isn't available
     const fallbackMetrics: MetricInput[] = [
@@ -198,15 +187,11 @@ function getDisabledMetricsForSystem(): Set<string> {
     disabledMetrics.add('sentiment_detailed');
 
     if (isLowMemorySystem) {
-      console.log(
-        `[Memory Management] Disabled sentiment analysis on ${totalSystemMemoryGB.toFixed(1)}GB system`,
-      );
+      // Sentiment analysis disabled due to memory constraints - logged by service layer
     }
 
     if (sentimentExplicitlyDisabled) {
-      console.log(
-        `[Environment Config] Sentiment analysis disabled via environment variables`,
-      );
+      // Sentiment analysis disabled via environment - logged by service layer
     }
   }
 
@@ -456,9 +441,7 @@ jobsRouter.get(
           ? Math.floor(totalSystemMemoryGB * 1024 * 0.6) // 60% of total for small VPS (e.g., 600MB on 1GB system)
           : 2048; // 2GB growth allowance for development machines (16GB+)
 
-      console.log(
-        `[Memory Management] Job ${id}: Baseline=${baselineMemoryMB.toFixed(0)}MB, Growth_Limit=${memoryGrowthLimitMB}MB, System_Total=${totalSystemMemoryGB.toFixed(1)}GB`,
-      );
+      // Memory management baseline - logged by service layer
 
       // Memory check: Only fail if THIS JOB grows memory excessively
       const memoryCheck = () => {
@@ -466,17 +449,13 @@ jobsRouter.get(
         const memoryGrowthMB = currentMemoryMB - baselineMemoryMB;
 
         if (memoryGrowthMB > memoryGrowthLimitMB) {
-          console.warn(
-            `[Memory Management] ⚠️ Job ${id} exceeded growth limit: +${memoryGrowthMB.toFixed(0)}MB > ${memoryGrowthLimitMB}MB (Current: ${currentMemoryMB.toFixed(0)}MB, Baseline: ${baselineMemoryMB.toFixed(0)}MB)`,
-          );
+          // Memory limit exceeded warning - logged by service layer
           return false;
         }
 
         // Log significant growth for monitoring (but don't fail)
         if (memoryGrowthMB > 100) {
-          console.log(
-            `[Memory Management] Job ${id} growth: +${memoryGrowthMB.toFixed(0)}MB (Current: ${currentMemoryMB.toFixed(0)}MB)`,
-          );
+          // Memory growth monitoring - logged by service layer
         }
 
         return true;

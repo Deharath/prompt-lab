@@ -39,7 +39,7 @@ export const useRunViewer = () => {
           document.title = `Run · ${id}`;
         }
       } catch (err) {
-        console.error('Failed to load job:', err);
+        // Job loading error handled by user notification
         setError('Run not found');
         document.title = 'Run not found';
       } finally {

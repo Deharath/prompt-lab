@@ -485,7 +485,7 @@ export function processMetrics(
         }
       } catch (error) {
         errorCount++;
-        console.warn(`Failed to process metric ${key}:`, error);
+        // Metric processing warning handled by error boundary
       }
     });
 
@@ -529,7 +529,7 @@ export function processMetrics(
 
     return result;
   } catch (error) {
-    console.error('Failed to process metrics:', error);
+    // Metrics processing error handled by error boundary
     return {
       ...createEmptyMetricsResult(),
       errorCount: 1,

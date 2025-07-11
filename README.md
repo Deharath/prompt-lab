@@ -92,8 +92,7 @@ prompt-lab/
 │   └── api/          # Express.js backend API
 ├── packages/
 │   ├── evaluation-engine/  # Core evaluation framework
-│   ├── providers/          # AI provider integrations
-│   ├── db/                 # Database schemas and utilities
+│   └── shared-types/       # Shared TypeScript definitions
 ├── scripts/               # Build and deployment scripts
 └── docs/                  # Additional documentation
 ```
