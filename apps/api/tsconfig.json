@@ -6,9 +6,7 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../../packages/evaluation-engine" },
-    { "path": "../../packages/evaluator" },
-    { "path": "../../packages/test-cases" }
+    { "path": "../../packages/evaluation-engine" }
   ],
   "exclude": ["dist", "node_modules"]
 }

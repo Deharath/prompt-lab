@@ -15,16 +15,13 @@
     "paths": {
       "@prompt-lab/evaluation-engine": [
         "packages/evaluation-engine/src/index.ts"
-      ],
-      "@prompt-lab/evaluator": ["packages/evaluator/src/index.ts"]
+      ]
     }
   },
   "files": [],
   "references": [
     { "path": "./apps/api" },
     { "path": "./apps/web" },
-    { "path": "./packages/evaluation-engine" },
-    { "path": "./packages/evaluator" },
-    { "path": "./packages/test-cases" }
+    { "path": "./packages/evaluation-engine" }
   ]
 }

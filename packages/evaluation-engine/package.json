@@ -23,7 +23,6 @@
     "@anthropic-ai/sdk": "^0.56.0",
     "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^3.6.1",
-    "@prompt-lab/evaluator": "workspace:*",
     "@prompt-lab/shared-types": "workspace:*",
     "better-sqlite3": "^12.2.0",
     "dotenv": "^16.4.5",
@@ -31,7 +30,6 @@
     "express": "^4.21.2",
     "node-cache": "^5.1.2",
     "openai": "^4.50.0",
-    "sharp": "^0.34.2",
     "text-readability": "^1.1.1",
     "wink-tokenizer": "^5.3.0",
     "winston": "^3.17.0",
@@ -42,7 +40,6 @@
     "@types/node-cache": "^4.2.5",
     "drizzle-kit": "^0.31.4",
     "rimraf": "^6.0.1",
-    "supertest": "^7.1.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

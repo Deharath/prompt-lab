@@ -69,7 +69,8 @@ export interface GeminiConfig extends ProviderConfig {
   projectId?: string;
   location?: string;
 }
-export type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
+import type { JobStatus } from '@prompt-lab/shared-types';
+export type { JobStatus } from '@prompt-lab/shared-types';
 export interface JobWithTypedMetrics {
   id: string;
   prompt: string;
@@ -134,3 +135,4 @@ export interface JobEvent {
     | unknown;
   timestamp: Date;
 }
+//# sourceMappingURL=index.d.ts.map

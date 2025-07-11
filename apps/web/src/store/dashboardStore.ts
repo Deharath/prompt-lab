@@ -22,12 +22,11 @@ export const useDashboardStore = create<DashboardState>((set, _get) => ({
       const data = await ApiClient.fetchDashboardStats(days);
       set({ data, isLoading: false });
     } catch (error) {
-      console.error('Dashboard fetch error:', error);
+      // Dashboard fetch error handled by user notification
       const errorMessage =
         error instanceof Error
           ? error.message
           : 'Failed to fetch dashboard stats';
-      console.log('Setting error state:', errorMessage);
       set({ error: errorMessage, isLoading: false, data: null });
     }
   },

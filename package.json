@@ -39,7 +39,6 @@
     "@eslint/compat": "^1.3.1",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.30.0",
-    "@jridgewell/set-array": "^1.2.1",
     "@testing-library/react": "^16.3.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "4.17.21",
@@ -110,9 +109,7 @@
         "@typescript-eslint/parser": "8"
       }
     },
-    "ignoredBuiltDependencies": [
-      "sharp"
-    ]
+    "ignoredBuiltDependencies": []
   },
   "//": "Ensure only @types/express@4.17.21 is used for Express 4.x compatibility",
   "dependencies": {

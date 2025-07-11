@@ -180,7 +180,7 @@ export function useMetricsDisplay(
     } catch (error) {
       errorRef.current =
         error instanceof Error ? error : new Error(String(error));
-      console.error('Error processing metrics:', error);
+      // Metrics processing error handled by user notification
       return {
         groups: [],
         totalMetrics: 0,

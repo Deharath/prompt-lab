@@ -9,14 +9,11 @@ lerna-debug.log*
 
 # Dependencies
 node_modules/
-/node_modules
 .pnpm-store/
 
 # Build artifacts
-dist
-/dist
-build
-/build
+dist/
+build/
 *.tsbuildinfo
 tsconfig.tsbuildinfo
 
@@ -40,7 +37,6 @@ packages/*/src/**/*.d.ts.map
 !.env.example
 
 # Test & Coverage
-coverage/
 **/coverage/
 .nyc_output
 *.lcov
@@ -61,7 +57,6 @@ Thumbs.db
 
 # SQLite databases (local artifacts)
 *.db
-sqlite.db
 **/sqlite.db
 *.sqlite
 *.sqlite-shm
@@ -70,9 +65,6 @@ sqlite.db
 # Local database directories
 apps/api/db/
 packages/db/
-
-# Temporary commit message
-COMMIT_MSG.tmp
 
 # Ignore GitHub specific instruction files
 .github/instructions/
@@ -113,6 +105,7 @@ packages/evaluation-engine/drizzle/
 .claude-*
 *.claude-session
 claude-*.json
+claude.md
 
 # GitHub Copilot settings and instructions
 copilot-instructions*
@@ -137,7 +130,6 @@ copilot-instructions*
 !**/src/types/**/*.d.ts
 !vitest.shims.d.ts
 
-claude.md
-commit_message.txt
+# Removed duplicate entries (already covered above)
 .serena
 CLAUDE.local.md

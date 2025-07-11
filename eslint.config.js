@@ -163,34 +163,10 @@ export default [
     },
   },
 
-  // Type-aware rules for packages/evaluator
-  {
-    files: [
-      'packages/evaluator/src/**/*.{ts,tsx}',
-      'packages/evaluator/test/**/*.{ts,tsx}',
-    ],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        project: path.resolve(
-          __dirname,
-          'packages/evaluator/tsconfig.lint.json',
-        ),
-        tsconfigRootDir: __dirname,
-      },
-    },
-    rules: {
-      '@typescript-eslint/prefer-nullish-coalescing': 'off',
-      '@typescript-eslint/prefer-optional-chain': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'off',
-    },
-  },
 
   // Non-type-aware rules for config files and other packages
   {
     files: [
-      'packages/test-cases/**/*.{ts,tsx}',
       '**/*.config.{js,ts}',
       '**/*.config.{mjs,mts}',
     ],

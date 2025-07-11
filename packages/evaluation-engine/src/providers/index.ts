@@ -54,5 +54,6 @@ export function resetProviders() {
   providers = {
     openai: OpenAIProvider,
     gemini: GeminiProvider,
+    anthropic: AnthropicProvider,
   };
 }

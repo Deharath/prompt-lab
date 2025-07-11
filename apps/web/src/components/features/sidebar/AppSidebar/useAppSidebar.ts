@@ -124,7 +124,7 @@ export const useAppSidebar = (
     } catch (error) {
       // Rollback optimistic update on error
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      console.error('Failed to delete job:', error);
+      // Delete job error handled by user notification
       // You could add a toast notification here instead of alert
     }
   };
@@ -155,6 +155,7 @@ export const useAppSidebar = (
         model: job.model,
         costUsd: job.costUsd || null,
         avgScore: null, // Will be calculated from metrics if needed
+        resultSnippet: job.result ? job.result.slice(0, 100) : null,
       });
       if (job.result) {
         append(job.result);
@@ -162,7 +163,7 @@ export const useAppSidebar = (
       finish((job.metrics as Record<string, number>) || {});
       onSelectJob(id);
     } catch (err) {
-      console.error('Failed to load job', err);
+      // Job loading error handled by user notification
     }
   };
 

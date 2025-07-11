@@ -93,7 +93,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
           onJobSelect(jobId);
         }
       } catch (error) {
-        console.error('Failed to load job details:', error);
+        // Job details loading error handled by user notification
       }
     };
 

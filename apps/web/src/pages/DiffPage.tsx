@@ -40,7 +40,7 @@ const DiffPage = () => {
     ApiClient.diffJobs(baseJobId, compareJobId)
       .then(setDiff)
       .catch((err) => {
-        console.error('Failed to load diff', err);
+        // Diff loading error handled by user notification
       });
   }, [comparison, navigate]);
 

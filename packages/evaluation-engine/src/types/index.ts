@@ -82,12 +82,9 @@ export interface GeminiConfig extends ProviderConfig {
 }
 
 // Database types with proper constraints
-export type JobStatus =
-  | 'pending'
-  | 'running'
-  | 'evaluating'
-  | 'completed'
-  | 'failed';
+// Re-export from shared-types
+import type { JobStatus } from '@prompt-lab/shared-types';
+export type { JobStatus } from '@prompt-lab/shared-types';
 
 export interface JobWithTypedMetrics {
   id: string;

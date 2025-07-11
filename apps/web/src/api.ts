@@ -39,16 +39,9 @@ export interface JobRequest {
   metrics?: Array<{ id: string; input?: string }>;
 }
 
-export interface JobSummary {
-  id: string;
-  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
-  createdAt: Date;
-  provider: string;
-  model: string;
-  costUsd?: number | null;
-  avgScore?: number | null;
-  resultSnippet?: string | null;
-}
+// Re-export from shared-types
+import type { JobSummary } from '@prompt-lab/shared-types';
+export type { JobSummary } from '@prompt-lab/shared-types';
 
 export interface JobResult {
   id: string;
