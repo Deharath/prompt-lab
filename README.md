@@ -78,10 +78,8 @@ Prompt Lab follows a modern microservices architecture designed for scalability 
 ### Packages
 
 - **evaluation-engine:** Core evaluation logic with pluggable metrics system
-- **evaluator:** High-level evaluation orchestration and result processing
 - **providers:** Abstracted AI provider integrations with unified interface
 - **db:** Database schema definitions and migration management
-- **test-cases:** Comprehensive test suites and evaluation datasets
 
 ## Monorepo Structure
 
@@ -94,10 +92,8 @@ prompt-lab/
 │   └── api/          # Express.js backend API
 ├── packages/
 │   ├── evaluation-engine/  # Core evaluation framework
-│   ├── evaluator/          # Evaluation orchestration
 │   ├── providers/          # AI provider integrations
 │   ├── db/                 # Database schemas and utilities
-│   └── test-cases/         # Test data and evaluation cases
 ├── scripts/               # Build and deployment scripts
 └── docs/                  # Additional documentation
 ```

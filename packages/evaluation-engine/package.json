@@ -40,7 +40,6 @@
     "@types/node-cache": "^4.2.5",
     "drizzle-kit": "^0.31.4",
     "rimraf": "^6.0.1",
-    "supertest": "^7.1.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

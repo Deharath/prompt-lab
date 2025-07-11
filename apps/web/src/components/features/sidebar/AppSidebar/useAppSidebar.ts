@@ -155,6 +155,7 @@ export const useAppSidebar = (
         model: job.model,
         costUsd: job.costUsd || null,
         avgScore: null, // Will be calculated from metrics if needed
+        resultSnippet: job.result ? job.result.slice(0, 100) : null,
       });
       if (job.result) {
         append(job.result);

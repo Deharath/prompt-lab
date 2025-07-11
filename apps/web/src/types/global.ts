@@ -5,6 +5,8 @@
  * the entire application for consistent typing and better developer experience.
  */
 
+import type { JobStatus, MetricCategory } from '@prompt-lab/shared-types';
+
 // =============================================================================
 // CORE DOMAIN TYPES
 // =============================================================================
@@ -27,18 +29,8 @@ export interface Job {
   errorMessage?: string | null;
 }
 
-export interface JobSummary {
-  id: string;
-  status: JobStatus;
-  createdAt: Date;
-  provider: ModelProvider;
-  model: string;
-  costUsd?: number | null;
-  avgScore?: number | null;
-  resultSnippet?: string | null;
-}
-
-export type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
+// Re-export from shared-types
+export type { JobStatus } from '@prompt-lab/shared-types';
 export type ModelProvider = 'openai' | 'gemini' | 'anthropic';
 
 // =============================================================================
@@ -97,7 +89,8 @@ export interface EvaluationMetric {
   config?: Record<string, unknown>;
 }
 
-export type MetricCategory = 'quality' | 'safety' | 'performance' | 'custom';
+// Re-export from shared-types
+export type { MetricCategory } from '@prompt-lab/shared-types';
 
 export interface MetricResult {
   metricId: string;

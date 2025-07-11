@@ -115,16 +115,9 @@ export interface ListJobsOptions {
   since?: Date;
 }
 
-export interface JobSummary {
-  id: string;
-  status: JobStatus;
-  createdAt: Date;
-  provider: string;
-  model: string;
-  costUsd: number | null;
-  avgScore: number | null;
-  resultSnippet: string | null; // First 100 chars of result for identification
-}
+// Re-export from shared-types
+import type { JobSummary } from '@prompt-lab/shared-types';
+export type { JobSummary } from '@prompt-lab/shared-types';
 
 export async function listJobs(
   options: ListJobsOptions = {},

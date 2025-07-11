@@ -6,16 +6,8 @@
  */
 
 // Type definition for JobSummary (from API)
-export interface JobSummary {
-  id: string;
-  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
-  createdAt: Date;
-  provider: string;
-  model: string;
-  costUsd?: number | null;
-  avgScore?: number | null;
-  resultSnippet?: string | null;
-}
+// Re-export from shared-types
+export type { JobSummary } from '@prompt-lab/shared-types';
 
 /**
  * Props for the main AppSidebar component

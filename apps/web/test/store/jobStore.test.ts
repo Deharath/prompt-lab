@@ -34,6 +34,7 @@ describe('jobStore', () => {
       model: 'gpt-4o-mini',
       costUsd: null,
       avgScore: null,
+      resultSnippet: null,
     };
     act(() => useJobStore.getState().start(job));
     const state = useJobStore.getState();
@@ -68,6 +69,7 @@ describe('jobStore', () => {
         model: 'gpt-4o-mini',
         costUsd: null,
         avgScore: null,
+        resultSnippet: null,
       });
       useJobStore.getState().append('log');
       useJobStore.getState().finish({ score: 1 });

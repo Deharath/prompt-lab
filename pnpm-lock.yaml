@@ -29,9 +29,6 @@ importers:
       '@eslint/js':
         specifier: ^9.30.0
         version: 9.30.0
-      '@jridgewell/set-array':
-        specifier: ^1.2.1
-        version: 1.2.1
       '@testing-library/react':
         specifier: ^16.3.0
         version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -152,9 +149,6 @@ importers:
       '@prompt-lab/evaluation-engine':
         specifier: workspace:*
         version: link:../../packages/evaluation-engine
-      '@prompt-lab/evaluator':
-        specifier: workspace:*
-        version: link:../../packages/evaluator
       compression:
         specifier: ^1.8.0
         version: 1.8.0
@@ -170,9 +164,6 @@ importers:
       openai:
         specifier: ^4.104.0
         version: 4.104.0(ws@8.18.3)(zod@3.25.67)
-      p-limit:
-        specifier: ^5.0.0
-        version: 5.0.0
       zod:
         specifier: ^3.22.2
         version: 3.25.67
@@ -186,9 +177,6 @@ importers:
       get-port:
         specifier: ^7.1.0
         version: 7.1.0
-      supertest:
-        specifier: ^7.1.1
-        version: 7.1.1
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@5.4.19(@types/node@24.0.8)(lightningcss@1.30.1))
@@ -277,9 +265,6 @@ importers:
       eslint-plugin-storybook:
         specifier: 9.0.15
         version: 9.0.15(eslint@9.30.0(jiti@2.4.2))(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
-      eventsource-polyfill:
-        specifier: ^0.9.6
-        version: 0.9.6
       playwright:
         specifier: ^1.53.2
         version: 1.53.2
@@ -313,9 +298,6 @@ importers:
       '@huggingface/transformers':
         specifier: ^3.6.1
         version: 3.6.1
-      '@prompt-lab/evaluator':
-        specifier: workspace:*
-        version: link:../evaluator
       '@prompt-lab/shared-types':
         specifier: workspace:*
         version: link:../shared-types
@@ -337,9 +319,6 @@ importers:
       openai:
         specifier: ^4.50.0
         version: 4.104.0(ws@8.18.3)(zod@3.25.67)
-      sharp:
-        specifier: ^0.34.2
-        version: 0.34.2
       text-readability:
         specifier: ^1.1.1
         version: 1.1.1
@@ -365,31 +344,9 @@ importers:
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
-      supertest:
-        specifier: ^7.1.1
-        version: 7.1.1
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.0.8)(@vitest/browser@3.2.4)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.20.3)(yaml@2.8.0)
-
-  packages/evaluator:
-    dependencies:
-      openai:
-        specifier: ^4.104.0
-        version: 4.104.0(ws@8.18.3)(zod@3.25.67)
-      p-limit:
-        specifier: ^5.0.0
-        version: 5.0.0
-      tiktoken:
-        specifier: ^1.0.21
-        version: 1.0.21
-    devDependencies:
-      vite:
-        specifier: ^7.0.0
-        version: 7.0.0(@types/node@24.0.8)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.20.3)(yaml@2.8.0)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.0.8)(@vitest/browser@3.2.4)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.20.3)(yaml@2.8.0)
@@ -402,8 +359,6 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
-
-  packages/test-cases: {}
 
 packages:
   '@adobe/css-tools@4.4.3':
@@ -1349,13 +1304,6 @@ packages:
     resolution:
       {
         integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==,
-      }
-    engines: { node: '>=6.0.0' }
-
-  '@jridgewell/set-array@1.2.1':
-    resolution:
-      {
-        integrity: sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==,
       }
     engines: { node: '>=6.0.0' }
 
@@ -4698,12 +4646,6 @@ packages:
         integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==,
       }
 
-  eventsource-polyfill@0.9.6:
-    resolution:
-      {
-        integrity: sha512-LyMFp2oPDGhum2lMvkjqKZEwWd2/AoXyt8aoyftTBMWwPHNgU+2tdxhTHPluDxoz+z4gNj0uHAPR9nqevATMbg==,
-      }
-
   expand-template@2.0.3:
     resolution:
       {
@@ -6761,13 +6703,6 @@ packages:
         integrity: sha512-5b0R4txpzjPWVw/cXXUResoD4hb6U/x9BH08L7nw+GN1sezDzPdxeRvpc9c433fZhBan/wusjbCsqwqm4EIBIQ==,
       }
     engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
-
-  p-limit@5.0.0:
-    resolution:
-      {
-        integrity: sha512-/Eaoq+QyLSiXQ4lyYV23f14mZRQcXnxfHrN0vCai+ak9G0pp9iEQukIIZq5NccEvwRB8PUnZT0KsOoDCINS1qQ==,
-      }
-    engines: { node: '>=18' }
 
   p-locate@5.0.0:
     resolution:
@@ -9464,8 +9399,6 @@ snapshots:
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
-  '@jridgewell/set-array@1.2.1': {}
-
   '@jridgewell/sourcemap-codec@1.5.3': {}
 
   '@jridgewell/trace-mapping@0.3.28':
@@ -11523,8 +11456,6 @@ snapshots:
 
   eventemitter3@5.0.1: {}
 
-  eventsource-polyfill@0.9.6: {}
-
   expand-template@2.0.3: {}
 
   expand-tilde@2.0.2:
@@ -12836,10 +12767,6 @@ snapshots:
       yocto-queue: 0.1.0
 
   p-limit@4.0.0:
-    dependencies:
-      yocto-queue: 1.2.1
-
-  p-limit@5.0.0:
     dependencies:
       yocto-queue: 1.2.1
 
