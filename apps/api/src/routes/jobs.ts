@@ -131,7 +131,7 @@ async function calculateJobMetrics(
     .map((plugin) => ({ id: plugin.id }));
 
   // Use all available metrics instead of just defaults
-  let allMetrics = allAvailableMetrics;
+  let allMetrics: MetricInput[] = allAvailableMetrics;
 
   // For precision, recall, f_score, BLEU, and ROUGE: if no explicit input provided, use job context as reference
   if (jobContext) {
