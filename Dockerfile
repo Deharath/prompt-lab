@@ -22,6 +22,7 @@ RUN corepack enable
 COPY --from=builder /app/apps/web/dist            ./public
 COPY --from=builder /app/apps/api/dist            ./apps/api/dist
 COPY --from=builder /app/packages/evaluation-engine/dist        ./packages/evaluation-engine/dist
+COPY --from=builder /app/packages/shared-types/dist           ./packages/shared-types/dist
 # ── package-manager metadata & production deps ───────────────────────────────
 COPY --from=builder /app/package.json \
                      /app/pnpm-lock.yaml \
@@ -29,6 +30,7 @@ COPY --from=builder /app/package.json \
                      ./
 COPY --from=builder /app/apps/api/package.json   ./apps/api/package.json
 COPY --from=builder /app/packages/evaluation-engine/package.json ./packages/evaluation-engine/package.json
+COPY --from=builder /app/packages/shared-types/package.json       ./packages/shared-types/package.json
 # install all dependencies for CI/dev (including devDependencies for lint/test)
 RUN pnpm install --frozen-lockfile
 
