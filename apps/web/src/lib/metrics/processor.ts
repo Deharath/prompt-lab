@@ -62,7 +62,8 @@ function generateMetricDisplayConfig(): Record<string, MetricDisplayConfig> {
     sentiment: {
       id: 'sentiment',
       name: 'Sentiment Analysis',
-      description: 'Overall sentiment of the text (positive, negative, neutral)',
+      description:
+        'Overall sentiment of the text (positive, negative, neutral)',
       category: MetricCategory.SENTIMENT,
       colSpan: 1,
     },
@@ -153,7 +154,7 @@ function generateMetricDisplayConfig(): Record<string, MetricDisplayConfig> {
       colSpan: 1,
     },
   };
-  
+
   return config;
 }
 export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> =
@@ -472,11 +473,8 @@ export function processMetrics(
         return;
       }
 
-
-
       try {
         const item = processMetricItem(key, value);
-
 
         if (item.hasError) {
           errorCount++;
@@ -530,7 +528,6 @@ export function processMetrics(
       processingTime: performance.now() - startTime,
       hasData: metricItems.length > 0,
     };
-
 
     return result;
   } catch (error) {

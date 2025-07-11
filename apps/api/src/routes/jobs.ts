@@ -118,7 +118,7 @@ async function calculateJobMetrics(
       // Filter out memory-intensive metrics on low-memory systems
       const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
       const isLowMemorySystem = totalSystemMemoryGB < 2;
-      
+
       if (
         isLowMemorySystem &&
         plugin.requiresMemory &&

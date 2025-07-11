@@ -71,10 +71,11 @@ export class MetricAutoLoader {
   private static async loadFile(filePath: string): Promise<void> {
     try {
       // Convert Windows paths to file:// URLs for ESM imports
-      const importPath = process.platform === 'win32' 
-        ? `file:///${filePath.replace(/\\/g, '/')}`
-        : filePath;
-      
+      const importPath =
+        process.platform === 'win32'
+          ? `file:///${filePath.replace(/\\/g, '/')}`
+          : filePath;
+
       const module = await import(importPath);
 
       // Check all exports for metric plugins
