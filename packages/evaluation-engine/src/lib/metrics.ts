@@ -127,13 +127,14 @@ export async function calculateMetrics(
       }
 
       // Validate input if required
-      if (
-        plugin.requiresInput &&
-        plugin.validate &&
-        !plugin.validate(metric.input)
-      ) {
-        continue; // Skip invalid metrics silently
-      }
+      // Note: Let plugins handle their own validation and error cases
+      // if (
+      //   plugin.requiresInput &&
+      //   plugin.validate &&
+      //   !plugin.validate(metric.input)
+      // ) {
+      //   continue; // Skip invalid metrics silently
+      // }
 
       // Determine input for calculation
       let input = metric.input;
