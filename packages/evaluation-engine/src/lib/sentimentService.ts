@@ -53,7 +53,7 @@ async function callSentimentApi(
       throw new Error(`API call failed with status ${response.status}`);
     }
 
-    const result = await response.json() as {
+    const result = (await response.json()) as {
       success: boolean;
       data?: SentimentScore;
       error?: string;

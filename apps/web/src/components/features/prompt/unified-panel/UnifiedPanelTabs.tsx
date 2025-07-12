@@ -4,12 +4,14 @@ interface UnifiedPanelTabsProps {
   activeTab: 'input' | 'results';
   handleTabChange: (tab: 'input' | 'results') => void;
   hasResults: boolean;
+  isEvaluating?: boolean;
 }
 
 export const UnifiedPanelTabs = ({
   activeTab,
   handleTabChange,
   hasResults,
+  isEvaluating = false,
 }: UnifiedPanelTabsProps) => (
   <div className="border-border bg-muted/20 relative border-b">
     <div className="relative flex items-center">
@@ -74,8 +76,13 @@ export const UnifiedPanelTabs = ({
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <span>Evaluation Results</span>
-          {hasResults && (
+          <div className="flex items-center space-x-1">
+            <span>Evaluation Results</span>
+            {isEvaluating && (
+              <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+            )}
+          </div>
+          {hasResults && !isEvaluating && (
             <span className="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-green-500" />
           )}
         </div>
