@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
       { endpoint: '/api/sentiment' },
       error instanceof Error ? error : new Error(String(error)),
     );
-    
+
     res.status(500).json({
       error: 'Internal server error during sentiment analysis',
       code: 'SENTIMENT_ANALYSIS_FAILED',

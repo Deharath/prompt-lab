@@ -31,13 +31,16 @@ function getApiBaseUrl(): string {
 /**
  * Call the sentiment analysis API
  */
-async function callSentimentApi(text: string, detailed: boolean): Promise<SentimentScore> {
+async function callSentimentApi(
+  text: string,
+  detailed: boolean,
+): Promise<SentimentScore> {
   const apiUrl = `${getApiBaseUrl()}/api/sentiment`;
-  
+
   try {
     // Use dynamic import to avoid bundling fetch polyfill unless needed
     const { default: fetch } = await import('node-fetch');
-    
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -50,13 +53,17 @@ async function callSentimentApi(text: string, detailed: boolean): Promise<Sentim
       throw new Error(`API call failed with status ${response.status}`);
     }
 
-    const result = await response.json();
-    
+    const result = await response.json() as {
+      success: boolean;
+      data?: SentimentScore;
+      error?: string;
+    };
+
     if (!result.success) {
       throw new Error(result.error || 'API call failed');
     }
 
-    return result.data;
+    return result.data!;
   } catch (error) {
     log.error(
       'Failed to call sentiment API',
@@ -109,13 +116,10 @@ export async function analyzeSentiment(
     const result = await callSentimentApi(text, detailed);
     return detailed ? result : result.compound;
   } catch (error) {
-    log.warn(
-      'Sentiment API call failed, falling back to neutral sentiment',
-      { 
-        textLength: text.length,
-        error: error instanceof Error ? error.message : String(error) 
-      },
-    );
+    log.warn('Sentiment API call failed, falling back to neutral sentiment', {
+      textLength: text.length,
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     // Return neutral sentiment as fallback
     const neutralScore: SentimentScore = {

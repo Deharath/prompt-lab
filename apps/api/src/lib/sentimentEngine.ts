@@ -31,7 +31,7 @@ let modelLoadAttempts = 0;
  */
 function isCorruptedCacheError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  
+
   const errorMessage = error.message.toLowerCase();
   const corruptedIndicators = [
     'corrupted',
@@ -45,8 +45,10 @@ function isCorruptedCacheError(error: unknown): boolean {
     'premature end',
     'file appears to be corrupted',
   ];
-  
-  return corruptedIndicators.some(indicator => errorMessage.includes(indicator));
+
+  return corruptedIndicators.some((indicator) =>
+    errorMessage.includes(indicator),
+  );
 }
 
 /**
@@ -58,7 +60,14 @@ async function clearModelCache(): Promise<void> {
     path.join(process.cwd(), '.cache', 'huggingface', 'hub'),
     path.join(process.cwd(), 'node_modules', '.cache', 'huggingface'),
     path.join(process.cwd(), '..', '..', '.cache', 'huggingface', 'hub'),
-    path.join(process.cwd(), '..', '..', 'node_modules', '.cache', 'huggingface'),
+    path.join(
+      process.cwd(),
+      '..',
+      '..',
+      'node_modules',
+      '.cache',
+      'huggingface',
+    ),
     path.join(process.env.HOME || '~', '.cache', 'huggingface', 'hub'),
   ];
 
@@ -84,14 +93,18 @@ async function clearModelCache(): Promise<void> {
   if (cacheClearedCount === 0) {
     console.log('⚠️ No cache directories found to clear');
   } else {
-    console.log(`✅ Successfully cleared ${cacheClearedCount} cache location(s)`);
+    console.log(
+      `✅ Successfully cleared ${cacheClearedCount} cache location(s)`,
+    );
   }
 }
 
 /**
  * Analyze sentiment using Hugging Face transformers (server-side only)
  */
-async function analyzeTransformersSentiment(text: string): Promise<SentimentScore> {
+async function analyzeTransformersSentiment(
+  text: string,
+): Promise<SentimentScore> {
   // Check for environment-based disabling
   if (
     process.env.DISABLE_SENTIMENT_ANALYSIS === 'true' ||
@@ -142,7 +155,10 @@ async function analyzeTransformersSentiment(text: string): Promise<SentimentScor
           transformers = await pipeline('sentiment-analysis', MODEL_NAME);
           console.log('✅ Successfully loaded model after cache clear');
         } catch (retryError) {
-          console.error(`❌ Model loading failed again after cache clear:`, retryError);
+          console.error(
+            `❌ Model loading failed again after cache clear:`,
+            retryError,
+          );
           throw retryError;
         }
       } else {
