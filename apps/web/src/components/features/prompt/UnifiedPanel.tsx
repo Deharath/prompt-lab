@@ -15,6 +15,10 @@ interface UnifiedPanelProps {
   hasResults: boolean;
 }
 
+import { useQuery } from '@tanstack/react-query';
+import { ApiClient } from '../../../api.js';
+import type { JobSummary } from '../sidebar/AppSidebar/types.js';
+
 const UnifiedPanel = ({
   template,
   inputData,
@@ -27,6 +31,20 @@ const UnifiedPanel = ({
   hasResults,
 }: UnifiedPanelProps) => {
   const [activeTab, setActiveTab] = useState<'input' | 'results'>('input');
+
+  // Check if any jobs are currently evaluating
+  const { data: history = [] } = useQuery<JobSummary[]>({
+    queryKey: ['jobs'],
+    queryFn: () => {
+      if (!ApiClient) {
+        throw new Error('ApiClient is not available');
+      }
+      return ApiClient.listJobs();
+    },
+    staleTime: 1000 * 10,
+  });
+
+  const isEvaluating = history.some((job) => job.status === 'evaluating');
 
   useEffect(() => {
     if (hasResults && activeTab === 'input') {
@@ -50,6 +68,7 @@ const UnifiedPanel = ({
         activeTab={activeTab}
         handleTabChange={handleTabChange}
         hasResults={hasResults}
+        isEvaluating={isEvaluating}
       />
       <div className="p-6">
         {activeTab === 'input' ? (

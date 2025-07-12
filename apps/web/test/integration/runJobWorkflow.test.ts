@@ -94,7 +94,6 @@ describe('Run Job Workflow Integration', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     vi.mocked(ApiClient.createJob).mockResolvedValue(mockJobSummary);
@@ -186,9 +185,10 @@ describe('Run Job Workflow Integration', () => {
       expect.any(Function),
     );
 
-    // Wait for simulated streaming to complete
+    // Wait for simulated streaming to complete and polling to finish
     await act(async () => {
-      vi.advanceTimersByTime(20);
+      vi.advanceTimersByTime(50); // Initial streaming completion
+      vi.advanceTimersByTime(1000); // Allow polling attempts with exponential backoff
     });
 
     // Step 6: Verify job completion
@@ -245,7 +245,6 @@ describe('Run Job Workflow Integration', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     vi.mocked(ApiClient.createJob).mockResolvedValue(mockJobSummary2);
@@ -307,7 +306,6 @@ describe('Run Job Workflow Integration', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     vi.mocked(ApiClient.createJob).mockResolvedValue(mockJobSummary3);

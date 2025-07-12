@@ -10,8 +10,8 @@
   "scripts": {
     "dev:api": "pnpm --filter @prompt-lab/app-api run dev",
     "dev:web": "pnpm --filter web run dev",
-    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
-    "tsc": "pnpm -r tsc --noEmit --pretty false",
+    "dev": "pnpm dev:api & pnpm dev:web",
+    "tsc": "pnpm --filter @prompt-lab/shared-types build && pnpm -r tsc --noEmit --pretty false",
     "build": "pnpm -r --sort build",
     "test": "vitest run --coverage --config vitest.config.mts --reporter=dot",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts --reporter=dot",
@@ -62,7 +62,6 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-vitest": "0.5.4",
-    "get-port": "^7.1.0",
     "globals": "^16.3.0",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",

@@ -16,4 +16,10 @@ export interface DashboardStats {
     model: string;
     estimatedCost: number;
   }>;
+  modelEfficiency: Array<{
+    model: string;
+    avgResponseTime: number;
+    costPerToken: number;
+    totalJobs: number;
+  }>;
 }

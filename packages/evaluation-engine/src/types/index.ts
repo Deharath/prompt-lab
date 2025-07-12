@@ -1,5 +1,7 @@
 // Type definitions for better type safety
 
+// Note: ApiResponse and PaginatedResponse moved to local definitions
+
 export interface JobMetrics {
   // Content Quality Metrics
   flesch_reading_ease?: number;
@@ -102,20 +104,9 @@ export interface JobWithTypedMetrics {
 }
 
 // API Response types
-export interface ApiResponse<T = unknown> {
-  data?: T;
-  error?: string;
-  code?: string;
-}
+// Moved to @prompt-lab/shared-types
 
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+// Moved to @prompt-lab/shared-types
 
 // Configuration types
 export interface RateLimitConfig {

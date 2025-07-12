@@ -163,13 +163,9 @@ export default [
     },
   },
 
-
   // Non-type-aware rules for config files and other packages
   {
-    files: [
-      '**/*.config.{js,ts}',
-      '**/*.config.{mjs,mts}',
-    ],
+    files: ['**/*.config.{js,ts}', '**/*.config.{mjs,mts}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {

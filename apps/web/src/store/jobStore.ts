@@ -60,6 +60,7 @@ export const useJobStore = create<JobState>((set) => ({
     { id: 'precision' },
     { id: 'recall' },
     { id: 'f_score' },
+    { id: 'response_latency' }, // Essential for Model Efficiency dashboard
   ] as SelectedMetric[],
   comparison: {},
   start: (job) => {

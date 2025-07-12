@@ -30,10 +30,12 @@ async function getTiktoken() {
         const tiktoken = await import('tiktoken');
         return tiktoken;
       } catch (error) {
-        console.warn(
-          'Failed to load tiktoken WASM, falling back to approximation:',
-          error,
-        );
+        if (import.meta.env.DEV) {
+          console.warn(
+            'Failed to load tiktoken WASM, falling back to approximation:',
+            error,
+          );
+        }
         return null;
       }
     })();
@@ -59,7 +61,9 @@ async function getEncoding(model: string) {
     encodingCache.set(encoding, enc);
     return enc;
   } catch (error) {
-    console.warn(`Failed to get encoding ${encoding}:`, error);
+    if (import.meta.env.DEV) {
+      console.warn(`Failed to get encoding ${encoding}:`, error);
+    }
     return null;
   }
 }
@@ -81,7 +85,9 @@ export function countTokens(
     try {
       return cachedEnc.encode(text).length;
     } catch (error) {
-      console.warn('Error using cached encoding:', error);
+      if (import.meta.env.DEV) {
+        console.warn('Error using cached encoding:', error);
+      }
     }
   }
 
@@ -104,7 +110,9 @@ export async function countTokensAsync(
       return enc.encode(text).length;
     }
   } catch (error) {
-    console.warn('Failed to count tokens with tiktoken:', error);
+    if (import.meta.env.DEV) {
+      console.warn('Failed to count tokens with tiktoken:', error);
+    }
   }
 
   // Fallback to approximation
@@ -136,10 +144,12 @@ export function countChatTokens(
 
     return totalTokens;
   } catch (error) {
-    console.warn(
-      'Failed to count chat tokens, falling back to approximation:',
-      error,
-    );
+    if (import.meta.env.DEV) {
+      console.warn(
+        'Failed to count chat tokens, falling back to approximation:',
+        error,
+      );
+    }
     const totalText = messages.map((m) => m.role + m.content).join('');
     return Math.ceil(totalText.length / 4);
   }
@@ -231,11 +241,15 @@ export async function preloadTokenizer(
           const enc = tiktoken.get_encoding(encoding as TiktokenEncoding);
           encodingCache.set(encoding, enc);
         } catch (error) {
-          console.warn(`Failed to preload encoding ${encoding}:`, error);
+          if (import.meta.env.DEV) {
+            console.warn(`Failed to preload encoding ${encoding}:`, error);
+          }
         }
       }),
     );
   } catch (error) {
-    console.warn('Failed to preload tokenizers:', error);
+    if (import.meta.env.DEV) {
+      console.warn('Failed to preload tokenizers:', error);
+    }
   }
 }

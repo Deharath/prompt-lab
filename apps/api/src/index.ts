@@ -13,6 +13,7 @@ import {
   qualitySummaryRouter,
   initializeCache,
 } from '@prompt-lab/evaluation-engine';
+import sentimentRouter from './routes/sentiment.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
@@ -53,7 +54,6 @@ const jobsWriteRateLimit = rateLimit({
   max: config.rateLimit.jobsMax,
   message: { error: 'Too many job requests, please try again later.' },
   standardHeaders: true,
-  legacyHeaders: false,
   skip: (req) => req.method === 'GET', // Skip rate limiting for GET requests (reading history)
 });
 
@@ -68,6 +68,7 @@ app.get('/health', (_req, res) => {
 app.post('/jobs', jobsWriteRateLimit);
 app.use('/jobs', jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/sentiment', sentimentRouter);
 app.use('/api', qualitySummaryRouter);
 
 // Serve built web UI from /public when present (production only)
@@ -160,14 +161,15 @@ if (process.argv[1] === __filename) {
     });
 
     server.on('error', (error) => {
-      log.error('Server failed to start', { error: error.message });
-      console.error('Full server error:', error);
+      log.error('Server failed to start', {
+        error: error.message,
+        stack: error.stack,
+      });
       process.exit(1);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
     log.error(
-      'Startup error',
+      'Failed to start server',
       {},
       error instanceof Error ? error : new Error(String(error)),
     );

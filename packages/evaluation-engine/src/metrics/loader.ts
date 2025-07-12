@@ -3,6 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import type { MetricPlugin } from '@prompt-lab/shared-types';
 import { MetricRegistry } from './registry.js';
+import { log } from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,10 +29,10 @@ export class MetricAutoLoader {
         }
       }
     } catch (error) {
-      console.warn(
-        `[MetricAutoLoader] Failed to load directory ${dir}:`,
-        error,
-      );
+      log.warn('Failed to load directory', {
+        path: dir,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -52,9 +53,9 @@ export class MetricAutoLoader {
       await this.loadFromDirectory(customDir);
     } catch (error) {
       // Custom directory is optional
-      console.debug(
-        `[MetricAutoLoader] Custom metrics directory not found or empty: ${customDir}`,
-      );
+      log.debug('Custom metrics directory not found or empty', {
+        path: customDir,
+      });
     }
   }
 
@@ -94,15 +95,14 @@ export class MetricAutoLoader {
             MetricRegistry.setDefault(plugin.id);
           }
 
-          console.debug(
-            `[MetricAutoLoader] Loaded metric: ${plugin.id} from ${filePath}`,
-          );
+          log.debug('Loaded metric', { id: plugin.id, path: filePath });
         }
       }
     } catch (error) {
-      console.error(
-        `[MetricAutoLoader] Failed to load file ${filePath}:`,
-        error,
+      log.error(
+        'Failed to load file',
+        { path: filePath },
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }

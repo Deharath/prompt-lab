@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import Card from '../../ui/Card.js';
 import DebouncedInput from './DebouncedInput.js';
-import type { MetricInput, MetricOption } from '@prompt-lab/shared-types';
-
-// Use shared types instead of local definitions
-export type SelectedMetric = MetricInput;
+import type {
+  MetricInput,
+  MetricOption,
+  SelectedMetric,
+} from '@prompt-lab/shared-types';
 
 interface MetricSelectorProps {
   metrics: MetricOption[];

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Get the commit message from the file
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip validation for merge commits, revert commits, and fixup commits
+if echo "$COMMIT_MSG" | grep -qE '^(Merge|Revert|fixup!|squash!)'; then
+  exit 0
+fi
+
+# Skip validation if SKIP_COMMIT_MSG=1
+if [ "$SKIP_COMMIT_MSG" = "1" ]; then
+  echo "⏭️  Skipping commit message validation"
+  exit 0
+fi
+
+# Relaxed pattern - just needs a type or starts with common patterns
+PATTERN='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert|wip|update|add|remove|improve)(\(.+\))?[:\-\s]'
+
+if ! echo "$COMMIT_MSG" | grep -qiE "$PATTERN"; then
+  echo "💡 Consider using conventional commits format:"
+  echo "   feat: add new feature"
+  echo "   fix: resolve bug"
+  echo "   chore: update dependencies"
+  echo ""
+  echo "Your message: $COMMIT_MSG"
+  echo "Continuing anyway... (skip with SKIP_COMMIT_MSG=1)"
+fi
+
+echo "✅ Commit message accepted!"

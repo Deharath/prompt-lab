@@ -22,7 +22,7 @@ export interface QualitySummaryData {
   };
   metrics: {
     totalJobs: number;
-    avgScore: number;
+
     avgReadability: number;
     avgSentiment: number;
     successRate: number;

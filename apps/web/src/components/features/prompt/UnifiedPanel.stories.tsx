@@ -193,14 +193,14 @@ export const Interactive: Story = {
     isEmptyState: false,
     hasResults: false,
     metrics: undefined,
-    onTemplateChange: (value) => console.log('Template changed:', value),
-    onInputDataChange: (value) => console.log('Input data changed:', value),
-    onStartWithExample: () => console.log('Start with example clicked'),
+    onTemplateChange: () => {},
+    onInputDataChange: () => {},
+    onStartWithExample: () => {},
   },
   parameters: {
     docs: {
       description: {
-        story: 'Interactive panel with console logging for all callbacks.',
+        story: 'Interactive panel example with callback handlers.',
       },
     },
   },

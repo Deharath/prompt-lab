@@ -5,8 +5,6 @@
     "lib": ["ESNext"]
   },
   "include": ["src"],
-  "references": [
-    { "path": "../../packages/evaluation-engine" }
-  ],
+  "references": [{ "path": "../../packages/evaluation-engine" }],
   "exclude": ["dist", "node_modules"]
 }

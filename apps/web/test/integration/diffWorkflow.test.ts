@@ -33,7 +33,6 @@ describe('Diff Workflow Integration', () => {
       model: 'gpt-4o-mini',
       createdAt: new Date('2024-01-01T10:00:00Z'),
       costUsd: 0.01,
-      avgScore: 75.0,
       resultSnippet: 'Hello World!',
     };
 
@@ -44,7 +43,6 @@ describe('Diff Workflow Integration', () => {
       model: 'gpt-4o',
       createdAt: new Date('2024-01-01T11:00:00Z'),
       costUsd: 0.02,
-      avgScore: 85.5,
       resultSnippet: 'Greetings World!',
     };
 
@@ -189,7 +187,6 @@ describe('Diff Workflow Integration', () => {
       model: 'gpt-4o-mini',
       createdAt: new Date('2024-01-01T10:00:00Z'),
       costUsd: 0.01,
-      avgScore: 85.0,
       resultSnippet: 'Hello World!',
     };
 
@@ -249,7 +246,6 @@ describe('Diff Workflow Integration', () => {
       model: 'gpt-3.5-turbo',
       createdAt: new Date('2024-01-01T10:00:00Z'),
       costUsd: 0.005,
-      avgScore: 70.0,
       resultSnippet: 'Hi!',
     };
 
@@ -260,7 +256,6 @@ describe('Diff Workflow Integration', () => {
       model: 'gpt-4',
       createdAt: new Date('2024-01-01T11:00:00Z'),
       costUsd: 0.03,
-      avgScore: 90.0,
       resultSnippet: 'This is a much longer response...',
     };
 
