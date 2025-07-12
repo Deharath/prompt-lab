@@ -176,17 +176,23 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
             // Poll for job completion with exponential backoff
             let attempts = 0;
             let final;
-            
-            while (attempts < 10) { // Max 10 attempts (~3 seconds total)
-              await new Promise(resolve => setTimeout(resolve, Math.min(100 * Math.pow(1.5, attempts), 500)));
+
+            while (attempts < 10) {
+              // Max 10 attempts (~3 seconds total)
+              await new Promise((resolve) =>
+                setTimeout(
+                  resolve,
+                  Math.min(100 * Math.pow(1.5, attempts), 500),
+                ),
+              );
               final = await ApiClient.fetchJob(job.id);
-              
+
               if (final.status === 'completed' || final.status === 'failed') {
                 break;
               }
               attempts++;
             }
-            
+
             // Only set metrics if we haven't received them via the metrics event
             if (!metricsReceived && final) {
               finish((final.metrics as Record<string, unknown>) || {});

@@ -26,11 +26,7 @@ const DashboardPage = () => {
   const { isDarkMode } = useDarkModeStore();
 
   // Use TanStack Query for auto-refresh dashboard data
-  const {
-    data,
-    isLoading,
-    error,
-  } = useQuery<DashboardStats>({
+  const { data, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['dashboard', days],
     queryFn: () => ApiClient.fetchDashboardStats(days),
     staleTime: 1000 * 10, // 10 seconds
@@ -81,7 +77,15 @@ const DashboardPage = () => {
 
           {/* Loading/Error States */}
           {isLoading && <LoadingSpinner data-testid="loading-spinner" />}
-          {error && <ErrorMessage message={error instanceof Error ? error.message : 'Failed to load dashboard'} />}
+          {error && (
+            <ErrorMessage
+              message={
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to load dashboard'
+              }
+            />
+          )}
 
           {/* Main Dashboard Content */}
           {data && !isLoading && !error && (
@@ -398,7 +402,10 @@ const DashboardPage = () => {
                             }}
                             formatter={(value: number, name: string) => {
                               if (name === 'Cost per Token') {
-                                return [`$${(value * 1000).toFixed(4)}/K tokens`, name];
+                                return [
+                                  `$${(value * 1000).toFixed(4)}/K tokens`,
+                                  name,
+                                ];
                               }
                               if (name === 'Response Time') {
                                 return [`${value.toFixed(0)}ms`, name];
@@ -407,7 +414,9 @@ const DashboardPage = () => {
                             }}
                             labelFormatter={(label, payload) => {
                               const data = payload?.[0]?.payload;
-                              return data ? `${data.model} (${data.totalJobs} jobs)` : label;
+                              return data
+                                ? `${data.model} (${data.totalJobs} jobs)`
+                                : label;
                             }}
                           />
                           <Scatter

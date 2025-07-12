@@ -9,7 +9,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), wasm(), topLevelAwait()],
   resolve: {
     alias: {
-      '@prompt-lab/shared-types': resolve(__dirname, '../../packages/shared-types/src'),
+      '@prompt-lab/shared-types': resolve(
+        __dirname,
+        '../../packages/shared-types/src',
+      ),
     },
   },
   server: {
@@ -19,7 +22,10 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err, req, res) => {
-            console.warn('Proxy error (API server may not be ready):', err.message);
+            console.warn(
+              'Proxy error (API server may not be ready):',
+              err.message,
+            );
           });
         },
       },
@@ -28,7 +34,10 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err, req, res) => {
-            console.warn('Proxy error (API server may not be ready):', err.message);
+            console.warn(
+              'Proxy error (API server may not be ready):',
+              err.message,
+            );
           });
         },
       },
@@ -37,7 +46,10 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err, req, res) => {
-            console.warn('Proxy error (API server may not be ready):', err.message);
+            console.warn(
+              'Proxy error (API server may not be ready):',
+              err.message,
+            );
           });
         },
       },
@@ -47,7 +59,10 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err, req, res) => {
-            console.warn('Proxy error (API server may not be ready):', err.message);
+            console.warn(
+              'Proxy error (API server may not be ready):',
+              err.message,
+            );
           });
         },
       },
