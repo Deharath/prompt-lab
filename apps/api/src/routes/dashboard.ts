@@ -85,7 +85,8 @@ dashboardRouter.get(
       let scoreHistoryStmt,
         costByModelStmt,
         tokensByModelStmt,
-        estimatedCostByModelStmt;
+        estimatedCostByModelStmt,
+        modelEfficiencyStmt;
       try {
         scoreHistoryStmt = sqlite.prepare(`
           SELECT 
@@ -133,6 +134,29 @@ dashboardRouter.get(
           GROUP BY model
           ORDER BY model
         `);
+
+        modelEfficiencyStmt = sqlite.prepare(`
+          SELECT 
+            model,
+            AVG(
+              CASE 
+                WHEN json_extract(metrics, '$.response_time_ms') IS NOT NULL 
+                THEN json_extract(metrics, '$.response_time_ms')
+                ELSE NULL
+              END
+            ) as avgResponseTime,
+            CASE 
+              WHEN SUM(COALESCE(tokens_used, 0)) > 0 
+              THEN SUM(COALESCE(cost_usd, 0)) / SUM(COALESCE(tokens_used, 0))
+              ELSE 0
+            END as costPerToken,
+            COUNT(*) as totalJobs
+          FROM jobs 
+          WHERE created_at >= ? AND status = 'completed'
+          GROUP BY model
+          HAVING COUNT(*) > 0
+          ORDER BY model
+        `);
       } catch (prepareError) {
         throw new Error(
           `Failed to prepare database statements: ${prepareError instanceof Error ? prepareError.message : 'Unknown error'}`,
@@ -143,13 +167,15 @@ dashboardRouter.get(
       let scoreHistoryQuery,
         costByModelQuery,
         tokensByModelQuery,
-        estimatedCostByModelQuery;
+        estimatedCostByModelQuery,
+        modelEfficiencyQuery;
       try {
         scoreHistoryQuery = scoreHistoryStmt.all(dateThresholdUnix);
         costByModelQuery = costByModelStmt.all(dateThresholdUnix);
         tokensByModelQuery = tokensByModelStmt.all(dateThresholdUnix);
         estimatedCostByModelQuery =
           estimatedCostByModelStmt.all(dateThresholdUnix);
+        modelEfficiencyQuery = modelEfficiencyStmt.all(dateThresholdUnix);
       } catch (queryError) {
         throw new Error(
           `Failed to execute dashboard queries: ${queryError instanceof Error ? queryError.message : 'Unknown error'}`,
@@ -238,11 +264,42 @@ dashboardRouter.get(
         },
       );
 
+      const modelEfficiency = modelEfficiencyQuery.map((row: unknown) => {
+        if (
+          typeof row === 'object' &&
+          row !== null &&
+          'model' in row &&
+          'avgResponseTime' in row &&
+          'costPerToken' in row &&
+          'totalJobs' in row
+        ) {
+          return {
+            model: (row as { model: string }).model,
+            avgResponseTime:
+              typeof (row as { avgResponseTime: unknown }).avgResponseTime ===
+              'number'
+                ? (row as { avgResponseTime: number }).avgResponseTime
+                : 0,
+            costPerToken:
+              typeof (row as { costPerToken: unknown }).costPerToken ===
+              'number'
+                ? (row as { costPerToken: number }).costPerToken
+                : 0,
+            totalJobs:
+              typeof (row as { totalJobs: unknown }).totalJobs === 'number'
+                ? (row as { totalJobs: number }).totalJobs
+                : 0,
+          };
+        }
+        return { model: '', avgResponseTime: 0, costPerToken: 0, totalJobs: 0 };
+      });
+
       res.json({
         scoreHistory,
         costByModel,
         tokensByModel,
         estimatedCostByModel,
+        modelEfficiency,
       });
     } catch (error) {
       next(error);

@@ -9,6 +9,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  ScatterChart,
+  Scatter,
 } from 'recharts';
 import { useDashboardStore } from '../store/dashboardStore.js';
 import Card from '../components/ui/Card.js';
@@ -118,7 +120,7 @@ const DashboardPage = () => {
               </div>
 
               {/* Analytics Charts - Improved Space Utilization */}
-              <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-2">
+              <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
                 {/* Evaluation Activity Trend */}
                 <Card
                   title="Evaluation Activity"
@@ -306,6 +308,91 @@ const DashboardPage = () => {
                           <span className="text-3xl">🪙</span>
                           <p className="mt-2 text-sm">
                             No token data available
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Model Efficiency Analysis - Response Time vs Cost */}
+                <Card
+                  title="Model Efficiency"
+                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                >
+                  <div className="h-64">
+                    {data.modelEfficiency && data.modelEfficiency.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ScatterChart
+                          data={data.modelEfficiency}
+                          margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className="opacity-30"
+                          />
+                          <XAxis
+                            type="number"
+                            dataKey="avgResponseTime"
+                            name="Response Time"
+                            unit="ms"
+                            className="text-gray-600 dark:text-gray-400"
+                            fontSize={11}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis
+                            type="number"
+                            dataKey="costPerToken"
+                            name="Cost per Token"
+                            unit="$"
+                            className="text-gray-600 dark:text-gray-400"
+                            fontSize={11}
+                            tickFormatter={(value) =>
+                              typeof value === 'number'
+                                ? `$${(value * 1000).toFixed(3)}`
+                                : value
+                            }
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: isDarkMode
+                                ? 'rgba(31, 41, 55, 0.95)'
+                                : 'rgba(255, 255, 255, 0.95)',
+                              border: isDarkMode
+                                ? '1px solid #4b5563'
+                                : '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              color: isDarkMode ? '#f9fafb' : '#111827',
+                            }}
+                            formatter={(value: number, name: string) => {
+                              if (name === 'Cost per Token') {
+                                return [`$${(value * 1000).toFixed(4)}/K tokens`, name];
+                              }
+                              if (name === 'Response Time') {
+                                return [`${value.toFixed(0)}ms`, name];
+                              }
+                              return [value, name];
+                            }}
+                            labelFormatter={(label, payload) => {
+                              const data = payload?.[0]?.payload;
+                              return data ? `${data.model} (${data.totalJobs} jobs)` : label;
+                            }}
+                          />
+                          <Scatter
+                            dataKey="costPerToken"
+                            fill="#8b5cf6"
+                          />
+                        </ScatterChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
+                        <div className="text-center">
+                          <span className="text-3xl">⚡</span>
+                          <p className="mt-2 text-sm">
+                            No efficiency data available
                           </p>
                         </div>
                       </div>

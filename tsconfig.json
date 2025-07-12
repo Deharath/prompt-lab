@@ -22,6 +22,7 @@
   "references": [
     { "path": "./apps/api" },
     { "path": "./apps/web" },
-    { "path": "./packages/evaluation-engine" }
+    { "path": "./packages/evaluation-engine" },
+    { "path": "./packages/shared-types" }
   ]
 }
