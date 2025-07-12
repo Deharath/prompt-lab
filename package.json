@@ -11,7 +11,7 @@
     "dev:api": "pnpm --filter @prompt-lab/app-api run dev",
     "dev:web": "pnpm --filter web run dev",
     "dev": "pnpm dev:api & pnpm dev:web",
-    "tsc": "pnpm -r tsc --noEmit --pretty false",
+    "tsc": "pnpm --filter @prompt-lab/shared-types build && pnpm -r tsc --noEmit --pretty false",
     "build": "pnpm -r --sort build",
     "test": "vitest run --coverage --config vitest.config.mts --reporter=dot",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts --reporter=dot",
