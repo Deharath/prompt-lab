@@ -28,7 +28,6 @@ export interface Job {
   metrics?: Record<string, number>;
   costUsd?: number | null;
   tokensUsed?: number;
-  avgScore?: number | null;
   resultSnippet?: string | null;
   errorMessage?: string | null;
 }
@@ -174,12 +173,10 @@ export interface DashboardStats {
   totalJobs: number;
   successRate: number;
   averageCost: number;
-  averageScore: number;
   totalCost: number;
   jobsToday: number;
   scoreHistory: Array<{
     date: string;
-    avgReadability: number;
     totalJobs: number;
   }>;
   costByModel: Array<{

@@ -70,7 +70,7 @@ export interface JobSummary {
   provider: string;
   model: string;
   costUsd: number | null;
-  avgScore: number | null;
+
   resultSnippet: string | null; // First 100 chars of result for identification
 }
 

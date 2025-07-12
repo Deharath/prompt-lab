@@ -138,21 +138,13 @@ const JobListItem: React.FC<JobListItemProps> = ({
             <span className="text-muted-foreground">{timestamp}</span>
           </div>
 
-          {(job.costUsd || job.avgScore) && (
+          {job.costUsd && (
             <div className="flex items-center space-x-4 text-xs">
               {job.costUsd && (
                 <div className="flex items-center space-x-1">
                   <span className="text-muted-foreground/70">Cost:</span>
                   <span className="text-foreground/80 font-medium">
                     ${job.costUsd.toFixed(4)}
-                  </span>
-                </div>
-              )}
-              {job.avgScore && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-muted-foreground/70">Score:</span>
-                  <span className="text-foreground/80 font-medium">
-                    {job.avgScore.toFixed(1)}
                   </span>
                 </div>
               )}

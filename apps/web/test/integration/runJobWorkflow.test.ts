@@ -94,7 +94,6 @@ describe('Run Job Workflow Integration', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     vi.mocked(ApiClient.createJob).mockResolvedValue(mockJobSummary);
@@ -245,7 +244,6 @@ describe('Run Job Workflow Integration', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     vi.mocked(ApiClient.createJob).mockResolvedValue(mockJobSummary2);
@@ -307,7 +305,6 @@ describe('Run Job Workflow Integration', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     vi.mocked(ApiClient.createJob).mockResolvedValue(mockJobSummary3);

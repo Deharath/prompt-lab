@@ -172,63 +172,6 @@ const DashboardPage = () => {
                   </div>
                 </Card>
 
-                {/* Content Quality Trend */}
-                <Card
-                  title="Content Quality Trend"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
-                >
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.scoreHistory}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          className="opacity-30"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          className="text-gray-600 dark:text-gray-400"
-                          fontSize={11}
-                        />
-                        <YAxis
-                          className="text-gray-600 dark:text-gray-400"
-                          fontSize={11}
-                          domain={[0, 100]}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: isDarkMode
-                              ? 'rgba(31, 41, 55, 0.95)'
-                              : 'rgba(255, 255, 255, 0.95)',
-                            border: isDarkMode
-                              ? '1px solid #4b5563'
-                              : '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            color: isDarkMode ? '#f9fafb' : '#111827',
-                          }}
-                          formatter={(value: number) => [
-                            value.toFixed(1),
-                            'Quality Score',
-                          ]}
-                          labelFormatter={(label: string) => label}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="avgReadability"
-                          stroke="#10b981"
-                          strokeWidth={2}
-                          dot={{ fill: '#10b981', strokeWidth: 1, r: 3 }}
-                          activeDot={{
-                            r: 5,
-                            stroke: '#10b981',
-                            strokeWidth: 2,
-                          }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-
                 {/* Cost by Model - Vertical Bar Chart */}
                 <Card
                   title="Cost by Model"
