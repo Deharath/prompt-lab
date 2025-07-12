@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -12,24 +12,53 @@ import {
   ScatterChart,
   Scatter,
 } from 'recharts';
-import { useDashboardStore } from '../store/dashboardStore.js';
+import { useQuery } from '@tanstack/react-query';
+import { ApiClient } from '../api.js';
 import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/features/dashboard/TimeRangeSelector.js';
 import { LoadingSpinner } from '../components/ui/LoadingState.js';
 import ErrorMessage from '../components/shared/ErrorMessage.js';
 import { useDarkModeStore } from '../store/darkModeStore.js';
+import type { DashboardStats } from '../types/dashboard.js';
 
 const DashboardPage = () => {
-  const { isLoading, error, data, days, fetchDashboardStats } =
-    useDashboardStore();
+  const [days, setDays] = useState(30);
   const { isDarkMode } = useDarkModeStore();
 
-  useEffect(() => {
-    fetchDashboardStats(30);
-  }, [fetchDashboardStats]);
+  // Use TanStack Query for auto-refresh dashboard data
+  const {
+    data,
+    isLoading,
+    error,
+  } = useQuery<DashboardStats>({
+    queryKey: ['dashboard', days],
+    queryFn: () => ApiClient.fetchDashboardStats(days),
+    staleTime: 1000 * 10, // 10 seconds
+    refetchInterval: 1000 * 30, // Refetch every 30 seconds
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+
+  const CustomScatterLabel = ({ payload, position, viewBox }: any) => {
+    if (!payload || !payload.model) return null;
+    const { x, y } = position;
+    const modelName = payload.model.split('-').slice(-1)[0]; // Show just the model variant
+    return (
+      <text
+        x={x}
+        y={y - 8}
+        textAnchor="middle"
+        fontSize={9}
+        fill={isDarkMode ? '#f9fafb' : '#111827'}
+        fontWeight="500"
+      >
+        {modelName}
+      </text>
+    );
+  };
 
   const handleDaysChange = (newDays: number) => {
-    fetchDashboardStats(newDays);
+    setDays(newDays);
   };
 
   return (
@@ -52,7 +81,7 @@ const DashboardPage = () => {
 
           {/* Loading/Error States */}
           {isLoading && <LoadingSpinner data-testid="loading-spinner" />}
-          {error && <ErrorMessage message={error} />}
+          {error && <ErrorMessage message={error instanceof Error ? error.message : 'Failed to load dashboard'} />}
 
           {/* Main Dashboard Content */}
           {data && !isLoading && !error && (
@@ -119,8 +148,8 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {/* Analytics Charts - Improved Space Utilization */}
-              <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              {/* Analytics Charts - 2x2 Grid Layout */}
+              <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-2">
                 {/* Evaluation Activity Trend */}
                 <Card
                   title="Evaluation Activity"
@@ -384,6 +413,7 @@ const DashboardPage = () => {
                           <Scatter
                             dataKey="costPerToken"
                             fill="#8b5cf6"
+                            label={<CustomScatterLabel />}
                           />
                         </ScatterChart>
                       </ResponsiveContainer>
