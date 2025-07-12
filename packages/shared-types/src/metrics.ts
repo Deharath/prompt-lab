@@ -5,6 +5,23 @@
 // Core metric input structure
 import type { MetricDisplayConfig } from './results.js';
 
+// API response interfaces
+export interface ApiResponse<T = unknown> {
+  data?: T;
+  error?: string;
+  success: boolean;
+  timestamp: string;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 export interface MetricInput {
   id: string;
   input?: string; // For keywords and other parameterized metrics

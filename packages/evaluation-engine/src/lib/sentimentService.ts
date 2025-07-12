@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { log } from '../utils/logger.js';
 
 export interface SentimentScore {
   compound: number; // Overall sentiment score -1 to 1
@@ -97,24 +98,24 @@ async function clearModelCache(): Promise<void> {
 
     try {
       await fs.access(modelCacheDir);
-      console.log(`🔍 Found corrupted cache at: ${modelCacheDir}`);
+      log.debug('Found corrupted cache', { path: modelCacheDir });
 
       // If it exists, remove it
       await fs.rm(modelCacheDir, { recursive: true, force: true });
-      console.log(`✅ Successfully cleared cache at: ${modelCacheDir}`);
+      log.info('Successfully cleared cache', { path: modelCacheDir });
       cacheClearedCount++;
     } catch (error) {
       // Directory doesn't exist, which is fine - not all paths will have cache
-      console.log(`ℹ️ No cache found at: ${modelCacheDir}`);
+      log.debug('No cache found', { path: modelCacheDir });
     }
   }
 
   if (cacheClearedCount === 0) {
-    console.log('⚠️ No corrupted cache directories found to clear');
+    log.debug('No corrupted cache directories found to clear');
   } else {
-    console.log(
-      `✅ Successfully cleared ${cacheClearedCount} corrupted cache location(s)`,
-    );
+    log.info('Successfully cleared corrupted cache locations', {
+      count: cacheClearedCount,
+    });
   }
 }
 
@@ -157,7 +158,7 @@ async function analyzeTransformersSentiment(
       process.env.DISABLE_SENTIMENT_ANALYSIS === 'true' ||
       process.env.ENABLE_ML_MODELS === 'false'
     ) {
-      console.log('ℹ️ Sentiment analysis disabled due to resource constraints');
+      log.info('Sentiment analysis disabled due to resource constraints');
       return {
         compound: 0,
         positive: 0,
@@ -187,9 +188,10 @@ async function analyzeTransformersSentiment(
           isCorruptedCacheError(modelError) &&
           modelLoadAttempts <= MAX_MODEL_LOAD_ATTEMPTS
         ) {
-          console.warn(
-            `⚠️ Model loading failed (attempt ${modelLoadAttempts}/${MAX_MODEL_LOAD_ATTEMPTS}), attempting cache clear...`,
-          );
+          log.warn('Model loading failed, attempting cache clear', {
+            attempt: modelLoadAttempts,
+            maxAttempts: MAX_MODEL_LOAD_ATTEMPTS,
+          });
 
           // Clear the corrupted cache
           await clearModelCache();
@@ -200,11 +202,14 @@ async function analyzeTransformersSentiment(
           // Retry loading the model
           try {
             transformers = await pipeline('sentiment-analysis', MODEL_NAME);
-            console.log('✅ Successfully loaded model after cache clear');
+            log.info('Successfully loaded model after cache clear');
           } catch (retryError) {
-            console.error(
-              `❌ Model loading failed again after cache clear:`,
-              retryError,
+            log.error(
+              'Model loading failed again after cache clear',
+              {},
+              retryError instanceof Error
+                ? retryError
+                : new Error(String(retryError)),
             );
             throw retryError;
           }
@@ -286,7 +291,11 @@ async function analyzeTransformersSentiment(
       mode: 'accurate',
     };
   } catch (error) {
-    console.error('Sentiment analysis error:', error);
+    log.error(
+      'Sentiment analysis error',
+      {},
+      error instanceof Error ? error : new Error(String(error)),
+    );
 
     // If this is a corrupted cache error and we haven't exceeded max attempts,
     // reset transformers to null so it can be retried on next call
@@ -295,7 +304,7 @@ async function analyzeTransformersSentiment(
       modelLoadAttempts < MAX_MODEL_LOAD_ATTEMPTS
     ) {
       transformers = null;
-      console.log('🔄 Resetting transformers cache for retry on next request');
+      log.debug('Resetting transformers cache for retry on next request');
     }
 
     // Return neutral sentiment as fallback (no inferior methods)
@@ -373,7 +382,11 @@ export async function sentimentHandler(req: Request, res: Response) {
       data: sentiment,
     });
   } catch (error) {
-    console.error('Sentiment analysis error:', error);
+    log.error(
+      'Sentiment analysis error',
+      {},
+      error instanceof Error ? error : new Error(String(error)),
+    );
     res.status(500).json({
       error: 'Internal server error during sentiment analysis',
       code: 500,
@@ -424,9 +437,13 @@ export async function clearTransformersCache(): Promise<void> {
     await clearModelCache();
     transformers = null;
     modelLoadAttempts = 0;
-    console.log('✅ Successfully cleared transformers cache and reset state');
+    log.info('Successfully cleared transformers cache and reset state');
   } catch (error) {
-    console.error('❌ Failed to clear transformers cache:', error);
+    log.error(
+      'Failed to clear transformers cache',
+      {},
+      error instanceof Error ? error : new Error(String(error)),
+    );
     throw error;
   }
 }

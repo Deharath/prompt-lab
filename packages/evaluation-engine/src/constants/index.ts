@@ -56,28 +56,6 @@ export const PROVIDERS = {
   },
 } as const;
 
-// HTTP status codes (for better readability)
-export const HTTP_STATUS = {
-  OK: 200,
-  CREATED: 201,
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  TOO_MANY_REQUESTS: 429,
-  INTERNAL_SERVER_ERROR: 500,
-  SERVICE_UNAVAILABLE: 503,
-} as const;
-
-// Job status flow
-export const JOB_STATUS = {
-  PENDING: 'pending',
-  RUNNING: 'running',
-  EVALUATING: 'evaluating',
-  COMPLETED: 'completed',
-  FAILED: 'failed',
-} as const;
-
 // Allowed dataset IDs for security
 export const ALLOWED_DATASETS = ['news-summaries'] as const;
 
@@ -86,15 +64,4 @@ export const ENVIRONMENTS = {
   DEVELOPMENT: 'development',
   TEST: 'test',
   PRODUCTION: 'production',
-} as const;
-
-// Log types for structured logging
-export const LOG_TYPES = {
-  REQUEST: 'request',
-  RESPONSE: 'response',
-  JOB_CREATED: 'job_created',
-  JOB_STARTED: 'job_started',
-  JOB_COMPLETED: 'job_completed',
-  JOB_FAILED: 'job_failed',
-  HEALTH_CHECK: 'health_check',
 } as const;
