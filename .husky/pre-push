@@ -1,1 +1,34 @@
-pnpm pre-push
+#!/bin/sh
+
+# Exit on any command failure
+set -e
+
+echo "🚀 Running pre-push checks..."
+
+# Get the current branch name
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Block direct pushes to main/master
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "❌ Direct pushes to $BRANCH are not allowed!"
+  echo "Please create a feature branch and submit a PR."
+  exit 1
+fi
+
+# Validate branch naming convention
+if ! echo "$BRANCH" | grep -qE '^(feature|fix|chore|docs|refactor|test)\/[a-z0-9-]+$'; then
+  echo "⚠️  Branch name '$BRANCH' doesn't follow convention:"
+  echo "   Expected: {feature|fix|chore|docs|refactor|test}/{description}"
+  echo "   Example: feature/user-authentication"
+  echo "   Continuing anyway..."
+fi
+
+# Run full quality check
+echo "🔍 Running full quality check..."
+pnpm quality:check
+
+# Security audit
+echo "🔒 Running security audit..."
+pnpm audit --audit-level high || echo "⚠️  Security audit found issues, please review"
+
+echo "✅ Pre-push checks passed!"

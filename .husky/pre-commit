@@ -1,1 +1,22 @@
+#!/bin/sh
+
+# Exit on any command failure
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged for formatting and linting
+echo "📝 Checking code formatting and linting..."
 npx lint-staged
+
+# Run type checking on staged TypeScript files
+echo "🔍 Type checking..."
+pnpm tsc
+
+# Run tests related to staged files (if any staged files exist)
+if git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' > /dev/null; then
+  echo "🧪 Running tests..."
+  pnpm test --run --passWithNoTests
+fi
+
+echo "✅ Pre-commit checks passed!"

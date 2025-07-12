@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Exit on any command failure
+set -e
+
+# Get the commit message from the file
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip validation for merge commits and revert commits
+if echo "$COMMIT_MSG" | grep -qE '^(Merge|Revert)'; then
+  exit 0
+fi
+
+# Conventional Commits pattern
+# Format: type(scope): description
+# Examples: feat: add user authentication
+#          fix(api): resolve memory leak
+#          docs: update README
+PATTERN='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,50}'
+
+if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Commit message must follow Conventional Commits format:"
+  echo "  type(scope): description"
+  echo ""
+  echo "Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+  echo "Scope: optional, e.g., (api), (ui), (auth)"
+  echo "Description: 1-50 characters, lowercase, no period"
+  echo ""
+  echo "Examples:"
+  echo "  feat: add user authentication"
+  echo "  fix(api): resolve memory leak in user service"
+  echo "  docs: update installation guide"
+  echo ""
+  echo "Your message: $COMMIT_MSG"
+  exit 1
+fi
+
+echo "✅ Commit message format is valid!"
