@@ -13,6 +13,7 @@ import {
   qualitySummaryRouter,
   initializeCache,
 } from '@prompt-lab/evaluation-engine';
+import sentimentRouter from './routes/sentiment.js';
 
 // Resolve repo root from this file location
 const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
@@ -67,6 +68,7 @@ app.get('/health', (_req, res) => {
 app.post('/jobs', jobsWriteRateLimit);
 app.use('/jobs', jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/sentiment', sentimentRouter);
 app.use('/api', qualitySummaryRouter);
 
 // Serve built web UI from /public when present (production only)

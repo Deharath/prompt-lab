@@ -1,12 +1,10 @@
 /**
- * Task 3 - Sentiment Service (Accurate Trinary Classification)
- * Uses Xenova Twitter RoBERTa via @huggingface/transformers for accurate positive/neutral/negative classification.
- * Includes robust cache management for handling corrupted model files.
+ * Sentiment Analysis Service - API Client
+ * Provides sentiment analysis by calling the server-side API endpoint
+ * Fallback mechanisms for production robustness.
  */
 
 import { Request, Response } from 'express';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { log } from '../utils/logger.js';
 
 export interface SentimentScore {
@@ -14,314 +12,63 @@ export interface SentimentScore {
   positive: number; // Positive sentiment confidence 0 to 1
   negative: number; // Negative sentiment confidence 0 to 1
   neutral: number; // Neutral sentiment confidence 0 to 1
-  label: 'positive' | 'negative' | 'neutral'; // Predicted sentiment class
-  confidence: number; // Confidence of the prediction 0 to 1
-  mode: 'accurate'; // Only accurate mode available
-  disabled?: boolean; // Whether sentiment analysis was disabled
-  disabledReason?: string; // Reason for disabling
-}
-
-export interface SentimentError {
-  error: string;
-  code: number;
-}
-
-const SENTIMENT_MODE = process.env.SENTIMENT_MODE || 'accurate';
-const MODEL_NAME = 'Xenova/twitter-roberta-base-sentiment-latest';
-
-// Dynamic imports to handle typing issues
-let transformers: any;
-let modelLoadAttempts = 0;
-const MAX_MODEL_LOAD_ATTEMPTS = 2;
-
-/**
- * Reset the transformers cache (for testing)
- */
-export function resetTransformersCache() {
-  transformers = null;
-  modelLoadAttempts = 0;
+  label: 'positive' | 'negative' | 'neutral';
+  confidence: number; // Confidence in the prediction 0 to 1
+  mode: 'accurate'; // Mode of analysis
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 /**
- * Clear corrupted model cache from all possible locations in monorepo
+ * Get the API base URL for sentiment analysis
  */
-async function clearModelCache(): Promise<void> {
-  const possibleCachePaths = [
-    // Root node_modules
-    path.join(
-      process.cwd(),
-      'node_modules',
-      '@huggingface',
-      'transformers',
-      '.cache',
-    ),
-    // Apps/api node_modules
-    path.join(
-      process.cwd(),
-      'apps',
-      'api',
-      'node_modules',
-      '@huggingface',
-      'transformers',
-      '.cache',
-    ),
-    // Apps/web node_modules
-    path.join(
-      process.cwd(),
-      'apps',
-      'web',
-      'node_modules',
-      '@huggingface',
-      'transformers',
-      '.cache',
-    ),
-    // Packages/evaluation-engine node_modules
-    path.join(
-      process.cwd(),
-      'packages',
-      'evaluation-engine',
-      'node_modules',
-      '@huggingface',
-      'transformers',
-      '.cache',
-    ),
-  ];
-
-  let cacheClearedCount = 0;
-
-  for (const cacheDir of possibleCachePaths) {
-    const modelCacheDir = path.join(
-      cacheDir,
-      'Xenova',
-      'twitter-roberta-base-sentiment-latest',
-    );
-
-    try {
-      await fs.access(modelCacheDir);
-      log.debug('Found corrupted cache', { path: modelCacheDir });
-
-      // If it exists, remove it
-      await fs.rm(modelCacheDir, { recursive: true, force: true });
-      log.info('Successfully cleared cache', { path: modelCacheDir });
-      cacheClearedCount++;
-    } catch (error) {
-      // Directory doesn't exist, which is fine - not all paths will have cache
-      log.debug('No cache found', { path: modelCacheDir });
-    }
-  }
-
-  if (cacheClearedCount === 0) {
-    log.debug('No corrupted cache directories found to clear');
-  } else {
-    log.info('Successfully cleared corrupted cache locations', {
-      count: cacheClearedCount,
-    });
-  }
+function getApiBaseUrl(): string {
+  // In production, this would be the actual API URL
+  // In development, use localhost
+  return process.env.API_BASE_URL || 'http://localhost:3000';
 }
 
 /**
- * Check if error indicates corrupted model cache
+ * Call the sentiment analysis API
  */
-function isCorruptedCacheError(error: any): boolean {
-  const errorMessage = error?.message || error?.toString() || '';
-  return (
-    errorMessage.includes('Protobuf parsing failed') ||
-    errorMessage.includes('model.onnx failed') ||
-    errorMessage.includes('corrupted') ||
-    errorMessage.includes('Invalid ONNX model')
-  );
-}
-
-/**
- * Accurate sentiment analysis using Xenova Twitter RoBERTa via @huggingface/transformers
- * Uses Xenova/twitter-roberta-base-sentiment-latest for positive/neutral/negative classification
- * Includes robust error handling for corrupted model cache
- */
-async function analyzeTransformersSentiment(
-  text: string,
-): Promise<SentimentScore> {
-  if (!text || text.trim().length === 0) {
-    return {
-      compound: 0,
-      positive: 0,
-      negative: 0,
-      neutral: 1,
-      label: 'neutral',
-      confidence: 1,
-      mode: 'accurate',
-    };
-  }
-
+async function callSentimentApi(text: string, detailed: boolean): Promise<SentimentScore> {
+  const apiUrl = `${getApiBaseUrl()}/api/sentiment`;
+  
   try {
-    // Check if ML models are disabled due to resource constraints
-    if (
-      process.env.DISABLE_SENTIMENT_ANALYSIS === 'true' ||
-      process.env.ENABLE_ML_MODELS === 'false'
-    ) {
-      log.info('Sentiment analysis disabled due to resource constraints');
-      return {
-        compound: 0,
-        positive: 0,
-        negative: 0,
-        neutral: 1,
-        label: 'neutral',
-        confidence: 1,
-        mode: 'accurate',
-        disabled: true,
-        disabledReason:
-          'Disabled due to memory constraints on production server',
-      };
+    // Use dynamic import to avoid bundling fetch polyfill unless needed
+    const { default: fetch } = await import('node-fetch');
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text, detailed }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API call failed with status ${response.status}`);
     }
 
-    // Lazy load transformers with CardiffNLP Twitter RoBERTa model
-    if (!transformers) {
-      const { pipeline } = await import('@huggingface/transformers');
-
-      try {
-        // Use the Xenova version of CardiffNLP Twitter RoBERTa model for 3-class sentiment
-        transformers = await pipeline('sentiment-analysis', MODEL_NAME);
-      } catch (modelError) {
-        modelLoadAttempts++;
-
-        // Check if this is a corrupted cache error
-        if (
-          isCorruptedCacheError(modelError) &&
-          modelLoadAttempts <= MAX_MODEL_LOAD_ATTEMPTS
-        ) {
-          log.warn('Model loading failed, attempting cache clear', {
-            attempt: modelLoadAttempts,
-            maxAttempts: MAX_MODEL_LOAD_ATTEMPTS,
-          });
-
-          // Clear the corrupted cache
-          await clearModelCache();
-
-          // Wait a moment before retrying
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          // Retry loading the model
-          try {
-            transformers = await pipeline('sentiment-analysis', MODEL_NAME);
-            log.info('Successfully loaded model after cache clear');
-          } catch (retryError) {
-            log.error(
-              'Model loading failed again after cache clear',
-              {},
-              retryError instanceof Error
-                ? retryError
-                : new Error(String(retryError)),
-            );
-            throw retryError;
-          }
-        } else {
-          // Either not a cache error or exceeded max attempts
-          throw modelError;
-        }
-      }
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'API call failed');
     }
 
-    // Get results and try to get all scores
-    const results = await transformers(text, { return_all_scores: true });
-
-    // Check if we got all scores or just the top one
-    let positive = 0;
-    let negative = 0;
-    let neutral = 0;
-
-    if (Array.isArray(results) && results.length > 1) {
-      // We got all scores
-      results.forEach((result: any) => {
-        if (result.label === 'LABEL_2' || result.label === 'positive') {
-          positive = result.score;
-        } else if (result.label === 'LABEL_0' || result.label === 'negative') {
-          negative = result.score;
-        } else if (result.label === 'LABEL_1' || result.label === 'neutral') {
-          neutral = result.score;
-        }
-      });
-    } else {
-      // We only got the top prediction, need to handle differently
-      const result = Array.isArray(results) ? results[0] : results;
-      const confidence = result.score;
-
-      // Map the single result to appropriate class
-      if (result.label === 'LABEL_2' || result.label === 'positive') {
-        positive = confidence;
-        // For single prediction, we can't know the exact other scores
-        // but we can estimate them roughly
-        negative = (1 - confidence) * 0.3; // rough estimate
-        neutral = (1 - confidence) * 0.7; // assume most of remainder is neutral
-      } else if (result.label === 'LABEL_0' || result.label === 'negative') {
-        negative = confidence;
-        positive = (1 - confidence) * 0.3;
-        neutral = (1 - confidence) * 0.7;
-      } else {
-        neutral = confidence;
-        positive = (1 - confidence) * 0.4;
-        negative = (1 - confidence) * 0.6;
-      }
-    }
-
-    // Determine the correct label based on highest confidence
-    let label: 'positive' | 'negative' | 'neutral';
-    let confidence: number;
-    let compound: number;
-
-    if (positive >= negative && positive >= neutral) {
-      label = 'positive';
-      confidence = positive;
-      compound = positive;
-    } else if (negative >= positive && negative >= neutral) {
-      label = 'negative';
-      confidence = negative;
-      compound = -negative;
-    } else {
-      label = 'neutral';
-      confidence = neutral;
-      compound = 0;
-    }
-
-    return {
-      compound,
-      positive,
-      negative,
-      neutral,
-      label,
-      confidence,
-      mode: 'accurate',
-    };
+    return result.data;
   } catch (error) {
     log.error(
-      'Sentiment analysis error',
-      {},
+      'Failed to call sentiment API',
+      { apiUrl, textLength: text.length },
       error instanceof Error ? error : new Error(String(error)),
     );
-
-    // If this is a corrupted cache error and we haven't exceeded max attempts,
-    // reset transformers to null so it can be retried on next call
-    if (
-      isCorruptedCacheError(error) &&
-      modelLoadAttempts < MAX_MODEL_LOAD_ATTEMPTS
-    ) {
-      transformers = null;
-      log.debug('Resetting transformers cache for retry on next request');
-    }
-
-    // Return neutral sentiment as fallback (no inferior methods)
-    return {
-      compound: 0,
-      positive: 0,
-      negative: 0,
-      neutral: 1,
-      label: 'neutral',
-      confidence: 1,
-      mode: 'accurate',
-    };
+    throw error;
   }
 }
 
 /**
- * Main sentiment analysis function
+ * Main sentiment analysis function with API fallback
  */
 export async function analyzeSentiment(
   text: string,
@@ -357,8 +104,33 @@ export async function analyzeSentiment(
     return detailed ? neutralScore : neutralScore.compound;
   }
 
-  const result = await analyzeTransformersSentiment(text);
-  return detailed ? result : result.compound;
+  try {
+    // Try to call the API first
+    const result = await callSentimentApi(text, detailed);
+    return detailed ? result : result.compound;
+  } catch (error) {
+    log.warn(
+      'Sentiment API call failed, falling back to neutral sentiment',
+      { 
+        textLength: text.length,
+        error: error instanceof Error ? error.message : String(error) 
+      },
+    );
+
+    // Return neutral sentiment as fallback
+    const neutralScore: SentimentScore = {
+      compound: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 1,
+      label: 'neutral',
+      confidence: 1,
+      mode: 'accurate',
+      disabled: true,
+      disabledReason: 'API unavailable, using fallback',
+    };
+    return detailed ? neutralScore : neutralScore.compound;
+  }
 }
 
 /**
@@ -371,7 +143,7 @@ export async function sentimentHandler(req: Request, res: Response) {
     if (!text || typeof text !== 'string') {
       return res.status(400).json({
         error: 'Text field is required and must be a string',
-        code: 400,
+        code: 'INVALID_INPUT',
       });
     }
 
@@ -389,7 +161,7 @@ export async function sentimentHandler(req: Request, res: Response) {
     );
     res.status(500).json({
       error: 'Internal server error during sentiment analysis',
-      code: 500,
+      code: 'SENTIMENT_ANALYSIS_FAILED',
     });
   }
 }
@@ -407,21 +179,21 @@ export function validateSentimentRequest(
   if (!text) {
     return res.status(400).json({
       error: 'Missing required field: text',
-      code: 400,
+      code: 'MISSING_TEXT',
     });
   }
 
   if (typeof text !== 'string') {
     return res.status(400).json({
       error: 'Text field must be a string',
-      code: 400,
+      code: 'INVALID_TEXT_TYPE',
     });
   }
 
   if (text.length > 10000) {
     return res.status(413).json({
       error: 'Text too long. Maximum length is 10,000 characters',
-      code: 413,
+      code: 'TEXT_TOO_LONG',
     });
   }
 
@@ -429,21 +201,15 @@ export function validateSentimentRequest(
 }
 
 /**
- * Manually clear the Hugging Face transformers cache
- * Useful for development and troubleshooting
+ * Clear transformers cache (now a no-op since we use API)
  */
 export async function clearTransformersCache(): Promise<void> {
-  try {
-    await clearModelCache();
-    transformers = null;
-    modelLoadAttempts = 0;
-    log.info('Successfully cleared transformers cache and reset state');
-  } catch (error) {
-    log.error(
-      'Failed to clear transformers cache',
-      {},
-      error instanceof Error ? error : new Error(String(error)),
-    );
-    throw error;
-  }
+  log.info('clearTransformersCache called - no-op in API mode');
+}
+
+/**
+ * Reset transformers cache (for testing - now a no-op)
+ */
+export function resetTransformersCache(): void {
+  log.info('resetTransformersCache called - no-op in API mode');
 }
