@@ -185,9 +185,10 @@ describe('Run Job Workflow Integration', () => {
       expect.any(Function),
     );
 
-    // Wait for simulated streaming to complete
+    // Wait for simulated streaming to complete and polling to finish
     await act(async () => {
-      vi.advanceTimersByTime(20);
+      vi.advanceTimersByTime(50); // Initial streaming completion
+      vi.advanceTimersByTime(1000); // Allow polling attempts with exponential backoff
     });
 
     // Step 6: Verify job completion

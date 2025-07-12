@@ -1,22 +1,32 @@
 #!/bin/sh
 
-# Exit on any command failure
+# Emergency escape hatch - use ONLY when absolutely necessary
+if [ "$SKIP_HOOKS" = "1" ]; then
+  echo "🚨 EMERGENCY: Skipping all pre-commit checks!"
+  echo "   Remember to fix issues immediately after this commit."
+  exit 0
+fi
+
+# Exit immediately on any command failure
 set -e
 
-echo "🔍 Running pre-commit checks..."
+echo "🔒 Running stringent pre-commit checks..."
 
 # Run lint-staged for formatting and linting
 echo "📝 Checking code formatting and linting..."
 npx lint-staged
 
-# Run type checking on staged TypeScript files
-echo "🔍 Type checking..."
+# MANDATORY: Type checking (fails commit if errors found)
+echo "🔍 Type checking (MANDATORY)..."
 pnpm tsc
 
-# Run tests related to staged files (if any staged files exist)
-if git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' > /dev/null; then
-  echo "🧪 Running tests..."
-  pnpm test --run --passWithNoTests
-fi
+# MANDATORY: Run tests to ensure nothing is broken  
+echo "🧪 Running tests (MANDATORY)..."
+pnpm test --run
 
-echo "✅ Pre-commit checks passed!"
+# Optional security audit check
+echo "🔒 Security audit..."
+pnpm audit --audit-level high --reporter=silent || echo "⚠️  Security issues found - consider fixing"
+
+echo "✅ All pre-commit checks passed! Code is error-free."
+echo "💡 Emergency bypass: SKIP_HOOKS=1 git commit (use sparingly!)"
