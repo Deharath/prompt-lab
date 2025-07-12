@@ -14,8 +14,21 @@ import {
 } from '../constants/index.js';
 
 // Load environment variables from root .env file
-const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
-dotenv.config({ path: join(rootDir, '.env') });
+let rootDir: string;
+try {
+  if (typeof import.meta?.url === 'string') {
+    rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
+  } else {
+    // Fallback for test environments
+    rootDir = join(__dirname, '../../../..');
+  }
+  dotenv.config({ path: join(rootDir, '.env') });
+} catch (error) {
+  // In test environments, we might not need .env loading
+  if (process.env.NODE_ENV !== 'test') {
+    console.warn('Failed to load .env file:', error);
+  }
+}
 
 // Create configuration schema dynamically based on environment
 function createConfigSchema() {
