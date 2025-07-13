@@ -15,7 +15,8 @@
     "paths": {
       "@prompt-lab/evaluation-engine": [
         "packages/evaluation-engine/src/index.ts"
-      ]
+      ],
+      "@prompt-lab/shared-types": ["packages/shared-types/src/index.ts"]
     }
   },
   "files": [],

@@ -15,6 +15,14 @@ const dirname =
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   plugins: [react(), wasm(), topLevelAwait()],
+  resolve: {
+    alias: {
+      '@prompt-lab/shared-types': path.resolve(
+        dirname,
+        '../../packages/shared-types/dist',
+      ),
+    },
+  },
   worker: {
     format: 'es',
     plugins: () => [wasm(), topLevelAwait()],

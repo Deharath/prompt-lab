@@ -1,11 +1,11 @@
 /**
  * Sentiment Analysis Service - API Client
- * Provides sentiment analysis by calling the server-side API endpoint
- * Fallback mechanisms for production robustness.
+ * Simple client that calls the consolidated API endpoint
  */
 
 import { Request, Response } from 'express';
 import { log } from '../utils/logger.js';
+import fetch from 'node-fetch';
 
 export interface SentimentScore {
   compound: number; // Overall sentiment score -1 to 1
@@ -38,9 +38,6 @@ async function callSentimentApi(
   const apiUrl = `${getApiBaseUrl()}/api/sentiment`;
 
   try {
-    // Use dynamic import to avoid bundling fetch polyfill unless needed
-    const { default: fetch } = await import('node-fetch');
-
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -75,7 +72,7 @@ async function callSentimentApi(
 }
 
 /**
- * Main sentiment analysis function with API fallback
+ * Main sentiment analysis function
  */
 export async function analyzeSentiment(
   text: string,
@@ -112,7 +109,7 @@ export async function analyzeSentiment(
   }
 
   try {
-    // Try to call the API first
+    // Simple API call to consolidated sentiment service
     const result = await callSentimentApi(text, detailed);
     return detailed ? result : result.compound;
   } catch (error) {
@@ -197,7 +194,7 @@ export function validateSentimentRequest(
   if (text.length > 10000) {
     return res.status(413).json({
       error: 'Text too long. Maximum length is 10,000 characters',
-      code: 'TEXT_TOO_LONG',
+      code: 'TEXT_TOO_LARGE',
     });
   }
 
@@ -205,15 +202,15 @@ export function validateSentimentRequest(
 }
 
 /**
- * Clear transformers cache (now a no-op since we use API)
+ * Clear transformers cache (API client - no-op)
  */
 export async function clearTransformersCache(): Promise<void> {
-  log.info('clearTransformersCache called - no-op in API mode');
+  log.info('clearTransformersCache called - API client mode, no local cache');
 }
 
 /**
- * Reset transformers cache (for testing - now a no-op)
+ * Reset transformers cache (API client - no-op)
  */
 export function resetTransformersCache(): void {
-  log.info('resetTransformersCache called - no-op in API mode');
+  log.info('resetTransformersCache called - API client mode, no local cache');
 }

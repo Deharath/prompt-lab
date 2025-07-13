@@ -21,12 +21,12 @@ router.post('/', async (req, res) => {
     if (text.length > 10000) {
       return res.status(413).json({
         error: 'Text too long. Maximum length is 10,000 characters',
-        code: 'TEXT_TOO_LONG',
+        code: 'TEXT_TOO_LARGE',
       });
     }
 
-    // Use server-side sentiment engine with transformers
-    const { analyzeSentiment } = await import('../lib/sentimentEngine.js');
+    // Use consolidated sentiment analysis
+    const { analyzeSentiment } = await import('../lib/sentimentAnalysis.js');
     const sentiment = await analyzeSentiment(text, detailed);
 
     res.json({

@@ -144,7 +144,7 @@ importers:
         specifier: ^0.24.1
         version: 0.24.1
       '@huggingface/transformers':
-        specifier: ^3.6.1
+        specifier: ^3.6.3
         version: 3.6.3
       '@prompt-lab/evaluation-engine':
         specifier: workspace:*

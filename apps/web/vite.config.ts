@@ -11,7 +11,7 @@ export default defineConfig({
     alias: {
       '@prompt-lab/shared-types': resolve(
         __dirname,
-        '../../packages/shared-types/src',
+        '../../packages/shared-types/dist/index.js',
       ),
     },
   },

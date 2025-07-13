@@ -54,7 +54,7 @@ export function validateTextSize(
   if (sizeInBytes > maxSize) {
     return res.status(413).json({
       error: `Text too large. Maximum size is ${maxSize} bytes, received ${sizeInBytes} bytes.`,
-      code: 413,
+      code: 'TEXT_TOO_LARGE',
     });
   }
 
@@ -255,7 +255,7 @@ export async function readabilityHandler(req: Request, res: Response) {
     if (!text || typeof text !== 'string') {
       return res.status(400).json({
         error: 'Text field is required and must be a string',
-        code: 400,
+        code: 'INVALID_INPUT',
       });
     }
 
@@ -269,7 +269,7 @@ export async function readabilityHandler(req: Request, res: Response) {
     console.error('Readability analysis error:', error);
     res.status(500).json({
       error: 'Internal server error during readability analysis',
-      code: 500,
+      code: 'READABILITY_ANALYSIS_FAILED',
     });
   }
 }

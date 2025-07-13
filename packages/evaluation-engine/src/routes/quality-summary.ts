@@ -223,21 +223,21 @@ export async function qualitySummaryHandler(req: Request, res: Response) {
     if (query.since && isNaN(new Date(query.since).getTime())) {
       return res.status(400).json({
         error: 'Invalid since date format',
-        code: 400,
+        code: 'INVALID_DATE_FORMAT',
       });
     }
 
     if (query.until && isNaN(new Date(query.until).getTime())) {
       return res.status(400).json({
         error: 'Invalid until date format',
-        code: 400,
+        code: 'INVALID_DATE_FORMAT',
       });
     }
 
     if (query.windowDays && (isNaN(query.windowDays) || query.windowDays < 1)) {
       return res.status(400).json({
         error: 'windowDays must be a positive number',
-        code: 400,
+        code: 'INVALID_WINDOW_DAYS',
       });
     }
 
@@ -256,7 +256,7 @@ export async function qualitySummaryHandler(req: Request, res: Response) {
     console.error('Quality summary error:', error);
     res.status(500).json({
       error: 'Internal server error while generating quality summary',
-      code: 500,
+      code: 'QUALITY_SUMMARY_FAILED',
     });
   }
 }

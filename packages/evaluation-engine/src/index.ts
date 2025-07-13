@@ -9,6 +9,12 @@ export * from './types/index.js';
 export * from './constants/index.js';
 export * from './errors/ApiError.js';
 
+// Sentiment service exports
+export {
+  analyzeSentiment,
+  type SentimentScore,
+} from './lib/sentimentService.js';
+
 // Pricing exports
 export { PRICING, type ProviderPricing } from './providers/pricing.js';
 
