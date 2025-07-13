@@ -17,19 +17,39 @@ export const jobs = sqliteTable(
     provider: text('provider').notNull(),
     model: text('model').notNull(),
     status: text('status', {
-      enum: ['pending', 'running', 'evaluating', 'completed', 'failed'],
+      enum: [
+        'pending',
+        'running',
+        'evaluating',
+        'completed',
+        'failed',
+        'cancelled',
+      ],
     })
       .notNull()
       .default('pending'),
     result: text('result'),
     metrics: text('metrics', { mode: 'json' }),
-    errorMessage: text('error_message'), // New field for error details
+    errorMessage: text('error_message'), // Error details
+    errorType: text('error_type', {
+      enum: [
+        'provider_error',
+        'timeout',
+        'validation_error',
+        'network_error',
+        'rate_limit',
+        'unknown',
+      ],
+    }), // Error categorization for retry logic
     tokensUsed: integer('tokens_used'),
     costUsd: real('cost_usd'),
     temperature: real('temperature'),
     topP: real('top_p'),
     maxTokens: integer('max_tokens'),
     selectedMetrics: text('selected_metrics', { mode: 'json' }), // Array of selected metric configs
+
+    attemptCount: integer('attempt_count').notNull().default(1),
+    maxAttempts: integer('max_attempts').notNull().default(3),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
       .default(sql`(strftime('%s', 'now'))`),

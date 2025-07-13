@@ -8,7 +8,7 @@ export default {
   out: './drizzle/migrations',
   dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.DATABASE_URL || './data/prompt-lab.db',
+    url: process.env.DATABASE_URL || 'sqlite://./db.sqlite',
   },
   verbose: true,
   strict: true,

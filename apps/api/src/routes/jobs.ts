@@ -30,6 +30,8 @@ import {
   getPreviousJob,
   getProvider,
   deleteJob,
+  retryJob,
+  updateJobWithError,
   type Job,
 } from '@prompt-lab/evaluation-engine';
 import {
@@ -393,12 +395,15 @@ jobsRouter.get(
         throw new NotFoundError('Job not found');
       }
 
-      // Prevent streaming if job is already completed or failed
-      if (job.status === 'completed' || job.status === 'failed') {
+      // Prevent streaming if job is already completed, failed, or cancelled
+      if (['completed', 'failed', 'cancelled'].includes(job.status as any)) {
         res.status(200).json({
           status: job.status,
           result: job.result,
           metrics: job.metrics,
+          ...((job.status as any) === 'cancelled' && {
+            message: 'Job was cancelled',
+          }),
         });
         return;
       }
@@ -505,6 +510,20 @@ jobsRouter.get(
                 return;
               }
 
+              // Check if job was cancelled by another request
+              const currentJob = await getJob(id);
+              if ((currentJob?.status as any) === 'cancelled') {
+                cleanupJobMemory(id, baselineMemoryMB);
+                if (!clientDisconnected) {
+                  sendEvent({ message: 'Job was cancelled' }, 'cancelled');
+                  sendEvent({ done: true }, 'done');
+                }
+                if (!res.writableEnded) {
+                  res.end();
+                }
+                return;
+              }
+
               if (!memoryCheck()) {
                 await updateJob(id, {
                   status: 'failed',
@@ -529,16 +548,12 @@ jobsRouter.get(
               try {
                 result = await streamIterator.next();
               } catch (streamError) {
+                await updateJobWithError(id, streamError);
+                cleanupJobMemory(id, baselineMemoryMB);
                 const errorMessage =
                   streamError instanceof Error
                     ? streamError.message
                     : 'An unknown error occurred during streaming.';
-                await updateJob(id, {
-                  status: 'failed',
-                  result: '',
-                  errorMessage,
-                });
-                cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent({ error: errorMessage }, 'error');
                   sendEvent({ done: true }, 'done');
@@ -772,6 +787,65 @@ jobsRouter.delete(
       }
 
       res.status(204).send(); // 204 No Content for successful deletion
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// PUT /jobs/:id/cancel - Cancel a running job
+jobsRouter.put(
+  '/:id/cancel',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const job = await getJob(id);
+      if (!job) {
+        throw new NotFoundError('Job not found');
+      }
+
+      // Only allow cancellation of pending or running jobs
+      if (!['pending', 'running', 'evaluating'].includes(job.status)) {
+        return res.status(400).json({
+          error: `Cannot cancel job with status '${job.status}'`,
+        });
+      }
+
+      // Update job status to cancelled
+      const cancelledJob = await updateJob(id, {
+        status: 'cancelled' as any, // Type assertion until schema migration
+        errorMessage: 'Job cancelled by user',
+      });
+
+      res.json({
+        message: 'Job cancelled successfully',
+        job: cancelledJob,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// POST /jobs/:id/retry - Retry a failed job
+jobsRouter.post(
+  '/:id/retry',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      const newJob = await retryJob(id);
+
+      if (!newJob) {
+        throw new NotFoundError('Job not found');
+      }
+
+      res.status(201).json({
+        message: 'Job retry created successfully',
+        originalJobId: id,
+        newJob,
+      });
     } catch (error) {
       next(error);
     }
