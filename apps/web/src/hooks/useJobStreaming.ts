@@ -161,17 +161,6 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setIsExecuting(false);
           currentEventSourceRef.current = null;
 
-          // Update job status in history cache to 'evaluating' when stream completes
-          queryClient.setQueryData(
-            ['jobs'],
-            (oldJobs: JobSummary[] | undefined) => {
-              if (!oldJobs) return oldJobs;
-              return oldJobs.map((j) =>
-                j.id === job.id ? { ...j, status: 'evaluating' as const } : j,
-              );
-            },
-          );
-
           try {
             // Poll for job completion with exponential backoff
             let attempts = 0;
@@ -265,6 +254,34 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
               if (!oldJobs) return oldJobs;
               return oldJobs.map((j) =>
                 j.id === job.id ? { ...j, status: 'completed' as const } : j,
+              );
+            },
+          );
+        },
+        // NEW: Status update handler
+        (status) => {
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: status as any } : j,
+              );
+            },
+          );
+        },
+        // NEW: Cancelled handler
+        (message) => {
+          setStreamStatus('complete');
+          setIsExecuting(false);
+          currentEventSourceRef.current = null;
+
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: 'cancelled' as const } : j,
               );
             },
           );

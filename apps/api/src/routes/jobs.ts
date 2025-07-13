@@ -594,6 +594,7 @@ jobsRouter.get(
 
             // Streaming is complete, transition to evaluating state
             await updateJob(id, { status: 'evaluating' });
+            sendEvent({ status: 'evaluating' }, 'status');
 
             // Don't send 'done' event yet - calculate metrics first
             const endTime = Date.now();
@@ -627,6 +628,7 @@ jobsRouter.get(
               result: output,
               metrics,
             });
+            sendEvent({ status: 'completed' }, 'status');
 
             // Send metrics first, then done event
             if (!clientDisconnected) {
@@ -648,6 +650,7 @@ jobsRouter.get(
               result: '',
               errorMessage,
             });
+            sendEvent({ status: 'failed' }, 'status');
             cleanupJobMemory(id, baselineMemoryMB);
             if (!clientDisconnected) {
               sendEvent({ error: errorMessage }, 'error');
@@ -702,6 +705,7 @@ jobsRouter.get(
             result: output,
             metrics,
           });
+          sendEvent({ status: 'completed' }, 'status');
 
           if (!clientDisconnected) {
             sendEvent(metrics, 'metrics');
@@ -718,6 +722,7 @@ jobsRouter.get(
           result: '',
           errorMessage,
         });
+        sendEvent({ status: 'failed' }, 'status');
         cleanupJobMemory(id, baselineMemoryMB);
         // Always use sendEvent for error event
         if (!clientDisconnected) {

@@ -122,18 +122,20 @@ export const useJobStore = create<JobState>((set) => ({
     set({ cancelling: true });
     try {
       await ApiClient.cancelJob(id);
-      // Update current job if it's the one being cancelled
-      set((state) => ({
-        current:
-          state.current?.id === id
-            ? { ...state.current, status: 'cancelled' as const }
-            : state.current,
-        cancelling: false,
-        running: false,
-      }));
-      // Refresh history to reflect cancelled status
-      const history = await ApiClient.listJobs();
-      set({ history });
+      // Don't immediately update state - wait for SSE confirmation
+      // The SSE 'cancelled' event will update the state
+
+      // Add timeout fallback in case SSE doesn't respond
+      setTimeout(() => {
+        set((state) => ({
+          current:
+            state.current?.id === id
+              ? { ...state.current, status: 'cancelled' as const }
+              : state.current,
+          cancelling: false,
+          running: false,
+        }));
+      }, 3000); // 3 second fallback
     } catch (error) {
       set({ cancelling: false });
       throw error;
