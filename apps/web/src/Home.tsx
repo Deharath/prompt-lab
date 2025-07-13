@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useJobStore } from './store/jobStore.js';
+import { useJobStreaming } from './hooks/useJobStreaming.js';
 import { useWorkspaceStore } from './store/workspaceStore.js';
 import { useToggle } from './hooks/useToggle.js';
 import AppSidebar from './components/features/sidebar/AppSidebar/index.js';
@@ -18,8 +19,17 @@ const Home = () => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  const { comparison, temperature, topP, maxTokens, selectedMetrics } =
-    useJobStore();
+  const {
+    comparison,
+    temperature,
+    topP,
+    maxTokens,
+    selectedMetrics,
+    running,
+    current,
+  } = useJobStore();
+
+  const { cancelStream } = useJobStreaming();
 
   // Get workspace data from store
   const {
@@ -52,6 +62,13 @@ const Home = () => {
     // Call the PromptWorkspace's handleRun method via ref
     if (promptWorkspaceRef.current) {
       await promptWorkspaceRef.current.handleRun();
+    }
+  };
+
+  const handleCancel = async () => {
+    // Cancel the current running job
+    if (current?.id) {
+      await cancelStream(current.id);
     }
   };
 
@@ -128,7 +145,9 @@ const Home = () => {
             onModelChange={setModel}
             onLoadTemplate={setTemplate}
             onRunEvaluation={handleRun}
+            onCancelEvaluation={handleCancel}
             canRunEvaluation={canRunEvaluation}
+            isRunning={running}
             // Token summary data
             promptTokens={promptTokens}
             estimatedCompletionTokens={estimatedCompletionTokens}

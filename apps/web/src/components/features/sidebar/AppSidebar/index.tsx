@@ -30,6 +30,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onModelChange,
   onLoadTemplate,
   onRunEvaluation,
+  onCancelEvaluation,
   canRunEvaluation = false,
   isRunning = false,
   promptTokens = 0,
@@ -39,7 +40,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   template = '',
   inputData = '',
 }) => {
-  const sidebarState = useAppSidebar(isCollapsed, onSelectJob, onCompareJobs);
+  const sidebarState = useAppSidebar(
+    isCollapsed,
+    onSelectJob || (() => {}),
+    onCompareJobs || (() => {}),
+  );
 
   // Destructure state for cleaner JSX
   const {
@@ -84,9 +89,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       <CollapsedSidebar
         onOpenTab={(tab) => {
           setActiveTab(tab);
-          onToggle(); // Expand the sidebar when a tab is clicked
+          onToggle?.(); // Expand the sidebar when a tab is clicked
         }}
         onRunEvaluation={onRunEvaluation}
+        onCancelEvaluation={onCancelEvaluation}
         canRunEvaluation={canRunEvaluation}
         isRunning={isRunning}
       />
@@ -125,13 +131,13 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
           {activeTab === 'configuration' && (
             <ConfigurationTab
-              provider={provider}
-              model={model}
+              provider={provider || ''}
+              model={model || ''}
               temperature={temperature}
               topP={topP}
               maxTokens={maxTokens}
-              onProviderChange={onProviderChange}
-              onModelChange={onModelChange}
+              onProviderChange={onProviderChange || (() => {})}
+              onModelChange={onModelChange || (() => {})}
               setTemperature={setTemperature}
               setTopP={setTopP}
               setMaxTokens={setMaxTokens}
@@ -148,6 +154,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         {/* Footer with evaluation controls */}
         <RunEvaluationFooter
           onRunEvaluation={onRunEvaluation}
+          onCancelEvaluation={onCancelEvaluation}
           canRunEvaluation={canRunEvaluation}
           isRunning={isRunning}
           promptTokens={promptTokens}

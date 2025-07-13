@@ -23,7 +23,7 @@ export interface JobStreamingActions {
     selectedMetrics: any[];
   }) => Promise<void>;
   reset: () => void;
-  cancelStream: () => void;
+  cancelStream: (jobId?: string) => Promise<void>;
 }
 
 export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
@@ -289,10 +289,29 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
     resetJobStore();
   };
 
-  const cancelStream = () => {
+  const cancelStream = async (jobId?: string) => {
     closeCurrentStream();
     setStreamStatus('complete');
     setIsExecuting(false);
+
+    // If jobId is provided, also cancel the job on the backend
+    if (jobId) {
+      try {
+        await ApiClient.cancelJob(jobId);
+        // Update the job in query cache to cancelled status
+        queryClient.setQueryData(
+          ['jobs'],
+          (oldJobs: JobSummary[] | undefined) => {
+            if (!oldJobs) return oldJobs;
+            return oldJobs.map((j) =>
+              j.id === jobId ? { ...j, status: 'cancelled' as const } : j,
+            );
+          },
+        );
+      } catch (error) {
+        console.error('Failed to cancel job on backend:', error);
+      }
+    }
   };
 
   return {

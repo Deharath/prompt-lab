@@ -256,6 +256,12 @@ export class ApiClient {
     });
   }
 
+  static async cancelJob(id: string): Promise<void> {
+    await this.makeRequest(`/jobs/${id}/cancel`, {
+      method: 'PUT',
+    });
+  }
+
   static async fetchQualitySummary(
     params: {
       model?: string;

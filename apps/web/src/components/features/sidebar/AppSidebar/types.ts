@@ -16,35 +16,23 @@ export type { JobSummary } from '@prompt-lab/shared-types';
  * to handle its three tabs and various functionality.
  */
 export interface AppSidebarProps {
-  // Sidebar state
   isCollapsed: boolean;
-  onToggle: () => void;
-
-  // Job selection and comparison
-  onSelectJob: (jobId: string) => void;
-  onCompareJobs: (baseId: string, compareId: string) => void;
-
-  // Model configuration props (Configuration tab)
-  provider: string;
-  model: string;
-  onProviderChange: (provider: string) => void;
-  onModelChange: (model: string) => void;
-
-  // Custom prompt template loading (Custom tab)
-  onLoadTemplate?: (template: string) => void;
-
-  // Evaluation execution
+  onToggle?: () => void;
+  onSelectJob?: (jobId: string) => void;
+  onCompareJobs?: (baseId: string, compareId: string) => void;
+  provider?: string;
+  model?: string;
+  onProviderChange?: (provider: string) => void;
+  onModelChange?: (model: string) => void;
+  onLoadTemplate?: (template: any) => void;
   onRunEvaluation?: () => void;
+  onCancelEvaluation?: () => void;
   canRunEvaluation?: boolean;
   isRunning?: boolean;
-
-  // Token usage and cost estimation
   promptTokens?: number;
   estimatedCompletionTokens?: number;
   totalTokens?: number;
   estimatedCost?: number;
-
-  // Template and input data for token summary display
   template?: string;
   inputData?: string;
 }

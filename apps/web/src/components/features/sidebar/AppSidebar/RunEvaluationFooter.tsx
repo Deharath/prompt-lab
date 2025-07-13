@@ -2,6 +2,7 @@ import React from 'react';
 
 interface RunEvaluationFooterProps {
   onRunEvaluation?: () => void;
+  onCancelEvaluation?: () => void;
   canRunEvaluation?: boolean;
   isRunning?: boolean;
   promptTokens?: number;
@@ -14,25 +15,39 @@ interface RunEvaluationFooterProps {
 
 const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
   onRunEvaluation,
+  onCancelEvaluation,
   canRunEvaluation = false,
   isRunning = false,
 }) => {
   if (!onRunEvaluation) return null;
 
+  const handleClick = () => {
+    if (isRunning && onCancelEvaluation) {
+      onCancelEvaluation();
+    } else if (!isRunning && onRunEvaluation) {
+      onRunEvaluation();
+    }
+  };
+
   return (
     <div className="border-border bg-card flex-shrink-0 border-t">
       <div className="p-4">
         <button
-          onClick={onRunEvaluation}
-          disabled={!canRunEvaluation || isRunning}
+          onClick={handleClick}
+          disabled={
+            (!canRunEvaluation && !isRunning) ||
+            (isRunning && !onCancelEvaluation)
+          }
           className={`focus-visible:ring-primary w-full rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
-            canRunEvaluation && !isRunning
-              ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
-              : 'bg-muted text-muted-foreground cursor-not-allowed'
+            isRunning
+              ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm'
+              : canRunEvaluation
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
           }`}
           aria-label={
             isRunning
-              ? 'Evaluation running...'
+              ? 'Cancel running evaluation'
               : canRunEvaluation
                 ? 'Start evaluation'
                 : 'Complete prompt and input to run evaluation'
@@ -40,8 +55,20 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
         >
           {isRunning ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2" />
-              <span>Running...</span>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              <span>Cancel</span>
             </div>
           ) : (
             <div className="flex items-center justify-center space-x-2">
