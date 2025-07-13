@@ -53,7 +53,7 @@ Thumbs.db
 **/jobs.json
 
 # Documentation and audit files (keep local only)
-/docs/
+/local_docs/
 
 # SQLite databases (local artifacts)
 *.db

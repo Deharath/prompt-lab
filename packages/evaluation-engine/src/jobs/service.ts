@@ -10,7 +10,11 @@ import {
   logStatusChange,
 } from './helpers.js';
 import type { JobMetricsWithAvg } from './helpers.js';
-import { categorizeError, shouldRetryError, type CategorizedError } from '../errors/JobError.js';
+import {
+  categorizeError,
+  shouldRetryError,
+  type CategorizedError,
+} from '../errors/JobError.js';
 
 export async function createJob(
   data: Omit<NewJob, 'id' | 'status'>,
@@ -182,27 +186,29 @@ export async function listJobs(
 
 export async function retryJob(id: string): Promise<Job | null> {
   await getDb();
-  
+
   const job = await getJob(id);
   if (!job) {
     return null;
   }
-  
+
   // Only retry failed jobs
   if (job.status !== 'failed') {
     throw new Error(`Cannot retry job with status '${job.status}'`);
   }
-  
+
   // Get current attempt count (defaulting to 1 for existing jobs)
   const currentAttempts = (job as any).attemptCount || 1;
   const maxAttempts = (job as any).maxAttempts || 3;
-  
+
   // Check if we should retry based on error type
   const errorType = (job as any).errorType || 'unknown';
   if (!shouldRetryError(errorType, currentAttempts, maxAttempts)) {
-    throw new Error(`Job cannot be retried: ${errorType} after ${currentAttempts} attempts`);
+    throw new Error(
+      `Job cannot be retried: ${errorType} after ${currentAttempts} attempts`,
+    );
   }
-  
+
   // Create new job with incremented attempt count
   const retryJobData = {
     prompt: job.prompt,
@@ -218,25 +224,30 @@ export async function retryJob(id: string): Promise<Job | null> {
     attemptCount: currentAttempts + 1,
     maxAttempts,
   };
-  
+
   const newJob = await createJob(retryJobData as any);
-  
-  log.info(`Job ${id} retried as ${newJob.id}, attempt ${currentAttempts + 1}/${maxAttempts}`);
-  
+
+  log.info(
+    `Job ${id} retried as ${newJob.id}, attempt ${currentAttempts + 1}/${maxAttempts}`,
+  );
+
   return newJob;
 }
 
-export async function updateJobWithError(id: string, error: unknown): Promise<Job> {
+export async function updateJobWithError(
+  id: string,
+  error: unknown,
+): Promise<Job> {
   const categorizedError = categorizeError(error);
-  
+
   const updateData: Parameters<typeof updateJob>[1] = {
     status: 'failed',
     errorMessage: categorizedError.message,
   };
-  
+
   // Add error type if we have the schema field (will be ignored if not available)
   (updateData as any).errorType = categorizedError.type;
-  
+
   return updateJob(id, updateData);
 }
 

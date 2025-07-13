@@ -3,7 +3,7 @@
  */
 
 // Core metric input structure
-import type { MetricDisplayConfig } from './results.js';
+import type { MetricDisplayConfig } from './results';
 
 // API response interfaces
 export interface ApiResponse<T = unknown> {

@@ -1,6 +1,6 @@
-export type ErrorType = 
+export type ErrorType =
   | 'provider_error'
-  | 'timeout' 
+  | 'timeout'
   | 'validation_error'
   | 'network_error'
   | 'rate_limit'
@@ -15,7 +15,7 @@ export interface CategorizedError {
 
 export function categorizeError(error: unknown): CategorizedError {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  
+
   // Rate limiting errors
   if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
     return {
@@ -25,7 +25,7 @@ export function categorizeError(error: unknown): CategorizedError {
       retryDelay: 60000, // 1 minute
     };
   }
-  
+
   // Network/connection errors
   if (
     errorMessage.includes('ECONNREFUSED') ||
@@ -41,7 +41,7 @@ export function categorizeError(error: unknown): CategorizedError {
       retryDelay: 5000, // 5 seconds
     };
   }
-  
+
   // Timeout errors
   if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
     return {
@@ -51,7 +51,7 @@ export function categorizeError(error: unknown): CategorizedError {
       retryDelay: 2000, // 2 seconds
     };
   }
-  
+
   // Provider-specific errors
   if (
     errorMessage.includes('API key') ||
@@ -66,7 +66,7 @@ export function categorizeError(error: unknown): CategorizedError {
       retryable: false,
     };
   }
-  
+
   // Validation errors
   if (
     errorMessage.includes('validation') ||
@@ -79,7 +79,7 @@ export function categorizeError(error: unknown): CategorizedError {
       retryable: false,
     };
   }
-  
+
   // Default to unknown
   return {
     type: 'unknown',
@@ -88,11 +88,19 @@ export function categorizeError(error: unknown): CategorizedError {
   };
 }
 
-export function shouldRetryError(errorType: ErrorType, attemptCount: number, maxAttempts: number): boolean {
+export function shouldRetryError(
+  errorType: ErrorType,
+  attemptCount: number,
+  maxAttempts: number,
+): boolean {
   if (attemptCount >= maxAttempts) {
     return false;
   }
-  
-  const retryableTypes: ErrorType[] = ['network_error', 'timeout', 'rate_limit'];
+
+  const retryableTypes: ErrorType[] = [
+    'network_error',
+    'timeout',
+    'rate_limit',
+  ];
   return retryableTypes.includes(errorType);
 }

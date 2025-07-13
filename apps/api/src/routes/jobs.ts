@@ -401,7 +401,9 @@ jobsRouter.get(
           status: job.status,
           result: job.result,
           metrics: job.metrics,
-          ...((job.status as any) === 'cancelled' && { message: 'Job was cancelled' }),
+          ...((job.status as any) === 'cancelled' && {
+            message: 'Job was cancelled',
+          }),
         });
         return;
       }
@@ -548,7 +550,10 @@ jobsRouter.get(
               } catch (streamError) {
                 await updateJobWithError(id, streamError);
                 cleanupJobMemory(id, baselineMemoryMB);
-                const errorMessage = streamError instanceof Error ? streamError.message : 'An unknown error occurred during streaming.';
+                const errorMessage =
+                  streamError instanceof Error
+                    ? streamError.message
+                    : 'An unknown error occurred during streaming.';
                 if (!clientDisconnected) {
                   sendEvent({ error: errorMessage }, 'error');
                   sendEvent({ done: true }, 'done');
@@ -831,7 +836,7 @@ jobsRouter.post(
       const { id } = req.params;
 
       const newJob = await retryJob(id);
-      
+
       if (!newJob) {
         throw new NotFoundError('Job not found');
       }

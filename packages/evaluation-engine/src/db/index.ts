@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import { config } from '../config/index.js';
 import { log } from '../utils/logger.js';
-import { runMigrations, runMigrationsOnConnection } from './migrations.js';
+import { runDrizzleMigrations } from './migrations-drizzle.js';
 import * as schema from './schema.js';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
@@ -43,8 +43,8 @@ async function initializeDb() {
         sqlite.pragma('foreign_keys = ON');
       }
 
-      // Run migrations on the SAME connection we'll use for Drizzle
-      await runMigrationsOnConnection(sqlite);
+      // Run Drizzle migrations on the SAME connection we'll use for Drizzle
+      await runDrizzleMigrations(sqlite);
 
       _db = drizzle(sqlite, { schema });
 
@@ -98,4 +98,4 @@ export function resetDb() {
   dbInitPromise = null;
 }
 
-export { getDb, runMigrations };
+export { getDb };
