@@ -35,24 +35,6 @@ const DashboardPage = () => {
     refetchOnMount: true,
   });
 
-  const CustomScatterLabel = ({ payload, position, viewBox }: any) => {
-    if (!payload || !payload.model) return null;
-    const { x, y } = position;
-    const modelName = payload.model.split('-').slice(-1)[0]; // Show just the model variant
-    return (
-      <text
-        x={x}
-        y={y - 8}
-        textAnchor="middle"
-        fontSize={9}
-        fill={isDarkMode ? '#f9fafb' : '#111827'}
-        fontWeight="500"
-      >
-        {modelName}
-      </text>
-    );
-  };
-
   const handleDaysChange = (newDays: number) => {
     setDays(newDays);
   };
@@ -368,18 +350,21 @@ const DashboardPage = () => {
                             type="number"
                             dataKey="avgResponseTime"
                             name="Response Time"
-                            unit="ms"
                             className="text-gray-600 dark:text-gray-400"
                             fontSize={11}
                             angle={-45}
                             textAnchor="end"
                             height={60}
+                            tickFormatter={(value) =>
+                              typeof value === 'number'
+                                ? `${value.toFixed(0)}ms`
+                                : value
+                            }
                           />
                           <YAxis
                             type="number"
                             dataKey="costPerToken"
                             name="Cost per Token"
-                            unit="$"
                             className="text-gray-600 dark:text-gray-400"
                             fontSize={11}
                             tickFormatter={(value) =>
@@ -389,41 +374,46 @@ const DashboardPage = () => {
                             }
                           />
                           <Tooltip
-                            contentStyle={{
-                              backgroundColor: isDarkMode
-                                ? 'rgba(31, 41, 55, 0.95)'
-                                : 'rgba(255, 255, 255, 0.95)',
-                              border: isDarkMode
-                                ? '1px solid #4b5563'
-                                : '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              fontSize: '13px',
-                              color: isDarkMode ? '#f9fafb' : '#111827',
-                            }}
-                            formatter={(value: number, name: string) => {
-                              if (name === 'Cost per Token') {
-                                return [
-                                  `$${(value * 1000).toFixed(4)}/K tokens`,
-                                  name,
-                                ];
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length > 0) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div
+                                    className="rounded-lg border p-3 shadow-lg"
+                                    style={{
+                                      backgroundColor: isDarkMode
+                                        ? 'rgba(31, 41, 55, 0.95)'
+                                        : 'rgba(255, 255, 255, 0.95)',
+                                      border: isDarkMode
+                                        ? '1px solid #4b5563'
+                                        : '1px solid #e5e7eb',
+                                      color: isDarkMode ? '#f9fafb' : '#111827',
+                                    }}
+                                  >
+                                    <div className="mb-2 font-semibold">
+                                      {data.model || 'Unknown Model'}
+                                    </div>
+                                    <div className="space-y-1 text-sm">
+                                      <div>
+                                        Response Time:{' '}
+                                        {data.avgResponseTime?.toFixed(0)}ms
+                                      </div>
+                                      <div>
+                                        Cost: $
+                                        {(data.costPerToken * 1000).toFixed(4)}
+                                        /K tokens
+                                      </div>
+                                      <div>
+                                        Total Jobs: {data.totalJobs || 0}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
                               }
-                              if (name === 'Response Time') {
-                                return [`${value.toFixed(0)}ms`, name];
-                              }
-                              return [value, name];
-                            }}
-                            labelFormatter={(label, payload) => {
-                              const data = payload?.[0]?.payload;
-                              return data
-                                ? `${data.model} (${data.totalJobs} jobs)`
-                                : label;
+                              return null;
                             }}
                           />
-                          <Scatter
-                            dataKey="costPerToken"
-                            fill="#8b5cf6"
-                            label={<CustomScatterLabel />}
-                          />
+                          <Scatter dataKey="costPerToken" fill="#8b5cf6" />
                         </ScatterChart>
                       </ResponsiveContainer>
                     ) : (
