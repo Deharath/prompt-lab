@@ -7,6 +7,9 @@ export default defineConfig({
       '@prompt-lab/evaluation-engine': resolve(
         'packages/evaluation-engine/src/index.ts',
       ),
+      '@prompt-lab/shared-types': resolve(
+        'packages/shared-types/src/index.ts',
+      ),
     },
   },
   test: {
