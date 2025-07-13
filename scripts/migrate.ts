@@ -1,4 +1,4 @@
-import { runMigrations } from '@prompt-lab/evaluation-engine';
+import { runMigrations } from '../packages/evaluation-engine/dist/index.js';
 
 runMigrations().catch((err) => {
   console.error(err);

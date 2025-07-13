@@ -61,7 +61,8 @@ export type JobStatus =
   | 'running'
   | 'evaluating'
   | 'completed'
-  | 'failed';
+  | 'failed'
+  | 'cancelled';
 
 export interface JobSummary {
   id: string;

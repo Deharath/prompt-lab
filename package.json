@@ -26,7 +26,7 @@
     "deps:check": "depcheck --ignores='@types/*,@testing-library/*,@vitejs/*,@vitest/*,eslint-*,@eslint/*,typescript,react-dom,better-sqlite3,get-port,rimraf,supertest,@jridgewell/set-array' --ignore-patterns='scripts/**/*'",
     "deps:update": "pnpm update --recursive --latest --reporter=silent",
     "prepare": "husky",
-    "migrate": "pnpm exec tsx scripts/migrate.ts",
+    "migrate": "node --loader ts-node/esm scripts/migrate.ts",
     "quality:check": "pnpm lint && pnpm tsc && pnpm test",
     "quality:fix": "pnpm format && pnpm lint --fix",
     "pre-push": "pnpm quality:check"
@@ -70,6 +70,7 @@
     "prettier-plugin-tailwindcss": "^0.6.13",
     "rimraf": "^6.0.1",
     "supertest": "^7.1.1",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "5.8.3",
     "vite": "7.0.0",
