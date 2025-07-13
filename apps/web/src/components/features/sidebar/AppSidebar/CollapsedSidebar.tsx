@@ -91,7 +91,7 @@ ${tab.description}`}
             }
             className={`focus-visible:ring-primary group flex h-12 w-full flex-col items-center justify-center rounded-lg border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 ${
               isRunning
-                ? 'border-destructive bg-destructive hover:bg-destructive/90 text-destructive-foreground transform hover:scale-105 hover:shadow-lg'
+                ? 'transform border-red-500 bg-red-600 text-white hover:scale-105 hover:bg-red-700 hover:shadow-lg'
                 : canRunEvaluation
                   ? 'border-primary bg-primary hover:bg-primary/90 text-primary-foreground transform hover:scale-105 hover:shadow-lg'
                   : 'border-muted bg-muted/50 text-muted-foreground cursor-not-allowed'

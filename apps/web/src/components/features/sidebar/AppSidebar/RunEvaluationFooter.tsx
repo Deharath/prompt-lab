@@ -40,7 +40,7 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
           }
           className={`focus-visible:ring-primary w-full rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
             isRunning
-              ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm'
+              ? 'border border-red-500 bg-red-600 text-white shadow-sm hover:bg-red-700'
               : canRunEvaluation
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
