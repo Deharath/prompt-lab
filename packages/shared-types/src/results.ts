@@ -2,7 +2,7 @@
  * Shared type definitions for evaluation results and metrics display
  */
 
-import { MetricResult, MetricCategory } from './metrics';
+import { MetricResult, MetricCategory } from './metrics.js';
 
 // Proper metric display data structure instead of primitive tuple
 export interface MetricDisplayItem {
