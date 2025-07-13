@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useAppSidebar } from './useAppSidebar.js';
 import SidebarHeader from './SidebarHeader.js';
 import HistoryTab from './HistoryTab.js';
@@ -19,7 +19,7 @@ import type { AppSidebarProps } from './types.js';
  *
  * The sidebar can be collapsed and includes proper keyboard navigation and accessibility features.
  */
-const AppSidebar: React.FC<AppSidebarProps> = ({
+const AppSidebar = memo<AppSidebarProps>(({
   isCollapsed,
   onToggle,
   onSelectJob,
@@ -174,6 +174,21 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       />
     </aside>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for React.memo optimization
+  return (
+    prevProps.isCollapsed === nextProps.isCollapsed &&
+    prevProps.provider === nextProps.provider &&
+    prevProps.model === nextProps.model &&
+    prevProps.canRunEvaluation === nextProps.canRunEvaluation &&
+    prevProps.isRunning === nextProps.isRunning &&
+    prevProps.promptTokens === nextProps.promptTokens &&
+    prevProps.estimatedCompletionTokens === nextProps.estimatedCompletionTokens &&
+    prevProps.totalTokens === nextProps.totalTokens &&
+    prevProps.estimatedCost === nextProps.estimatedCost &&
+    prevProps.template === nextProps.template &&
+    prevProps.inputData === nextProps.inputData
+  );
+});
 
 export default AppSidebar;

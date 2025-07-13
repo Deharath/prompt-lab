@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, memo } from 'react';
 
 interface ParameterSliderProps {
   /**
@@ -51,7 +51,7 @@ interface ParameterSliderProps {
  * A specialized component that combines a slider with a synchronized number input
  * for configuring model parameters like temperature and top_p.
  */
-const ParameterSlider = ({
+const ParameterSlider = memo<ParameterSliderProps>(({
   label,
   value,
   onChange,
@@ -184,6 +184,18 @@ const ParameterSlider = ({
       )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for React.memo optimization
+  return (
+    prevProps.label === nextProps.label &&
+    prevProps.value === nextProps.value &&
+    prevProps.min === nextProps.min &&
+    prevProps.max === nextProps.max &&
+    prevProps.step === nextProps.step &&
+    prevProps.decimals === nextProps.decimals &&
+    prevProps.description === nextProps.description &&
+    prevProps.compact === nextProps.compact
+  );
+});
 
 export default ParameterSlider;

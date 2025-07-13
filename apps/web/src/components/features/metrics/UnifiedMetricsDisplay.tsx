@@ -3,7 +3,7 @@
  * Ultra-compact, space-efficient metrics display with fixed button functionality
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import {
   type MetricResult,
   type MetricGroup,
@@ -27,7 +27,7 @@ interface UnifiedMetricsDisplayProps {
   'data-testid'?: string;
 }
 
-const UnifiedMetricsDisplay: React.FC<UnifiedMetricsDisplayProps> = ({
+const UnifiedMetricsDisplay = memo<UnifiedMetricsDisplayProps>(({
   metrics,
   title = 'Evaluation Results',
   compact = false,
@@ -380,6 +380,17 @@ const UnifiedMetricsDisplay: React.FC<UnifiedMetricsDisplayProps> = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for React.memo optimization
+  return (
+    prevProps.metrics === nextProps.metrics &&
+    prevProps.title === nextProps.title &&
+    prevProps.compact === nextProps.compact &&
+    prevProps.showCategories === nextProps.showCategories &&
+    prevProps.showTooltips === nextProps.showTooltips &&
+    prevProps.className === nextProps.className &&
+    prevProps['data-testid'] === nextProps['data-testid']
+  );
+});
 
 export default UnifiedMetricsDisplay;

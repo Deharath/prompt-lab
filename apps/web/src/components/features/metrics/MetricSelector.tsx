@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import Card from '../../ui/Card.js';
 import DebouncedInput from './DebouncedInput.js';
 import type {
@@ -19,12 +19,14 @@ interface MetricSelectorProps {
  * for evaluating responses, with optional input fields for metrics that
  * require additional configuration.
  */
-const MetricSelector = ({
-  metrics,
-  selectedMetrics,
-  onChange,
-  compact = false,
-}: MetricSelectorProps) => {
+const MetricSelector = memo<MetricSelectorProps>((
+  {
+    metrics,
+    selectedMetrics,
+    onChange,
+    compact = false,
+  }: MetricSelectorProps
+) => {
   const [userInputs, setUserInputs] = useState<Record<string, string>>({});
 
   // Check if a metric is currently selected
@@ -261,6 +263,17 @@ const MetricSelector = ({
       )}
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for React.memo optimization
+  return (
+    prevProps.compact === nextProps.compact &&
+    prevProps.metrics === nextProps.metrics &&
+    prevProps.selectedMetrics.length === nextProps.selectedMetrics.length &&
+    prevProps.selectedMetrics.every((metric, index) => 
+      metric.id === nextProps.selectedMetrics[index]?.id &&
+      metric.input === nextProps.selectedMetrics[index]?.input
+    )
+  );
+});
 
 export default MetricSelector;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import ShareRunButton from '../../../shared/ShareRunButton.js';
 
 import type { JobSummary } from './types.js';
@@ -15,7 +15,7 @@ interface JobListItemProps {
   setFocusedJobIndex: (index: number) => void;
 }
 
-const JobListItem: React.FC<JobListItemProps> = ({
+const JobListItem = memo<JobListItemProps>(({
   job,
   index,
   isSelected,
@@ -159,6 +159,17 @@ const JobListItem: React.FC<JobListItemProps> = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for React.memo optimization
+  return (
+    prevProps.job.id === nextProps.job.id &&
+    prevProps.index === nextProps.index &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isFocused === nextProps.isFocused &&
+    prevProps.selectionType === nextProps.selectionType &&
+    prevProps.job.status === nextProps.job.status &&
+    prevProps.job.createdAt === nextProps.job.createdAt
+  );
+});
 
 export default JobListItem;
