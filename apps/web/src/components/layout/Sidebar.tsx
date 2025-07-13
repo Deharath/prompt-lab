@@ -26,6 +26,7 @@ interface SidebarProps extends BaseComponentProps {
   onLoadTemplate?: (template: string) => void;
   onSelectJob?: (jobId: string) => void;
   onRunEvaluation?: () => void;
+  onCancelEvaluation?: () => void;
   canRunEvaluation?: boolean;
   isRunning?: boolean;
   // Token summary data
@@ -56,6 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onLoadTemplate = () => {},
   onSelectJob,
   onRunEvaluation = () => {},
+  onCancelEvaluation = () => {},
   canRunEvaluation = false,
   isRunning = false,
   promptTokens = 0,
@@ -109,6 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onModelChange={onModelChange}
           onLoadTemplate={onLoadTemplate}
           onRunEvaluation={onRunEvaluation}
+          onCancelEvaluation={onCancelEvaluation}
           canRunEvaluation={canRunEvaluation}
           isRunning={isRunning}
           promptTokens={promptTokens}
@@ -135,6 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onModelChange={onModelChange}
           onLoadTemplate={onLoadTemplate}
           onRunEvaluation={onRunEvaluation}
+          onCancelEvaluation={onCancelEvaluation}
           canRunEvaluation={canRunEvaluation}
           isRunning={isRunning}
           promptTokens={promptTokens}

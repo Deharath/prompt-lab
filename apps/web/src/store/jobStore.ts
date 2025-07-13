@@ -28,6 +28,7 @@ interface JobState {
     baseJobId?: string;
     compareJobId?: string;
   };
+  cancelling: boolean;
   start(job: JobSummary): void;
   append(text: string): void;
   finish(metrics: MetricResult): void;
@@ -41,6 +42,7 @@ interface JobState {
   setTopP(value: number): void;
   setMaxTokens(value: number): void;
   setSelectedMetrics(metrics: SelectedMetric[]): void;
+  cancelJob(id: string): Promise<void>;
 }
 
 export const useJobStore = create<JobState>((set) => ({
@@ -63,6 +65,7 @@ export const useJobStore = create<JobState>((set) => ({
     { id: 'response_latency' }, // Essential for Model Efficiency dashboard
   ] as SelectedMetric[],
   comparison: {},
+  cancelling: false,
   start: (job) => {
     set({
       current: job,
@@ -114,5 +117,28 @@ export const useJobStore = create<JobState>((set) => ({
   },
   setSelectedMetrics: (metrics) => {
     set({ selectedMetrics: metrics });
+  },
+  cancelJob: async (id) => {
+    set({ cancelling: true });
+    try {
+      await ApiClient.cancelJob(id);
+      // Don't immediately update state - wait for SSE confirmation
+      // The SSE 'cancelled' event will update the state
+
+      // Add timeout fallback in case SSE doesn't respond
+      setTimeout(() => {
+        set((state) => ({
+          current:
+            state.current?.id === id
+              ? { ...state.current, status: 'cancelled' as const }
+              : state.current,
+          cancelling: false,
+          running: false,
+        }));
+      }, 3000); // 3 second fallback
+    } catch (error) {
+      set({ cancelling: false });
+      throw error;
+    }
   },
 }));

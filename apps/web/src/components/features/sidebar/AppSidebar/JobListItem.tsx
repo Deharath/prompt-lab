@@ -1,5 +1,6 @@
 import React from 'react';
 import ShareRunButton from '../../../shared/ShareRunButton.js';
+
 import type { JobSummary } from './types.js';
 import { getReadableLabel, getFormattedTimestamp } from './utils.js';
 
@@ -56,7 +57,9 @@ const JobListItem: React.FC<JobListItemProps> = ({
                 ? 'bg-yellow-500'
                 : job.status === 'failed'
                   ? 'bg-destructive'
-                  : 'bg-muted-foreground/40'
+                  : job.status === 'cancelled'
+                    ? 'bg-orange-500'
+                    : 'bg-muted-foreground/40'
         }`}
       />
 
@@ -77,7 +80,9 @@ const JobListItem: React.FC<JobListItemProps> = ({
                       ? 'border border-yellow-500/20 bg-yellow-500/15 text-yellow-700'
                       : job.status === 'failed'
                         ? 'bg-destructive/15 text-destructive border-destructive/20 border'
-                        : 'bg-muted text-muted-foreground border-border border'
+                        : job.status === 'cancelled'
+                          ? 'border border-orange-500/20 bg-orange-500/15 text-orange-700'
+                          : 'bg-muted text-muted-foreground border-border border'
               }`}
             >
               {job.status}

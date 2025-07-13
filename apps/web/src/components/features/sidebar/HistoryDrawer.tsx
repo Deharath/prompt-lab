@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ApiClient, type JobSummary } from '../../../api.js';
+
 import { useJobStore } from '../../../store/jobStore.js';
 
 interface HistoryDrawerProps {
@@ -68,17 +69,21 @@ const HistoryDrawer = ({ open, onClose }: HistoryDrawerProps) => {
           {jobs.map((job) => (
             <div
               key={job.id}
-              className={`cursor-pointer border-b p-4 hover:bg-gray-50 ${
+              className={`border-b p-4 hover:bg-gray-50 ${
                 selectedJobs.includes(job.id) ? 'bg-blue-50' : ''
               }`}
-              onClick={() => handleJobSelect(job.id)}
             >
-              <div className="text-sm text-gray-600">Job #{job.id}</div>
-              <div className="mt-1 text-xs text-gray-500">
-                {format(job.createdAt, 'MMM d, yyyy, h:mm:ss a')}
-              </div>
-              <div className="text-xs text-gray-500">
-                {job.provider} " {job.model}
+              <div
+                className="cursor-pointer"
+                onClick={() => handleJobSelect(job.id)}
+              >
+                <div className="text-sm text-gray-600">Job #{job.id}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  {format(job.createdAt, 'MMM d, yyyy, h:mm:ss a')}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {job.provider} " {job.model}
+                </div>
               </div>
             </div>
           ))}

@@ -3,6 +3,7 @@ import React from 'react';
 interface CollapsedSidebarProps {
   onOpenTab: (tab: 'history' | 'configuration' | 'custom') => void;
   onRunEvaluation?: () => void;
+  onCancelEvaluation?: () => void;
   canRunEvaluation?: boolean;
   isRunning?: boolean;
 }
@@ -10,6 +11,7 @@ interface CollapsedSidebarProps {
 const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
   onOpenTab,
   onRunEvaluation,
+  onCancelEvaluation,
   canRunEvaluation = false,
   isRunning = false,
 }) => {
@@ -34,6 +36,14 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
     },
   ];
 
+  const handleClick = () => {
+    if (isRunning && onCancelEvaluation) {
+      onCancelEvaluation();
+    } else if (!isRunning && onRunEvaluation) {
+      onRunEvaluation();
+    }
+  };
+
   return (
     <aside
       className="bg-card border-border flex h-full w-16 flex-col border-r"
@@ -47,7 +57,8 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
             onClick={() => onOpenTab(tab.id)}
             className="border-muted hover:border-primary/50 focus-visible:ring-primary bg-background hover:bg-primary/10 group flex h-12 w-full transform cursor-pointer flex-col items-center justify-center rounded-lg border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2"
             aria-label={`Open ${tab.label} tab - ${tab.description}`}
-            title={`${tab.label}\n${tab.description}`}
+            title={`${tab.label}
+${tab.description}`}
           >
             <svg
               className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors duration-200"
@@ -73,23 +84,28 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
       {onRunEvaluation && (
         <div className="border-border border-t p-2">
           <button
-            onClick={onRunEvaluation}
-            disabled={!canRunEvaluation || isRunning}
+            onClick={handleClick}
+            disabled={
+              (!canRunEvaluation && !isRunning) ||
+              (isRunning && !onCancelEvaluation)
+            }
             className={`focus-visible:ring-primary group flex h-12 w-full flex-col items-center justify-center rounded-lg border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 ${
-              canRunEvaluation && !isRunning
-                ? 'border-primary bg-primary hover:bg-primary/90 text-primary-foreground transform hover:scale-105 hover:shadow-lg'
-                : 'border-muted bg-muted/50 text-muted-foreground cursor-not-allowed'
+              isRunning
+                ? 'transform border-red-500 bg-red-600 text-white hover:scale-105 hover:bg-red-700 hover:shadow-lg'
+                : canRunEvaluation
+                  ? 'border-primary bg-primary hover:bg-primary/90 text-primary-foreground transform hover:scale-105 hover:shadow-lg'
+                  : 'border-muted bg-muted/50 text-muted-foreground cursor-not-allowed'
             }`}
             aria-label={
               isRunning
-                ? 'Evaluation is running...'
+                ? 'Cancel running evaluation'
                 : canRunEvaluation
                   ? 'Run evaluation with current prompt and input'
                   : 'Complete prompt and input to run evaluation'
             }
             title={
               isRunning
-                ? 'Running...'
+                ? 'Cancel'
                 : canRunEvaluation
                   ? 'Run Evaluation'
                   : 'Need prompt & input'
@@ -97,8 +113,20 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
           >
             {isRunning ? (
               <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                <span className="mt-1 text-[10px] font-medium">Running</span>
+                <svg
+                  className="h-5 w-5 transition-colors duration-200"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                <span className="mt-1 text-[10px] font-medium">Cancel</span>
               </>
             ) : (
               <>

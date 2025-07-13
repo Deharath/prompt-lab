@@ -149,6 +149,8 @@ export class ApiClient {
     onDone: () => void,
     onError?: (error: Error) => void,
     onMetrics?: (metrics: Record<string, unknown>) => void,
+    onStatusUpdate?: (status: string) => void,
+    onCancelled?: (message: string) => void,
   ): EventSource {
     const es = new EventSource(`/jobs/${id}/stream`);
     let done = false;
@@ -190,6 +192,28 @@ export class ApiClient {
         done = true;
         onDone();
         es.close();
+      } catch (_err) {
+        // intentionally empty: ignore parse errors in event stream
+      }
+    });
+
+    es.addEventListener('status', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.status && onStatusUpdate) {
+          onStatusUpdate(data.status);
+        }
+      } catch (_err) {
+        // intentionally empty: ignore parse errors in event stream
+      }
+    });
+
+    es.addEventListener('cancelled', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (onCancelled) {
+          onCancelled(data.message || 'Job was cancelled');
+        }
       } catch (_err) {
         // intentionally empty: ignore parse errors in event stream
       }
@@ -253,6 +277,12 @@ export class ApiClient {
   static async deleteJob(id: string): Promise<void> {
     await this.makeRequest(`/jobs/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  static async cancelJob(id: string): Promise<void> {
+    await this.makeRequest(`/jobs/${id}/cancel`, {
+      method: 'PUT',
     });
   }
 

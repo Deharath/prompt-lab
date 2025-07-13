@@ -147,7 +147,15 @@ describe('Run Job Workflow Integration', () => {
 
     // Mock the streaming functionality properly
     vi.mocked(ApiClient.streamJob).mockImplementation(
-      (jobId, onToken, onComplete, onError, onMetrics) => {
+      (
+        jobId,
+        onToken,
+        onComplete,
+        onError,
+        onMetrics,
+        onStatusUpdate,
+        onCancelled,
+      ) => {
         // Simulate streaming with a slight delay
         setTimeout(() => {
           onToken('Hello,');
@@ -179,6 +187,8 @@ describe('Run Job Workflow Integration', () => {
     // Step 5: Verify streaming was set up
     expect(vi.mocked(ApiClient.streamJob)).toHaveBeenCalledWith(
       mockJobId,
+      expect.any(Function),
+      expect.any(Function),
       expect.any(Function),
       expect.any(Function),
       expect.any(Function),
@@ -251,7 +261,15 @@ describe('Run Job Workflow Integration', () => {
 
     // Mock the streaming functionality to trigger an error
     vi.mocked(ApiClient.streamJob).mockImplementation(
-      (jobId, onToken, onComplete, onError, onMetrics) => {
+      (
+        jobId,
+        onToken,
+        onComplete,
+        onError,
+        onMetrics,
+        onStatusUpdate,
+        onCancelled,
+      ) => {
         // Simulate an error during streaming
         setTimeout(() => {
           if (onError) {

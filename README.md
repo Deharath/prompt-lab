@@ -4,7 +4,7 @@ An advanced environment for testing and evaluating AI models and prompts.
 
 ## Overview
 
-Prompt Lab is a comprehensive, production-ready platform designed for prompt engineering and AI model evaluation. Built with modern web technologies and a microservices architecture, it enables developers, researchers, and organizations to systematically develop, test, and optimize prompts across multiple AI providers while tracking performance metrics and costs.
+Prompt Lab is a modern platform for prompt engineering and AI model evaluation. Built with React, TypeScript, and Node.js, it enables systematic development, testing, and optimization of prompts across multiple AI providers while tracking performance metrics and costs in real-time.
 
 ## Vision
 
@@ -28,8 +28,8 @@ Prompt Lab addresses the critical challenges in prompt engineering by providing 
 
 - **Automated Metrics:** Built-in evaluation metrics including sentiment analysis, readability scores, and custom quality assessments
 - **Side-by-Side Comparison:** Compare outputs from different models or prompt variations in a unified interface
-- **Batch Processing:** Run evaluations across multiple test cases and prompts simultaneously
-- **Historical Analysis:** Track performance trends and model behavior over time
+- **Job History:** View and manage previous evaluation runs with status tracking
+- **Real-time Results:** Live streaming of evaluation results with immediate feedback
 
 ### Performance Monitoring
 
@@ -40,18 +40,18 @@ Prompt Lab addresses the critical challenges in prompt engineering by providing 
 
 ### Data Management
 
-- **Version Control:** Full versioning of prompts, configurations, and evaluation results
-- **Export Capabilities:** Export results in multiple formats for further analysis or reporting
-- **Search and Filtering:** Advanced search and filtering capabilities for large datasets
-- **Data Persistence:** Reliable data storage with backup and recovery options
+- **Share Functionality:** Share evaluation runs with teammates via secure links
+- **Data Persistence:** Reliable SQLite storage for prompts, jobs, and evaluation results
+- **Job Management:** Create, view, and delete evaluation jobs with comprehensive status tracking
+- **Settings Storage:** Persistent storage of model configurations and user preferences
 
 ## Tech Stack
 
 - **Framework:** React (Vite)
 - **UI:** Tailwind CSS, Shadcn UI
 - **Language:** TypeScript
-- **Backend:** Node.js, Hono
-- **Database:** Turso (SQLite) with Drizzle ORM
+- **Backend:** Node.js, Express.js
+- **Database:** SQLite with Drizzle ORM
 - **Testing:** Vitest, Playwright
 - **Linting/Formatting:** ESLint, Prettier
 - **CI/CD:** GitHub Actions
@@ -59,14 +59,14 @@ Prompt Lab addresses the critical challenges in prompt engineering by providing 
 
 ## Architecture
 
-Prompt Lab follows a modern microservices architecture designed for scalability and maintainability:
+Prompt Lab follows a modern monorepo architecture designed for scalability and maintainability:
 
 ### Frontend (apps/web)
 
 - **React Application:** Built with Vite for fast development and optimized production builds
 - **State Management:** Zustand for lightweight, type-safe state management
 - **UI Components:** Tailwind CSS with Shadcn UI for consistent, accessible design
-- **Real-time Updates:** WebSocket integration for live prompt evaluation feedback
+- **Real-time Updates:** Server-Sent Events (SSE) for live prompt evaluation feedback
 
 ### Backend (apps/api)
 
@@ -77,9 +77,8 @@ Prompt Lab follows a modern microservices architecture designed for scalability 
 
 ### Packages
 
-- **evaluation-engine:** Core evaluation logic with pluggable metrics system
-- **providers:** Abstracted AI provider integrations with unified interface
-- **db:** Database schema definitions and migration management
+- **evaluation-engine:** Core evaluation logic with pluggable metrics system and AI provider integrations
+- **shared-types:** Shared TypeScript type definitions across the monorepo
 
 ## Monorepo Structure
 
@@ -91,26 +90,25 @@ prompt-lab/
 │   ├── web/          # React frontend application
 │   └── api/          # Express.js backend API
 ├── packages/
-│   ├── evaluation-engine/  # Core evaluation framework
+│   ├── evaluation-engine/  # Core evaluation framework and AI providers
 │   └── shared-types/       # Shared TypeScript definitions
-├── scripts/               # Build and deployment scripts
-└── docs/                  # Additional documentation
+└── scripts/               # Build and deployment scripts
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v20 or higher)
+- Node.js (v18 or higher)
 - pnpm
-- Docker
+- Docker (optional, for deployment)
 
 ### Installation & Setup
 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/prompt-lab.git
+    git clone https://github.com/Deharath/prompt-lab.git
     cd prompt-lab
     ```
 
@@ -179,10 +177,10 @@ docker run -d -p 3000:3000 \
 
 ### Advanced Features
 
-- **Batch Processing:** Upload CSV files with multiple test cases for bulk evaluation
-- **Custom Metrics:** Define custom evaluation criteria specific to your use case
-- **Historical Analysis:** Track performance trends and model behavior over time
-- **Cost Optimization:** Monitor and optimize API usage costs across providers
+- **Custom Prompt Templates:** Pre-built templates for common use cases like summarization, sentiment analysis, and code review
+- **Custom Metrics:** Define custom evaluation criteria specific to your use case with flexible metric plugins
+- **Real-time Streaming:** Live evaluation results with Server-Sent Events for immediate feedback
+- **Cost Optimization:** Monitor and optimize API usage costs across providers with detailed pricing breakdowns
 
 ## Development
 
@@ -192,6 +190,7 @@ docker run -d -p 3000:3000 \
 - `pnpm build` - Build all packages for production
 - `pnpm test` - Run test suite with coverage
 - `pnpm lint` - Run ESLint across all packages
+- `pnpm format` - Format code with Prettier
 - `pnpm tsc` - Type check all TypeScript code
 - `pnpm clean` - Clean build artifacts and dependencies
 

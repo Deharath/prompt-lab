@@ -23,7 +23,7 @@ export interface JobStreamingActions {
     selectedMetrics: any[];
   }) => Promise<void>;
   reset: () => void;
-  cancelStream: () => void;
+  cancelStream: (jobId?: string) => Promise<void>;
 }
 
 export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
@@ -161,17 +161,6 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setIsExecuting(false);
           currentEventSourceRef.current = null;
 
-          // Update job status in history cache to 'evaluating' when stream completes
-          queryClient.setQueryData(
-            ['jobs'],
-            (oldJobs: JobSummary[] | undefined) => {
-              if (!oldJobs) return oldJobs;
-              return oldJobs.map((j) =>
-                j.id === job.id ? { ...j, status: 'evaluating' as const } : j,
-              );
-            },
-          );
-
           try {
             // Poll for job completion with exponential backoff
             let attempts = 0;
@@ -269,6 +258,34 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
             },
           );
         },
+        // NEW: Status update handler
+        (status) => {
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: status as any } : j,
+              );
+            },
+          );
+        },
+        // NEW: Cancelled handler
+        (message) => {
+          setStreamStatus('complete');
+          setIsExecuting(false);
+          currentEventSourceRef.current = null;
+
+          queryClient.setQueryData(
+            ['jobs'],
+            (oldJobs: JobSummary[] | undefined) => {
+              if (!oldJobs) return oldJobs;
+              return oldJobs.map((j) =>
+                j.id === job.id ? { ...j, status: 'cancelled' as const } : j,
+              );
+            },
+          );
+        },
       );
 
       currentEventSourceRef.current = eventSource;
@@ -289,10 +306,29 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
     resetJobStore();
   };
 
-  const cancelStream = () => {
+  const cancelStream = async (jobId?: string) => {
     closeCurrentStream();
     setStreamStatus('complete');
     setIsExecuting(false);
+
+    // If jobId is provided, also cancel the job on the backend
+    if (jobId) {
+      try {
+        await ApiClient.cancelJob(jobId);
+        // Update the job in query cache to cancelled status
+        queryClient.setQueryData(
+          ['jobs'],
+          (oldJobs: JobSummary[] | undefined) => {
+            if (!oldJobs) return oldJobs;
+            return oldJobs.map((j) =>
+              j.id === jobId ? { ...j, status: 'cancelled' as const } : j,
+            );
+          },
+        );
+      } catch (error) {
+        console.error('Failed to cancel job on backend:', error);
+      }
+    }
   };
 
   return {
