@@ -52,9 +52,11 @@ const JobListItem: React.FC<JobListItemProps> = ({
             ? 'bg-success'
             : job.status === 'running'
               ? 'bg-primary'
-              : job.status === 'failed'
-                ? 'bg-destructive'
-                : 'bg-muted-foreground/40'
+              : job.status === 'evaluating'
+                ? 'bg-yellow-500'
+                : job.status === 'failed'
+                  ? 'bg-destructive'
+                  : 'bg-muted-foreground/40'
         }`}
       />
 
@@ -71,9 +73,11 @@ const JobListItem: React.FC<JobListItemProps> = ({
                   ? 'bg-success/15 text-success border-success/20 border'
                   : job.status === 'running'
                     ? 'bg-primary/15 text-primary border-primary/20 border'
-                    : job.status === 'failed'
-                      ? 'bg-destructive/15 text-destructive border-destructive/20 border'
-                      : 'bg-muted text-muted-foreground border-border border'
+                    : job.status === 'evaluating'
+                      ? 'border border-yellow-500/20 bg-yellow-500/15 text-yellow-700'
+                      : job.status === 'failed'
+                        ? 'bg-destructive/15 text-destructive border-destructive/20 border'
+                        : 'bg-muted text-muted-foreground border-border border'
               }`}
             >
               {job.status}
@@ -134,21 +138,13 @@ const JobListItem: React.FC<JobListItemProps> = ({
             <span className="text-muted-foreground">{timestamp}</span>
           </div>
 
-          {(job.costUsd || job.avgScore) && (
+          {job.costUsd && (
             <div className="flex items-center space-x-4 text-xs">
               {job.costUsd && (
                 <div className="flex items-center space-x-1">
                   <span className="text-muted-foreground/70">Cost:</span>
                   <span className="text-foreground/80 font-medium">
                     ${job.costUsd.toFixed(4)}
-                  </span>
-                </div>
-              )}
-              {job.avgScore && (
-                <div className="flex items-center space-x-1">
-                  <span className="text-muted-foreground/70">Score:</span>
-                  <span className="text-foreground/80 font-medium">
-                    {job.avgScore.toFixed(1)}
                   </span>
                 </div>
               )}

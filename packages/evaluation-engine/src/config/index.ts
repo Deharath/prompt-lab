@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { dirname } from 'node:path';
 import {
   RATE_LIMITS,
   TIMEOUTS,
@@ -14,8 +15,29 @@ import {
 } from '../constants/index.js';
 
 // Load environment variables from root .env file
-const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
-dotenv.config({ path: join(rootDir, '.env') });
+let rootDir: string;
+try {
+  // Start from current directory and traverse up to find the workspace root
+  rootDir = process.cwd();
+
+  // Look for workspace root by finding pnpm-workspace.yaml
+  let currentDir = rootDir;
+  while (currentDir !== dirname(currentDir)) {
+    // Check if this is the workspace root (has pnpm-workspace.yaml)
+    if (existsSync(join(currentDir, 'pnpm-workspace.yaml'))) {
+      rootDir = currentDir;
+      break;
+    }
+    currentDir = dirname(currentDir);
+  }
+
+  dotenv.config({ path: join(rootDir, '.env') });
+} catch (error) {
+  // In test environments, we might not need .env loading
+  if (process.env.NODE_ENV !== 'test') {
+    console.warn('Failed to load .env file:', error);
+  }
+}
 
 // Create configuration schema dynamically based on environment
 function createConfigSchema() {

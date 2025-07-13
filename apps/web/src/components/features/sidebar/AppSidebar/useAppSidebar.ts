@@ -154,7 +154,7 @@ export const useAppSidebar = (
         provider: job.provider,
         model: job.model,
         costUsd: job.costUsd || null,
-        avgScore: null, // Will be calculated from metrics if needed
+
         resultSnippet: job.result ? job.result.slice(0, 100) : null,
       });
       if (job.result) {

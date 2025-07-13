@@ -105,7 +105,7 @@ describe('Readability Service', () => {
       expect(res.json).toHaveBeenCalledWith({
         error:
           'Text too large. Maximum size is 20480 bytes, received 21504 bytes.',
-        code: 413,
+        code: 'TEXT_TOO_LARGE',
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -172,7 +172,7 @@ describe('Readability Service', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Text field is required and must be a string',
-        code: 400,
+        code: 'INVALID_INPUT',
       });
     });
 

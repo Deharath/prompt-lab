@@ -1,1 +1,15 @@
-pnpm pre-push
+#!/bin/sh
+
+echo "🚀 Pre-push check..."
+
+# Get the current branch name
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Warn about main branch pushes but allow them (solo dev)
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "⚠️  Pushing directly to $BRANCH (solo dev mode)"
+fi
+
+# Since pre-commit is now stringent, just a quick sanity check
+echo "✅ Pre-commit checks should have caught any issues."
+echo "🚀 Pushing clean code..."

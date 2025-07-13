@@ -1,2 +1,5 @@
 // Re-export from shared-types
-export { PRICING, type ProviderPricing } from '@prompt-lab/shared-types';
+export {
+  PRICING,
+  type ProviderPricing,
+} from '../../../shared-types/dist/index.js';

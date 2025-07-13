@@ -6,6 +6,7 @@ process.env.NODE_ENV = 'test';
 process.env.OPENAI_API_KEY = 'test-openai-key';
 process.env.GEMINI_API_KEY = 'test-gemini-key';
 process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
+process.env.DISABLE_SENTIMENT_ANALYSIS = 'true';
 
 // Ensure DB migrations are run before any tests
 beforeAll(async () => {
@@ -270,27 +271,13 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
 });
 
 // --- MOCK FILESYSTEM OPERATIONS FOR DATASETS ---
+import { loadFixture } from './fixtures/index.js';
+
 vi.mock('fs/promises', () => {
   const mockReadFile = vi.fn().mockImplementation(async (filePath: string) => {
     // Mock the news-summaries dataset
     if (filePath.includes('news-summaries.jsonl')) {
-      return [
-        '{"id":"1","input":"Tech stocks rallied today sending the market higher.","expected":"Market climbs as tech stocks rally."}',
-        '{"id":"2","input":"The city council approved new green initiatives.","expected":"Council backs new eco measures."}',
-        '{"id":"3","input":"Scientists discovered a potential cure for the rare disease.","expected":"New discovery offers hope for curing rare disease."}',
-        '{"id":"4","input":"Heavy rains caused flooding across the region.","expected":"Region hit by floods after heavy rains."}',
-        '{"id":"5","input":"A local team won the championship after a tense final.","expected":"Local champions triumph in tense final."}',
-        '{"id":"6","input":"The government announced tax cuts for small businesses.","expected":"Small businesses to benefit from tax cuts."}',
-        '{"id":"7","input":"An ancient shipwreck was found near the coastline.","expected":"Archaeologists uncover ancient shipwreck."}',
-        '{"id":"8","input":"The art exhibition attracted thousands of visitors.","expected":"Large crowds drawn to art exhibition."}',
-        '{"id":"9","input":"A new restaurant opened offering plant-based dishes.","expected":"Plant-based eatery opens to public."}',
-        '{"id":"10","input":"Meteorologists predict a severe storm this weekend.","expected":"Severe storm expected this weekend."}',
-        '{"id":"11","input":"The company reported strong quarterly earnings.","expected":"Company posts strong quarterly results."}',
-        '{"id":"12","input":"A new book by the famous author topped the bestseller list.","expected":"Author\'s latest book becomes bestseller."}',
-        '{"id":"13","input":"The park will be renovated to include new playground equipment.","expected":"Park renovation to feature new playground."}',
-        '{"id":"14","input":"Researchers published findings on climate change impact.","expected":"Study reveals climate change effects."}',
-        '{"id":"15","input":"The local festival attracted visitors from around the world.","expected":"International visitors flock to local festival."}',
-      ].join('\n');
+      return loadFixture('news-summaries.jsonl');
     }
     // For other files, simulate file not found
     const error = new Error('ENOENT: no such file or directory') as unknown;
@@ -315,23 +302,7 @@ vi.mock('fs', async () => {
       readFile: vi.fn().mockImplementation(async (filePath: string) => {
         // Mock the news-summaries dataset
         if (filePath.includes('news-summaries.jsonl')) {
-          return [
-            '{"id":"1","input":"Tech stocks rallied today sending the market higher.","expected":"Market climbs as tech stocks rally."}',
-            '{"id":"2","input":"The city council approved new green initiatives.","expected":"Council backs new eco measures."}',
-            '{"id":"3","input":"Scientists discovered a potential cure for the rare disease.","expected":"New discovery offers hope for curing rare disease."}',
-            '{"id":"4","input":"Heavy rains caused flooding across the region.","expected":"Region hit by floods after heavy rains."}',
-            '{"id":"5","input":"A local team won the championship after a tense final.","expected":"Local champions triumph in tense final."}',
-            '{"id":"6","input":"The government announced tax cuts for small businesses.","expected":"Small businesses to benefit from tax cuts."}',
-            '{"id":"7","input":"An ancient shipwreck was found near the coastline.","expected":"Archaeologists uncover ancient shipwreck."}',
-            '{"id":"8","input":"The art exhibition attracted thousands of visitors.","expected":"Large crowds drawn to art exhibition."}',
-            '{"id":"9","input":"A new restaurant opened offering plant-based dishes.","expected":"Plant-based eatery opens to public."}',
-            '{"id":"10","input":"Meteorologists predict a severe storm this weekend.","expected":"Severe storm expected this weekend."}',
-            '{"id":"11","input":"The company reported strong quarterly earnings.","expected":"Company posts strong quarterly results."}',
-            '{"id":"12","input":"A new book by the famous author topped the bestseller list.","expected":"Author\'s latest book becomes bestseller."}',
-            '{"id":"13","input":"The park will be renovated to include new playground equipment.","expected":"Park renovation to feature new playground."}',
-            '{"id":"14","input":"Researchers published findings on climate change impact.","expected":"Study reveals climate change effects."}',
-            '{"id":"15","input":"The local festival attracted visitors from around the world.","expected":"International visitors flock to local festival."}',
-          ].join('\n');
+          return loadFixture('news-summaries.jsonl');
         }
         // For other files, simulate file not found
         const error = new Error('ENOENT: no such file or directory') as unknown;

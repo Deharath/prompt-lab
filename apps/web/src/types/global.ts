@@ -5,7 +5,11 @@
  * the entire application for consistent typing and better developer experience.
  */
 
-import type { JobStatus, MetricCategory } from '@prompt-lab/shared-types';
+import type {
+  JobStatus,
+  MetricCategory,
+  MetricResult,
+} from '@prompt-lab/shared-types';
 
 // =============================================================================
 // CORE DOMAIN TYPES
@@ -24,7 +28,6 @@ export interface Job {
   metrics?: Record<string, number>;
   costUsd?: number | null;
   tokensUsed?: number;
-  avgScore?: number | null;
   resultSnippet?: string | null;
   errorMessage?: string | null;
 }
@@ -92,32 +95,15 @@ export interface EvaluationMetric {
 // Re-export from shared-types
 export type { MetricCategory } from '@prompt-lab/shared-types';
 
-export interface MetricResult {
-  metricId: string;
-  score: number;
-  details?: Record<string, unknown>;
-  explanation?: string;
-}
+// Moved to @prompt-lab/shared-types
 
 // =============================================================================
 // API & STATE TYPES
 // =============================================================================
 
-export interface ApiResponse<T = unknown> {
-  data?: T;
-  error?: string;
-  success: boolean;
-  timestamp: string;
-}
+// Moved to @prompt-lab/shared-types
 
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+// Moved to @prompt-lab/shared-types
 
 export interface AsyncState<T = unknown> {
   data: T | null;
@@ -187,12 +173,10 @@ export interface DashboardStats {
   totalJobs: number;
   successRate: number;
   averageCost: number;
-  averageScore: number;
   totalCost: number;
   jobsToday: number;
   scoreHistory: Array<{
     date: string;
-    avgReadability: number;
     totalJobs: number;
   }>;
   costByModel: Array<{

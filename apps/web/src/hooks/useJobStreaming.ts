@@ -173,32 +173,53 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           );
 
           try {
-            const final = await ApiClient.fetchJob(job.id);
+            // Poll for job completion with exponential backoff
+            let attempts = 0;
+            let final;
+
+            while (attempts < 10) {
+              // Max 10 attempts (~3 seconds total)
+              await new Promise((resolve) =>
+                setTimeout(
+                  resolve,
+                  Math.min(100 * Math.pow(1.5, attempts), 500),
+                ),
+              );
+              final = await ApiClient.fetchJob(job.id);
+
+              if (final.status === 'completed' || final.status === 'failed') {
+                break;
+              }
+              attempts++;
+            }
+
             // Only set metrics if we haven't received them via the metrics event
-            if (!metricsReceived) {
+            if (!metricsReceived && final) {
               finish((final.metrics as Record<string, unknown>) || {});
             }
 
             // Update job status in history cache to final status
-            queryClient.setQueryData(
-              ['jobs'],
-              (oldJobs: JobSummary[] | undefined) => {
-                if (!oldJobs) return oldJobs;
-                return oldJobs.map((j) =>
-                  j.id === job.id
-                    ? {
-                        ...j,
-                        status: final.status,
-                        costUsd: final.costUsd,
-                        // Add a result snippet for preview
-                        resultSnippet: final.result
-                          ? final.result.substring(0, 100) + '...'
-                          : null,
-                      }
-                    : j,
-                );
-              },
-            );
+            if (final) {
+              queryClient.setQueryData(
+                ['jobs'],
+                (oldJobs: JobSummary[] | undefined) => {
+                  if (!oldJobs) return oldJobs;
+                  return oldJobs.map((j) =>
+                    j.id === job.id
+                      ? {
+                          ...j,
+                          status: final.status,
+                          costUsd: final.costUsd,
+                          // Add a result snippet for preview
+                          resultSnippet: final.result
+                            ? final.result.substring(0, 100) + '...'
+                            : null,
+                        }
+                      : j,
+                  );
+                },
+              );
+            }
           } catch (_err) {
             if (!metricsReceived) {
               finish({});

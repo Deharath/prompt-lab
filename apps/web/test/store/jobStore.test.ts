@@ -33,7 +33,6 @@ describe('jobStore', () => {
       provider: 'openai',
       model: 'gpt-4o-mini',
       costUsd: null,
-      avgScore: null,
       resultSnippet: null,
     };
     act(() => useJobStore.getState().start(job));
@@ -68,7 +67,6 @@ describe('jobStore', () => {
         provider: 'openai',
         model: 'gpt-4o-mini',
         costUsd: null,
-        avgScore: null,
         resultSnippet: null,
       });
       useJobStore.getState().append('log');
