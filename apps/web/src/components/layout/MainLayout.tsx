@@ -85,7 +85,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
           {/* Main Content */}
           <main
-            className={`flex-1 overflow-hidden transition-all duration-300 ${
+            className={`sidebar-slide flex-1 overflow-hidden ${
               hideSidebar
                 ? 'w-full'
                 : sidebarCollapsed

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ApiClient } from '../api.js';
 import { SAMPLE_PROMPT, SAMPLE_INPUT } from '../constants/app.js';
+import { useJobStore } from './jobStore.js';
 import {
   countTokens,
   estimateCompletionTokens,
@@ -106,6 +107,39 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           provider: jobDetails.provider,
           model: jobDetails.model,
         });
+      }
+
+      // Get job store actions
+      const { finish, reset } = useJobStore.getState();
+
+      // Always reset the job store first to clear any previous state
+      reset();
+
+      // Load historical job result into log if available
+      if (jobDetails.result) {
+        // Create a mock job to populate the store with historical data
+        const mockJob = {
+          id: jobDetails.id,
+          status: jobDetails.status,
+          createdAt: jobDetails.createdAt,
+          updatedAt: jobDetails.updatedAt,
+        };
+
+        // Start with the job to set up the store
+        useJobStore.getState().start(mockJob);
+
+        // Add the result to the log
+        useJobStore.getState().append(jobDetails.result);
+      }
+
+      // Handle metrics loading based on job status
+      if (jobDetails.metrics && jobDetails.status === 'completed') {
+        // Only load metrics for genuinely completed jobs
+        finish(jobDetails.metrics);
+      } else {
+        // For cancelled, failed, or other non-completed jobs, clear any existing metrics
+        // This prevents showing results from previously loaded completed jobs
+        finish({});
       }
 
       get()._updateTokenData();

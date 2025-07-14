@@ -45,7 +45,13 @@ export type { JobSummary } from '@prompt-lab/shared-types';
 
 export interface JobResult {
   id: string;
-  status: 'pending' | 'running' | 'evaluating' | 'completed' | 'failed';
+  status:
+    | 'pending'
+    | 'running'
+    | 'evaluating'
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
   result?: string;
   metrics?: Record<string, unknown>;
   tokensUsed?: number;

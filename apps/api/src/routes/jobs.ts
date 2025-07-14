@@ -513,6 +513,14 @@ jobsRouter.get(
               // Check if job was cancelled by another request
               const currentJob = await getJob(id);
               if ((currentJob?.status as any) === 'cancelled') {
+                // Save the partial output that was generated before cancellation
+                if (output.length > 0) {
+                  await updateJob(id, {
+                    status: 'cancelled' as any,
+                    result: output,
+                    errorMessage: 'Job cancelled by user',
+                  });
+                }
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent({ message: 'Job was cancelled' }, 'cancelled');

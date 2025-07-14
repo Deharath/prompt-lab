@@ -330,8 +330,9 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
       }
     }
 
-    // Update job store running state to false
-    finish({});
+    // Update job store running state to false without clearing metrics
+    // Never clear metrics on cancellation - preserve existing metrics
+    useJobStore.setState({ running: false });
   };
 
   return {

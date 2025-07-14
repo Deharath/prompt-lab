@@ -41,7 +41,6 @@ const UnifiedPanel = ({
       }
       return ApiClient.listJobs();
     },
-    staleTime: 1000 * 10,
   });
 
   const isEvaluating = history.some((job) => job.status === 'evaluating');

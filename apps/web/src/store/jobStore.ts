@@ -29,6 +29,7 @@ interface JobState {
     compareJobId?: string;
   };
   cancelling: boolean;
+  cancelTimeoutId?: ReturnType<typeof setTimeout>;
   start(job: JobSummary): void;
   append(text: string): void;
   finish(metrics: MetricResult): void;
@@ -45,7 +46,7 @@ interface JobState {
   cancelJob(id: string): Promise<void>;
 }
 
-export const useJobStore = create<JobState>((set) => ({
+export const useJobStore = create<JobState>((set, get) => ({
   log: [],
   history: [],
   running: false,
@@ -66,6 +67,7 @@ export const useJobStore = create<JobState>((set) => ({
   ] as SelectedMetric[],
   comparison: {},
   cancelling: false,
+  cancelTimeoutId: undefined,
   start: (job) => {
     set({
       current: job,
@@ -79,10 +81,28 @@ export const useJobStore = create<JobState>((set) => ({
     set((s) => ({ log: [...s.log, { ts: Date.now(), text }] }));
   },
   finish: (metrics) => {
-    set({ metrics, running: false });
+    set((state) => {
+      // Clear any pending cancel timeout
+      if (state.cancelTimeoutId) {
+        clearTimeout(state.cancelTimeoutId);
+      }
+      return { metrics, running: false, cancelTimeoutId: undefined };
+    });
   },
   reset: () => {
-    set({ current: undefined, log: [], metrics: undefined, running: false });
+    set((state) => {
+      // Clear any pending cancel timeout
+      if (state.cancelTimeoutId) {
+        clearTimeout(state.cancelTimeoutId);
+      }
+      return {
+        current: undefined,
+        log: [],
+        metrics: undefined,
+        running: false,
+        cancelTimeoutId: undefined,
+      };
+    });
     // Note: We intentionally do NOT reset hasUserData here to preserve the user's input between evaluations
   },
   setUserData: (hasData) => {
@@ -120,22 +140,38 @@ export const useJobStore = create<JobState>((set) => ({
   },
   cancelJob: async (id) => {
     set({ cancelling: true });
+
+    // Clear any existing timeout
+    const currentState = get();
+    if (currentState.cancelTimeoutId) {
+      clearTimeout(currentState.cancelTimeoutId);
+      set({ cancelTimeoutId: undefined });
+    }
+
     try {
       await ApiClient.cancelJob(id);
       // Don't immediately update state - wait for SSE confirmation
       // The SSE 'cancelled' event will update the state
 
       // Add timeout fallback in case SSE doesn't respond
-      setTimeout(() => {
-        set((state) => ({
-          current:
-            state.current?.id === id
-              ? { ...state.current, status: 'cancelled' as const }
-              : state.current,
-          cancelling: false,
-          running: false,
-        }));
-      }, 3000); // 3 second fallback
+      // Only set timeout if this is the current running job
+      if (currentState.current?.id === id && currentState.running) {
+        const timeoutId = setTimeout(() => {
+          set((state) => ({
+            current:
+              state.current?.id === id
+                ? { ...state.current, status: 'cancelled' as const }
+                : state.current,
+            cancelling: false,
+            running: state.current?.id === id ? false : state.running,
+            cancelTimeoutId: undefined,
+          }));
+        }, 3000); // 3 second fallback
+        set({ cancelTimeoutId: timeoutId });
+      } else {
+        // Not the current job, just update cancelling state
+        set({ cancelling: false });
+      }
     } catch (error) {
       set({ cancelling: false });
       throw error;

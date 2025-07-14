@@ -33,7 +33,7 @@ const JobListItem = memo<JobListItemProps>(
     return (
       <div
         key={job.id}
-        className={`group relative cursor-pointer touch-manipulation overflow-hidden rounded-xl border-2 transition-all ${
+        className={`group transition-smooth hover-lift relative cursor-pointer touch-manipulation overflow-hidden rounded-xl border-2 ${
           isSelected
             ? 'bg-primary/8 border-primary/40 ring-primary/30 shadow-lg ring-2'
             : isFocused
@@ -49,7 +49,7 @@ const JobListItem = memo<JobListItemProps>(
       >
         {/* Status stripe */}
         <div
-          className={`absolute top-0 left-0 h-full w-1 ${
+          className={`status-transition absolute top-0 left-0 h-full w-1 ${
             job.status === 'completed'
               ? 'bg-success'
               : job.status === 'running'
@@ -72,7 +72,7 @@ const JobListItem = memo<JobListItemProps>(
                 #{shortId}
               </span>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                className={`status-transition rounded-full px-2 py-0.5 text-xs font-medium ${
                   job.status === 'completed'
                     ? 'bg-success/15 text-success border-success/20 border'
                     : job.status === 'running'
@@ -103,7 +103,7 @@ const JobListItem = memo<JobListItemProps>(
 
               <button
                 onClick={(e) => onDelete(job.id, e)}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20 flex min-h-[44px] min-w-[44px] cursor-pointer touch-manipulation items-center justify-center rounded-md p-1.5 transition-colors focus:outline-none focus-visible:ring-2"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20 button-press flex min-h-[44px] min-w-[44px] cursor-pointer touch-manipulation items-center justify-center rounded-md p-1.5 transition-colors focus:outline-none focus-visible:ring-2"
                 aria-label={`Delete job ${shortId}`}
               >
                 <svg

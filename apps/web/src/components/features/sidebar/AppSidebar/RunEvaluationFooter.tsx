@@ -38,7 +38,7 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
             (!canRunEvaluation && !isRunning) ||
             (isRunning && !onCancelEvaluation)
           }
-          className={`focus-visible:ring-primary min-h-[44px] w-full touch-manipulation rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
+          className={`focus-visible:ring-primary button-press min-h-[44px] w-full touch-manipulation rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
             isRunning
               ? 'border border-red-500 bg-red-600 text-white shadow-sm hover:bg-red-700'
               : canRunEvaluation

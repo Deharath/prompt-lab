@@ -170,7 +170,7 @@ const UnifiedMetricsDisplay = memo<UnifiedMetricsDisplayProps>(
                   sortBy: prev.sortBy === 'name' ? 'value' : 'name',
                 }))
               }
-              className="text-muted-foreground hover:text-foreground rounded-md px-2 py-1 text-sm transition-colors"
+              className="text-muted-foreground hover:text-foreground button-press rounded-md px-2 py-1 text-sm transition-colors"
             >
               Sort by {viewState.sortBy === 'name' ? 'Value' : 'Name'}
             </button>
@@ -181,7 +181,7 @@ const UnifiedMetricsDisplay = memo<UnifiedMetricsDisplayProps>(
                   sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
                 }))
               }
-              className="text-muted-foreground hover:text-foreground rounded-md px-2 py-1 text-sm transition-colors"
+              className="text-muted-foreground hover:text-foreground button-press rounded-md px-2 py-1 text-sm transition-colors"
             >
               {viewState.sortOrder === 'asc' ? '↑' : '↓'}
             </button>
@@ -195,7 +195,7 @@ const UnifiedMetricsDisplay = memo<UnifiedMetricsDisplayProps>(
               {showCategories && (
                 <button
                   onClick={() => toggleGroupCollapse(group.category)}
-                  className="hover:bg-muted flex w-full items-center justify-between rounded-md p-2 text-left transition-colors"
+                  className="hover:bg-muted button-press flex w-full items-center justify-between rounded-md p-2 text-left transition-colors"
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -224,7 +224,7 @@ const UnifiedMetricsDisplay = memo<UnifiedMetricsDisplayProps>(
                         (item as any)?.name ||
                         `item-${group.category}-${index}`
                       }
-                      className="border-border/50 hover:bg-muted/50 rounded-lg border p-3 transition-colors"
+                      className="border-border/50 hover:bg-muted/50 metric-card-hover rounded-lg border p-3"
                     >
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
