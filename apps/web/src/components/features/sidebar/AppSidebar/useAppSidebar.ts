@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '../../../../api.js';
 import { useJobStore } from '../../../../store/jobStore.js';
 import { useKeyboardShortcuts } from '../../../../hooks/useKeyboardShortcuts.js';
 import { KEYBOARD_SHORTCUTS } from '../../../../constants/shortcuts.js';
 import { createShortcut } from '../../../../utils/keyboardUtils.js';
+import { useJobsData } from '../../../../hooks/useJobsData.js';
 import type { JobSummary, DeleteConfirmation, TabType } from './types.js';
 
 /**
@@ -57,15 +58,7 @@ export const useAppSidebar = (
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Query for job history
-  const {
-    data: history = [],
-    isLoading,
-    error,
-  } = useQuery<JobSummary[]>({
-    queryKey: ['jobs'],
-    queryFn: () => ApiClient.listJobs(),
-    refetchOnWindowFocus: false,
-  });
+  const { data: history = [], isLoading, error } = useJobsData();
 
   // Query client for manual refetch
   const queryClient = useQueryClient();

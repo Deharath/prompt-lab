@@ -32,6 +32,7 @@ const Home = () => {
     selectedMetrics,
     running,
     current,
+    cancelling,
   } = useJobStore();
 
   const { cancelStream } = useJobStreaming();
@@ -72,9 +73,9 @@ const Home = () => {
   };
 
   const handleCancel = async () => {
-    // Cancel the current running job
+    // Use job store cancellation which properly manages cancelling state
     if (current?.id) {
-      await cancelStream(current.id);
+      await useJobStore.getState().cancelJob(current.id);
     }
   };
 
@@ -90,7 +91,11 @@ const Home = () => {
       handleRun,
       () => canRunEvaluation && !running,
     ),
-    createShortcut(KEYBOARD_SHORTCUTS.CANCEL_JOB, handleCancel, () => running),
+    createShortcut(
+      KEYBOARD_SHORTCUTS.CANCEL_JOB,
+      handleCancel,
+      () => running || cancelling,
+    ),
 
     // Layout
     createShortcut(KEYBOARD_SHORTCUTS.TOGGLE_SIDEBAR, () =>
@@ -195,7 +200,7 @@ const Home = () => {
             onRunEvaluation={handleRun}
             onCancelEvaluation={handleCancel}
             canRunEvaluation={canRunEvaluation}
-            isRunning={running}
+            isRunning={running || cancelling}
             // Token summary data
             promptTokens={promptTokens}
             estimatedCompletionTokens={estimatedCompletionTokens}

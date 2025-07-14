@@ -123,10 +123,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           status: jobDetails.status,
           createdAt: jobDetails.createdAt,
           updatedAt: jobDetails.updatedAt,
+          provider: jobDetails.provider,
+          model: jobDetails.model,
+          costUsd: jobDetails.costUsd || null,
+          resultSnippet: jobDetails.result
+            ? jobDetails.result.substring(0, 100) + '...'
+            : null,
         };
 
         // Start with the job to set up the store
-        useJobStore.getState().start(mockJob);
+        useJobStore.getState().loadHistorical(mockJob);
 
         // Add the result to the log
         useJobStore.getState().append(jobDetails.result);

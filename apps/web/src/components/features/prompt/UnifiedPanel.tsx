@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { UnifiedPanelTabs } from './unified-panel/UnifiedPanelTabs.js';
 import { UnifiedPanelInput } from './unified-panel/UnifiedPanelInput.js';
 import UnifiedPanelResults from './unified-panel/UnifiedPanelResults.js';
+import { useJobsData } from '../../../hooks/useJobsData.js';
+import type { JobSummary } from '../sidebar/AppSidebar/types.js';
 
 interface UnifiedPanelProps {
   template: string;
@@ -13,11 +15,8 @@ interface UnifiedPanelProps {
   isEmptyState: boolean;
   metrics: Record<string, unknown> | undefined;
   hasResults: boolean;
+  currentJob?: JobSummary;
 }
-
-import { useQuery } from '@tanstack/react-query';
-import { ApiClient } from '../../../api.js';
-import type { JobSummary } from '../sidebar/AppSidebar/types.js';
 
 const UnifiedPanel = ({
   template,
@@ -29,19 +28,12 @@ const UnifiedPanel = ({
   isEmptyState,
   metrics,
   hasResults,
+  currentJob,
 }: UnifiedPanelProps) => {
   const [activeTab, setActiveTab] = useState<'input' | 'results'>('input');
 
   // Check if any jobs are currently evaluating
-  const { data: history = [] } = useQuery<JobSummary[]>({
-    queryKey: ['jobs'],
-    queryFn: () => {
-      if (!ApiClient) {
-        throw new Error('ApiClient is not available');
-      }
-      return ApiClient.listJobs();
-    },
-  });
+  const { data: history = [] } = useJobsData();
 
   const isEvaluating = history.some((job) => job.status === 'evaluating');
 
@@ -81,7 +73,7 @@ const UnifiedPanel = ({
             isEmptyState={isEmptyState}
           />
         ) : (
-          <UnifiedPanelResults metrics={metrics} />
+          <UnifiedPanelResults metrics={metrics} currentJob={currentJob} />
         )}
       </div>
     </div>

@@ -22,10 +22,12 @@ const mockJobStore = {
   start: vi.fn(),
   finish: vi.fn(),
   reset: vi.fn(),
+  setRunning: vi.fn(),
+  setCancelling: vi.fn(),
 };
 
 vi.mock('../../src/store/jobStore.js', () => ({
-  useJobStore: () => mockJobStore,
+  useJobStore: vi.fn(() => mockJobStore),
 }));
 
 // Create a wrapper component with QueryClient

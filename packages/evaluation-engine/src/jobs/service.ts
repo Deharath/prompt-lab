@@ -150,8 +150,8 @@ export async function listJobs(
       provider: jobs.provider,
       model: jobs.model,
       costUsd: jobs.costUsd,
-      metrics: jobs.metrics,
-      result: jobs.result,
+      result: jobs.result, // Keep result for snippet generation only
+      // Remove: metrics (heavy field, avgScore not used)
     })
     .from(jobs);
 
@@ -164,7 +164,6 @@ export async function listJobs(
     .offset(offset);
 
   return rows.map((row) => {
-    const metrics = row.metrics as JobMetricsWithAvg | null;
     // Create a snippet from result (first 100 chars, cleaned up)
     const resultSnippet = row.result
       ? row.result.replace(/\s+/g, ' ').trim().substring(0, 100) +
@@ -178,10 +177,21 @@ export async function listJobs(
       provider: row.provider,
       model: row.model,
       costUsd: row.costUsd,
-      avgScore: metrics?.avgScore ?? null,
       resultSnippet,
     };
   });
+}
+
+export async function getJobDetails(jobId: string): Promise<Job | undefined> {
+  await getDb();
+
+  const result = await db
+    .select() // Select all fields for full details
+    .from(jobs)
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+
+  return result[0];
 }
 
 export async function retryJob(id: string): Promise<Job | null> {

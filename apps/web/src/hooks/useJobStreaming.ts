@@ -1,7 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '../api.js';
 import { useJobStore } from '../store/jobStore.js';
+import {
+  batchUpdateJobsCache,
+  addJobToCache,
+  type JobUpdate,
+} from '../utils/cacheUtils.js';
 import type { JobSummary } from '../api.js';
 
 export interface JobStreamingState {
@@ -40,6 +45,20 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
   const { start, finish, reset: resetJobStore } = useJobStore();
   const queryClient = useQueryClient();
 
+  // Create debounced update function using native setTimeout
+  const debouncedCacheUpdate = useCallback(
+    (() => {
+      let timeoutId: number;
+      return (updates: JobUpdate[]) => {
+        clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(() => {
+          batchUpdateJobsCache(queryClient, updates);
+        }, 100);
+      };
+    })(),
+    [queryClient],
+  );
+
   // Cleanup function to close any active EventSource
   const closeCurrentStream = () => {
     if (currentEventSourceRef.current) {
@@ -77,8 +96,11 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
       selectedMetrics,
     } = params;
 
-    // Close any existing stream before starting a new one
-    closeCurrentStream();
+    // Close any existing EventSource but maintain executing state
+    if (currentEventSourceRef.current) {
+      currentEventSourceRef.current.close();
+      currentEventSourceRef.current = null;
+    }
 
     setError(null);
     setOutputText('');
@@ -123,19 +145,14 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
       });
 
       // Immediately add the new job to the history cache for instant UI feedback
-      queryClient.setQueryData(
-        ['jobs'],
-        (oldJobs: JobSummary[] | undefined) => {
-          const updatedJobs = oldJobs ? [...oldJobs] : [];
-          // Add the new job at the beginning (most recent first)
-          updatedJobs.unshift(job);
-          return updatedJobs;
-        },
-      );
+      addJobToCache(queryClient, job);
 
       start(job);
       let fullText = '';
       let metricsReceived = false;
+
+      // Add a small delay to ensure cancel button is clickable
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Store the new EventSource reference for future cancellation
       const eventSource = ApiClient.streamJob(
@@ -143,15 +160,9 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
         (token) => {
           // Update job status to 'running' when first token arrives
           if (fullText === '') {
-            queryClient.setQueryData(
-              ['jobs'],
-              (oldJobs: JobSummary[] | undefined) => {
-                if (!oldJobs) return oldJobs;
-                return oldJobs.map((j) =>
-                  j.id === job.id ? { ...j, status: 'running' as const } : j,
-                );
-              },
-            );
+            batchUpdateJobsCache(queryClient, [
+              { id: job.id, status: 'running' },
+            ]);
           }
           fullText += token;
           setOutputText(fullText);
@@ -160,6 +171,8 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setStreamStatus('complete');
           setIsExecuting(false);
           currentEventSourceRef.current = null;
+
+          // Don't immediately set running to false - wait for job completion polling
 
           try {
             // Poll for job completion with exponential backoff
@@ -187,42 +200,33 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
               finish((final.metrics as Record<string, unknown>) || {});
             }
 
+            // Set running to false when job is actually completed
+            useJobStore.setState({ running: false });
+
             // Update job status in history cache to final status
             if (final) {
-              queryClient.setQueryData(
-                ['jobs'],
-                (oldJobs: JobSummary[] | undefined) => {
-                  if (!oldJobs) return oldJobs;
-                  return oldJobs.map((j) =>
-                    j.id === job.id
-                      ? {
-                          ...j,
-                          status: final.status,
-                          costUsd: final.costUsd,
-                          // Add a result snippet for preview
-                          resultSnippet: final.result
-                            ? final.result.substring(0, 100) + '...'
-                            : null,
-                        }
-                      : j,
-                  );
+              batchUpdateJobsCache(queryClient, [
+                {
+                  id: job.id,
+                  status: final.status,
+                  costUsd: final.costUsd,
+                  // Add a result snippet for preview
+                  resultSnippet: final.result
+                    ? final.result.substring(0, 100) + '...'
+                    : null,
                 },
-              );
+              ]);
             }
           } catch (_err) {
             if (!metricsReceived) {
               finish({});
             }
+            // Set running to false on polling error
+            useJobStore.setState({ running: false });
             // Update job status to failed in history cache
-            queryClient.setQueryData(
-              ['jobs'],
-              (oldJobs: JobSummary[] | undefined) => {
-                if (!oldJobs) return oldJobs;
-                return oldJobs.map((j) =>
-                  j.id === job.id ? { ...j, status: 'failed' as const } : j,
-                );
-              },
-            );
+            batchUpdateJobsCache(queryClient, [
+              { id: job.id, status: 'failed' },
+            ]);
           }
         },
         (streamError) => {
@@ -231,16 +235,11 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           currentEventSourceRef.current = null;
           setError(`Stream error: ${streamError.message}`);
 
+          // Set running to false on error
+          useJobStore.setState({ running: false });
+
           // Update job status to failed in history cache
-          queryClient.setQueryData(
-            ['jobs'],
-            (oldJobs: JobSummary[] | undefined) => {
-              if (!oldJobs) return oldJobs;
-              return oldJobs.map((j) =>
-                j.id === job.id ? { ...j, status: 'failed' as const } : j,
-              );
-            },
-          );
+          batchUpdateJobsCache(queryClient, [{ id: job.id, status: 'failed' }]);
         },
         (metrics) => {
           // Don't cast to Record<string, number> as metrics can include complex objects
@@ -248,27 +247,15 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           finish(metrics || {});
 
           // Update job status to completed when metrics are received
-          queryClient.setQueryData(
-            ['jobs'],
-            (oldJobs: JobSummary[] | undefined) => {
-              if (!oldJobs) return oldJobs;
-              return oldJobs.map((j) =>
-                j.id === job.id ? { ...j, status: 'completed' as const } : j,
-              );
-            },
-          );
+          batchUpdateJobsCache(queryClient, [
+            { id: job.id, status: 'completed' },
+          ]);
         },
         // NEW: Status update handler
         (status) => {
-          queryClient.setQueryData(
-            ['jobs'],
-            (oldJobs: JobSummary[] | undefined) => {
-              if (!oldJobs) return oldJobs;
-              return oldJobs.map((j) =>
-                j.id === job.id ? { ...j, status: status as any } : j,
-              );
-            },
-          );
+          batchUpdateJobsCache(queryClient, [
+            { id: job.id, status: status as any },
+          ]);
         },
         // NEW: Cancelled handler
         (message) => {
@@ -276,15 +263,12 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setIsExecuting(false);
           currentEventSourceRef.current = null;
 
-          queryClient.setQueryData(
-            ['jobs'],
-            (oldJobs: JobSummary[] | undefined) => {
-              if (!oldJobs) return oldJobs;
-              return oldJobs.map((j) =>
-                j.id === job.id ? { ...j, status: 'cancelled' as const } : j,
-              );
-            },
-          );
+          // Set running and cancelling to false on cancellation
+          useJobStore.setState({ running: false, cancelling: false });
+
+          batchUpdateJobsCache(queryClient, [
+            { id: job.id, status: 'cancelled' },
+          ]);
         },
       );
 
@@ -294,6 +278,9 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
       setIsExecuting(false);
       const errorMessage = err instanceof Error ? err.message : 'Failed to run';
       setError(errorMessage);
+
+      // Set running to false on job creation error
+      useJobStore.setState({ running: false });
     }
   };
 

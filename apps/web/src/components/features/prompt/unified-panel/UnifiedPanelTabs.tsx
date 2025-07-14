@@ -53,13 +53,10 @@ export const UnifiedPanelTabs = ({
       </button>
       <button
         onClick={() => handleTabChange('results')}
-        disabled={!hasResults}
         className={`relative z-10 min-h-[48px] flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
           activeTab === 'results'
             ? 'text-foreground'
-            : hasResults
-              ? 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
-              : 'text-muted-foreground/50 cursor-not-allowed'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
         }`}
       >
         <div className="flex items-center justify-center space-x-2">

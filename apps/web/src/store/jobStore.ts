@@ -31,6 +31,7 @@ interface JobState {
   cancelling: boolean;
   cancelTimeoutId?: ReturnType<typeof setTimeout>;
   start(job: JobSummary): void;
+  loadHistorical(job: JobSummary): void;
   append(text: string): void;
   finish(metrics: MetricResult): void;
   reset(): void;
@@ -75,6 +76,18 @@ export const useJobStore = create<JobState>((set, get) => ({
       metrics: undefined,
       running: true,
       hasUserData: true,
+      cancelling: false, // Reset cancelling state when starting
+    });
+  },
+  loadHistorical: (job: JobSummary) => {
+    // Load historical job data without setting running state to true
+    set({
+      current: job,
+      log: [],
+      metrics: undefined,
+      running: false, // Historical jobs are not running
+      hasUserData: true,
+      cancelling: false,
     });
   },
   append: (text) => {
@@ -86,7 +99,8 @@ export const useJobStore = create<JobState>((set, get) => ({
       if (state.cancelTimeoutId) {
         clearTimeout(state.cancelTimeoutId);
       }
-      return { metrics, running: false, cancelTimeoutId: undefined };
+      // Don't automatically set running to false here - let the stream completion handler do it
+      return { metrics, cancelTimeoutId: undefined };
     });
   },
   reset: () => {

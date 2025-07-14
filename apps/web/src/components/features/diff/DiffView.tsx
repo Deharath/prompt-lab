@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiClient } from '../../../api.js';
 import { useJobStore } from '../../../store/jobStore.js';
+import { QUERY_CONFIG } from '../../../constants/queryConfig.js';
 import Card from '../../ui/Card.js';
 import Button from '../../ui/Button.js';
 import { DiffHeader } from './DiffHeader.js';
@@ -25,11 +26,9 @@ const DiffView = ({ baseJobId, compareJobId, onClose }: DiffViewProps) => {
     error,
   } = useQuery({
     queryKey: ['diff', baseJobId, compareJobId],
-    queryFn: () => {
-      return ApiClient.diffJobs(baseJobId, compareJobId);
-    },
+    queryFn: () => ApiClient.diffJobs(baseJobId, compareJobId),
     enabled: !!(baseJobId && compareJobId),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    ...QUERY_CONFIG.DIFF,
   });
 
   const handleClose = () => {

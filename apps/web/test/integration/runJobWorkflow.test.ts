@@ -5,9 +5,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act } from '@testing-library/react';
+import { useJobStreaming } from '../../src/hooks/useJobStreaming.js';
 import { useWorkspaceStore } from '../../src/store/workspaceStore.js';
 import { useJobStore } from '../../src/store/jobStore.js';
-import { useJobStreaming } from '../../src/hooks/useJobStreaming.js';
 import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
@@ -73,6 +73,30 @@ describe('Run Job Workflow Integration', () => {
     vi.clearAllMocks();
     vi.clearAllTimers();
     vi.useFakeTimers();
+
+    // Reset actual stores to initial state
+    useWorkspaceStore.setState({
+      template: '',
+      inputData: '',
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      promptTokens: 0,
+      estimatedCompletionTokens: 0,
+      totalTokens: 0,
+      estimatedCost: 0,
+    });
+
+    useJobStore.setState({
+      log: [],
+      history: [],
+      running: false,
+      hasUserData: false,
+      comparison: {},
+      cancelling: false,
+      cancelTimeoutId: undefined,
+      current: undefined,
+      metrics: undefined,
+    });
 
     // Set up default streamJob mock
     vi.mocked(ApiClient.streamJob).mockImplementation(() => {

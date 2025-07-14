@@ -13,6 +13,7 @@ import {
   Scatter,
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { QUERY_CONFIG } from '../constants/queryConfig.js';
 import { ApiClient } from '../api.js';
 import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/features/dashboard/TimeRangeSelector.js';
@@ -30,10 +31,7 @@ const DashboardPage = () => {
   const { data, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['dashboard', days],
     queryFn: () => ApiClient.fetchDashboardStats(days),
-    staleTime: 1000 * 10, // 10 seconds
-    refetchInterval: 1000 * 30, // Refetch every 30 seconds
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    ...QUERY_CONFIG.DASHBOARD,
   });
 
   const handleDaysChange = (newDays: number) => {

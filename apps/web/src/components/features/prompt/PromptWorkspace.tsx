@@ -10,6 +10,7 @@ import ErrorAlert from '../../ui/ErrorAlert.js';
 import { useJobStore } from '../../../store/jobStore.js';
 import { useWorkspaceStore } from '../../../store/workspaceStore.js';
 import { useJobStreaming } from '../../../hooks/useJobStreaming.js';
+import { useStateSynchronization } from '../../../hooks/useStateSynchronization.js';
 
 interface PromptWorkspaceProps {
   onJobSelect?: (jobId: string) => void;
@@ -25,6 +26,9 @@ export interface PromptWorkspaceRef {
  */
 const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
   ({ onJobSelect }, ref) => {
+    // Initialize state synchronization
+    useStateSynchronization();
+
     // Get workspace data from store
     const {
       template,
@@ -40,6 +44,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
     const isEmptyState = !template && !inputData;
 
     const {
+      current,
       log,
       metrics,
       temperature,
@@ -122,6 +127,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
               isEmptyState={isEmptyState}
               metrics={metrics}
               hasResults={!!(metrics && Object.keys(metrics).length > 0)}
+              currentJob={current}
             />
           </div>
 
