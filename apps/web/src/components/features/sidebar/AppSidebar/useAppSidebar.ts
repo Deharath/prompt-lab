@@ -62,10 +62,11 @@ export const useAppSidebar = (
     isLoading,
     error,
   } = useQuery<JobSummary[]>({
-    queryKey: ['job-history'],
-    queryFn: ApiClient.listJobs,
+    queryKey: ['jobs'],
+    queryFn: () => ApiClient.listJobs(),
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchInterval: 1000 * 30, // 30 seconds
+    refetchOnWindowFocus: false,
   });
 
   // Query client for manual refetch
@@ -155,7 +156,7 @@ export const useAppSidebar = (
       try {
         await ApiClient.deleteJob(deleteConfirmation.jobId);
         // Invalidate and refetch the job history
-        queryClient.invalidateQueries({ queryKey: ['job-history'] });
+        queryClient.invalidateQueries({ queryKey: ['jobs'] });
         setDeleteConfirmation(null);
       } catch (error) {
         console.error('Failed to delete job:', error);

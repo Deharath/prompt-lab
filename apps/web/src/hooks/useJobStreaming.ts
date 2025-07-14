@@ -329,6 +329,9 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
         console.error('Failed to cancel job on backend:', error);
       }
     }
+
+    // Update job store running state to false
+    finish({});
   };
 
   return {
