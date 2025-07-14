@@ -25,6 +25,7 @@ interface WorkspaceState {
   setInputData: (inputData: string) => void;
   setProvider: (provider: string) => void;
   setModel: (model: string) => void;
+  reset: () => void;
   startWithExample: () => void;
   loadJobData: (jobId: string) => Promise<void>;
 
@@ -64,6 +65,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setModel: (model: string) => {
     set({ model });
     get()._updateTokenData();
+  },
+
+  reset: () => {
+    set({
+      template: '',
+      inputData: '',
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      promptTokens: 0,
+      estimatedCompletionTokens: 0,
+      totalTokens: 0,
+      estimatedCost: 0,
+    });
   },
 
   startWithExample: () => {
