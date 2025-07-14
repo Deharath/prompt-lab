@@ -41,12 +41,12 @@ const DashboardPage = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-4 py-2">
+      <div className="flex-1 touch-pan-y overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-3 py-2 sm:px-4">
           {/* Compact Header */}
           <div className="mb-2">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                 Analytics Dashboard
               </h1>
               <TimeRangeSelector
@@ -73,13 +73,13 @@ const DashboardPage = () => {
           {data && !isLoading && !error && (
             <>
               {/* Key Metrics - Enhanced Dark Mode */}
-              <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+              <div className="mb-3 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Total Evaluations
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       {data.scoreHistory
                         .reduce((sum, item) => sum + item.totalJobs, 0)
                         .toLocaleString()}
@@ -87,12 +87,12 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Active Models
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       {data.tokensByModel?.length ||
                         data.estimatedCostByModel?.length ||
                         0}
@@ -100,12 +100,12 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Total Cost
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       $
                       {(
                         data.estimatedCostByModel?.reduce(
@@ -117,12 +117,12 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Avg Daily Tests
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       {Math.round(
                         data.scoreHistory.reduce(
                           (sum, item) => sum + item.totalJobs,
@@ -135,13 +135,13 @@ const DashboardPage = () => {
               </div>
 
               {/* Analytics Charts - 2x2 Grid Layout */}
-              <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-2">
+              <div className="grid min-h-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-2">
                 {/* Evaluation Activity Trend */}
                 <Card
                   title="Evaluation Activity"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={data.scoreHistory}>
                         <CartesianGrid
@@ -192,9 +192,9 @@ const DashboardPage = () => {
                 {/* Cost by Model - Vertical Bar Chart */}
                 <Card
                   title="Cost by Model"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     {data.estimatedCostByModel &&
                     data.estimatedCostByModel.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
@@ -262,9 +262,9 @@ const DashboardPage = () => {
                 {/* Token Usage by Model - Vertical Bar Chart */}
                 <Card
                   title="Token Usage by Model"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     {data.tokensByModel && data.tokensByModel.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
@@ -333,9 +333,9 @@ const DashboardPage = () => {
                 {/* Model Efficiency Analysis - Response Time vs Cost */}
                 <Card
                   title="Model Efficiency"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     {data.modelEfficiency && data.modelEfficiency.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <ScatterChart

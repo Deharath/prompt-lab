@@ -33,7 +33,7 @@
     "setup": "node --loader ts-node/esm scripts/setup-environment.ts",
     "setup:force": "node --loader ts-node/esm scripts/setup-environment.ts --force",
     "setup:check": "node --loader ts-node/esm scripts/setup-environment.ts --check",
-    "quality:check": "pnpm lint && pnpm tsc && pnpm test",
+    "quality:check": "pnpm lint && pnpm tsc && pnpm test && pnpm --filter @prompt-lab/evaluation-engine test",
     "quality:fix": "pnpm format && pnpm lint --fix",
     "pre-push": "pnpm quality:check"
   },

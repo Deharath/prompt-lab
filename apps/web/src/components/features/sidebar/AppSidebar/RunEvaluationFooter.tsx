@@ -31,14 +31,14 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
 
   return (
     <div className="border-border bg-card flex-shrink-0 border-t">
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <button
           onClick={handleClick}
           disabled={
             (!canRunEvaluation && !isRunning) ||
             (isRunning && !onCancelEvaluation)
           }
-          className={`focus-visible:ring-primary w-full rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
+          className={`focus-visible:ring-primary min-h-[44px] w-full touch-manipulation rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
             isRunning
               ? 'border border-red-500 bg-red-600 text-white shadow-sm hover:bg-red-700'
               : canRunEvaluation

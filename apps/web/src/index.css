@@ -52,6 +52,12 @@
 
   body {
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    /* Enhanced touch scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent zoom on iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent double-tap zoom */
+    touch-action: manipulation;
   }
 
   /* Defensive SVG icon constraints */
@@ -126,6 +132,24 @@
     height: calc(100dvh - 4rem);
   }
 
+  /* Touch-friendly button sizing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improved scrolling on mobile */
+  .scroll-smooth {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Better tap highlight */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   /* Screen reader only text */
   .sr-only {
     position: absolute;
@@ -192,9 +216,15 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - smaller on mobile */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+}
+
+@media (min-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
 }
 
 ::-webkit-scrollbar-track {

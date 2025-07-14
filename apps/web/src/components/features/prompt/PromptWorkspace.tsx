@@ -107,7 +107,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
         )}
 
         <section
-          className="flex min-h-0 w-full max-w-full flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row lg:gap-8"
+          className="flex min-h-0 w-full max-w-full flex-col items-start gap-4 p-3 sm:gap-6 sm:p-6 lg:flex-row lg:gap-8"
           aria-label="Prompt evaluation workspace"
         >
           {/* Left Column - Unified Input & Results Panel */}
@@ -126,10 +126,10 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
           </div>
 
           {/* Right Column - Modern Live Output */}
-          <div className="w-full min-w-0 space-y-4 sm:space-y-6 lg:w-3/5 lg:max-w-[60%]">
-            <div className="bg-card border-border flex h-fit flex-col overflow-hidden rounded-xl border shadow-sm">
+          <div className="w-full min-w-0 space-y-3 sm:space-y-6 lg:w-3/5 lg:max-w-[60%]">
+            <div className="bg-card border-border flex h-fit touch-pan-y flex-col overflow-hidden rounded-xl border shadow-sm">
               <div
-                className="flex flex-col p-6"
+                className="flex flex-col p-3 sm:p-6"
                 style={{
                   height:
                     displayOutputText || streamStatus === 'streaming'
