@@ -1,5 +1,6 @@
 import React from 'react';
 import JobListItem from './JobListItem.js';
+import { JobListSkeleton } from '../../../ui/Skeleton.js';
 import type { JobSummary, ComparisonState } from './types.js';
 
 interface HistoryTabProps {
@@ -127,11 +128,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
             </button>
           </div>
         ) : isLoading ? (
-          <div className="flex h-32 items-center justify-center">
-            <div className="flex items-center space-x-3">
-              <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
-              <span className="text-muted-foreground text-sm">Loading...</span>
-            </div>
+          <div className="space-y-2 p-3">
+            <JobListSkeleton itemCount={5} />
           </div>
         ) : history.length === 0 ? (
           <div className="p-6 text-center">

@@ -1,5 +1,6 @@
 import React from 'react';
 import UnifiedMetricsDisplay from './UnifiedMetricsDisplay.js';
+import { ResultsPanelSkeleton } from '../../ui/Skeleton.js';
 import { type MetricResult } from '@prompt-lab/shared-types';
 
 interface ResultsPanelProps {
@@ -23,6 +24,15 @@ const ResultsPanel: React.FC<ResultsPanelProps> = ({
   compact = false,
   className = '',
 }) => {
+  // Show skeleton while loading
+  if (!metrics || Object.keys(metrics).length === 0) {
+    return (
+      <div className={className} data-testid="results-panel">
+        <ResultsPanelSkeleton />
+      </div>
+    );
+  }
+
   return (
     <UnifiedMetricsDisplay
       metrics={metrics}

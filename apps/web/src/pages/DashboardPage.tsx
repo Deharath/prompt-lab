@@ -18,6 +18,7 @@ import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/features/dashboard/TimeRangeSelector.js';
 import { LoadingSpinner } from '../components/ui/LoadingState.js';
 import ErrorMessage from '../components/shared/ErrorMessage.js';
+import { DashboardSkeleton } from '../components/ui/Skeleton.js';
 import { useDarkModeStore } from '../store/darkModeStore.js';
 import type { DashboardStats } from '../types/dashboard.js';
 
@@ -39,6 +40,34 @@ const DashboardPage = () => {
     setDays(newDays);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex-1 touch-pan-y overflow-y-auto">
+          <DashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex-1 touch-pan-y overflow-y-auto">
+          <div className="mx-auto max-w-7xl px-3 py-2 sm:px-4">
+            <ErrorMessage
+              message={
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to load dashboard'
+              }
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 touch-pan-y overflow-y-auto">
@@ -56,18 +85,6 @@ const DashboardPage = () => {
               />
             </div>
           </div>
-
-          {/* Loading/Error States */}
-          {isLoading && <LoadingSpinner data-testid="loading-spinner" />}
-          {error && (
-            <ErrorMessage
-              message={
-                error instanceof Error
-                  ? error.message
-                  : 'Failed to load dashboard'
-              }
-            />
-          )}
 
           {/* Main Dashboard Content */}
           {data && !isLoading && !error && (
