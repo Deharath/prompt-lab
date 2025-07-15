@@ -430,12 +430,12 @@ jobsRouter.get(
       let clientDisconnected = false;
       let jobCancelled = false;
       const abortController = new AbortController();
-      
+
       const cleanup = () => {
         clientDisconnected = true;
         abortController.abort();
       };
-      
+
       const cancelJob = () => {
         jobCancelled = true;
         abortController.abort();
@@ -764,7 +764,7 @@ jobsRouter.get(
       } finally {
         // Clean up the cancellation function
         activeJobCancellations.delete(id);
-        
+
         // Only end the response if not already ended
         if (!res.writableEnded && !clientDisconnected) {
           res.end();
