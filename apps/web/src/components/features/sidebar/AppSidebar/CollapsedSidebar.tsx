@@ -15,6 +15,7 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
   canRunEvaluation = false,
   isRunning = false,
 }) => {
+  const [isCancelling, setIsCancelling] = React.useState(false);
   const tabs = [
     {
       id: 'history' as const,
@@ -36,9 +37,14 @@ const CollapsedSidebar: React.FC<CollapsedSidebarProps> = ({
     },
   ];
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (isRunning && onCancelEvaluation) {
-      onCancelEvaluation();
+      setIsCancelling(true);
+      try {
+        await onCancelEvaluation();
+      } finally {
+        setIsCancelling(false);
+      }
     } else if (!isRunning && onRunEvaluation) {
       onRunEvaluation();
     }
@@ -87,7 +93,8 @@ ${tab.description}`}
             onClick={handleClick}
             disabled={
               (!canRunEvaluation && !isRunning) ||
-              (isRunning && !onCancelEvaluation)
+              (isRunning && !onCancelEvaluation) ||
+              isCancelling
             }
             className={`focus-visible:ring-primary group flex h-12 w-full flex-col items-center justify-center rounded-lg border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 ${
               isRunning
@@ -98,14 +105,18 @@ ${tab.description}`}
             }`}
             aria-label={
               isRunning
-                ? 'Cancel running evaluation'
+                ? isCancelling
+                  ? 'Cancelling evaluation...'
+                  : 'Cancel running evaluation'
                 : canRunEvaluation
                   ? 'Run evaluation with current prompt and input'
                   : 'Complete prompt and input to run evaluation'
             }
             title={
               isRunning
-                ? 'Cancel'
+                ? isCancelling
+                  ? 'Cancelling...'
+                  : 'Cancel'
                 : canRunEvaluation
                   ? 'Run Evaluation'
                   : 'Need prompt & input'
@@ -113,20 +124,38 @@ ${tab.description}`}
           >
             {isRunning ? (
               <>
-                <svg
-                  className="h-5 w-5 transition-colors duration-200"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-                <span className="mt-1 text-[10px] font-medium">Cancel</span>
+                {isCancelling ? (
+                  <svg
+                    className="h-5 w-5 animate-spin transition-colors duration-200"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="h-5 w-5 transition-colors duration-200"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                )}
+                <span className="mt-1 text-[10px] font-medium">
+                  {isCancelling ? 'Cancelling...' : 'Cancel'}
+                </span>
               </>
             ) : (
               <>

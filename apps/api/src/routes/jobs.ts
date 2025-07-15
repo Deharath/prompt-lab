@@ -34,6 +34,7 @@ import {
   updateJobWithError,
   type Job,
 } from '@prompt-lab/evaluation-engine';
+import { WebSocketJobManager } from '../lib/websocketManager.js';
 import {
   ValidationError,
   NotFoundError,
@@ -199,6 +200,9 @@ function getDisabledMetricsForSystem(): Set<string> {
 
   return disabledMetrics;
 }
+
+// Map to track active jobs and their cancellation functions
+const activeJobCancellations = new Map<string, () => void>();
 
 const jobsRouter = createRouter();
 
@@ -422,11 +426,23 @@ jobsRouter.get(
         );
       }
 
-      // Track if client disconnected
+      // Track if client disconnected and job cancellation
       let clientDisconnected = false;
+      let jobCancelled = false;
+      const abortController = new AbortController();
+
       const cleanup = () => {
         clientDisconnected = true;
+        abortController.abort();
       };
+
+      const cancelJob = () => {
+        jobCancelled = true;
+        abortController.abort();
+      };
+
+      // Register the cancellation function for this job
+      activeJobCancellations.set(id, cancelJob);
 
       // Handle client disconnect
       req.on('close', cleanup);
@@ -510,9 +526,16 @@ jobsRouter.get(
                 return;
               }
 
-              // Check if job was cancelled by another request
-              const currentJob = await getJob(id);
-              if ((currentJob?.status as any) === 'cancelled') {
+              // Check if job was cancelled (more frequent checks)
+              if (jobCancelled || abortController.signal.aborted) {
+                // Save the partial output that was generated before cancellation
+                if (output.length > 0) {
+                  await updateJob(id, {
+                    status: 'cancelled' as any,
+                    result: output,
+                    errorMessage: 'Job cancelled by user',
+                  });
+                }
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent({ message: 'Job was cancelled' }, 'cancelled');
@@ -522,6 +545,15 @@ jobsRouter.get(
                   res.end();
                 }
                 return;
+              }
+
+              // Periodic database check for cancellation (every 10 iterations)
+              if (tokens % 10 === 0) {
+                const currentJob = await getJob(id);
+                if (currentJob?.status === 'cancelled') {
+                  cancelJob();
+                  continue; // Will be caught by the check above
+                }
               }
 
               if (!memoryCheck()) {
@@ -730,6 +762,9 @@ jobsRouter.get(
           sendEvent({ done: true }, 'done');
         }
       } finally {
+        // Clean up the cancellation function
+        activeJobCancellations.delete(id);
+
         // Only end the response if not already ended
         if (!res.writableEnded && !clientDisconnected) {
           res.end();
@@ -822,6 +857,15 @@ jobsRouter.put(
         status: 'cancelled' as any, // Type assertion until schema migration
         errorMessage: 'Job cancelled by user',
       });
+
+      // Immediately cancel the active job if it's streaming
+      const cancelFunction = activeJobCancellations.get(id);
+      if (cancelFunction) {
+        cancelFunction();
+      }
+
+      // Notify WebSocket connections about cancellation
+      WebSocketJobManager.getInstance().notifyJobCancelled(id);
 
       res.json({
         message: 'Job cancelled successfully',

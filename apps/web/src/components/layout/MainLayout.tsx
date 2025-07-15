@@ -72,7 +72,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           hideSidebarToggle={hideSidebar}
         />
 
-        <div className="mobile-full-height flex">
+        <div className="mobile-full-height flex overflow-hidden">
           {/* Sidebar */}
           {!hideSidebar &&
             (sidebarContent || (
@@ -85,15 +85,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
           {/* Main Content */}
           <main
-            className={`flex-1 overflow-hidden transition-all duration-300 ${
+            className={`sidebar-slide flex-1 overflow-hidden ${
               hideSidebar
                 ? 'w-full'
                 : sidebarCollapsed
                   ? 'lg:ml-16'
                   : 'lg:ml-80'
-            }`}
+            } ${!hideSidebar && mobileSidebarOpen ? 'ml-0' : ''}`}
           >
-            <div className="h-full overflow-y-auto">
+            <div className="h-full touch-pan-y overflow-y-auto">
               {loading ? (
                 <div className="flex h-full items-center justify-center">
                   <LoadingSpinner />
@@ -122,6 +122,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div
             className="fixed inset-0 z-40 bg-black/50 lg:hidden"
             onClick={() => setMobileSidebarOpen(false)}
+            onTouchEnd={() => setMobileSidebarOpen(false)}
             aria-hidden="true"
           />
         )}

@@ -119,6 +119,7 @@ copilot-instructions*
 .openai/
 .codeium/
 .tabnine/
+.gemini/
 
 # Vite artifacts
 **/*.timestamp-*.mjs

@@ -12,6 +12,12 @@ vi.mock('@huggingface/transformers', () => ({
   pipeline: vi.fn(),
 }));
 
+// Mock node-fetch to prevent actual HTTP calls during tests
+vi.mock('node-fetch', () => ({
+  __esModule: true,
+  default: vi.fn(),
+}));
+
 describe('Metrics Orchestrator', () => {
   beforeAll(async () => {
     // Initialize metrics registry before running tests
@@ -31,6 +37,25 @@ describe('Metrics Orchestrator', () => {
     (vi.mocked(transformersModule.pipeline) as any).mockResolvedValue(
       mockPipeline,
     );
+
+    // Set up node-fetch mock to return sentiment API responses
+    const nodeFetch = await import('node-fetch');
+    const mockFetch = vi.mocked(nodeFetch.default);
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          compound: 0.8,
+          positive: 0.8,
+          negative: 0.1,
+          neutral: 0.1,
+          label: 'positive',
+          confidence: 0.9,
+          mode: 'accurate',
+        },
+      }),
+    } as any);
   });
   describe('calculateMetrics', () => {
     it('should return empty object for empty input', async () => {

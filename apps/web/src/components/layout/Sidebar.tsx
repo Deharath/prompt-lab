@@ -125,7 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Mobile Sidebar */}
       <div
-        className={`mobile-full-height fixed top-16 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} `}
+        className={`mobile-full-height fixed top-16 left-0 z-50 w-80 max-w-[85vw] transform transition-transform duration-300 ease-in-out lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} `}
       >
         <AppSidebar
           isCollapsed={false}

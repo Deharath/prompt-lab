@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ApiClient } from '../api.js';
 import { SAMPLE_PROMPT, SAMPLE_INPUT } from '../constants/app.js';
+import { useJobStore } from './jobStore.js';
 import {
   countTokens,
   estimateCompletionTokens,
@@ -25,6 +26,7 @@ interface WorkspaceState {
   setInputData: (inputData: string) => void;
   setProvider: (provider: string) => void;
   setModel: (model: string) => void;
+  reset: () => void;
   startWithExample: () => void;
   loadJobData: (jobId: string) => Promise<void>;
 
@@ -66,6 +68,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     get()._updateTokenData();
   },
 
+  reset: () => {
+    set({
+      template: '',
+      inputData: '',
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      promptTokens: 0,
+      estimatedCompletionTokens: 0,
+      totalTokens: 0,
+      estimatedCost: 0,
+    });
+  },
+
   startWithExample: () => {
     set({
       template: SAMPLE_PROMPT,
@@ -92,6 +107,45 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           provider: jobDetails.provider,
           model: jobDetails.model,
         });
+      }
+
+      // Get job store actions
+      const { finish, reset } = useJobStore.getState();
+
+      // Always reset the job store first to clear any previous state
+      reset();
+
+      // Load historical job result into log if available
+      if (jobDetails.result) {
+        // Create a mock job to populate the store with historical data
+        const mockJob = {
+          id: jobDetails.id,
+          status: jobDetails.status,
+          createdAt: jobDetails.createdAt,
+          updatedAt: jobDetails.updatedAt,
+          provider: jobDetails.provider,
+          model: jobDetails.model,
+          costUsd: jobDetails.costUsd || null,
+          resultSnippet: jobDetails.result
+            ? jobDetails.result.substring(0, 100) + '...'
+            : null,
+        };
+
+        // Start with the job to set up the store
+        useJobStore.getState().loadHistorical(mockJob);
+
+        // Add the result to the log
+        useJobStore.getState().append(jobDetails.result);
+      }
+
+      // Handle metrics loading based on job status
+      if (jobDetails.metrics && jobDetails.status === 'completed') {
+        // Only load metrics for genuinely completed jobs
+        finish(jobDetails.metrics);
+      } else {
+        // For cancelled, failed, or other non-completed jobs, clear any existing metrics
+        // This prevents showing results from previously loaded completed jobs
+        finish({});
       }
 
       get()._updateTokenData();

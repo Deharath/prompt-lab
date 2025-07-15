@@ -70,7 +70,7 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
       ) : (
         <span
           onClick={handleShare}
-          className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-gray-100 p-1.5 text-gray-600 transition-all duration-200 hover:bg-gray-200 hover:text-gray-800"
+          className="button-press inline-flex cursor-pointer items-center justify-center rounded-lg bg-gray-100 p-1.5 text-gray-600 transition-all duration-200 hover:bg-gray-200 hover:text-gray-800"
           title="Share this run (Alt+C)"
           aria-label="Share this run"
           role="button"
@@ -101,7 +101,7 @@ const ShareRunButton = ({ jobId, as = 'button' }: ShareRunButtonProps) => {
       {/* Success Toast */}
       {showToast && (
         <div
-          className="animate-slide-up fixed top-4 right-4 z-50 rounded-lg bg-green-600 px-4 py-2 text-white shadow-lg transition-all duration-300"
+          className="toast-enter fixed top-4 right-4 z-50 rounded-lg bg-green-600 px-4 py-2 text-white shadow-lg"
           role="status"
           aria-live="polite"
         >

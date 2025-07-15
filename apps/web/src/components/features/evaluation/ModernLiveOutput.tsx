@@ -159,10 +159,10 @@ export function ModernLiveOutput({
   }, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* Modern Header */}
-      <div className="border-border/50 flex shrink-0 items-center justify-between border-b pb-4">
-        <div className="flex items-center space-x-3">
+    <div className="flex h-full min-h-0 touch-pan-y flex-col">
+      {/* Modern Header - Mobile Responsive */}
+      <div className="border-border/50 flex shrink-0 flex-col space-y-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
             <svg
               className="h-4 w-4 text-purple-600 dark:text-purple-400"
@@ -184,21 +184,22 @@ export function ModernLiveOutput({
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {/* View toggle - Modern pill design */}
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
+          {/* View toggle - Modern pill design with mobile optimization */}
           <div className="bg-muted/50 border-border/50 flex overflow-hidden rounded-lg border">
             <button
-              className={`px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+              className={`touch-manipulation px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:px-3 ${
                 viewMode === 'rendered'
                   ? 'bg-background text-foreground border-border/50 border-r shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
               }`}
               onClick={() => setViewMode('rendered')}
             >
-              Markdown
+              <span className="hidden sm:inline">Markdown</span>
+              <span className="sm:hidden">MD</span>
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+              className={`touch-manipulation px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:px-3 ${
                 viewMode === 'raw'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
@@ -209,9 +210,9 @@ export function ModernLiveOutput({
             </button>
           </div>
 
-          {/* Copy button - Modern design */}
+          {/* Copy button - Modern design with mobile optimization */}
           <button
-            className="bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50 flex items-center space-x-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200"
+            className="bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50 flex touch-manipulation items-center space-x-1.5 rounded-lg border px-2 py-1.5 text-xs font-medium transition-all duration-200 sm:px-3"
             onClick={handleCopy}
             aria-label={
               copied ? 'Output copied to clipboard' : 'Copy output to clipboard'
@@ -232,7 +233,7 @@ export function ModernLiveOutput({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span>Copied!</span>
+                <span className="hidden sm:inline">Copied!</span>
               </>
             ) : (
               <>
@@ -249,7 +250,7 @@ export function ModernLiveOutput({
                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                   />
                 </svg>
-                <span>Copy</span>
+                <span className="hidden sm:inline">Copy</span>
               </>
             )}
           </button>

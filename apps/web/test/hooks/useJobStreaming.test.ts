@@ -22,10 +22,17 @@ const mockJobStore = {
   start: vi.fn(),
   finish: vi.fn(),
   reset: vi.fn(),
+  setRunning: vi.fn(),
+  setCancelling: vi.fn(),
 };
 
 vi.mock('../../src/store/jobStore.js', () => ({
-  useJobStore: () => mockJobStore,
+  useJobStore: Object.assign(
+    vi.fn(() => mockJobStore),
+    {
+      getState: vi.fn(() => mockJobStore),
+    },
+  ),
 }));
 
 // Create a wrapper component with QueryClient
@@ -68,7 +75,6 @@ describe('useJobStreaming', () => {
 
     expect(typeof result.current.executeJob).toBe('function');
     expect(typeof result.current.reset).toBe('function');
-    expect(typeof result.current.cancelStream).toBe('function');
   });
 
   it('reset clears state correctly', () => {

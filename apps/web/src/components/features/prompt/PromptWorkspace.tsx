@@ -10,6 +10,7 @@ import ErrorAlert from '../../ui/ErrorAlert.js';
 import { useJobStore } from '../../../store/jobStore.js';
 import { useWorkspaceStore } from '../../../store/workspaceStore.js';
 import { useJobStreaming } from '../../../hooks/useJobStreaming.js';
+import { useStateSynchronization } from '../../../hooks/useStateSynchronization.js';
 
 interface PromptWorkspaceProps {
   onJobSelect?: (jobId: string) => void;
@@ -25,6 +26,9 @@ export interface PromptWorkspaceRef {
  */
 const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
   ({ onJobSelect }, ref) => {
+    // Initialize state synchronization
+    useStateSynchronization();
+
     // Get workspace data from store
     const {
       template,
@@ -40,6 +44,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
     const isEmptyState = !template && !inputData;
 
     const {
+      current,
       log,
       metrics,
       temperature,
@@ -55,12 +60,51 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
       setUserData(!!(template || inputData));
     }, [template, inputData, setUserData]);
 
-    const { outputText, streamStatus, isExecuting, executeJob, error } =
-      useJobStreaming();
+    const {
+      outputText,
+      streamStatus,
+      isExecuting,
+      executeJob,
+      error,
+      reset: resetStreaming,
+    } = useJobStreaming();
 
-    // Sync outputText with job store log for Bug #7 fix
-    const displayOutputText =
-      log.length > 0 ? log.map((l) => l.text).join('') : outputText;
+    // Create unified output data source
+    const unifiedOutput = useMemo(() => {
+      // Priority 1: If actively executing/streaming, use live output
+      if (isExecuting || streamStatus === 'streaming') {
+        return outputText;
+      }
+
+      // Priority 2: If we have historical log data, use it
+      if (log && log.length > 0) {
+        return log.map((entry) => entry.text).join('');
+      }
+
+      // Priority 3: If we have streaming output (completed job), use it
+      if (outputText) {
+        return outputText;
+      }
+
+      // No output available
+      return '';
+    }, [outputText, streamStatus, isExecuting, log]);
+
+    // Determine the appropriate stream status for display
+    const unifiedStreamStatus = useMemo(() => {
+      // If actively executing, use the real stream status
+      if (isExecuting) {
+        return streamStatus;
+      }
+
+      // If we have historical data or completed streaming output, mark as complete
+      if (unifiedOutput) {
+        return 'complete' as const;
+      }
+
+      // No output, use current stream status
+      return streamStatus;
+    }, [isExecuting, streamStatus, unifiedOutput]);
 
     const handleRun = async () => {
       await executeJob({
@@ -86,6 +130,9 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
 
     const handleJobSelect = async (jobId: string) => {
       try {
+        // Clear any active execution state before loading historical job
+        resetStreaming();
+
         await loadJobData(jobId);
 
         // Notify parent component if callback provided
@@ -107,7 +154,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
         )}
 
         <section
-          className="flex min-h-0 w-full max-w-full flex-col items-start gap-6 p-4 sm:p-6 lg:flex-row lg:gap-8"
+          className="flex min-h-0 w-full max-w-full flex-col items-start gap-4 p-3 sm:gap-6 sm:p-6 lg:flex-row lg:gap-8"
           aria-label="Prompt evaluation workspace"
         >
           {/* Left Column - Unified Input & Results Panel */}
@@ -121,26 +168,31 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
               onStartWithExample={startWithExample}
               isEmptyState={isEmptyState}
               metrics={metrics}
-              hasResults={!!(metrics && Object.keys(metrics).length > 0)}
+              hasResults={
+                metrics !== undefined &&
+                metrics !== null &&
+                Object.keys(metrics || {}).length > 0
+              }
+              currentJob={current}
             />
           </div>
 
           {/* Right Column - Modern Live Output */}
-          <div className="w-full min-w-0 space-y-4 sm:space-y-6 lg:w-3/5 lg:max-w-[60%]">
-            <div className="bg-card border-border flex h-fit flex-col overflow-hidden rounded-xl border shadow-sm">
+          <div className="w-full min-w-0 space-y-3 sm:space-y-6 lg:w-3/5 lg:max-w-[60%]">
+            <div className="bg-card border-border flex h-fit touch-pan-y flex-col overflow-hidden rounded-xl border shadow-sm">
               <div
-                className="flex flex-col p-6"
+                className="flex flex-col p-3 sm:p-6"
                 style={{
                   height:
-                    displayOutputText || streamStatus === 'streaming'
+                    unifiedOutput || unifiedStreamStatus === 'streaming'
                       ? '100%'
                       : 'auto',
                 }}
               >
-                {displayOutputText || streamStatus === 'streaming' ? (
+                {unifiedOutput || unifiedStreamStatus === 'streaming' ? (
                   <ModernLiveOutput
-                    outputText={displayOutputText}
-                    status={streamStatus}
+                    outputText={unifiedOutput}
+                    status={unifiedStreamStatus}
                   />
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center text-center">

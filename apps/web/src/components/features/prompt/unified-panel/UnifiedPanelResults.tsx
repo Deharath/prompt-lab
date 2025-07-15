@@ -6,11 +6,13 @@
 import React from 'react';
 import { type MetricResult } from '@prompt-lab/shared-types';
 import { processMetrics } from '../../../../lib/metrics/processor.js';
+import type { JobSummary } from '../../sidebar/AppSidebar/types.js';
 
 interface UnifiedPanelResultsProps {
   metrics: MetricResult | Record<string, unknown> | null | undefined;
   compact?: boolean;
   className?: string;
+  currentJob?: JobSummary;
 }
 
 const renderMetric = (
@@ -117,11 +119,45 @@ const UnifiedPanelResults: React.FC<UnifiedPanelResultsProps> = ({
   metrics,
   compact = true,
   className = '',
+  currentJob,
 }) => {
   if (
     !metrics ||
     (typeof metrics === 'object' && Object.keys(metrics).length === 0)
   ) {
+    // Determine the appropriate message based on job status
+    let title = 'No Results Yet';
+    let description = 'Run an evaluation to see metrics and analysis here';
+
+    if (currentJob) {
+      switch (currentJob.status) {
+        case 'cancelled':
+          title = 'Evaluation Cancelled';
+          description =
+            'This evaluation was cancelled and has no results to display';
+          break;
+        case 'failed':
+          title = 'Evaluation Failed';
+          description = 'This evaluation failed and could not generate results';
+          break;
+        case 'pending':
+        case 'running':
+        case 'evaluating':
+          title = 'Evaluation In Progress';
+          description =
+            'Results will appear here once the evaluation completes';
+          break;
+        case 'completed':
+          title = 'No Metrics Available';
+          description =
+            'This evaluation completed but no metrics were generated';
+          break;
+        default:
+          // Keep default message
+          break;
+      }
+    }
+
     return (
       <div className={`py-8 text-center ${className}`}>
         <div className="text-muted-foreground mb-4">
@@ -139,12 +175,8 @@ const UnifiedPanelResults: React.FC<UnifiedPanelResultsProps> = ({
             />
           </svg>
         </div>
-        <h3 className="text-foreground mb-2 text-lg font-semibold">
-          No Results Yet
-        </h3>
-        <p className="text-muted-foreground">
-          Run an evaluation to see metrics and analysis here
-        </p>
+        <h3 className="text-foreground mb-2 text-lg font-semibold">{title}</h3>
+        <p className="text-muted-foreground">{description}</p>
       </div>
     );
   }

@@ -3,17 +3,22 @@ import { useJobStore } from './store/jobStore.js';
 import { useJobStreaming } from './hooks/useJobStreaming.js';
 import { useWorkspaceStore } from './store/workspaceStore.js';
 import { useToggle } from './hooks/useToggle.js';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
+import { KEYBOARD_SHORTCUTS } from './constants/shortcuts.js';
+import { createShortcut } from './utils/keyboardUtils.js';
 import AppSidebar from './components/features/sidebar/AppSidebar/index.js';
 import DiffView from './components/features/diff/DiffView.js';
 import Header from './components/layout/Header.js';
 import PromptWorkspace, {
   type PromptWorkspaceRef,
 } from './components/features/prompt/PromptWorkspace.js';
+import { KeyboardShortcutsModal } from './components/ui/KeyboardShortcutsModal.js';
 
 const Home = () => {
   // Layout-only state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, toggleMobileMenu] = useToggle(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   // Touch handling for swipe gestures
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -25,11 +30,14 @@ const Home = () => {
     topP,
     maxTokens,
     selectedMetrics,
-    running,
-    current,
+    isExecuting,
+    isStreaming,
   } = useJobStore();
 
-  const { cancelStream } = useJobStreaming();
+  const { cancelJob, reset: resetJobStreaming } = useJobStreaming();
+
+  // Calculate running state from job execution
+  const running = isExecuting || isStreaming;
 
   // Get workspace data from store
   const {
@@ -45,6 +53,7 @@ const Home = () => {
     setModel,
     setTemplate,
     loadJobData,
+    reset: resetWorkspace,
   } = useWorkspaceStore();
 
   const canRunEvaluation = !!(template && inputData);
@@ -66,15 +75,55 @@ const Home = () => {
   };
 
   const handleCancel = async () => {
-    // Cancel the current running job
-    if (current?.id) {
-      await cancelStream(current.id);
-    }
+    // Use proper job cancellation
+    await cancelJob();
   };
 
   const handleCompareJobs = (_baseId: string, _compareId: string) => {
     // Comparison state is managed by the store, we just need to react to it
   };
+
+  // Keyboard shortcuts
+  const shortcuts = [
+    // Core actions
+    createShortcut(
+      KEYBOARD_SHORTCUTS.RUN_EVALUATION,
+      handleRun,
+      () => canRunEvaluation && !running,
+    ),
+    createShortcut(KEYBOARD_SHORTCUTS.CANCEL_JOB, handleCancel, () => running),
+
+    // Layout
+    createShortcut(KEYBOARD_SHORTCUTS.TOGGLE_SIDEBAR, () =>
+      setSidebarCollapsed(!sidebarCollapsed),
+    ),
+
+    // Workspace
+    createShortcut(
+      KEYBOARD_SHORTCUTS.CLEAR_WORKSPACE,
+      resetWorkspace,
+      () => !running,
+    ),
+
+    // Focus management
+    createShortcut(KEYBOARD_SHORTCUTS.FOCUS_SEARCH, () => {
+      // Focus the first input element in the workspace
+      const firstInput = document.querySelector<
+        HTMLInputElement | HTMLTextAreaElement
+      >('input:not([type="hidden"]):not([disabled]), textarea:not([disabled])');
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }),
+
+    // Help
+    createShortcut(KEYBOARD_SHORTCUTS.SHOW_SHORTCUTS, () =>
+      setShowShortcutsModal(true),
+    ),
+  ];
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts(shortcuts);
 
   // Handle swipe gestures for mobile sidebar
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -190,6 +239,12 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+      />
     </div>
   );
 };

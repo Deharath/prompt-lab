@@ -13,11 +13,13 @@ import {
   Scatter,
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { QUERY_CONFIG } from '../constants/queryConfig.js';
 import { ApiClient } from '../api.js';
 import Card from '../components/ui/Card.js';
 import TimeRangeSelector from '../components/features/dashboard/TimeRangeSelector.js';
 import { LoadingSpinner } from '../components/ui/LoadingState.js';
 import ErrorMessage from '../components/shared/ErrorMessage.js';
+import { DashboardSkeleton } from '../components/ui/Skeleton.js';
 import { useDarkModeStore } from '../store/darkModeStore.js';
 import type { DashboardStats } from '../types/dashboard.js';
 
@@ -29,42 +31,49 @@ const DashboardPage = () => {
   const { data, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['dashboard', days],
     queryFn: () => ApiClient.fetchDashboardStats(days),
-    staleTime: 1000 * 10, // 10 seconds
-    refetchInterval: 1000 * 30, // Refetch every 30 seconds
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    ...QUERY_CONFIG.DASHBOARD,
   });
-
-  const CustomScatterLabel = ({ payload, position, viewBox }: any) => {
-    if (!payload || !payload.model) return null;
-    const { x, y } = position;
-    const modelName = payload.model.split('-').slice(-1)[0]; // Show just the model variant
-    return (
-      <text
-        x={x}
-        y={y - 8}
-        textAnchor="middle"
-        fontSize={9}
-        fill={isDarkMode ? '#f9fafb' : '#111827'}
-        fontWeight="500"
-      >
-        {modelName}
-      </text>
-    );
-  };
 
   const handleDaysChange = (newDays: number) => {
     setDays(newDays);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex-1 touch-pan-y overflow-y-auto">
+          <DashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex-1 touch-pan-y overflow-y-auto">
+          <div className="mx-auto max-w-7xl px-3 py-2 sm:px-4">
+            <ErrorMessage
+              message={
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to load dashboard'
+              }
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-4 py-2">
+      <div className="flex-1 touch-pan-y overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-3 py-2 sm:px-4">
           {/* Compact Header */}
           <div className="mb-2">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                 Analytics Dashboard
               </h1>
               <TimeRangeSelector
@@ -75,29 +84,17 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Loading/Error States */}
-          {isLoading && <LoadingSpinner data-testid="loading-spinner" />}
-          {error && (
-            <ErrorMessage
-              message={
-                error instanceof Error
-                  ? error.message
-                  : 'Failed to load dashboard'
-              }
-            />
-          )}
-
           {/* Main Dashboard Content */}
           {data && !isLoading && !error && (
             <>
               {/* Key Metrics - Enhanced Dark Mode */}
-              <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+              <div className="mb-3 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Total Evaluations
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       {data.scoreHistory
                         .reduce((sum, item) => sum + item.totalJobs, 0)
                         .toLocaleString()}
@@ -105,12 +102,12 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Active Models
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       {data.tokensByModel?.length ||
                         data.estimatedCostByModel?.length ||
                         0}
@@ -118,12 +115,12 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Total Cost
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       $
                       {(
                         data.estimatedCostByModel?.reduce(
@@ -135,12 +132,12 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors dark:border-gray-600 dark:bg-gray-800">
+                <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       Avg Daily Tests
                     </p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
                       {Math.round(
                         data.scoreHistory.reduce(
                           (sum, item) => sum + item.totalJobs,
@@ -153,13 +150,13 @@ const DashboardPage = () => {
               </div>
 
               {/* Analytics Charts - 2x2 Grid Layout */}
-              <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-2">
+              <div className="grid min-h-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-2">
                 {/* Evaluation Activity Trend */}
                 <Card
                   title="Evaluation Activity"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={data.scoreHistory}>
                         <CartesianGrid
@@ -210,9 +207,9 @@ const DashboardPage = () => {
                 {/* Cost by Model - Vertical Bar Chart */}
                 <Card
                   title="Cost by Model"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     {data.estimatedCostByModel &&
                     data.estimatedCostByModel.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
@@ -280,9 +277,9 @@ const DashboardPage = () => {
                 {/* Token Usage by Model - Vertical Bar Chart */}
                 <Card
                   title="Token Usage by Model"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     {data.tokensByModel && data.tokensByModel.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
@@ -351,9 +348,9 @@ const DashboardPage = () => {
                 {/* Model Efficiency Analysis - Response Time vs Cost */}
                 <Card
                   title="Model Efficiency"
-                  className="h-80 bg-white p-4 dark:bg-gray-800"
+                  className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     {data.modelEfficiency && data.modelEfficiency.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <ScatterChart
@@ -368,18 +365,21 @@ const DashboardPage = () => {
                             type="number"
                             dataKey="avgResponseTime"
                             name="Response Time"
-                            unit="ms"
                             className="text-gray-600 dark:text-gray-400"
                             fontSize={11}
                             angle={-45}
                             textAnchor="end"
                             height={60}
+                            tickFormatter={(value) =>
+                              typeof value === 'number'
+                                ? `${value.toFixed(0)}ms`
+                                : value
+                            }
                           />
                           <YAxis
                             type="number"
                             dataKey="costPerToken"
                             name="Cost per Token"
-                            unit="$"
                             className="text-gray-600 dark:text-gray-400"
                             fontSize={11}
                             tickFormatter={(value) =>
@@ -389,41 +389,46 @@ const DashboardPage = () => {
                             }
                           />
                           <Tooltip
-                            contentStyle={{
-                              backgroundColor: isDarkMode
-                                ? 'rgba(31, 41, 55, 0.95)'
-                                : 'rgba(255, 255, 255, 0.95)',
-                              border: isDarkMode
-                                ? '1px solid #4b5563'
-                                : '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              fontSize: '13px',
-                              color: isDarkMode ? '#f9fafb' : '#111827',
-                            }}
-                            formatter={(value: number, name: string) => {
-                              if (name === 'Cost per Token') {
-                                return [
-                                  `$${(value * 1000).toFixed(4)}/K tokens`,
-                                  name,
-                                ];
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length > 0) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div
+                                    className="rounded-lg border p-3 shadow-lg"
+                                    style={{
+                                      backgroundColor: isDarkMode
+                                        ? 'rgba(31, 41, 55, 0.95)'
+                                        : 'rgba(255, 255, 255, 0.95)',
+                                      border: isDarkMode
+                                        ? '1px solid #4b5563'
+                                        : '1px solid #e5e7eb',
+                                      color: isDarkMode ? '#f9fafb' : '#111827',
+                                    }}
+                                  >
+                                    <div className="mb-2 font-semibold">
+                                      {data.model || 'Unknown Model'}
+                                    </div>
+                                    <div className="space-y-1 text-sm">
+                                      <div>
+                                        Response Time:{' '}
+                                        {data.avgResponseTime?.toFixed(0)}ms
+                                      </div>
+                                      <div>
+                                        Cost: $
+                                        {(data.costPerToken * 1000).toFixed(4)}
+                                        /K tokens
+                                      </div>
+                                      <div>
+                                        Total Jobs: {data.totalJobs || 0}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
                               }
-                              if (name === 'Response Time') {
-                                return [`${value.toFixed(0)}ms`, name];
-                              }
-                              return [value, name];
-                            }}
-                            labelFormatter={(label, payload) => {
-                              const data = payload?.[0]?.payload;
-                              return data
-                                ? `${data.model} (${data.totalJobs} jobs)`
-                                : label;
+                              return null;
                             }}
                           />
-                          <Scatter
-                            dataKey="costPerToken"
-                            fill="#8b5cf6"
-                            label={<CustomScatterLabel />}
-                          />
+                          <Scatter dataKey="costPerToken" fill="#8b5cf6" />
                         </ScatterChart>
                       </ResponsiveContainer>
                     ) : (

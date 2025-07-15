@@ -17,8 +17,10 @@ interface JobState {
   log: LogLine[];
   history: JobSummary[];
   metrics?: MetricResult;
-  running: boolean;
   hasUserData: boolean; // Track if user has any prompt/input data
+  // Execution state - shared across all components
+  isExecuting: boolean;
+  isStreaming: boolean;
   // Model parameters
   temperature: number;
   topP: number;
@@ -28,8 +30,9 @@ interface JobState {
     baseJobId?: string;
     compareJobId?: string;
   };
-  cancelling: boolean;
+
   start(job: JobSummary): void;
+  loadHistorical(job: JobSummary): void;
   append(text: string): void;
   finish(metrics: MetricResult): void;
   reset(): void;
@@ -42,14 +45,18 @@ interface JobState {
   setTopP(value: number): void;
   setMaxTokens(value: number): void;
   setSelectedMetrics(metrics: SelectedMetric[]): void;
-  cancelJob(id: string): Promise<void>;
+  // Execution state setters
+  setIsExecuting(isExecuting: boolean): void;
+  setIsStreaming(isStreaming: boolean): void;
 }
 
-export const useJobStore = create<JobState>((set) => ({
+export const useJobStore = create<JobState>((set, get) => ({
   log: [],
   history: [],
-  running: false,
   hasUserData: false,
+  // Execution state
+  isExecuting: false,
+  isStreaming: false,
   // Default parameter values
   temperature: 0.7,
   topP: 1.0,
@@ -65,13 +72,20 @@ export const useJobStore = create<JobState>((set) => ({
     { id: 'response_latency' }, // Essential for Model Efficiency dashboard
   ] as SelectedMetric[],
   comparison: {},
-  cancelling: false,
   start: (job) => {
     set({
       current: job,
       log: [],
       metrics: undefined,
-      running: true,
+      hasUserData: true,
+    });
+  },
+  loadHistorical: (job: JobSummary) => {
+    // Load historical job data without affecting running state
+    set({
+      current: job,
+      log: [],
+      metrics: undefined,
       hasUserData: true,
     });
   },
@@ -79,11 +93,16 @@ export const useJobStore = create<JobState>((set) => ({
     set((s) => ({ log: [...s.log, { ts: Date.now(), text }] }));
   },
   finish: (metrics) => {
-    set({ metrics, running: false });
+    set({ metrics });
   },
   reset: () => {
-    set({ current: undefined, log: [], metrics: undefined, running: false });
-    // Note: We intentionally do NOT reset hasUserData here to preserve the user's input between evaluations
+    set({
+      current: undefined,
+      log: [],
+      metrics: undefined,
+      isExecuting: false,
+      isStreaming: false,
+    });
   },
   setUserData: (hasData) => {
     set({ hasUserData: hasData });
@@ -95,50 +114,21 @@ export const useJobStore = create<JobState>((set) => ({
     set((s) => ({ comparison: { ...s.comparison, compareJobId: id } }));
   },
   clearComparison: () => {
-    set(() => ({ comparison: {} }));
+    set({ comparison: {} });
   },
   loadHistory: async () => {
     try {
-      const history = await ApiClient.listJobs();
-      set({ history });
+      const jobs = await ApiClient.listJobs();
+      set({ history: jobs });
     } catch (error) {
-      // History loading is not critical, silently fail or set empty history
-      set({ history: [] });
+      console.error('Failed to load job history:', error);
     }
   },
-  setTemperature: (value) => {
-    set({ temperature: value });
-  },
-  setTopP: (value) => {
-    set({ topP: value });
-  },
-  setMaxTokens: (value) => {
-    set({ maxTokens: value });
-  },
-  setSelectedMetrics: (metrics) => {
-    set({ selectedMetrics: metrics });
-  },
-  cancelJob: async (id) => {
-    set({ cancelling: true });
-    try {
-      await ApiClient.cancelJob(id);
-      // Don't immediately update state - wait for SSE confirmation
-      // The SSE 'cancelled' event will update the state
-
-      // Add timeout fallback in case SSE doesn't respond
-      setTimeout(() => {
-        set((state) => ({
-          current:
-            state.current?.id === id
-              ? { ...state.current, status: 'cancelled' as const }
-              : state.current,
-          cancelling: false,
-          running: false,
-        }));
-      }, 3000); // 3 second fallback
-    } catch (error) {
-      set({ cancelling: false });
-      throw error;
-    }
-  },
+  setTemperature: (temperature) => set({ temperature }),
+  setTopP: (topP) => set({ topP }),
+  setMaxTokens: (maxTokens) => set({ maxTokens }),
+  setSelectedMetrics: (selectedMetrics) => set({ selectedMetrics }),
+  // Execution state setters
+  setIsExecuting: (isExecuting) => set({ isExecuting }),
+  setIsStreaming: (isStreaming) => set({ isStreaming }),
 }));
