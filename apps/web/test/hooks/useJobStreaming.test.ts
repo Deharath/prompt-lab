@@ -75,7 +75,6 @@ describe('useJobStreaming', () => {
 
     expect(typeof result.current.executeJob).toBe('function');
     expect(typeof result.current.reset).toBe('function');
-    expect(typeof result.current.cancelStream).toBe('function');
   });
 
   it('reset clears state correctly', () => {

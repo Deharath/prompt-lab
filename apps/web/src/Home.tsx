@@ -30,12 +30,14 @@ const Home = () => {
     topP,
     maxTokens,
     selectedMetrics,
-    running,
-    current,
-    cancelling,
+    isExecuting,
+    isStreaming,
   } = useJobStore();
 
-  const { cancelStream } = useJobStreaming();
+  const { cancelJob, reset: resetJobStreaming } = useJobStreaming();
+
+  // Calculate running state from job execution
+  const running = isExecuting || isStreaming;
 
   // Get workspace data from store
   const {
@@ -73,10 +75,8 @@ const Home = () => {
   };
 
   const handleCancel = async () => {
-    // Use job store cancellation which properly manages cancelling state
-    if (current?.id) {
-      await useJobStore.getState().cancelJob(current.id);
-    }
+    // Use proper job cancellation
+    await cancelJob();
   };
 
   const handleCompareJobs = (_baseId: string, _compareId: string) => {
@@ -91,11 +91,7 @@ const Home = () => {
       handleRun,
       () => canRunEvaluation && !running,
     ),
-    createShortcut(
-      KEYBOARD_SHORTCUTS.CANCEL_JOB,
-      handleCancel,
-      () => running || cancelling,
-    ),
+    createShortcut(KEYBOARD_SHORTCUTS.CANCEL_JOB, handleCancel, () => running),
 
     // Layout
     createShortcut(KEYBOARD_SHORTCUTS.TOGGLE_SIDEBAR, () =>
@@ -200,7 +196,7 @@ const Home = () => {
             onRunEvaluation={handleRun}
             onCancelEvaluation={handleCancel}
             canRunEvaluation={canRunEvaluation}
-            isRunning={running || cancelling}
+            isRunning={running}
             // Token summary data
             promptTokens={promptTokens}
             estimatedCompletionTokens={estimatedCompletionTokens}

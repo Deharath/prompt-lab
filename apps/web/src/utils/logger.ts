@@ -38,6 +38,28 @@ class Logger {
 }
 
 export const logger = new Logger();
+/**
+ * Generates a consistent result snippet from output text
+ * @param text - The full output text
+ * @param maxLength - Maximum length of the snippet (default: 100)
+ * @returns A trimmed snippet with ellipsis if truncated
+ */
+export const generateResultSnippet = (
+  text: string,
+  maxLength: number = 100,
+): string | null => {
+  if (!text || text.trim().length === 0) {
+    return null;
+  }
+
+  const trimmedText = text.trim();
+
+  if (trimmedText.length <= maxLength) {
+    return trimmedText;
+  }
+
+  return trimmedText.substring(0, maxLength) + '...';
+};
 
 if (process.env.NODE_ENV === 'development') {
   logger.setLevel(LogLevel.DEBUG);

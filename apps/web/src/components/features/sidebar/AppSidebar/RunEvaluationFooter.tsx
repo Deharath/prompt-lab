@@ -19,11 +19,18 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
   canRunEvaluation = false,
   isRunning = false,
 }) => {
+  const [isCancelling, setIsCancelling] = React.useState(false);
+
   if (!onRunEvaluation) return null;
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (isRunning && onCancelEvaluation) {
-      onCancelEvaluation();
+      setIsCancelling(true);
+      try {
+        await onCancelEvaluation();
+      } finally {
+        setIsCancelling(false);
+      }
     } else if (!isRunning && onRunEvaluation) {
       onRunEvaluation();
     }
@@ -36,7 +43,8 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
           onClick={handleClick}
           disabled={
             (!canRunEvaluation && !isRunning) ||
-            (isRunning && !onCancelEvaluation)
+            (isRunning && !onCancelEvaluation) ||
+            isCancelling
           }
           className={`focus-visible:ring-primary button-press min-h-[44px] w-full touch-manipulation rounded-lg px-4 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${
             isRunning
@@ -47,7 +55,9 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
           }`}
           aria-label={
             isRunning
-              ? 'Cancel running evaluation'
+              ? isCancelling
+                ? 'Cancelling evaluation...'
+                : 'Cancel running evaluation'
               : canRunEvaluation
                 ? 'Start evaluation'
                 : 'Complete prompt and input to run evaluation'
@@ -55,20 +65,36 @@ const RunEvaluationFooter: React.FC<RunEvaluationFooterProps> = ({
         >
           {isRunning ? (
             <div className="flex items-center justify-center space-x-2">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-              <span>Cancel</span>
+              {isCancelling ? (
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              )}
+              <span>{isCancelling ? 'Cancelling...' : 'Cancel'}</span>
             </div>
           ) : (
             <div className="flex items-center justify-center space-x-2">

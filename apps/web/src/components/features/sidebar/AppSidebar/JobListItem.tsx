@@ -170,7 +170,9 @@ const JobListItem = memo<JobListItemProps>(
       prevProps.isFocused === nextProps.isFocused &&
       prevProps.selectionType === nextProps.selectionType &&
       prevProps.job.status === nextProps.job.status &&
-      prevProps.job.createdAt === nextProps.job.createdAt
+      prevProps.job.createdAt === nextProps.job.createdAt &&
+      prevProps.job.resultSnippet === nextProps.job.resultSnippet &&
+      prevProps.job.costUsd === nextProps.job.costUsd
     );
   },
 );

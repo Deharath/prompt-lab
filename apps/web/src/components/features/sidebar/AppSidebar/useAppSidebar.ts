@@ -23,6 +23,7 @@ export const useAppSidebar = (
   isCollapsed: boolean,
   onSelectJob: (jobId: string) => void,
   onCompareJobs: (baseId: string, compareId: string) => void,
+  isRunning: boolean = false, // Add isRunning prop
 ) => {
   // Get job store state and actions
   const {
@@ -34,7 +35,6 @@ export const useAppSidebar = (
     setBaseJob,
     setCompareJob,
     clearComparison,
-    running,
     // Configuration values from store
     temperature,
     topP,
@@ -45,6 +45,10 @@ export const useAppSidebar = (
     setMaxTokens,
     setSelectedMetrics,
   } = useJobStore();
+
+  // Remove duplicate useJobExecution call - use isRunning prop instead
+  // const { currentJob, isExecuting, isStreaming } = useJobExecution();
+  // const running = isExecuting || isStreaming;
 
   // Local component state
   const [compareMode, setCompareMode] = useState(false);

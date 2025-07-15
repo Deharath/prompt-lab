@@ -34,7 +34,6 @@ import {
   updateJobWithError,
   type Job,
 } from '@prompt-lab/evaluation-engine';
-import { JobCancellationManager } from '../lib/jobCancellationManager.js';
 import { WebSocketJobManager } from '../lib/websocketManager.js';
 import {
   ValidationError,
@@ -201,6 +200,9 @@ function getDisabledMetricsForSystem(): Set<string> {
 
   return disabledMetrics;
 }
+
+// Map to track active jobs and their cancellation functions
+const activeJobCancellations = new Map<string, () => void>();
 
 const jobsRouter = createRouter();
 
@@ -424,11 +426,23 @@ jobsRouter.get(
         );
       }
 
-      // Track if client disconnected
+      // Track if client disconnected and job cancellation
       let clientDisconnected = false;
+      let jobCancelled = false;
+      const abortController = new AbortController();
+      
       const cleanup = () => {
         clientDisconnected = true;
+        abortController.abort();
       };
+      
+      const cancelJob = () => {
+        jobCancelled = true;
+        abortController.abort();
+      };
+
+      // Register the cancellation function for this job
+      activeJobCancellations.set(id, cancelJob);
 
       // Handle client disconnect
       req.on('close', cleanup);
@@ -509,12 +523,11 @@ jobsRouter.get(
                   errorMessage: 'Client disconnected during streaming',
                 });
                 cleanupJobMemory(id, baselineMemoryMB);
-                JobCancellationManager.getInstance().removeJob(id);
                 return;
               }
 
-              // Check if job was cancelled by another request
-              if (JobCancellationManager.getInstance().isJobCancelled(id)) {
+              // Check if job was cancelled (more frequent checks)
+              if (jobCancelled || abortController.signal.aborted) {
                 // Save the partial output that was generated before cancellation
                 if (output.length > 0) {
                   await updateJob(id, {
@@ -524,7 +537,6 @@ jobsRouter.get(
                   });
                 }
                 cleanupJobMemory(id, baselineMemoryMB);
-                JobCancellationManager.getInstance().removeJob(id);
                 if (!clientDisconnected) {
                   sendEvent({ message: 'Job was cancelled' }, 'cancelled');
                   sendEvent({ done: true }, 'done');
@@ -535,6 +547,15 @@ jobsRouter.get(
                 return;
               }
 
+              // Periodic database check for cancellation (every 10 iterations)
+              if (tokens % 10 === 0) {
+                const currentJob = await getJob(id);
+                if (currentJob?.status === 'cancelled') {
+                  cancelJob();
+                  continue; // Will be caught by the check above
+                }
+              }
+
               if (!memoryCheck()) {
                 await updateJob(id, {
                   status: 'failed',
@@ -542,7 +563,6 @@ jobsRouter.get(
                   errorMessage: 'Job aborted due to memory constraints',
                 });
                 cleanupJobMemory(id, baselineMemoryMB);
-                JobCancellationManager.getInstance().removeJob(id);
                 if (!clientDisconnected) {
                   sendEvent(
                     { error: 'Job aborted due to memory constraints' },
@@ -562,7 +582,6 @@ jobsRouter.get(
               } catch (streamError) {
                 await updateJobWithError(id, streamError);
                 cleanupJobMemory(id, baselineMemoryMB);
-                JobCancellationManager.getInstance().removeJob(id);
                 const errorMessage =
                   streamError instanceof Error
                     ? streamError.message
@@ -602,7 +621,6 @@ jobsRouter.get(
                 errorMessage: 'Client disconnected before completion',
               });
               cleanupJobMemory(id, baselineMemoryMB);
-              JobCancellationManager.getInstance().removeJob(id);
               return;
             }
 
@@ -652,9 +670,6 @@ jobsRouter.get(
 
             // Clean up memory after successful completion
             cleanupJobMemory(id, baselineMemoryMB);
-
-            // Clean up cancellation tracking
-            JobCancellationManager.getInstance().removeJob(id);
             return;
           } catch (streamError) {
             // Defensive: should never reach here, but just in case
@@ -669,7 +684,6 @@ jobsRouter.get(
             });
             sendEvent({ status: 'failed' }, 'status');
             cleanupJobMemory(id, baselineMemoryMB);
-            JobCancellationManager.getInstance().removeJob(id);
             if (!clientDisconnected) {
               sendEvent({ error: errorMessage }, 'error');
               sendEvent({ done: true }, 'done');
@@ -731,7 +745,6 @@ jobsRouter.get(
 
           // Clean up memory after successful completion (non-streaming)
           cleanupJobMemory(id, baselineMemoryMB);
-          JobCancellationManager.getInstance().removeJob(id);
         }
       } catch (error) {
         const errorMessage =
@@ -743,13 +756,15 @@ jobsRouter.get(
         });
         sendEvent({ status: 'failed' }, 'status');
         cleanupJobMemory(id, baselineMemoryMB);
-        JobCancellationManager.getInstance().removeJob(id);
         // Always use sendEvent for error event
         if (!clientDisconnected) {
           sendEvent({ error: errorMessage }, 'error');
           sendEvent({ done: true }, 'done');
         }
       } finally {
+        // Clean up the cancellation function
+        activeJobCancellations.delete(id);
+        
         // Only end the response if not already ended
         if (!res.writableEnded && !clientDisconnected) {
           res.end();
@@ -843,8 +858,11 @@ jobsRouter.put(
         errorMessage: 'Job cancelled by user',
       });
 
-      // Add to cancellation manager for real-time tracking
-      JobCancellationManager.getInstance().cancelJob(id);
+      // Immediately cancel the active job if it's streaming
+      const cancelFunction = activeJobCancellations.get(id);
+      if (cancelFunction) {
+        cancelFunction();
+      }
 
       // Notify WebSocket connections about cancellation
       WebSocketJobManager.getInstance().notifyJobCancelled(id);

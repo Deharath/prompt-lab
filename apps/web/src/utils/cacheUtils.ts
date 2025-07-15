@@ -19,6 +19,28 @@ export const batchUpdateJobsCache = (
     });
   });
 };
+/**
+ * Updates job cache while preserving existing resultSnippet if not provided in update
+ */
+export const batchUpdateJobsCachePreserveSnippet = (
+  queryClient: QueryClient,
+  updates: JobUpdate[],
+) => {
+  queryClient.setQueryData(['jobs'], (oldJobs: JobSummary[] = []) => {
+    return oldJobs.map((job) => {
+      const update = updates.find((u) => u.id === job.id);
+      if (!update) return job;
+
+      // Preserve existing snippet if update doesn't include one
+      const preservedSnippet =
+        update.resultSnippet === undefined
+          ? job.resultSnippet
+          : update.resultSnippet;
+
+      return { ...job, ...update, resultSnippet: preservedSnippet };
+    });
+  });
+};
 
 export const addJobToCache = (queryClient: QueryClient, job: JobSummary) => {
   queryClient.setQueryData(['jobs'], (oldJobs: JobSummary[] = []) => {

@@ -20,12 +20,11 @@ describe('jobStore', () => {
     const state = useJobStore.getState();
     expect(state.log).toEqual([]);
     expect(state.history).toEqual([]);
-    expect(state.running).toBe(false);
     expect(state.hasUserData).toBe(false);
     expect(state.comparison).toEqual({});
   });
 
-  it('start sets current job and running', () => {
+  it('start sets current job', () => {
     const job = {
       id: '1',
       status: 'pending' as const,
@@ -38,7 +37,6 @@ describe('jobStore', () => {
     act(() => useJobStore.getState().start(job));
     const state = useJobStore.getState();
     expect(state.current).toEqual(job);
-    expect(state.running).toBe(true);
     expect(state.hasUserData).toBe(true);
     expect(state.log).toEqual([]);
   });
@@ -50,15 +48,14 @@ describe('jobStore', () => {
     expect(state.log[0].text).toBe('hello');
   });
 
-  it('finish sets metrics and stops running', () => {
+  it('finish sets metrics', () => {
     const metrics = { score: 1 };
     act(() => useJobStore.getState().finish(metrics));
     const state = useJobStore.getState();
     expect(state.metrics).toEqual(metrics);
-    expect(state.running).toBe(false);
   });
 
-  it('reset clears current, log, metrics, running', () => {
+  it('reset clears current, log, metrics', () => {
     act(() => {
       useJobStore.getState().start({
         id: '1',
@@ -77,7 +74,6 @@ describe('jobStore', () => {
     expect(state.current).toBeUndefined();
     expect(state.log).toEqual([]);
     expect(state.metrics).toBeUndefined();
-    expect(state.running).toBe(false);
   });
 
   it('setUserData updates hasUserData', () => {

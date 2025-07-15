@@ -45,6 +45,7 @@ const AppSidebar = memo<AppSidebarProps>(
       isCollapsed,
       onSelectJob || (() => {}),
       onCompareJobs || (() => {}),
+      isRunning, // Pass isRunning prop to useAppSidebar
     );
 
     // Destructure state for cleaner JSX

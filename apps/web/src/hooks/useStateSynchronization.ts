@@ -1,10 +1,15 @@
 import { useEffect } from 'react';
 import { useJobStore } from '../store/jobStore.js';
 import { useWorkspaceStore } from '../store/workspaceStore.js';
+import { useJobExecution } from './useJobExecution.js';
 
 export const useStateSynchronization = () => {
-  const { current: currentJob, metrics, running } = useJobStore();
+  const { metrics } = useJobStore();
   const { loadJobData } = useWorkspaceStore();
+  const { currentJob, isExecuting, isStreaming } = useJobExecution();
+
+  // Calculate running state from job execution
+  const running = isExecuting || isStreaming;
 
   // Sync workspace when job changes, but avoid syncing for actively running jobs
   useEffect(() => {
