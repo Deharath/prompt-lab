@@ -32,11 +32,15 @@ beforeAll(async () => {
   }
   const migrationsPath = join(
     testDir,
-    '../../../packages/api/src/db/migrations.ts',
+    '../../../packages/evaluation-engine/src/db/migrations-drizzle.ts',
   );
   const migrationsUrl = pathToFileURL(migrationsPath).href;
-  const { runMigrations } = await import(migrationsUrl);
-  await runMigrations();
+  const { runDrizzleMigrations } = await import(migrationsUrl);
+
+  // Initialize database for tests
+  const Database = (await import('better-sqlite3')).default;
+  const sqlite = new Database(':memory:');
+  await runDrizzleMigrations(sqlite);
   // Optionally log success
   // console.log('✅ DB migrations completed for test environment');
 });
@@ -59,6 +63,8 @@ export const mockListJobs = vi.fn();
 export const mockGetPreviousJob = vi.fn();
 export const mockSetProvider = vi.fn();
 export const mockResetProviders = vi.fn();
+export const mockDeleteJob = vi.fn();
+export const mockRetryJob = vi.fn();
 
 // Mock provider registry for tests
 export const mockProviderRegistry = new Map<string, any>();
@@ -264,6 +270,8 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
     updateJob: mockUpdateJob,
     listJobs: mockListJobs,
     getPreviousJob: mockGetPreviousJob,
+    deleteJob: mockDeleteJob,
+    retryJob: mockRetryJob,
 
     // Mock config
     config: mockConfig,
