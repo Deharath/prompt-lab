@@ -201,7 +201,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
             }
 
             // Set running to false when job is actually completed
-            useJobStore.setState({ running: false });
+            useJobStore.getState().reset();
 
             // Update job status in history cache to final status
             if (final) {
@@ -222,7 +222,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
               finish({});
             }
             // Set running to false on polling error
-            useJobStore.setState({ running: false });
+            useJobStore.getState().reset();
             // Update job status to failed in history cache
             batchUpdateJobsCache(queryClient, [
               { id: job.id, status: 'failed' },
@@ -236,7 +236,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           setError(`Stream error: ${streamError.message}`);
 
           // Set running to false on error
-          useJobStore.setState({ running: false });
+          useJobStore.getState().reset();
 
           // Update job status to failed in history cache
           batchUpdateJobsCache(queryClient, [{ id: job.id, status: 'failed' }]);
@@ -264,7 +264,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
           currentEventSourceRef.current = null;
 
           // Set running and cancelling to false on cancellation
-          useJobStore.setState({ running: false, cancelling: false });
+          useJobStore.getState().reset();
 
           batchUpdateJobsCache(queryClient, [
             { id: job.id, status: 'cancelled' },
@@ -280,7 +280,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
       setError(errorMessage);
 
       // Set running to false on job creation error
-      useJobStore.setState({ running: false });
+      useJobStore.getState().reset();
     }
   };
 
@@ -319,7 +319,7 @@ export const useJobStreaming = (): JobStreamingState & JobStreamingActions => {
 
     // Update job store running state to false without clearing metrics
     // Never clear metrics on cancellation - preserve existing metrics
-    useJobStore.setState({ running: false });
+    useJobStore.getState().reset();
   };
 
   return {

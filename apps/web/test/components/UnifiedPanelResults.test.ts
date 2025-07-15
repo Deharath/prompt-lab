@@ -10,9 +10,11 @@ import UnifiedPanelResults from '../../src/components/features/prompt/unified-pa
 describe('UnifiedPanelResults', () => {
   it('shows default message when no job provided', () => {
     render(createElement(UnifiedPanelResults, { metrics: null }));
-    
+
     expect(screen.getByText('No Results Yet')).toBeInTheDocument();
-    expect(screen.getByText('Run an evaluation to see metrics and analysis here')).toBeInTheDocument();
+    expect(
+      screen.getByText('Run an evaluation to see metrics and analysis here'),
+    ).toBeInTheDocument();
   });
 
   it('shows cancelled message for cancelled job', () => {
@@ -26,13 +28,19 @@ describe('UnifiedPanelResults', () => {
       resultSnippet: null,
     };
 
-    render(createElement(UnifiedPanelResults, { 
-      metrics: null, 
-      currentJob: mockCancelledJob 
-    }));
-    
+    render(
+      createElement(UnifiedPanelResults, {
+        metrics: null,
+        currentJob: mockCancelledJob,
+      }),
+    );
+
     expect(screen.getByText('Evaluation Cancelled')).toBeInTheDocument();
-    expect(screen.getByText('This evaluation was cancelled and has no results to display')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'This evaluation was cancelled and has no results to display',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('shows failed message for failed job', () => {
@@ -46,13 +54,17 @@ describe('UnifiedPanelResults', () => {
       resultSnippet: null,
     };
 
-    render(createElement(UnifiedPanelResults, { 
-      metrics: null, 
-      currentJob: mockFailedJob 
-    }));
-    
+    render(
+      createElement(UnifiedPanelResults, {
+        metrics: null,
+        currentJob: mockFailedJob,
+      }),
+    );
+
     expect(screen.getByText('Evaluation Failed')).toBeInTheDocument();
-    expect(screen.getByText('This evaluation failed and could not generate results')).toBeInTheDocument();
+    expect(
+      screen.getByText('This evaluation failed and could not generate results'),
+    ).toBeInTheDocument();
   });
 
   it('shows in progress message for running job', () => {
@@ -66,13 +78,19 @@ describe('UnifiedPanelResults', () => {
       resultSnippet: null,
     };
 
-    render(createElement(UnifiedPanelResults, { 
-      metrics: null, 
-      currentJob: mockRunningJob 
-    }));
-    
+    render(
+      createElement(UnifiedPanelResults, {
+        metrics: null,
+        currentJob: mockRunningJob,
+      }),
+    );
+
     expect(screen.getByText('Evaluation In Progress')).toBeInTheDocument();
-    expect(screen.getByText('Results will appear here once the evaluation completes')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Results will appear here once the evaluation completes',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('displays metrics when provided', () => {
@@ -83,7 +101,7 @@ describe('UnifiedPanelResults', () => {
     };
 
     render(createElement(UnifiedPanelResults, { metrics: mockMetrics }));
-    
+
     // Should not show the "No Results Yet" message when metrics are present
     expect(screen.queryByText('No Results Yet')).not.toBeInTheDocument();
   });
