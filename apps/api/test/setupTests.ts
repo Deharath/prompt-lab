@@ -162,11 +162,15 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
     items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return items.slice(offset, offset + limit).map((j) => ({
       id: j.id,
+      status: j.status,
       createdAt: j.createdAt,
       provider: j.provider,
       model: j.model,
       costUsd: j.costUsd ?? null,
-      avgScore: j.metrics?.avgScore ?? null,
+      resultSnippet: j.result
+        ? j.result.replace(/\s+/g, ' ').trim().substring(0, 100) +
+          (j.result.length > 100 ? '...' : '')
+        : null,
     }));
   });
 
@@ -530,11 +534,15 @@ afterEach(() => {
     items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return items.slice(offset, offset + limit).map((j) => ({
       id: j.id,
+      status: j.status,
       createdAt: j.createdAt,
       provider: j.provider,
       model: j.model,
       costUsd: j.costUsd ?? null,
-      avgScore: j.metrics?.avgScore ?? null,
+      resultSnippet: j.result
+        ? j.result.replace(/\s+/g, ' ').trim().substring(0, 100) +
+          (j.result.length > 100 ? '...' : '')
+        : null,
     }));
   });
 

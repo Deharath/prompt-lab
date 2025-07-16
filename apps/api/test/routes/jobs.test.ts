@@ -12,17 +12,7 @@ import {
   mockRetryJob,
 } from '../setupTests.js';
 
-// Mock the retryJob function
-vi.mock('@prompt-lab/evaluation-engine', async () => {
-  const actual = await vi.importActual('@prompt-lab/evaluation-engine');
-  return {
-    ...actual,
-    retryJob: vi.fn(),
-  };
-});
-
-// Add the mock to setupTests exports
-const mockRetryJobFn = vi.fn();
+// Mock functions are already set up in setupTests.ts
 
 describe('Jobs API', () => {
   beforeEach(() => {
@@ -56,12 +46,7 @@ describe('Jobs API', () => {
       return updatedJob;
     });
 
-    mockListJobs.mockImplementation(async (options = {}) => {
-      const { limit = 20, offset = 0 } = options;
-      const jobs = Array.from(mockJobStore.values());
-      jobs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      return jobs.slice(offset, offset + limit);
-    });
+    // mockListJobs implementation is already set up in setupTests.ts with proper JobSummary format
 
     mockDeleteJob.mockImplementation(async (id) => {
       const exists = mockJobStore.has(id);
@@ -79,7 +64,7 @@ describe('Jobs API', () => {
       return currentIndex > 0 ? allJobs[currentIndex - 1] : null;
     });
 
-    mockRetryJobFn.mockImplementation(async (id) => {
+    mockRetryJob.mockImplementation(async (id) => {
       const originalJob = mockJobStore.get(id);
       if (!originalJob) return null;
 
@@ -433,8 +418,7 @@ describe('Jobs API', () => {
       });
 
       // Mock the retry function
-      const { retryJob } = await import('@prompt-lab/evaluation-engine');
-      vi.mocked(retryJob).mockResolvedValue({
+      mockRetryJob.mockResolvedValue({
         ...originalJob,
         id: `${originalJob.id}-retry`,
         status: 'pending',
@@ -453,8 +437,7 @@ describe('Jobs API', () => {
     });
 
     it('should return 404 for non-existent job', async () => {
-      const { retryJob } = await import('@prompt-lab/evaluation-engine');
-      vi.mocked(retryJob).mockResolvedValue(null);
+      mockRetryJob.mockResolvedValue(null);
 
       await request(app).post('/jobs/non-existent-id/retry').expect(404);
     });

@@ -16,7 +16,14 @@ import {
 import sentimentRouter from './routes/sentiment.js';
 
 // Resolve repo root from this file location
-const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
+const rootDir = (() => {
+  try {
+    return fileURLToPath(new URL('../../../..', import.meta.url));
+  } catch (error) {
+    // Fallback for test environments
+    return process.cwd();
+  }
+})();
 
 export const app: Express = express();
 

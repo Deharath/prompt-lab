@@ -16,17 +16,21 @@ const defaultConfig = {
 // Try to load config, but fallback to defaults if it fails
 let appConfig = defaultConfig;
 try {
-  // Only import config if we're not in a problematic test environment
+  // Only import config if we're not in a test environment
   if (
     typeof import.meta?.url === 'string' &&
-    import.meta.url.startsWith('file:')
+    import.meta.url.startsWith('file:') &&
+    !process.env.NODE_ENV?.includes('test') &&
+    !process.env.VITEST
   ) {
     const { config } = require('../config/index.js');
     appConfig = config;
   }
 } catch (error) {
-  // Use default config if config loading fails
-  console.warn('Failed to load config for logger, using defaults');
+  // Use default config if config loading fails - only warn if not in test mode
+  if (!process.env.NODE_ENV?.includes('test') && !process.env.VITEST) {
+    console.warn('Failed to load config for logger, using defaults');
+  }
 }
 
 // Create winston logger with structured format

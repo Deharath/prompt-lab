@@ -7,15 +7,43 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { config } from '../config/index.js';
 import { log } from '../utils/logger.js';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __dirname = (() => {
+  try {
+    return fileURLToPath(new URL('.', import.meta.url));
+  } catch (error) {
+    // Fallback for test environments or when import.meta.url is not available
+    // Final fallback - use current working directory
+    return process.cwd();
+  }
+})();
 
 export async function runDrizzleMigrations(sqlite: Database.Database) {
   try {
     const db = drizzle(sqlite);
-    const migrationPath = join(__dirname, '../../drizzle/migrations');
+    // Try the normal path first, then fallback to relative paths for test environments
+    let migrationPath = join(__dirname, '../../drizzle/migrations');
 
     if (!existsSync(migrationPath)) {
-      throw new Error(`Migration folder not found: ${migrationPath}`);
+      // Fallback for test environments - try relative to package root
+      migrationPath = join(
+        process.cwd(),
+        'packages/evaluation-engine/drizzle/migrations',
+      );
+    }
+
+    if (!existsSync(migrationPath)) {
+      // Another fallback - try from current working directory
+      migrationPath = join(process.cwd(), 'drizzle/migrations');
+    }
+
+    if (!existsSync(migrationPath)) {
+      throw new Error(
+        `Migration folder not found. Tried paths: ${[
+          join(__dirname, '../../drizzle/migrations'),
+          join(process.cwd(), 'packages/evaluation-engine/drizzle/migrations'),
+          join(process.cwd(), 'drizzle/migrations'),
+        ].join(', ')}`,
+      );
     }
 
     log.info('Running Drizzle migrations', { migrationPath });
