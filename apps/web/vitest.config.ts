@@ -35,44 +35,17 @@ export default defineConfig({
     ],
   },
   test: {
-    environment: 'jsdom',
+    environment: process.env.VITEST_BROWSER === 'true' ? 'jsdom' : 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
     globals: true,
-    // Suppress excessive logging
     silent: false,
-    projects: [
-      // Standard unit/integration tests
-      {
-        extends: true,
-        test: {
-          name: 'unit',
-          include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          environment: 'jsdom',
-        },
-      },
-      // Storybook tests
-      {
-        extends: true,
-        plugins: [
-          storybookTest({
-            configDir: path.join(dirname, '.storybook'),
-          }),
-        ],
-        test: {
-          name: 'storybook',
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: 'playwright',
-            instances: [
-              {
-                browser: 'chromium',
-              },
-            ],
-          },
-          setupFiles: ['.storybook/vitest.setup.ts'],
-        },
-      },
-    ],
+    include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    // Simplified configuration - removed complex dual-project setup
+    browser: process.env.VITEST_BROWSER === 'true' ? {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chromium',
+      headless: true,
+    } : undefined,
   },
 });

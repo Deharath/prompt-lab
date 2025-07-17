@@ -13,7 +13,7 @@
     "dev": "pnpm dev:api & pnpm dev:web",
     "tsc": "pnpm --filter @prompt-lab/shared-types build && pnpm -r tsc --noEmit --pretty false",
     "build": "pnpm -r --sort build",
-    "test": "vitest run --coverage --config vitest.config.mts --reporter=dot",
+    "test": "NODE_ENV=test vitest run --coverage --config vitest.config.mts --reporter=dot",
     "test:e2e": "pnpm exec vitest run apps/api/test/e2e.test.ts --reporter=dot",
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
@@ -33,7 +33,7 @@
     "setup": "node --loader ts-node/esm scripts/setup-environment.ts",
     "setup:force": "node --loader ts-node/esm scripts/setup-environment.ts --force",
     "setup:check": "node --loader ts-node/esm scripts/setup-environment.ts --check",
-    "quality:check": "pnpm lint && pnpm tsc && pnpm test && pnpm --filter @prompt-lab/evaluation-engine test",
+    "quality:check": "pnpm lint && pnpm tsc && NODE_ENV=test pnpm test && NODE_ENV=test pnpm --filter @prompt-lab/evaluation-engine test",
     "quality:fix": "pnpm format && pnpm lint --fix",
     "pre-push": "pnpm quality:check"
   },
