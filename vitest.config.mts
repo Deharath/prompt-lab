@@ -9,7 +9,9 @@ export default defineConfig({
   plugins: [react(), wasm(), topLevelAwait(), tsconfigPaths()],
   resolve: {
     alias: {
-      '@prompt-lab/evaluation-engine': resolve('packages/evaluation-engine/src/index.ts'),
+      '@prompt-lab/evaluation-engine': resolve(
+        'packages/evaluation-engine/src/index.ts',
+      ),
       '@prompt-lab/shared-types': resolve('packages/shared-types/src/index.ts'),
     },
   },
@@ -42,8 +44,12 @@ export default defineConfig({
         setupFiles: [resolve('./apps/api/test/setupTests.ts')],
         resolve: {
           alias: {
-            '@prompt-lab/evaluation-engine': resolve('packages/evaluation-engine/src/index.ts'),
-            '@prompt-lab/shared-types': resolve('packages/shared-types/src/index.ts'),
+            '@prompt-lab/evaluation-engine': resolve(
+              'packages/evaluation-engine/src/index.ts',
+            ),
+            '@prompt-lab/shared-types': resolve(
+              'packages/shared-types/src/index.ts',
+            ),
           },
         },
       },
@@ -67,8 +73,12 @@ export default defineConfig({
         setupFiles: [resolve('./apps/web/src/setupTests.ts')],
         resolve: {
           alias: {
-            '@prompt-lab/evaluation-engine': resolve('packages/evaluation-engine/src/index.ts'),
-            '@prompt-lab/shared-types': resolve('packages/shared-types/src/index.ts'),
+            '@prompt-lab/evaluation-engine': resolve(
+              'packages/evaluation-engine/src/index.ts',
+            ),
+            '@prompt-lab/shared-types': resolve(
+              'packages/shared-types/src/index.ts',
+            ),
           },
         },
       },

@@ -48,6 +48,33 @@ import {
   type MetricInput,
 } from '@prompt-lab/evaluation-engine';
 
+// Simple in-memory cache for metrics results
+const metricsCache = new Map<
+  string,
+  { result: Record<string, unknown>; timestamp: number }
+>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+// Generate cache key from output and metrics configuration
+function generateCacheKey(output: string, metrics: MetricInput[]): string {
+  const outputHash = output.substring(0, 100) + output.length; // Simple hash
+  const metricsKey = metrics
+    .map((m) => `${m.id}:${m.input || ''}`)
+    .sort()
+    .join('|');
+  return `${outputHash}:${metricsKey}`;
+}
+
+// Clean expired cache entries
+function cleanupCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of metricsCache) {
+    if (now - entry.timestamp > CACHE_TTL_MS) {
+      metricsCache.delete(key);
+    }
+  }
+}
+
 /**
  * Get default metrics based on system memory constraints
  * Disables sentiment analysis on low-memory systems (< 2GB RAM)
@@ -104,26 +131,38 @@ async function calculateJobMetrics(
     return {};
   }
 
-  // Always run all available metrics instead of selected ones
-  const allAvailableMetrics = MetricRegistry.getAll()
-    .filter((plugin) => {
-      // Filter out memory-intensive metrics on low-memory systems
-      const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
-      const isLowMemorySystem = totalSystemMemoryGB < 2;
+  // Use selected metrics if provided, otherwise fall back to defaults for better performance
+  let metrics: MetricInput[];
 
-      if (
-        isLowMemorySystem &&
-        plugin.requiresMemory &&
-        plugin.requiresMemory > 100
-      ) {
-        return false;
-      }
-      return true;
-    })
-    .map((plugin) => ({ id: plugin.id }));
+  if (
+    selectedMetrics &&
+    Array.isArray(selectedMetrics) &&
+    selectedMetrics.length > 0
+  ) {
+    // Use the selected metrics from the job
+    metrics = selectedMetrics as MetricInput[];
+  } else {
+    // Fall back to default metrics only (not ALL metrics) for better performance
+    const defaultMetrics = MetricRegistry.getDefaults()
+      .filter((plugin) => {
+        // Filter out memory-intensive metrics on low-memory systems
+        const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
+        const isLowMemorySystem = totalSystemMemoryGB < 2;
 
-  // Use all available metrics instead of just defaults
-  let allMetrics: MetricInput[] = allAvailableMetrics;
+        if (
+          isLowMemorySystem &&
+          plugin.requiresMemory &&
+          plugin.requiresMemory > 100
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .map((plugin) => ({ id: plugin.id }));
+
+    metrics = defaultMetrics;
+  }
 
   // For precision, recall, f_score, BLEU, and ROUGE: if no explicit input provided, use job context as reference
   if (jobContext) {
@@ -136,7 +175,7 @@ async function calculateJobMetrics(
       'rouge_2',
       'rouge_l',
     ].forEach((metricId) => {
-      const metric = allMetrics.find((m) => m.id === metricId);
+      const metric = metrics.find((m) => m.id === metricId);
       if (metric && !metric.input) {
         // Build reference text from input data (the article/content to summarize)
         let referenceText = '';
@@ -163,11 +202,32 @@ async function calculateJobMetrics(
     });
   }
 
+  // Check cache first for performance improvement
+  const cacheKey = generateCacheKey(output, metrics);
+  const cachedEntry = metricsCache.get(cacheKey);
+
+  if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+    return cachedEntry.result;
+  }
+
+  // Calculate metrics if not cached
   const result = await calculateMetrics(
     output,
-    allMetrics,
+    metrics,
     getDisabledMetricsForSystem(),
   );
+
+  // Cache the result for future use
+  metricsCache.set(cacheKey, {
+    result: result.results,
+    timestamp: Date.now(),
+  });
+
+  // Periodic cache cleanup (every 10 calculations)
+  if (metricsCache.size % 10 === 0) {
+    cleanupCache();
+  }
+
   return result.results;
 }
 

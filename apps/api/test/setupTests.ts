@@ -12,7 +12,7 @@ process.env.DISABLE_SENTIMENT_ANALYSIS = 'true';
 beforeAll(async () => {
   // Force module isolation for API tests
   vi.resetModules();
-  
+
   // Clear any existing global state
   if (typeof globalThis !== 'undefined') {
     // Clear any global state that might leak between projects
@@ -679,13 +679,13 @@ afterEach(() => {
 afterAll(() => {
   // Clear all mocks completely
   vi.clearAllMocks();
-  
+
   // Reset modules to ensure clean state for next project
   vi.resetModules();
-  
+
   // Clear provider registry
   mockProviderRegistry.clear();
-  
+
   // Clear job store
   mockJobStore.clear();
 });
