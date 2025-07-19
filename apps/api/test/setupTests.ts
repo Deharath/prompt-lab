@@ -1,4 +1,4 @@
-import { vi, beforeAll, afterEach } from 'vitest';
+import { vi, beforeAll, afterEach, afterAll } from 'vitest';
 
 // Set up in-memory database and environment variables for all tests FIRST
 process.env.DATABASE_URL = ':memory:';
@@ -8,8 +8,17 @@ process.env.GEMINI_API_KEY = 'test-gemini-key';
 process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
 process.env.DISABLE_SENTIMENT_ANALYSIS = 'true';
 
-// Ensure DB migrations are run before any tests
+// Ensure DB migrations are run before any tests and proper isolation
 beforeAll(async () => {
+  // Force module isolation for API tests
+  vi.resetModules();
+
+  // Clear any existing global state
+  if (typeof globalThis !== 'undefined') {
+    // Clear any global state that might leak between projects
+    delete (globalThis as any).__vite_plugin_react_cached_babel_config__;
+    delete (globalThis as any).__vite_plugin_react_preamble_installed__;
+  }
   // Dynamically resolve the absolute path to the migrations file for ESM/monorepo
   const { fileURLToPath, pathToFileURL } = await import('url');
   const { join, dirname, resolve } = await import('path');
@@ -32,11 +41,130 @@ beforeAll(async () => {
   }
   const migrationsPath = join(
     testDir,
-    '../../../packages/api/src/db/migrations.ts',
+    '../../../packages/evaluation-engine/src/db/migrations-drizzle.ts',
   );
   const migrationsUrl = pathToFileURL(migrationsPath).href;
-  const { runMigrations } = await import(migrationsUrl);
-  await runMigrations();
+  const { runDrizzleMigrations } = await import(migrationsUrl);
+
+  // Generate migrations if they don't exist (for CI environments)
+  const migrationsDir = join(
+    testDir,
+    '../../../packages/evaluation-engine/drizzle/migrations',
+  );
+
+  // Check if the migration files actually exist, not just the directory
+  const migrationFile = join(migrationsDir, '0000_fresh_start.sql');
+  const journalFile = join(migrationsDir, 'meta/_journal.json');
+
+  if (!existsSync(migrationFile) || !existsSync(journalFile)) {
+    const { mkdirSync, writeFileSync } = await import('fs');
+    const { execSync } = await import('child_process');
+
+    // Create the complete drizzle directory structure
+    const drizzleDir = join(
+      testDir,
+      '../../../packages/evaluation-engine/drizzle',
+    );
+    const metaDir = join(drizzleDir, 'meta');
+    const migrationsMetaDir = join(migrationsDir, 'meta');
+
+    mkdirSync(migrationsMetaDir, { recursive: true });
+    mkdirSync(metaDir, { recursive: true });
+
+    // Generate migrations using drizzle-kit
+    const packageDir = join(testDir, '../../../packages/evaluation-engine');
+    try {
+      execSync('npx drizzle-kit generate:sqlite', {
+        cwd: packageDir,
+        stdio: 'pipe',
+        env: { ...process.env, DATABASE_URL: ':memory:' },
+      });
+      console.log('✅ Generated Drizzle migrations for test environment');
+
+      // Verify that critical files exist, create them if missing
+      if (!existsSync(migrationFile) || !existsSync(journalFile)) {
+        throw new Error('Generated files are incomplete, using fallback');
+      }
+    } catch (error) {
+      // If generation fails or files are incomplete, create minimal migration structure
+      console.warn(
+        '⚠️ Drizzle generation failed or incomplete, creating minimal migration structure',
+      );
+
+      // Create minimal migration file from schema
+      const migrationContent = `CREATE TABLE \`jobs\` (
+	\`id\` text PRIMARY KEY NOT NULL,
+	\`prompt\` text NOT NULL,
+	\`template\` text,
+	\`input_data\` text,
+	\`provider\` text NOT NULL,
+	\`model\` text NOT NULL,
+	\`status\` text DEFAULT 'pending' NOT NULL,
+	\`result\` text,
+	\`metrics\` text,
+	\`error_message\` text,
+	\`error_type\` text,
+	\`tokens_used\` integer,
+	\`cost_usd\` real,
+	\`temperature\` real,
+	\`top_p\` real,
+	\`max_tokens\` integer,
+	\`selected_metrics\` text,
+	\`attempt_count\` integer DEFAULT 1 NOT NULL,
+	\`max_attempts\` integer DEFAULT 3 NOT NULL,
+	\`created_at\` integer DEFAULT (strftime('%s', 'now')) NOT NULL,
+	\`updated_at\` integer DEFAULT (strftime('%s', 'now')) NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX \`jobs_status_idx\` ON \`jobs\` (\`status\`);--> statement-breakpoint
+CREATE INDEX \`jobs_created_at_idx\` ON \`jobs\` (\`created_at\`);--> statement-breakpoint
+CREATE INDEX \`jobs_provider_model_idx\` ON \`jobs\` (\`provider\`,\`model\`);`;
+
+      const journalContent = JSON.stringify({
+        version: '5',
+        dialect: 'sqlite',
+        entries: [
+          {
+            idx: 0,
+            version: '5',
+            when: Date.now(),
+            tag: '0000_fresh_start',
+            breakpoints: true,
+          },
+        ],
+      });
+
+      const snapshotContent = JSON.stringify({
+        version: '5',
+        dialect: 'sqlite',
+        id: '0000',
+        prevId: '00000000-0000-0000-0000-000000000000',
+        tables: {},
+        enums: {},
+        _meta: { schemas: {}, tables: {}, columns: {} },
+      });
+
+      writeFileSync(
+        join(migrationsDir, '0000_fresh_start.sql'),
+        migrationContent,
+      );
+      writeFileSync(join(migrationsMetaDir, '_journal.json'), journalContent);
+      writeFileSync(
+        join(migrationsMetaDir, '0000_snapshot.json'),
+        snapshotContent,
+      );
+      writeFileSync(join(metaDir, '_journal.json'), journalContent);
+
+      console.log(
+        '✅ Created minimal migration structure for test environment',
+      );
+    }
+  }
+
+  // Initialize database for tests
+  const Database = (await import('better-sqlite3')).default;
+  const sqlite = new Database(':memory:');
+  await runDrizzleMigrations(sqlite);
   // Optionally log success
   // console.log('✅ DB migrations completed for test environment');
 });
@@ -59,6 +187,8 @@ export const mockListJobs = vi.fn();
 export const mockGetPreviousJob = vi.fn();
 export const mockSetProvider = vi.fn();
 export const mockResetProviders = vi.fn();
+export const mockDeleteJob = vi.fn();
+export const mockRetryJob = vi.fn();
 
 // Mock provider registry for tests
 export const mockProviderRegistry = new Map<string, any>();
@@ -117,14 +247,13 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
     await importOriginal<typeof import('@prompt-lab/evaluation-engine')>();
 
   // Set up the job store and mock implementations
-  let jobIdCounter = 1;
 
   mockCreateJob.mockImplementation(async (data) => {
-    const id = `job-${jobIdCounter++}`;
+    const id = `job-${globalJobIdCounter++}`;
     const newJob = {
       id,
       ...data,
-      status: 'pending',
+      status: data.status || 'pending',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -156,11 +285,15 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
     items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return items.slice(offset, offset + limit).map((j) => ({
       id: j.id,
+      status: j.status,
       createdAt: j.createdAt,
       provider: j.provider,
       model: j.model,
       costUsd: j.costUsd ?? null,
-      avgScore: j.metrics?.avgScore ?? null,
+      resultSnippet: j.result
+        ? j.result.replace(/\s+/g, ' ').trim().substring(0, 100) +
+          (j.result.length > 100 ? '...' : '')
+        : null,
     }));
   });
 
@@ -183,6 +316,29 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
 
   mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
     return getPreviousJobImpl(currentJobId);
+  });
+
+  mockDeleteJob.mockImplementation(async (id: string) => {
+    const exists = mockJobStore.has(id);
+    if (exists) {
+      mockJobStore.delete(id);
+    }
+    return exists;
+  });
+
+  mockRetryJob.mockImplementation(async (id: string) => {
+    const originalJob = mockJobStore.get(id);
+    if (!originalJob) return null;
+
+    const newJob = {
+      ...originalJob,
+      id: `job-${globalJobIdCounter++}`,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mockJobStore.set(newJob.id, newJob);
+    return newJob;
   });
 
   // Return a new module object that mocks specific exports
@@ -264,6 +420,8 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
     updateJob: mockUpdateJob,
     listJobs: mockListJobs,
     getPreviousJob: mockGetPreviousJob,
+    deleteJob: mockDeleteJob,
+    retryJob: mockRetryJob,
 
     // Mock config
     config: mockConfig,
@@ -446,16 +604,37 @@ vi.mock('@google/generative-ai', () => {
 // TEST ISOLATION - Enforce Clean State
 // ================================================================================================
 
+// Global job ID counter for proper test isolation
+let globalJobIdCounter = 1;
+
 /**
  * Global afterEach hook - maintains test isolation
  * Resets all mocks and restores default config state
  */
 afterEach(() => {
-  // Clear all mock histories and reset mock implementations
-  vi.clearAllMocks();
-
   // Clear the job store for test isolation
   mockJobStore.clear();
+
+  // Reset job ID counter for test isolation
+  globalJobIdCounter = 1;
+
+  // Clear mock call history but preserve implementations
+  mockCreateJob.mockClear();
+  mockGetJob.mockClear();
+  mockUpdateJob.mockClear();
+  mockListJobs.mockClear();
+  mockGetPreviousJob.mockClear();
+  mockDeleteJob.mockClear();
+  mockRetryJob.mockClear();
+  mockGetProvider.mockClear();
+  mockSetProvider.mockClear();
+  mockResetProviders.mockClear();
+  mockEvaluateWithOpenAI.mockClear();
+  mockEvaluateWithGemini.mockClear();
+  mockGetEvaluator.mockClear();
+
+  // Reset provider registry to prevent leakage
+  mockProviderRegistry.clear();
 
   // Reset mockConfig to default "happy path" state
   mockConfig.openai.apiKey = 'sk-test-key-from-ci-fix';
@@ -483,15 +662,14 @@ afterEach(() => {
     score: 0.85,
   });
 
-  // Re-setup job mocks after clearAllMocks
-  let jobIdCounter = 1;
+  // Re-setup job mocks to ensure they work properly
 
   mockCreateJob.mockImplementation(async (data) => {
-    const id = `job-${jobIdCounter++}`;
+    const id = `job-${globalJobIdCounter++}`;
     const newJob = {
       id,
       ...data,
-      status: 'pending',
+      status: data.status || 'pending',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -522,11 +700,15 @@ afterEach(() => {
     items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return items.slice(offset, offset + limit).map((j) => ({
       id: j.id,
+      status: j.status,
       createdAt: j.createdAt,
       provider: j.provider,
       model: j.model,
       costUsd: j.costUsd ?? null,
-      avgScore: j.metrics?.avgScore ?? null,
+      resultSnippet: j.result
+        ? j.result.replace(/\s+/g, ' ').trim().substring(0, 100) +
+          (j.result.length > 100 ? '...' : '')
+        : null,
     }));
   });
 
@@ -549,6 +731,29 @@ afterEach(() => {
 
   mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
     return getPreviousJobImpl(currentJobId);
+  });
+
+  mockDeleteJob.mockImplementation(async (id: string) => {
+    const exists = mockJobStore.has(id);
+    if (exists) {
+      mockJobStore.delete(id);
+    }
+    return exists;
+  });
+
+  mockRetryJob.mockImplementation(async (id: string) => {
+    const originalJob = mockJobStore.get(id);
+    if (!originalJob) return null;
+
+    const newJob = {
+      ...originalJob,
+      id: `job-${globalJobIdCounter++}`,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mockJobStore.set(newJob.id, newJob);
+    return newJob;
   });
 
   // Reset provider mock
@@ -583,4 +788,19 @@ afterEach(() => {
     }
     throw new Error(`Unsupported model: ${model}`);
   });
+});
+
+// Clean up after all API tests to prevent state leakage to other projects
+afterAll(() => {
+  // Clear all mocks completely
+  vi.clearAllMocks();
+
+  // Reset modules to ensure clean state for next project
+  vi.resetModules();
+
+  // Clear provider registry
+  mockProviderRegistry.clear();
+
+  // Clear job store
+  mockJobStore.clear();
 });

@@ -6,7 +6,7 @@ import { useKeyboardShortcuts } from '../../../../hooks/useKeyboardShortcuts.js'
 import { KEYBOARD_SHORTCUTS } from '../../../../constants/shortcuts.js';
 import { createShortcut } from '../../../../utils/keyboardUtils.js';
 import { useJobsData } from '../../../../hooks/useJobsData.js';
-import type { JobSummary, DeleteConfirmation, TabType } from './types.js';
+import type { JobSummary, TabType } from './types.js';
 
 /**
  * Custom hook for managing AppSidebar state and logic
@@ -54,8 +54,6 @@ export const useAppSidebar = (
   const [compareMode, setCompareMode] = useState(false);
   const [focusedJobIndex, setFocusedJobIndex] = useState(-1);
   const [activeTab, setActiveTab] = useState<TabType>('history');
-  const [deleteConfirmation, setDeleteConfirmation] =
-    useState<DeleteConfirmation | null>(null);
 
   // Refs for keyboard navigation
   const jobListRef = useRef<HTMLDivElement>(null);
@@ -132,39 +130,25 @@ export const useAppSidebar = (
 
   // Handle delete job
   const handleDelete = useCallback(
-    (jobId: string, event: React.MouseEvent) => {
+    async (jobId: string, event: React.MouseEvent) => {
       event.stopPropagation();
-      const job = history.find((j) => j.id === jobId);
-      if (job) {
-        setDeleteConfirmation({
-          jobId,
-          shortId: job.id.slice(0, 8),
-        });
-      }
-    },
-    [history],
-  );
-
-  // Confirm delete
-  const confirmDelete = useCallback(async () => {
-    if (deleteConfirmation?.jobId) {
       try {
-        await ApiClient.deleteJob(deleteConfirmation.jobId);
+        await ApiClient.deleteJob(jobId);
         // Invalidate and refetch the job history
         queryClient.invalidateQueries({ queryKey: ['jobs'] });
-        setDeleteConfirmation(null);
       } catch (error) {
         console.error('Failed to delete job:', error);
         // You might want to show an error toast here
       }
-    }
-  }, [deleteConfirmation, queryClient]);
+    },
+    [queryClient],
+  );
 
   // Handle keyboard navigation for job list
   useEffect(() => {
     if (isCollapsed || activeTab !== 'history') return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (!jobListRef.current) return;
 
       switch (e.key) {
@@ -193,10 +177,12 @@ export const useAppSidebar = (
           e.preventDefault();
           if (focusedJobIndex >= 0 && focusedJobIndex < history.length) {
             const job = history[focusedJobIndex];
-            setDeleteConfirmation({
-              jobId: job.id,
-              shortId: job.id.slice(0, 8),
-            });
+            try {
+              await ApiClient.deleteJob(job.id);
+              queryClient.invalidateQueries({ queryKey: ['jobs'] });
+            } catch (error) {
+              console.error('Failed to delete job:', error);
+            }
           }
           break;
         case 'Escape':
@@ -228,7 +214,7 @@ export const useAppSidebar = (
     compareMode,
     focusedJobIndex,
     activeTab,
-    deleteConfirmation,
+
     history,
     isLoading,
     error,
@@ -243,7 +229,7 @@ export const useAppSidebar = (
     // Setters
     setFocusedJobIndex,
     setActiveTab,
-    setDeleteConfirmation,
+
     setTemperature,
     setTopP,
     setMaxTokens,
@@ -251,7 +237,7 @@ export const useAppSidebar = (
 
     // Handlers
     handleDelete,
-    confirmDelete,
+
     handleSelect,
     toggleCompareMode,
 

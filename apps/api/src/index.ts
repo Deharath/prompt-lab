@@ -12,11 +12,19 @@ import dashboardRouter from './routes/dashboard.js';
 import {
   qualitySummaryRouter,
   initializeCache,
+  initializeMetrics,
 } from '@prompt-lab/evaluation-engine';
 import sentimentRouter from './routes/sentiment.js';
 
 // Resolve repo root from this file location
-const rootDir = fileURLToPath(new URL('../../../..', import.meta.url));
+const rootDir = (() => {
+  try {
+    return fileURLToPath(new URL('../../../..', import.meta.url));
+  } catch (error) {
+    // Fallback for test environments
+    return process.cwd();
+  }
+})();
 
 export const app: Express = express();
 
@@ -145,36 +153,45 @@ app.use(
 
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
-  try {
-    // Initialize quality summary cache
-    initializeCache();
+  (async () => {
+    try {
+      // Initialize quality summary cache
+      initializeCache();
 
-    const server = app.listen(config.server.port, config.server.host, () => {
-      log.info(`API server started`, {
-        port: config.server.port,
-        env: config.server.env,
-        host: config.server.host,
+      // Initialize metrics system during server startup to avoid cold start delays
+      log.info('Initializing metrics system...');
+      const metricsStartTime = performance.now();
+      await initializeMetrics();
+      const metricsInitTime = performance.now() - metricsStartTime;
+      log.info(`Metrics system initialized in ${metricsInitTime.toFixed(2)}ms`);
+
+      const server = app.listen(config.server.port, config.server.host, () => {
+        log.info(`API server started`, {
+          port: config.server.port,
+          env: config.server.env,
+          host: config.server.host,
+        });
+        log.info(
+          `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
+        );
       });
-      log.info(
-        `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
+
+      server.on('error', (error) => {
+        log.error('Server failed to start', {
+          error: error.message,
+          stack: error.stack,
+        });
+        process.exit(1);
+      });
+    } catch (error) {
+      log.error(
+        'Failed to start server',
+        {},
+        error instanceof Error ? error : new Error(String(error)),
       );
-    });
-
-    server.on('error', (error) => {
-      log.error('Server failed to start', {
-        error: error.message,
-        stack: error.stack,
-      });
       process.exit(1);
-    });
-  } catch (error) {
-    log.error(
-      'Failed to start server',
-      {},
-      error instanceof Error ? error : new Error(String(error)),
-    );
-    process.exit(1);
-  }
+    }
+  })();
 }
 
 export default app;

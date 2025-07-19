@@ -19,11 +19,16 @@ vi.mock('../../src/api.js', () => ({
 
 // Mock job store
 const mockJobStore = {
+  current: undefined,
+  isExecuting: false,
+  isStreaming: false,
   start: vi.fn(),
   finish: vi.fn(),
   reset: vi.fn(),
   setRunning: vi.fn(),
   setCancelling: vi.fn(),
+  setIsExecuting: vi.fn(),
+  setIsStreaming: vi.fn(),
 };
 
 vi.mock('../../src/store/jobStore.js', () => ({

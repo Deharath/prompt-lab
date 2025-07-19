@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -16,10 +18,19 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@prompt-lab/evaluation-engine': new URL(
-        '../../packages/evaluation-engine/src',
-        import.meta.url,
-      ).pathname,
+      '@prompt-lab/evaluation-engine': (() => {
+        try {
+          return new URL(
+            '../../packages/evaluation-engine/src',
+            import.meta.url,
+          ).pathname;
+        } catch {
+          return path.resolve(
+            __dirname,
+            '../../packages/evaluation-engine/src',
+          );
+        }
+      })(),
     },
   },
 });

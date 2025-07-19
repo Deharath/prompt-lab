@@ -1,7 +1,12 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
+import react from '@vitejs/plugin-react';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+  plugins: [react(), wasm(), topLevelAwait(), tsconfigPaths()],
   resolve: {
     alias: {
       '@prompt-lab/evaluation-engine': resolve(
@@ -11,10 +16,73 @@ export default defineConfig({
     },
   },
   test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: 'apps/web/src/setupTests.ts',
-    exclude: ['node_modules/**', '**/dist/**'],
+    // Run tests sequentially to prevent mock contamination
+    sequence: {
+      concurrent: false,
+    },
+    // Use projects for proper environment isolation
+    projects: [
+      // Node environment tests (evaluation-engine and API)
+      {
+        name: 'node-tests',
+        plugins: [tsconfigPaths()],
+        environment: 'node',
+        globals: true,
+        isolate: true,
+        pool: 'threads',
+        poolOptions: {
+          threads: {
+            singleThread: true,
+            isolate: true,
+          },
+        },
+        include: [
+          'packages/evaluation-engine/test/**/*.{test,spec}.{js,ts}',
+          'apps/api/test/**/*.{test,spec}.{js,ts}',
+        ],
+        exclude: ['src/**', '**/*.d.ts'],
+        setupFiles: [resolve('./apps/api/test/setupTests.ts')],
+        resolve: {
+          alias: {
+            '@prompt-lab/evaluation-engine': resolve(
+              'packages/evaluation-engine/src/index.ts',
+            ),
+            '@prompt-lab/shared-types': resolve(
+              'packages/shared-types/src/index.ts',
+            ),
+          },
+        },
+      },
+      // Browser environment tests (web)
+      {
+        name: 'web-tests',
+        plugins: [react(), wasm(), topLevelAwait()],
+        environment: 'jsdom',
+        globals: true,
+        isolate: true,
+        pool: 'threads',
+        poolOptions: {
+          threads: {
+            isolate: true,
+          },
+        },
+        include: [
+          'apps/web/test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+        ],
+        exclude: ['src/**', '**/*.d.ts'],
+        setupFiles: [resolve('./apps/web/src/setupTests.ts')],
+        resolve: {
+          alias: {
+            '@prompt-lab/evaluation-engine': resolve(
+              'packages/evaluation-engine/src/index.ts',
+            ),
+            '@prompt-lab/shared-types': resolve(
+              'packages/shared-types/src/index.ts',
+            ),
+          },
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       exclude: [
@@ -37,10 +105,7 @@ export default defineConfig({
           lines: 30,
         },
       },
-      // Ignore missing source maps for .d.ts files
       ignoreEmptyLines: true,
     },
-    // Vitest will automatically look for workspace configs
-    // and run them appropriately.
   },
 });

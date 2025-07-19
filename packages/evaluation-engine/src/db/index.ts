@@ -6,6 +6,8 @@ import { runDrizzleMigrations } from './migrations-drizzle.js';
 import * as schema from './schema.js';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -19,7 +21,29 @@ async function initializeDb() {
       }
 
       // Always resolve relative to monorepo root
-      const rootDir = fileURLToPath(new URL('../../..', import.meta.url));
+      const rootDir = (() => {
+        try {
+          // Only use import.meta.url in proper ESM contexts
+          if (
+            typeof import.meta?.url === 'string' &&
+            import.meta.url.startsWith('file:')
+          ) {
+            return fileURLToPath(new URL('../../..', import.meta.url));
+          }
+        } catch (error) {
+          // Fallback for test environments
+        }
+
+        // Fallback: traverse up from cwd to find workspace root
+        let currentDir = process.cwd();
+        while (currentDir !== path.dirname(currentDir)) {
+          if (existsSync(path.join(currentDir, 'pnpm-workspace.yaml'))) {
+            return currentDir;
+          }
+          currentDir = path.dirname(currentDir);
+        }
+        return process.cwd();
+      })();
       if (dbPath !== ':memory:') {
         dbPath = resolve(rootDir, dbPath);
 

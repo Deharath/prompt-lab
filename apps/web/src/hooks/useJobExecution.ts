@@ -120,6 +120,7 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
 
         // Start streaming
         setIsStreaming(true);
+
         let fullText = '';
         let metricsReceived = false;
         let cancelled = false;
@@ -146,6 +147,7 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
             if (cancelled) return;
 
             setIsStreaming(false);
+            // Keep isExecuting true until all completion work is done
 
             // Generate snippet synchronously from current output
             const resultSnippet = fullText
@@ -203,7 +205,7 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
               ]);
             }
 
-            // Clear current job immediately after completion
+            // Clear current job and set execution to false ONLY after everything is done
             setCurrentJob(null);
             setIsExecuting(false);
           },
