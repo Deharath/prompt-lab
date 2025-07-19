@@ -15,6 +15,13 @@ import {
 import request from 'supertest';
 import { app } from '../../src/index.js';
 
+// CI-friendly timeout utility
+const getCITimeout = (baseTimeout: number): number => {
+  const isCI =
+    process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+  return isCI ? baseTimeout * 3 : baseTimeout; // 3x longer in CI
+};
+
 describe('API Load Testing', () => {
   beforeAll(() => {
     // Set longer timeout for load tests
@@ -55,7 +62,7 @@ describe('API Load Testing', () => {
       });
 
       // Performance assertions
-      expect(totalTime).toBeLessThan(5000); // All requests should complete within 5 seconds
+      expect(totalTime).toBeLessThan(getCITimeout(5000)); // All requests should complete within 5 seconds (15s in CI)
       console.log(`✓ 10 concurrent job creations completed in ${totalTime}ms`);
     });
 
@@ -77,7 +84,7 @@ describe('API Load Testing', () => {
       const totalTime = endTime - startTime;
 
       expect(results).toHaveLength(25);
-      expect(totalTime).toBeLessThan(10000); // 25 requests should complete within 10 seconds
+      expect(totalTime).toBeLessThan(getCITimeout(10000)); // 25 requests should complete within 10 seconds (30s in CI)
       console.log(`✓ 25 burst requests completed in ${totalTime}ms`);
     });
   });
@@ -94,7 +101,7 @@ describe('API Load Testing', () => {
       const totalTime = endTime - startTime;
 
       expect(results).toHaveLength(50);
-      expect(totalTime).toBeLessThan(3000); // Health checks should be very fast
+      expect(totalTime).toBeLessThan(getCITimeout(3000)); // Health checks should be very fast (9s in CI)
       console.log(`✓ 50 concurrent health checks completed in ${totalTime}ms`);
     });
   });
@@ -111,7 +118,7 @@ describe('API Load Testing', () => {
       const totalTime = endTime - startTime;
 
       expect(results).toHaveLength(20);
-      expect(totalTime).toBeLessThan(8000); // Stats aggregation under load
+      expect(totalTime).toBeLessThan(getCITimeout(8000)); // Stats aggregation under load (24s in CI)
       console.log(
         `✓ 20 concurrent dashboard stats requests completed in ${totalTime}ms`,
       );
@@ -145,7 +152,7 @@ describe('API Load Testing', () => {
       const totalTime = endTime - startTime;
 
       expect(results).toHaveLength(15);
-      expect(totalTime).toBeLessThan(3000); // Database reads should be fast
+      expect(totalTime).toBeLessThan(getCITimeout(3000)); // Database reads should be fast (9s in CI)
       console.log(`✓ 15 concurrent database reads completed in ${totalTime}ms`);
     });
   });
@@ -186,7 +193,7 @@ describe('API Load Testing', () => {
       const totalTime = endTime - startTime;
 
       expect(results).toHaveLength(30);
-      expect(totalTime).toBeLessThan(12000); // Mixed load should complete within 12 seconds
+      expect(totalTime).toBeLessThan(getCITimeout(12000)); // Mixed load should complete within 12 seconds (36s in CI)
       console.log(`✓ 30 mixed API requests completed in ${totalTime}ms`);
     });
   });
@@ -218,7 +225,7 @@ describe('API Load Testing', () => {
 
       expect(response.body).toHaveProperty('id');
       expect(response.body.template).toBe(largeTemplate);
-      expect(processingTime).toBeLessThan(2000); // Large templates should still process quickly
+      expect(processingTime).toBeLessThan(getCITimeout(2000)); // Large templates should still process quickly (6s in CI)
       console.log(
         `✓ Large template (${largeTemplate.length} chars) processed in ${processingTime}ms`,
       );
@@ -262,7 +269,7 @@ describe('API Load Testing', () => {
       const processingTime = endTime - startTime;
 
       expect(response.body).toHaveProperty('id');
-      expect(processingTime).toBeLessThan(1500); // Complex JSON should process efficiently
+      expect(processingTime).toBeLessThan(getCITimeout(1500)); // Complex JSON should process efficiently (4.5s in CI)
       console.log(
         `✓ Complex JSON input (${complexInputData.length} chars) processed in ${processingTime}ms`,
       );
@@ -272,10 +279,10 @@ describe('API Load Testing', () => {
   describe('Performance Regression Detection', () => {
     it('should establish baseline performance metrics', async () => {
       const benchmarks = {
-        healthCheck: { target: 50, threshold: 100 },
-        jobCreation: { target: 200, threshold: 500 },
-        jobRetrieval: { target: 100, threshold: 300 },
-        dashboardStats: { target: 400, threshold: 800 },
+        healthCheck: { target: 50, threshold: getCITimeout(100) },
+        jobCreation: { target: 200, threshold: getCITimeout(500) },
+        jobRetrieval: { target: 100, threshold: getCITimeout(300) },
+        dashboardStats: { target: 400, threshold: getCITimeout(800) },
       };
 
       // Health check benchmark

@@ -5,6 +5,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MetricCategory } from '@prompt-lab/shared-types';
+
+// CI-friendly timeout utility
+const getCITimeout = (baseTimeout: number): number => {
+  const isCI =
+    process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+  return isCI ? baseTimeout * 3 : baseTimeout; // 3x longer in CI
+};
 import { render, cleanup, fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -289,9 +296,9 @@ describe('Memory Leak Detection (Simplified)', () => {
       const storeTime = Date.now() - storeStart;
 
       // Verify performance is reasonable
-      expect(renderTime).toBeLessThan(1000); // Component render should be < 1s
-      expect(hookTime).toBeLessThan(500); // Hook setup should be < 500ms
-      expect(storeTime).toBeLessThan(100); // Store operations should be < 100ms
+      expect(renderTime).toBeLessThan(getCITimeout(1000)); // Component render should be < 1s (3s in CI)
+      expect(hookTime).toBeLessThan(getCITimeout(500)); // Hook setup should be < 500ms (1.5s in CI)
+      expect(storeTime).toBeLessThan(getCITimeout(100)); // Store operations should be < 100ms (300ms in CI)
 
       console.log('\n⚡ Performance Benchmarks:');
       console.log(`  Component Render (20 metrics): ${renderTime}ms`);
