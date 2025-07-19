@@ -52,7 +52,11 @@ beforeAll(async () => {
     '../../../packages/evaluation-engine/drizzle/migrations',
   );
 
-  if (!existsSync(migrationsDir)) {
+  // Check if the migration files actually exist, not just the directory
+  const migrationFile = join(migrationsDir, '0000_fresh_start.sql');
+  const journalFile = join(migrationsDir, 'meta/_journal.json');
+
+  if (!existsSync(migrationFile) || !existsSync(journalFile)) {
     const { mkdirSync, writeFileSync } = await import('fs');
     const { execSync } = await import('child_process');
 
@@ -78,9 +82,6 @@ beforeAll(async () => {
       console.log('✅ Generated Drizzle migrations for test environment');
 
       // Verify that critical files exist, create them if missing
-      const migrationFile = join(migrationsDir, '0000_fresh_start.sql');
-      const journalFile = join(migrationsMetaDir, '_journal.json');
-
       if (!existsSync(migrationFile) || !existsSync(journalFile)) {
         throw new Error('Generated files are incomplete, using fallback');
       }
