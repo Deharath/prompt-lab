@@ -1,4 +1,4 @@
-import { vi, beforeAll, afterEach } from 'vitest';
+import { vi, beforeAll, afterEach, afterAll } from 'vitest';
 
 // Set up in-memory database and environment variables for all tests FIRST
 process.env.DATABASE_URL = ':memory:';
@@ -8,8 +8,17 @@ process.env.GEMINI_API_KEY = 'test-gemini-key';
 process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
 process.env.DISABLE_SENTIMENT_ANALYSIS = 'true';
 
-// Ensure DB migrations are run before any tests
+// Ensure DB migrations are run before any tests and proper isolation
 beforeAll(async () => {
+  // Force module isolation for API tests
+  vi.resetModules();
+  
+  // Clear any existing global state
+  if (typeof globalThis !== 'undefined') {
+    // Clear any global state that might leak between projects
+    delete (globalThis as any).__vite_plugin_react_cached_babel_config__;
+    delete (globalThis as any).__vite_plugin_react_preamble_installed__;
+  }
   // Dynamically resolve the absolute path to the migrations file for ESM/monorepo
   const { fileURLToPath, pathToFileURL } = await import('url');
   const { join, dirname, resolve } = await import('path');
@@ -123,14 +132,13 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
     await importOriginal<typeof import('@prompt-lab/evaluation-engine')>();
 
   // Set up the job store and mock implementations
-  let jobIdCounter = 1;
 
   mockCreateJob.mockImplementation(async (data) => {
-    const id = `job-${jobIdCounter++}`;
+    const id = `job-${globalJobIdCounter++}`;
     const newJob = {
       id,
       ...data,
-      status: 'pending',
+      status: data.status || 'pending',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -193,6 +201,29 @@ vi.mock('@prompt-lab/evaluation-engine', async (importOriginal) => {
 
   mockGetPreviousJob.mockImplementation(async (currentJobId: string) => {
     return getPreviousJobImpl(currentJobId);
+  });
+
+  mockDeleteJob.mockImplementation(async (id: string) => {
+    const exists = mockJobStore.has(id);
+    if (exists) {
+      mockJobStore.delete(id);
+    }
+    return exists;
+  });
+
+  mockRetryJob.mockImplementation(async (id: string) => {
+    const originalJob = mockJobStore.get(id);
+    if (!originalJob) return null;
+
+    const newJob = {
+      ...originalJob,
+      id: `job-${globalJobIdCounter++}`,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mockJobStore.set(newJob.id, newJob);
+    return newJob;
   });
 
   // Return a new module object that mocks specific exports
@@ -458,16 +489,37 @@ vi.mock('@google/generative-ai', () => {
 // TEST ISOLATION - Enforce Clean State
 // ================================================================================================
 
+// Global job ID counter for proper test isolation
+let globalJobIdCounter = 1;
+
 /**
  * Global afterEach hook - maintains test isolation
  * Resets all mocks and restores default config state
  */
 afterEach(() => {
-  // Clear all mock histories and reset mock implementations
-  vi.clearAllMocks();
-
   // Clear the job store for test isolation
   mockJobStore.clear();
+
+  // Reset job ID counter for test isolation
+  globalJobIdCounter = 1;
+
+  // Clear mock call history but preserve implementations
+  mockCreateJob.mockClear();
+  mockGetJob.mockClear();
+  mockUpdateJob.mockClear();
+  mockListJobs.mockClear();
+  mockGetPreviousJob.mockClear();
+  mockDeleteJob.mockClear();
+  mockRetryJob.mockClear();
+  mockGetProvider.mockClear();
+  mockSetProvider.mockClear();
+  mockResetProviders.mockClear();
+  mockEvaluateWithOpenAI.mockClear();
+  mockEvaluateWithGemini.mockClear();
+  mockGetEvaluator.mockClear();
+
+  // Reset provider registry to prevent leakage
+  mockProviderRegistry.clear();
 
   // Reset mockConfig to default "happy path" state
   mockConfig.openai.apiKey = 'sk-test-key-from-ci-fix';
@@ -495,15 +547,14 @@ afterEach(() => {
     score: 0.85,
   });
 
-  // Re-setup job mocks after clearAllMocks
-  let jobIdCounter = 1;
+  // Re-setup job mocks to ensure they work properly
 
   mockCreateJob.mockImplementation(async (data) => {
-    const id = `job-${jobIdCounter++}`;
+    const id = `job-${globalJobIdCounter++}`;
     const newJob = {
       id,
       ...data,
-      status: 'pending',
+      status: data.status || 'pending',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -567,6 +618,29 @@ afterEach(() => {
     return getPreviousJobImpl(currentJobId);
   });
 
+  mockDeleteJob.mockImplementation(async (id: string) => {
+    const exists = mockJobStore.has(id);
+    if (exists) {
+      mockJobStore.delete(id);
+    }
+    return exists;
+  });
+
+  mockRetryJob.mockImplementation(async (id: string) => {
+    const originalJob = mockJobStore.get(id);
+    if (!originalJob) return null;
+
+    const newJob = {
+      ...originalJob,
+      id: `job-${globalJobIdCounter++}`,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mockJobStore.set(newJob.id, newJob);
+    return newJob;
+  });
+
   // Reset provider mock
   mockGetProvider.mockImplementation((providerName) => {
     // Return undefined for unknown providers to match real behavior
@@ -599,4 +673,19 @@ afterEach(() => {
     }
     throw new Error(`Unsupported model: ${model}`);
   });
+});
+
+// Clean up after all API tests to prevent state leakage to other projects
+afterAll(() => {
+  // Clear all mocks completely
+  vi.clearAllMocks();
+  
+  // Reset modules to ensure clean state for next project
+  vi.resetModules();
+  
+  // Clear provider registry
+  mockProviderRegistry.clear();
+  
+  // Clear job store
+  mockJobStore.clear();
 });

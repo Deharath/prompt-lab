@@ -20,9 +20,15 @@ export default defineConfig({
     alias: {
       '@prompt-lab/evaluation-engine': (() => {
         try {
-          return new URL('../../packages/evaluation-engine/src', import.meta.url).pathname;
+          return new URL(
+            '../../packages/evaluation-engine/src',
+            import.meta.url,
+          ).pathname;
         } catch {
-          return path.resolve(__dirname, '../../packages/evaluation-engine/src');
+          return path.resolve(
+            __dirname,
+            '../../packages/evaluation-engine/src',
+          );
         }
       })(),
     },

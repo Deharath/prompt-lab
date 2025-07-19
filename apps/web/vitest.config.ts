@@ -41,11 +41,14 @@ export default defineConfig({
     silent: false,
     include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     // Simplified configuration - removed complex dual-project setup
-    browser: process.env.VITEST_BROWSER === 'true' ? {
-      enabled: true,
-      provider: 'playwright',
-      name: 'chromium',
-      headless: true,
-    } : undefined,
+    browser:
+      process.env.VITEST_BROWSER === 'true'
+        ? {
+            enabled: true,
+            provider: 'playwright',
+            name: 'chromium',
+            headless: true,
+          }
+        : undefined,
   },
 });

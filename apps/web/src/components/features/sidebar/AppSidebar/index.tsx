@@ -5,7 +5,7 @@ import HistoryTab from './HistoryTab.js';
 import ConfigurationTab from './ConfigurationTab.js';
 import CustomPrompt from '../CustomPrompt.js';
 import CollapsedSidebar from './CollapsedSidebar.js';
-import DeleteConfirmationModal from './DeleteConfirmationModal.js';
+
 import RunEvaluationFooter from './RunEvaluationFooter.js';
 import type { AppSidebarProps } from './types.js';
 
@@ -54,7 +54,7 @@ const AppSidebar = memo<AppSidebarProps>(
       compareMode,
       focusedJobIndex,
       activeTab,
-      deleteConfirmation,
+
       history,
       isLoading,
       error,
@@ -69,7 +69,7 @@ const AppSidebar = memo<AppSidebarProps>(
       // Setters
       setFocusedJobIndex,
       setActiveTab,
-      setDeleteConfirmation,
+
       setTemperature,
       setTopP,
       setMaxTokens,
@@ -77,7 +77,7 @@ const AppSidebar = memo<AppSidebarProps>(
 
       // Handlers
       handleDelete,
-      confirmDelete,
+
       handleSelect,
       toggleCompareMode,
 
@@ -167,13 +167,6 @@ const AppSidebar = memo<AppSidebarProps>(
             inputData={inputData}
           />
         </div>
-
-        {/* Modal for delete confirmation */}
-        <DeleteConfirmationModal
-          deleteConfirmation={deleteConfirmation}
-          onCancel={() => setDeleteConfirmation(null)}
-          onConfirm={confirmDelete}
-        />
       </aside>
     );
   },

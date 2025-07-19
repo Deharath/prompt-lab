@@ -17,67 +17,6 @@ import {
 describe('Jobs API', () => {
   beforeEach(() => {
     mockJobStore.clear();
-    // Reset all mocks
-    vi.clearAllMocks();
-
-    // Setup default mock implementations
-    mockCreateJob.mockImplementation(async (data) => {
-      const id = `job-${Date.now()}`;
-      const newJob = {
-        id,
-        ...data,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      mockJobStore.set(id, newJob);
-      return newJob;
-    });
-
-    mockGetJob.mockImplementation(async (id) => {
-      return mockJobStore.get(id) || null;
-    });
-
-    mockUpdateJob.mockImplementation(async (id, updateData) => {
-      const job = mockJobStore.get(id);
-      if (!job) return null;
-      const updatedJob = { ...job, ...updateData, updatedAt: new Date() };
-      mockJobStore.set(id, updatedJob);
-      return updatedJob;
-    });
-
-    // mockListJobs implementation is already set up in setupTests.ts with proper JobSummary format
-
-    mockDeleteJob.mockImplementation(async (id) => {
-      const exists = mockJobStore.has(id);
-      if (exists) {
-        mockJobStore.delete(id);
-      }
-      return exists;
-    });
-
-    mockGetPreviousJob.mockImplementation(async (currentJobId) => {
-      const allJobs = Array.from(mockJobStore.values());
-      allJobs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
-      const currentIndex = allJobs.findIndex((job) => job.id === currentJobId);
-      return currentIndex > 0 ? allJobs[currentIndex - 1] : null;
-    });
-
-    mockRetryJob.mockImplementation(async (id) => {
-      const originalJob = mockJobStore.get(id);
-      if (!originalJob) return null;
-
-      const newJob = {
-        ...originalJob,
-        id: `job-${Date.now()}-retry`,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      mockJobStore.set(newJob.id, newJob);
-      return newJob;
-    });
   });
 
   describe('POST /jobs', () => {

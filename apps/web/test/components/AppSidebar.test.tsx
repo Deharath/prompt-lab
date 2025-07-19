@@ -191,24 +191,6 @@ vi.mock(
 );
 
 vi.mock(
-  '../../src/components/features/sidebar/AppSidebar/DeleteConfirmationModal.js',
-  () => ({
-    default: ({ deleteConfirmation, onCancel, onConfirm }: any) =>
-      deleteConfirmation && (
-        <div data-testid="delete-confirmation-modal">
-          <div data-testid="delete-job-id">{deleteConfirmation.jobId}</div>
-          <button onClick={onCancel} data-testid="cancel-delete">
-            Cancel
-          </button>
-          <button onClick={onConfirm} data-testid="confirm-delete">
-            Delete
-          </button>
-        </div>
-      ),
-  }),
-);
-
-vi.mock(
   '../../src/components/features/sidebar/AppSidebar/RunEvaluationFooter.js',
   () => ({
     default: ({
@@ -271,7 +253,7 @@ describe('AppSidebar', () => {
     compareMode: false,
     focusedJobIndex: 0,
     activeTab: 'history' as const,
-    deleteConfirmation: null,
+
     history: mockJobHistory,
     isLoading: false,
     error: null,
@@ -282,13 +264,13 @@ describe('AppSidebar', () => {
     selectedMetrics: [],
     setFocusedJobIndex: vi.fn(),
     setActiveTab: vi.fn(),
-    setDeleteConfirmation: vi.fn(),
+
     setTemperature: vi.fn(),
     setTopP: vi.fn(),
     setMaxTokens: vi.fn(),
     setSelectedMetrics: vi.fn(),
     handleDelete: vi.fn(),
-    confirmDelete: vi.fn(),
+
     handleSelect: vi.fn(),
     toggleCompareMode: vi.fn(),
     jobListRef: { current: null },
@@ -626,63 +608,6 @@ describe('AppSidebar', () => {
       fireEvent.click(screen.getByTestId('collapsed-run-button'));
 
       expect(defaultProps.onCancelEvaluation).toHaveBeenCalled();
-    });
-  });
-
-  describe('Delete Confirmation Modal', () => {
-    it('should show delete confirmation modal', async () => {
-      const { useAppSidebar } = vi.mocked(
-        await import(
-          '../../src/components/features/sidebar/AppSidebar/useAppSidebar.js'
-        ),
-      );
-      useAppSidebar.mockReturnValue({
-        ...mockSidebarState,
-        deleteConfirmation: { jobId: 'job-1', shortId: 'job-1' },
-      });
-
-      render(<AppSidebar {...defaultProps} />);
-
-      expect(
-        screen.getByTestId('delete-confirmation-modal'),
-      ).toBeInTheDocument();
-      expect(screen.getByTestId('delete-job-id')).toHaveTextContent('job-1');
-    });
-
-    it('should handle delete confirmation', async () => {
-      const { useAppSidebar } = vi.mocked(
-        await import(
-          '../../src/components/features/sidebar/AppSidebar/useAppSidebar.js'
-        ),
-      );
-      useAppSidebar.mockReturnValue({
-        ...mockSidebarState,
-        deleteConfirmation: { jobId: 'job-1', shortId: 'job-1' },
-      });
-
-      render(<AppSidebar {...defaultProps} />);
-
-      fireEvent.click(screen.getByTestId('confirm-delete'));
-
-      expect(mockSidebarState.confirmDelete).toHaveBeenCalled();
-    });
-
-    it('should handle delete cancellation', async () => {
-      const { useAppSidebar } = vi.mocked(
-        await import(
-          '../../src/components/features/sidebar/AppSidebar/useAppSidebar.js'
-        ),
-      );
-      useAppSidebar.mockReturnValue({
-        ...mockSidebarState,
-        deleteConfirmation: { jobId: 'job-1', shortId: 'job-1' },
-      });
-
-      render(<AppSidebar {...defaultProps} />);
-
-      fireEvent.click(screen.getByTestId('cancel-delete'));
-
-      expect(mockSidebarState.setDeleteConfirmation).toHaveBeenCalledWith(null);
     });
   });
 

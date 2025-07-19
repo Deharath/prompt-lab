@@ -61,9 +61,11 @@ function createConfigSchema() {
 
     // Database configuration
     database: z.object({
-      url: z.string().default(
-        process.env.NODE_ENV === 'test' ? ':memory:' : 'sqlite://./db.sqlite'
-      ),
+      url: z
+        .string()
+        .default(
+          process.env.NODE_ENV === 'test' ? ':memory:' : 'sqlite://./db.sqlite',
+        ),
       maxConnections: z.coerce
         .number()
         .min(1)

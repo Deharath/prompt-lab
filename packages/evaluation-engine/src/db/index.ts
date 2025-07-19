@@ -24,13 +24,16 @@ async function initializeDb() {
       const rootDir = (() => {
         try {
           // Only use import.meta.url in proper ESM contexts
-          if (typeof import.meta?.url === 'string' && import.meta.url.startsWith('file:')) {
+          if (
+            typeof import.meta?.url === 'string' &&
+            import.meta.url.startsWith('file:')
+          ) {
             return fileURLToPath(new URL('../../..', import.meta.url));
           }
         } catch (error) {
           // Fallback for test environments
         }
-        
+
         // Fallback: traverse up from cwd to find workspace root
         let currentDir = process.cwd();
         while (currentDir !== path.dirname(currentDir)) {
