@@ -51,40 +51,45 @@ beforeAll(async () => {
     testDir,
     '../../../packages/evaluation-engine/drizzle/migrations',
   );
-  
+
   if (!existsSync(migrationsDir)) {
     const { mkdirSync, writeFileSync } = await import('fs');
     const { execSync } = await import('child_process');
-    
+
     // Create the complete drizzle directory structure
-    const drizzleDir = join(testDir, '../../../packages/evaluation-engine/drizzle');
+    const drizzleDir = join(
+      testDir,
+      '../../../packages/evaluation-engine/drizzle',
+    );
     const metaDir = join(drizzleDir, 'meta');
     const migrationsMetaDir = join(migrationsDir, 'meta');
-    
+
     mkdirSync(migrationsMetaDir, { recursive: true });
     mkdirSync(metaDir, { recursive: true });
-    
+
     // Generate migrations using drizzle-kit
     const packageDir = join(testDir, '../../../packages/evaluation-engine');
     try {
       execSync('npx drizzle-kit generate:sqlite', {
         cwd: packageDir,
         stdio: 'pipe',
-        env: { ...process.env, DATABASE_URL: ':memory:' }
+        env: { ...process.env, DATABASE_URL: ':memory:' },
       });
       console.log('✅ Generated Drizzle migrations for test environment');
-      
+
       // Verify that critical files exist, create them if missing
       const migrationFile = join(migrationsDir, '0000_fresh_start.sql');
       const journalFile = join(migrationsMetaDir, '_journal.json');
-      
+
       if (!existsSync(migrationFile) || !existsSync(journalFile)) {
         throw new Error('Generated files are incomplete, using fallback');
       }
     } catch (error) {
       // If generation fails or files are incomplete, create minimal migration structure
-      console.warn('⚠️ Drizzle generation failed or incomplete, creating minimal migration structure');
-      
+      console.warn(
+        '⚠️ Drizzle generation failed or incomplete, creating minimal migration structure',
+      );
+
       // Create minimal migration file from schema
       const migrationContent = `CREATE TABLE \`jobs\` (
 	\`id\` text PRIMARY KEY NOT NULL,
@@ -115,33 +120,43 @@ CREATE INDEX \`jobs_created_at_idx\` ON \`jobs\` (\`created_at\`);--> statement-
 CREATE INDEX \`jobs_provider_model_idx\` ON \`jobs\` (\`provider\`,\`model\`);`;
 
       const journalContent = JSON.stringify({
-        version: "5",
-        dialect: "sqlite",
-        entries: [{
-          idx: 0,
-          version: "5",
-          when: Date.now(),
-          tag: "0000_fresh_start",
-          breakpoints: true
-        }]
+        version: '5',
+        dialect: 'sqlite',
+        entries: [
+          {
+            idx: 0,
+            version: '5',
+            when: Date.now(),
+            tag: '0000_fresh_start',
+            breakpoints: true,
+          },
+        ],
       });
 
       const snapshotContent = JSON.stringify({
-        version: "5",
-        dialect: "sqlite",
-        id: "0000",
-        prevId: "00000000-0000-0000-0000-000000000000",
+        version: '5',
+        dialect: 'sqlite',
+        id: '0000',
+        prevId: '00000000-0000-0000-0000-000000000000',
         tables: {},
         enums: {},
-        _meta: { schemas: {}, tables: {}, columns: {} }
+        _meta: { schemas: {}, tables: {}, columns: {} },
       });
 
-      writeFileSync(join(migrationsDir, '0000_fresh_start.sql'), migrationContent);
+      writeFileSync(
+        join(migrationsDir, '0000_fresh_start.sql'),
+        migrationContent,
+      );
       writeFileSync(join(migrationsMetaDir, '_journal.json'), journalContent);
-      writeFileSync(join(migrationsMetaDir, '0000_snapshot.json'), snapshotContent);
+      writeFileSync(
+        join(migrationsMetaDir, '0000_snapshot.json'),
+        snapshotContent,
+      );
       writeFileSync(join(metaDir, '_journal.json'), journalContent);
-      
-      console.log('✅ Created minimal migration structure for test environment');
+
+      console.log(
+        '✅ Created minimal migration structure for test environment',
+      );
     }
   }
 
