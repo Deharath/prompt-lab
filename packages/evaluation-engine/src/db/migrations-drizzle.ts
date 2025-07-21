@@ -20,39 +20,57 @@ const __dirname = (() => {
 export async function runDrizzleMigrations(sqlite: Database.Database) {
   try {
     const db = drizzle(sqlite);
-    // Try the normal path first, then fallback to relative paths for test environments
-    let migrationPath = join(__dirname, '../../drizzle/migrations');
+    
+    // More comprehensive search for migration path
+    const possiblePaths = [
+      // Standard development/build path
+      join(__dirname, '../../drizzle/migrations'),
+      // Production build path (if in dist folder)
+      join(__dirname, '../../../drizzle/migrations'), 
+      // Monorepo from working directory 
+      join(process.cwd(), 'packages/evaluation-engine/drizzle/migrations'),
+      // Direct from working directory (for Docker/production)
+      join(process.cwd(), 'drizzle/migrations'),
+      // Try from package root
+      join(process.cwd(), 'evaluation-engine/drizzle/migrations'),
+    ];
 
-    if (!existsSync(migrationPath)) {
-      // Fallback for test environments - try relative to package root
-      migrationPath = join(
-        process.cwd(),
-        'packages/evaluation-engine/drizzle/migrations',
-      );
+    let migrationPath = '';
+    for (const path of possiblePaths) {
+      if (existsSync(path)) {
+        migrationPath = path;
+        break;
+      }
     }
 
-    if (!existsSync(migrationPath)) {
-      // Another fallback - try from current working directory
-      migrationPath = join(process.cwd(), 'drizzle/migrations');
-    }
-
-    if (!existsSync(migrationPath)) {
+    if (!migrationPath) {
+      // If no migration folder found, log all attempted paths for debugging
+      log.error('Migration folder not found. Searched paths:', {
+        searchedPaths: possiblePaths,
+        currentWorkingDir: process.cwd(),
+        __dirname
+      });
+      
       throw new Error(
-        `Migration folder not found. Tried paths: ${[
-          join(__dirname, '../../drizzle/migrations'),
-          join(process.cwd(), 'packages/evaluation-engine/drizzle/migrations'),
-          join(process.cwd(), 'drizzle/migrations'),
-        ].join(', ')}`,
+        `Migration folder not found. Searched paths: ${possiblePaths.join(', ')}`
       );
     }
 
-    log.info('Running Drizzle migrations', { migrationPath });
+    log.info('Running Drizzle migrations', { 
+      migrationPath,
+      currentWorkingDir: process.cwd()
+    });
+    
     await migrate(db, { migrationsFolder: migrationPath });
     log.info('Database migrations completed successfully');
   } catch (error) {
     log.error(
       'Migration failed',
-      {},
+      { 
+        currentDir: process.cwd(),
+        dirname: __dirname,
+        error: error instanceof Error ? error.message : String(error)
+      },
       error instanceof Error ? error : new Error(String(error)),
     );
     throw error;
