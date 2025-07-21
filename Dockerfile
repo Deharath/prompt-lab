@@ -24,7 +24,9 @@ COPY --from=builder /app/apps/api/dist            ./apps/api/dist
 COPY --from=builder /app/packages/evaluation-engine/dist        ./packages/evaluation-engine/dist
 COPY --from=builder /app/packages/shared-types/dist           ./packages/shared-types/dist
 # ── migration files for database setup ──────────────────────────────────────
-COPY --from=builder /app/packages/evaluation-engine/drizzle    ./packages/evaluation-engine/drizzle
+COPY --from=builder /app/packages/evaluation-engine/drizzle    ./packages/evaluation-engine/drizzle/
+# Ensure migration files have proper permissions
+RUN ls -la ./packages/evaluation-engine/drizzle/migrations/ || echo "Migration files not found after copy"
 # ── package-manager metadata & production deps ───────────────────────────────
 COPY --from=builder /app/package.json \
                      /app/pnpm-lock.yaml \
