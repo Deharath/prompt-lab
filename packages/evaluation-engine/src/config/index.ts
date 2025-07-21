@@ -14,24 +14,36 @@ import {
   ENVIRONMENTS,
 } from '../constants/index.js';
 
-// Load environment variables from root .env file
+// Load environment variables - handle production and development differently
 let rootDir: string;
+let envLoaded = false;
+
 try {
-  // Start from current directory and traverse up to find the workspace root
-  rootDir = process.cwd();
+  // In production, environment variables are provided by container/platform
+  if (process.env.NODE_ENV === 'production') {
+    rootDir = process.cwd();
+    envLoaded = true; // Production uses platform env vars
+  } else {
+    // In development, look for workspace root and .env file
+    rootDir = process.cwd();
 
-  // Look for workspace root by finding pnpm-workspace.yaml
-  let currentDir = rootDir;
-  while (currentDir !== dirname(currentDir)) {
-    // Check if this is the workspace root (has pnpm-workspace.yaml)
-    if (existsSync(join(currentDir, 'pnpm-workspace.yaml'))) {
-      rootDir = currentDir;
-      break;
+    // Look for workspace root by finding pnpm-workspace.yaml
+    let currentDir = rootDir;
+    while (currentDir !== dirname(currentDir)) {
+      if (existsSync(join(currentDir, 'pnpm-workspace.yaml'))) {
+        rootDir = currentDir;
+        break;
+      }
+      currentDir = dirname(currentDir);
     }
-    currentDir = dirname(currentDir);
-  }
 
-  dotenv.config({ path: join(rootDir, '.env') });
+    // Load .env file for development
+    const envPath = join(rootDir, '.env');
+    if (existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+      envLoaded = true;
+    }
+  }
 } catch (error) {
   // In test environments, we might not need .env loading
   if (process.env.NODE_ENV !== 'test') {

@@ -24,6 +24,15 @@ export async function initializeMetrics(): Promise<void> {
     }
   } catch (error) {
     console.error('[Metrics] Failed to initialize metrics:', error);
+
+    // In production, don't crash the server if metrics fail to initialize
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[Metrics] Continuing without metrics system in production');
+      return;
+    }
+
+    // In development, we want to know about metrics issues but still continue
+    throw error;
   }
 }
 

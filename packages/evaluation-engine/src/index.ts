@@ -50,6 +50,12 @@ export {
   default as MetricRegistryDefault,
 } from './metrics/index.js';
 
-// Initialize metrics on module load
+// Initialize metrics on module load (with better error handling)
 import { initializeMetrics } from './metrics/index.js';
-initializeMetrics().catch(console.error);
+if (process.env.NODE_ENV !== 'production') {
+  // In development, initialize metrics eagerly but handle failures gracefully
+  initializeMetrics().catch((error) => {
+    console.warn('Failed to initialize metrics on module load:', error);
+  });
+}
+// In production, metrics are initialized explicitly during server startup

@@ -81,11 +81,18 @@ async function initializeDb() {
       log.info('Database initialized successfully', {
         url: dbPath,
         mode: dbPath === ':memory:' ? 'memory' : 'file',
+        nodeEnv: process.env.NODE_ENV,
+        cwd: process.cwd(),
       });
     } catch (error) {
       log.error(
         'Database initialization failed',
-        {},
+        {
+          configUrl: config.database.url,
+          nodeEnv: process.env.NODE_ENV,
+          cwd: process.cwd(),
+          error: error instanceof Error ? error.message : String(error),
+        },
         error instanceof Error ? error : new Error(String(error)),
       );
       throw error;

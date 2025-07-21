@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import { log, config } from '@prompt-lab/evaluation-engine';
+import { log, config, getDb } from '@prompt-lab/evaluation-engine';
 import { ApiError } from '@prompt-lab/evaluation-engine';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
@@ -155,6 +155,13 @@ const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
   (async () => {
     try {
+      // Initialize database first to ensure it's ready before handling requests
+      log.info('Initializing database...');
+      const dbStartTime = performance.now();
+      await getDb(); // This will run migrations and set up the database
+      const dbInitTime = performance.now() - dbStartTime;
+      log.info(`Database initialized in ${dbInitTime.toFixed(2)}ms`);
+
       // Initialize quality summary cache
       initializeCache();
 

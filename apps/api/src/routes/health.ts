@@ -32,9 +32,19 @@ interface HealthCheckResult {
 
 async function checkDatabase(): Promise<'healthy' | 'unhealthy'> {
   try {
-    await getDb();
+    const db = await getDb();
+
+    // Try a simple query to ensure database is actually working
+    // This will fail if migrations haven't run properly
+    await db.run('SELECT 1');
+
     return 'healthy';
-  } catch {
+  } catch (error) {
+    log.error('Database health check failed', {
+      error: error instanceof Error ? error.message : String(error),
+      nodeEnv: process.env.NODE_ENV,
+      databaseUrl: process.env.DATABASE_URL,
+    });
     return 'unhealthy';
   }
 }
