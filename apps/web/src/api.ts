@@ -1,4 +1,4 @@
-import type { DashboardStats } from './types/dashboard.js';
+import type { SimpleDashboardStats } from './types/dashboard.js';
 import type { QualitySummaryData } from './hooks/useQualitySummary.js';
 import { withRetry } from './hooks/useRetry.js';
 
@@ -271,10 +271,12 @@ export class ApiClient {
     return await diffJobsWithRetry();
   }
 
-  static async fetchDashboardStats(days: number = 30): Promise<DashboardStats> {
+  static async fetchDashboardStats(
+    days: number = 30,
+  ): Promise<SimpleDashboardStats> {
     const endpoint = `/api/dashboard/stats?days=${days}`;
     const fetchStatsWithRetry = withRetry(
-      () => this.makeRequest<DashboardStats>(endpoint),
+      () => this.makeRequest<SimpleDashboardStats>(endpoint),
       { maxAttempts: 2, initialDelay: 500 },
     );
     return await fetchStatsWithRetry();

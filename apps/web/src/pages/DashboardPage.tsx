@@ -21,14 +21,14 @@ import { LoadingSpinner } from '../components/ui/LoadingState.js';
 import ErrorMessage from '../components/shared/ErrorMessage.js';
 import { DashboardSkeleton } from '../components/ui/Skeleton.js';
 import { useDarkModeStore } from '../store/darkModeStore.js';
-import type { DashboardStats } from '../types/dashboard.js';
+import type { SimpleDashboardStats } from '../types/dashboard.js';
 
 const DashboardPage = () => {
   const [days, setDays] = useState(30);
   const { isDarkMode } = useDarkModeStore();
 
   // Use TanStack Query for auto-refresh dashboard data
-  const { data, isLoading, error } = useQuery<DashboardStats>({
+  const { data, isLoading, error } = useQuery<SimpleDashboardStats>({
     queryKey: ['dashboard', days],
     queryFn: () => ApiClient.fetchDashboardStats(days),
     ...QUERY_CONFIG.DASHBOARD,
@@ -95,9 +95,7 @@ const DashboardPage = () => {
                       Total Evaluations
                     </p>
                     <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
-                      {data.scoreHistory
-                        .reduce((sum, item) => sum + item.totalJobs, 0)
-                        .toLocaleString()}
+                      {data.totalJobs.toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -108,9 +106,7 @@ const DashboardPage = () => {
                       Active Models
                     </p>
                     <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
-                      {data.tokensByModel?.length ||
-                        data.estimatedCostByModel?.length ||
-                        0}
+                      {Object.keys(data.modelBreakdown || {}).length}
                     </p>
                   </div>
                 </div>
@@ -121,13 +117,7 @@ const DashboardPage = () => {
                       Total Cost
                     </p>
                     <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
-                      $
-                      {(
-                        data.estimatedCostByModel?.reduce(
-                          (sum, item) => sum + item.estimatedCost,
-                          0,
-                        ) || 0
-                      ).toFixed(2)}
+                      ${data.totalCost.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -135,15 +125,10 @@ const DashboardPage = () => {
                 <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm transition-colors sm:p-3 dark:border-gray-600 dark:bg-gray-800">
                   <div className="text-center">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                      Avg Daily Tests
+                      Success Rate
                     </p>
                     <p className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
-                      {Math.round(
-                        data.scoreHistory.reduce(
-                          (sum, item) => sum + item.totalJobs,
-                          0,
-                        ) / data.scoreHistory.length,
-                      )}
+                      {data.recentTrends.averageSuccessRate.toFixed(1)}%
                     </p>
                   </div>
                 </div>
@@ -153,121 +138,69 @@ const DashboardPage = () => {
               <div className="grid min-h-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-2">
                 {/* Evaluation Activity Trend */}
                 <Card
-                  title="Evaluation Activity"
+                  title="Recent Activity"
                   className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-56 sm:h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.scoreHistory}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          className="opacity-30"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          className="text-gray-600 dark:text-gray-400"
-                          fontSize={11}
-                        />
-                        <YAxis
-                          className="text-gray-600 dark:text-gray-400"
-                          fontSize={11}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: isDarkMode
-                              ? 'rgba(31, 41, 55, 0.95)'
-                              : 'rgba(255, 255, 255, 0.95)',
-                            border: isDarkMode
-                              ? '1px solid #4b5563'
-                              : '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            color: isDarkMode ? '#f9fafb' : '#111827',
-                          }}
-                          formatter={(value: number) => [value, 'Evaluations']}
-                          labelFormatter={(label: string) => label}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="totalJobs"
-                          stroke="#3b82f6"
-                          strokeWidth={2}
-                          dot={{ fill: '#3b82f6', strokeWidth: 1, r: 3 }}
-                          activeDot={{
-                            r: 5,
-                            stroke: '#3b82f6',
-                            strokeWidth: 2,
-                          }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div className="flex h-56 items-center justify-center sm:h-64">
+                    <div className="space-y-4 text-center">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-blue-600">
+                            {data.recentTrends.jobsToday}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Jobs Today
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-green-600">
+                            {data.completedJobs}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Completed
+                          </p>
+                        </div>
+                      </div>
+                      <div className="border-t border-gray-200 pt-4 dark:border-gray-600">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Cost trend: {data.recentTrends.costTrend}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </Card>
 
-                {/* Cost by Model - Vertical Bar Chart */}
+                {/* Model Breakdown */}
                 <Card
-                  title="Cost by Model"
+                  title="Model Usage"
                   className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-56 sm:h-64">
-                    {data.estimatedCostByModel &&
-                    data.estimatedCostByModel.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={data.estimatedCostByModel}
-                          margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            className="opacity-30"
-                          />
-                          <XAxis
-                            dataKey="model"
-                            className="text-gray-600 dark:text-gray-400"
-                            fontSize={10}
-                            angle={-45}
-                            textAnchor="end"
-                            height={60}
-                            interval={0}
-                          />
-                          <YAxis
-                            className="text-gray-600 dark:text-gray-400"
-                            fontSize={11}
-                            tickFormatter={(value) =>
-                              typeof value === 'number'
-                                ? `$${value.toFixed(2)}`
-                                : value
-                            }
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: isDarkMode
-                                ? 'rgba(31, 41, 55, 0.95)'
-                                : 'rgba(255, 255, 255, 0.95)',
-                              border: isDarkMode
-                                ? '1px solid #4b5563'
-                                : '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              fontSize: '13px',
-                              color: isDarkMode ? '#f9fafb' : '#111827',
-                            }}
-                            formatter={(value: number) => [
-                              `$${value.toFixed(4)}`,
-                              'Cost',
-                            ]}
-                          />
-                          <Bar
-                            dataKey="estimatedCost"
-                            fill="#10b981"
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
+                  <div className="h-56 overflow-y-auto sm:h-64">
+                    {Object.keys(data.modelBreakdown || {}).length > 0 ? (
+                      <div className="space-y-2">
+                        {Object.entries(data.modelBreakdown).map(
+                          ([model, count]) => (
+                            <div
+                              key={model}
+                              className="flex items-center justify-between rounded bg-gray-50 p-2 dark:bg-gray-700"
+                            >
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {model}
+                              </span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                {count} jobs
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
                     ) : (
                       <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
                         <div className="text-center">
-                          <span className="text-3xl">💰</span>
-                          <p className="mt-2 text-sm">No cost data available</p>
+                          <span className="text-3xl">🤖</span>
+                          <p className="mt-2 text-sm">
+                            No model data available
+                          </p>
                         </div>
                       </div>
                     )}
@@ -276,68 +209,34 @@ const DashboardPage = () => {
 
                 {/* Token Usage by Model - Vertical Bar Chart */}
                 <Card
-                  title="Token Usage by Model"
+                  title="Provider Usage"
                   className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-56 sm:h-64">
-                    {data.tokensByModel && data.tokensByModel.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={data.tokensByModel}
-                          margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            className="opacity-30"
-                          />
-                          <XAxis
-                            dataKey="model"
-                            className="text-gray-600 dark:text-gray-400"
-                            fontSize={10}
-                            angle={-45}
-                            textAnchor="end"
-                            height={60}
-                            interval={0}
-                          />
-                          <YAxis
-                            className="text-gray-600 dark:text-gray-400"
-                            fontSize={11}
-                            tickFormatter={(value) =>
-                              typeof value === 'number'
-                                ? `${(value / 1000).toFixed(0)}K`
-                                : value
-                            }
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: isDarkMode
-                                ? 'rgba(31, 41, 55, 0.95)'
-                                : 'rgba(255, 255, 255, 0.95)',
-                              border: isDarkMode
-                                ? '1px solid #4b5563'
-                                : '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              fontSize: '13px',
-                              color: isDarkMode ? '#f9fafb' : '#111827',
-                            }}
-                            formatter={(value: number) => [
-                              value.toLocaleString(),
-                              'Tokens',
-                            ]}
-                          />
-                          <Bar
-                            dataKey="totalTokens"
-                            fill="#f59e0b"
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
+                  <div className="h-56 overflow-y-auto sm:h-64">
+                    {Object.keys(data.providerBreakdown || {}).length > 0 ? (
+                      <div className="space-y-2">
+                        {Object.entries(data.providerBreakdown).map(
+                          ([provider, count]) => (
+                            <div
+                              key={provider}
+                              className="flex items-center justify-between rounded bg-gray-50 p-2 dark:bg-gray-700"
+                            >
+                              <span className="text-sm font-medium text-gray-700 capitalize dark:text-gray-300">
+                                {provider}
+                              </span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                {count} jobs
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
                     ) : (
                       <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
                         <div className="text-center">
-                          <span className="text-3xl">🪙</span>
+                          <span className="text-3xl">🔌</span>
                           <p className="mt-2 text-sm">
-                            No token data available
+                            No provider data available
                           </p>
                         </div>
                       </div>
@@ -350,97 +249,19 @@ const DashboardPage = () => {
                   title="Model Efficiency"
                   className="h-72 bg-white p-3 sm:h-80 sm:p-4 dark:bg-gray-800"
                 >
-                  <div className="h-56 sm:h-64">
-                    {data.modelEfficiency && data.modelEfficiency.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ScatterChart
-                          data={data.modelEfficiency}
-                          margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            className="opacity-30"
-                          />
-                          <XAxis
-                            type="number"
-                            dataKey="avgResponseTime"
-                            name="Response Time"
-                            className="text-gray-600 dark:text-gray-400"
-                            fontSize={11}
-                            angle={-45}
-                            textAnchor="end"
-                            height={60}
-                            tickFormatter={(value) =>
-                              typeof value === 'number'
-                                ? `${value.toFixed(0)}ms`
-                                : value
-                            }
-                          />
-                          <YAxis
-                            type="number"
-                            dataKey="costPerToken"
-                            name="Cost per Token"
-                            className="text-gray-600 dark:text-gray-400"
-                            fontSize={11}
-                            tickFormatter={(value) =>
-                              typeof value === 'number'
-                                ? `$${(value * 1000).toFixed(3)}`
-                                : value
-                            }
-                          />
-                          <Tooltip
-                            content={({ active, payload }) => {
-                              if (active && payload && payload.length > 0) {
-                                const data = payload[0].payload;
-                                return (
-                                  <div
-                                    className="rounded-lg border p-3 shadow-lg"
-                                    style={{
-                                      backgroundColor: isDarkMode
-                                        ? 'rgba(31, 41, 55, 0.95)'
-                                        : 'rgba(255, 255, 255, 0.95)',
-                                      border: isDarkMode
-                                        ? '1px solid #4b5563'
-                                        : '1px solid #e5e7eb',
-                                      color: isDarkMode ? '#f9fafb' : '#111827',
-                                    }}
-                                  >
-                                    <div className="mb-2 font-semibold">
-                                      {data.model || 'Unknown Model'}
-                                    </div>
-                                    <div className="space-y-1 text-sm">
-                                      <div>
-                                        Response Time:{' '}
-                                        {data.avgResponseTime?.toFixed(0)}ms
-                                      </div>
-                                      <div>
-                                        Cost: $
-                                        {(data.costPerToken * 1000).toFixed(4)}
-                                        /K tokens
-                                      </div>
-                                      <div>
-                                        Total Jobs: {data.totalJobs || 0}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }}
-                          />
-                          <Scatter dataKey="costPerToken" fill="#8b5cf6" />
-                        </ScatterChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
-                        <div className="text-center">
-                          <span className="text-3xl">⚡</span>
-                          <p className="mt-2 text-sm">
-                            No efficiency data available
-                          </p>
-                        </div>
+                  <div className="flex h-56 items-center justify-center sm:h-64">
+                    <div className="space-y-3 text-center">
+                      <span className="text-4xl">⚡</span>
+                      <div>
+                        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                          Coming Soon
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Advanced analytics will be available in future
+                          releases
+                        </p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </Card>
               </div>

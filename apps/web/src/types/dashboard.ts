@@ -23,3 +23,19 @@ export interface DashboardStats {
     totalJobs: number;
   }>;
 }
+
+// Simple dashboard stats interface matching current API reality
+export interface SimpleDashboardStats {
+  totalJobs: number;
+  completedJobs: number;
+  failedJobs: number;
+  totalCost: number;
+  averageResponseTime: number;
+  providerBreakdown: Record<string, number>;
+  modelBreakdown: Record<string, number>;
+  recentTrends: {
+    jobsToday: number;
+    costTrend: string;
+    averageSuccessRate: number;
+  };
+}

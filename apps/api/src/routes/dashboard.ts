@@ -81,12 +81,13 @@ dashboardRouter.get(
           totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0,
       };
 
+      // Return simple dashboard statistics matching the original API design
       res.json({
         totalJobs,
         completedJobs,
         failedJobs,
-        averageResponseTime,
         totalCost,
+        averageResponseTime,
         providerBreakdown,
         modelBreakdown,
         recentTrends,

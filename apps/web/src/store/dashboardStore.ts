@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { ApiClient } from '../api.js';
-import type { DashboardStats } from '../types/dashboard.js';
+import type { SimpleDashboardStats } from '../types/dashboard.js';
 
 interface DashboardState {
   isLoading: boolean;
   error: string | null;
-  data: DashboardStats | null;
+  data: SimpleDashboardStats | null;
   days: number;
   fetchDashboardStats: (days: number) => Promise<void>;
 }
