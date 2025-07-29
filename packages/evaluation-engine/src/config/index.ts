@@ -73,16 +73,16 @@ function createConfigSchema() {
 
     // Database configuration
     database: z.object({
-      url: z
-        .string()
-        .default(() => {
-          // If DATABASE_URL is explicitly set, use it regardless of NODE_ENV
-          if (process.env.DATABASE_URL) {
-            return process.env.DATABASE_URL;
-          }
-          // Otherwise, fall back to environment-appropriate defaults
-          return process.env.NODE_ENV === 'test' ? ':memory:' : 'sqlite://./db.sqlite';
-        }),
+      url: z.string().default(() => {
+        // If DATABASE_URL is explicitly set, use it regardless of NODE_ENV
+        if (process.env.DATABASE_URL) {
+          return process.env.DATABASE_URL;
+        }
+        // Otherwise, fall back to environment-appropriate defaults
+        return process.env.NODE_ENV === 'test'
+          ? ':memory:'
+          : 'sqlite://./db.sqlite';
+      }),
       maxConnections: z.coerce
         .number()
         .min(1)
