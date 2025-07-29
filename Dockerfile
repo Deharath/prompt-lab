@@ -12,11 +12,6 @@ RUN find . -name "tsconfig.tsbuildinfo" -delete && find . -name "dist" -type d -
 RUN pnpm install --frozen-lockfile \
     && pnpm -r build
 
-# Verify migration files exist in builder stage
-RUN echo "=== Checking migration files in builder stage ===" && \
-    ls -la packages/evaluation-engine/drizzle/ && \
-    ls -la packages/evaluation-engine/drizzle/migrations/ && \
-    cat packages/evaluation-engine/drizzle/migrations/0000_fresh_start.sql | head -5
 
 ###############################################################################
 # ❷ Runtime stage – slim image with only production artefacts
@@ -33,11 +28,6 @@ COPY --from=builder /app/packages/evaluation-engine/dist        ./packages/evalu
 COPY --from=builder /app/packages/shared-types/dist           ./packages/shared-types/dist
 # ── migration files for database setup ──────────────────────────────────────
 COPY --from=builder /app/packages/evaluation-engine/drizzle    ./packages/evaluation-engine/drizzle/
-# Verify migration files copied correctly to runner stage
-RUN echo "=== Verifying migration files in runner stage ===" && \
-    ls -la ./packages/evaluation-engine/drizzle/ && \
-    ls -la ./packages/evaluation-engine/drizzle/migrations/ && \
-    cat ./packages/evaluation-engine/drizzle/migrations/0000_fresh_start.sql | head -3 || echo "❌ Migration files missing in runner stage"
 # ── package-manager metadata & production deps ───────────────────────────────
 COPY --from=builder /app/package.json \
                      /app/pnpm-lock.yaml \
