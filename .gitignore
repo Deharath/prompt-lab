@@ -92,7 +92,8 @@ scripts/metrics-debug/
 /drizzle/
 drizzle/migrations/meta/
 apps/api/drizzle/meta/
-packages/evaluation-engine/drizzle/
+packages/evaluation-engine/drizzle/meta/
+packages/evaluation-engine/drizzle/migrations/meta/
 
 # Local database directory
 /db/
