@@ -7,8 +7,16 @@ RUN corepack enable      # enables pnpm
 COPY . .
 
 # install deps once (cached) and build every workspace that has a build script
+# Clean any stale build artifacts first to ensure fresh compilation
+RUN find . -name "tsconfig.tsbuildinfo" -delete && find . -name "dist" -type d -exec rm -rf {} + 2>/dev/null || true
 RUN pnpm install --frozen-lockfile \
     && pnpm -r build
+
+# Verify migration files exist in builder stage
+RUN echo "=== Checking migration files in builder stage ===" && \
+    ls -la packages/evaluation-engine/drizzle/ && \
+    ls -la packages/evaluation-engine/drizzle/migrations/ && \
+    cat packages/evaluation-engine/drizzle/migrations/0000_fresh_start.sql | head -5
 
 ###############################################################################
 # ❷ Runtime stage – slim image with only production artefacts
@@ -25,8 +33,11 @@ COPY --from=builder /app/packages/evaluation-engine/dist        ./packages/evalu
 COPY --from=builder /app/packages/shared-types/dist           ./packages/shared-types/dist
 # ── migration files for database setup ──────────────────────────────────────
 COPY --from=builder /app/packages/evaluation-engine/drizzle    ./packages/evaluation-engine/drizzle/
-# Ensure migration files have proper permissions
-RUN ls -la ./packages/evaluation-engine/drizzle/migrations/ || echo "Migration files not found after copy"
+# Verify migration files copied correctly to runner stage
+RUN echo "=== Verifying migration files in runner stage ===" && \
+    ls -la ./packages/evaluation-engine/drizzle/ && \
+    ls -la ./packages/evaluation-engine/drizzle/migrations/ && \
+    cat ./packages/evaluation-engine/drizzle/migrations/0000_fresh_start.sql | head -3 || echo "❌ Migration files missing in runner stage"
 # ── package-manager metadata & production deps ───────────────────────────────
 COPY --from=builder /app/package.json \
                      /app/pnpm-lock.yaml \
@@ -40,6 +51,11 @@ RUN pnpm install --frozen-lockfile
 
 ENV NODE_ENV=production
 RUN mkdir -p /app/db
+# Debug environment variables for configuration troubleshooting
+RUN echo "=== Environment variables for debugging ===" && \
+    echo "NODE_ENV=$NODE_ENV" && \
+    echo "DATABASE_URL=$DATABASE_URL" && \
+    echo "PORT=$PORT"
 EXPOSE 3000
 
 # start the API (entrypoint produced by tsc)
