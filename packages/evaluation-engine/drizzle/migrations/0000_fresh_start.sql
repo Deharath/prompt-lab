@@ -1,4 +1,4 @@
-CREATE TABLE `jobs` (
+CREATE TABLE IF NOT EXISTS `jobs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`prompt` text NOT NULL,
 	`template` text,
@@ -22,6 +22,6 @@ CREATE TABLE `jobs` (
 	`updated_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `jobs_status_idx` ON `jobs` (`status`);--> statement-breakpoint
-CREATE INDEX `jobs_created_at_idx` ON `jobs` (`created_at`);--> statement-breakpoint
-CREATE INDEX `jobs_provider_model_idx` ON `jobs` (`provider`,`model`);
+CREATE INDEX IF NOT EXISTS `jobs_status_idx` ON `jobs` (`status`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `jobs_created_at_idx` ON `jobs` (`created_at`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `jobs_provider_model_idx` ON `jobs` (`provider`,`model`);
