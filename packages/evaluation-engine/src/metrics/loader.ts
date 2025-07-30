@@ -9,7 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export class MetricAutoLoader {
-  private static readonly PLUGIN_EXTENSIONS = ['.js', '.ts'];
+  private static readonly PLUGIN_EXTENSIONS =
+    process.env.NODE_ENV === 'production' ? ['.js'] : ['.js', '.ts'];
 
   /**
    * Load metrics from a specific directory
@@ -115,6 +116,7 @@ export class MetricAutoLoader {
       this.PLUGIN_EXTENSIONS.some((ext) => fileName.endsWith(ext)) &&
       !fileName.includes('.test.') &&
       !fileName.includes('.spec.') &&
+      !fileName.endsWith('.d.ts') && // Exclude TypeScript declaration files
       fileName !== 'index.js' &&
       fileName !== 'index.ts'
     );
