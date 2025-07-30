@@ -26,7 +26,7 @@ const mockJobStore = {
   temperature: 0.7,
   topP: 0.9,
   maxTokens: 1000,
-  selectedMetrics: [],
+  disabledMetrics: [],
   hasUserData: false,
   setUserData: mockFn,
 };

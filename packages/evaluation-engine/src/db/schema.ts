@@ -47,6 +47,7 @@ export const jobs = sqliteTable(
     topP: real('top_p'),
     maxTokens: integer('max_tokens'),
     selectedMetrics: text('selected_metrics', { mode: 'json' }), // Array of selected metric configs
+    disabledMetrics: text('disabled_metrics', { mode: 'json' }), // Array of disabled metric IDs
 
     attemptCount: integer('attempt_count').notNull().default(1),
     maxAttempts: integer('max_attempts').notNull().default(3),

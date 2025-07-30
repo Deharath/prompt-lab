@@ -1,5 +1,4 @@
 import {
-  type SelectedMetric,
   type MetricResult,
   type MetricsCalculationResult,
 } from '@prompt-lab/shared-types';
@@ -25,7 +24,7 @@ interface JobState {
   temperature: number;
   topP: number;
   maxTokens: number;
-  selectedMetrics: SelectedMetric[];
+  disabledMetrics: string[];
   comparison: {
     baseJobId?: string;
     compareJobId?: string;
@@ -44,7 +43,7 @@ interface JobState {
   setTemperature(value: number): void;
   setTopP(value: number): void;
   setMaxTokens(value: number): void;
-  setSelectedMetrics(metrics: SelectedMetric[]): void;
+  setDisabledMetrics(metrics: string[]): void;
   // Execution state setters
   setIsExecuting(isExecuting: boolean): void;
   setIsStreaming(isStreaming: boolean): void;
@@ -61,44 +60,7 @@ export const useJobStore = create<JobState>((set, get) => ({
   temperature: 0.7,
   topP: 1.0,
   maxTokens: 0, // 0 means use model default
-  selectedMetrics: [
-    // Readability metrics
-    { id: 'flesch_reading_ease' },
-    { id: 'flesch_kincaid_grade' },
-    { id: 'smog_index' },
-    { id: 'text_complexity' },
-
-    // Structure metrics
-    { id: 'word_count' },
-    { id: 'sentence_count' },
-    { id: 'token_count' },
-    { id: 'avg_words_per_sentence' },
-
-    // Quality metrics
-    { id: 'precision' },
-    { id: 'recall' },
-    { id: 'f_score' },
-    { id: 'bleu_score' },
-    { id: 'rouge_1' },
-    { id: 'rouge_2' },
-    { id: 'rouge_l' },
-    { id: 'vocab_diversity' },
-    { id: 'completeness_score' },
-
-    // Sentiment metrics
-    { id: 'sentiment' },
-    { id: 'sentiment_detailed' },
-
-    // Keywords metrics
-    { id: 'keywords' },
-    { id: 'weighted_keywords' },
-
-    // Validation metrics
-    { id: 'is_valid_json' },
-
-    // Performance metrics
-    { id: 'response_latency' }, // Essential for Model Efficiency dashboard
-  ] as SelectedMetric[],
+  disabledMetrics: [],
   comparison: {},
   start: (job) => {
     set({
@@ -155,7 +117,7 @@ export const useJobStore = create<JobState>((set, get) => ({
   setTemperature: (temperature) => set({ temperature }),
   setTopP: (topP) => set({ topP }),
   setMaxTokens: (maxTokens) => set({ maxTokens }),
-  setSelectedMetrics: (selectedMetrics) => set({ selectedMetrics }),
+  setDisabledMetrics: (disabledMetrics) => set({ disabledMetrics }),
   // Execution state setters
   setIsExecuting: (isExecuting) => set({ isExecuting }),
   setIsStreaming: (isStreaming) => set({ isStreaming }),

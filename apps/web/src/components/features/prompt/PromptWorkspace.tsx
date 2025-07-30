@@ -50,7 +50,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
       temperature,
       topP,
       maxTokens,
-      selectedMetrics,
+      disabledMetrics,
       hasUserData,
       setUserData,
     } = useJobStore();
@@ -115,7 +115,7 @@ const PromptWorkspace = forwardRef<PromptWorkspaceRef, PromptWorkspaceProps>(
         temperature,
         topP,
         maxTokens,
-        selectedMetrics,
+        disabledMetrics,
       });
     };
 

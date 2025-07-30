@@ -29,7 +29,7 @@ const Home = () => {
     temperature,
     topP,
     maxTokens,
-    selectedMetrics,
+    disabledMetrics,
     isExecuting,
     isStreaming,
   } = useJobStore();

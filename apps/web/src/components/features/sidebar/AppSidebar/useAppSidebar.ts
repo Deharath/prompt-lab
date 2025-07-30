@@ -39,11 +39,11 @@ export const useAppSidebar = (
     temperature,
     topP,
     maxTokens,
-    selectedMetrics,
+    disabledMetrics,
     setTemperature,
     setTopP,
     setMaxTokens,
-    setSelectedMetrics,
+    setDisabledMetrics,
   } = useJobStore();
 
   // Remove duplicate useJobExecution call - use isRunning prop instead
@@ -224,7 +224,7 @@ export const useAppSidebar = (
     temperature,
     topP,
     maxTokens,
-    selectedMetrics,
+    disabledMetrics,
 
     // Setters
     setFocusedJobIndex,
@@ -233,7 +233,7 @@ export const useAppSidebar = (
     setTemperature,
     setTopP,
     setMaxTokens,
-    setSelectedMetrics,
+    setDisabledMetrics,
 
     // Handlers
     handleDelete,

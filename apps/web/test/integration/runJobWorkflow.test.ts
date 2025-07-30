@@ -187,7 +187,7 @@ describe('Run Job Workflow Integration', () => {
         temperature: 0.7,
         topP: 0.9,
         maxTokens: 1000,
-        selectedMetrics: [],
+        disabledMetrics: [],
       };
 
       // Mock the streaming functionality properly
@@ -226,7 +226,7 @@ describe('Run Job Workflow Integration', () => {
         temperature: 0.7,
         topP: 0.9,
         maxTokens: 1000,
-        metrics: undefined,
+        disabledMetrics: [],
       });
 
       // Step 5: Verify streaming was set up
@@ -279,7 +279,7 @@ describe('Run Job Workflow Integration', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [],
+      disabledMetrics: [],
     };
 
     await act(async () => {
@@ -345,7 +345,7 @@ describe('Run Job Workflow Integration', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [],
+      disabledMetrics: [],
     };
 
     await act(async () => {
@@ -392,7 +392,7 @@ describe('Run Job Workflow Integration', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [],
+      disabledMetrics: [],
     };
 
     // Start job execution (don't await - we want to check state during execution)
@@ -474,12 +474,7 @@ describe('Run Job Workflow Integration', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [
-        { id: 'sentiment' },
-        { id: 'flesch_reading_ease' },
-        { id: 'word_count' },
-        { id: 'token_count' },
-      ],
+      disabledMetrics: [],
     };
 
     // Mock streaming with metrics updates
@@ -514,12 +509,7 @@ describe('Run Job Workflow Integration', () => {
     // Verify job execution
     expect(vi.mocked(ApiClient.createJob)).toHaveBeenCalledWith(
       expect.objectContaining({
-        metrics: expect.arrayContaining([
-          { id: 'sentiment' },
-          { id: 'flesch_reading_ease' },
-          { id: 'word_count' },
-          { id: 'token_count' },
-        ]),
+        disabledMetrics: [],
       }),
     );
 
@@ -560,7 +550,7 @@ describe('Run Job Workflow Integration', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [],
+      disabledMetrics: [],
     };
 
     // First attempt should fail
@@ -628,7 +618,7 @@ describe('Run Job Workflow Integration', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [],
+      disabledMetrics: [],
     };
 
     await act(async () => {

@@ -15,7 +15,7 @@ export class JobService {
     temperature: number;
     topP: number;
     maxTokens: number;
-    selectedMetrics: any[];
+    disabledMetrics: string[];
   }): Promise<JobSummary> {
     logger.info('Starting job execution', {
       provider: params.provider,
@@ -37,10 +37,7 @@ export class JobService {
         temperature: params.temperature,
         topP: params.topP,
         maxTokens: params.maxTokens > 0 ? params.maxTokens : undefined,
-        metrics:
-          params.selectedMetrics.length > 0
-            ? params.selectedMetrics
-            : undefined,
+        disabledMetrics: params.disabledMetrics,
       });
 
       this.queryClient.setQueryData(['jobs'], (oldJobs: JobSummary[] = []) => {

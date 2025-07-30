@@ -1,90 +1,64 @@
 import React, { useState, useCallback, memo } from 'react';
 import Card from '../../ui/Card.js';
 import DebouncedInput from './DebouncedInput.js';
-import type {
-  MetricInput,
-  MetricOption,
-  SelectedMetric,
-} from '@prompt-lab/shared-types';
+import type { MetricInput, MetricOption } from '@prompt-lab/shared-types';
 
 interface MetricSelectorProps {
   metrics: MetricOption[];
-  selectedMetrics: SelectedMetric[];
-  onChange: (metrics: SelectedMetric[]) => void;
+  disabledMetrics?: string[];
+  onChange: (disabledMetrics: string[]) => void;
   compact?: boolean;
 }
 
 /**
- * MetricSelector component allows users to select which metrics to run
- * for evaluating responses, with optional input fields for metrics that
- * require additional configuration.
+ * MetricSelector component allows users to disable specific metrics from
+ * the comprehensive evaluation. By default, all available metrics are enabled,
+ * and users can selectively disable metrics they don't need.
  */
 const MetricSelector = memo<MetricSelectorProps>(
   ({
     metrics,
-    selectedMetrics,
+    disabledMetrics,
     onChange,
     compact = false,
   }: MetricSelectorProps) => {
     const [userInputs, setUserInputs] = useState<Record<string, string>>({});
 
-    // Check if a metric is currently selected
-    const isSelected = (id: string) => {
-      return selectedMetrics.some((m) => m.id === id);
+    // Check if a metric is currently disabled
+    const isDisabled = (id: string) => {
+      return disabledMetrics?.includes(id) ?? false;
     };
 
     // Handle checkbox toggle
     const handleToggleMetric = (metric: MetricOption) => {
-      const isCurrentlySelected = isSelected(metric.id);
+      const isCurrentlyDisabled = isDisabled(metric.id);
+      const currentDisabled = disabledMetrics ?? [];
 
-      let newSelectedMetrics: SelectedMetric[];
+      let newDisabledMetrics: string[];
 
-      if (isCurrentlySelected) {
-        // Remove the metric if it's already selected
-        newSelectedMetrics = selectedMetrics.filter((m) => m.id !== metric.id);
+      if (isCurrentlyDisabled) {
+        // Enable the metric by removing it from disabled list
+        newDisabledMetrics = currentDisabled.filter((id) => id !== metric.id);
       } else {
-        // Add the metric
-        const newMetric: SelectedMetric = {
-          id: metric.id,
-        };
-
-        // Add any input if the metric requires it
-        if (metric.requiresInput && userInputs[metric.id]) {
-          newMetric.input = userInputs[metric.id];
-        }
-
-        newSelectedMetrics = [...selectedMetrics, newMetric];
+        // Disable the metric by adding it to disabled list
+        newDisabledMetrics = [...currentDisabled, metric.id];
       }
 
-      onChange(newSelectedMetrics);
+      onChange(newDisabledMetrics);
     };
 
     // Handle input change for metrics that require additional data (debounced)
-    const handleInputChange = useCallback(
-      (metricId: string, value: string) => {
-        // Update local state with the input
-        setUserInputs((prev) => ({
-          ...prev,
-          [metricId]: value,
-        }));
+    const handleInputChange = useCallback((metricId: string, value: string) => {
+      // Update local state with the input
+      setUserInputs((prev) => ({
+        ...prev,
+        [metricId]: value,
+      }));
 
-        // Update the selected metrics if this metric is already selected
-        if (isSelected(metricId)) {
-          const newSelectedMetrics = selectedMetrics.map((m) => {
-            if (m.id === metricId) {
-              return {
-                ...m,
-                input: value,
-              };
-            }
-            return m;
-          });
-
-          onChange(newSelectedMetrics);
-        }
-      },
-      [selectedMetrics, onChange],
-    );
+      // Note: Input handling is now simplified since we only need to store
+      // the input value locally. The actual metric input will be handled
+      // by the parent component or service layer when creating jobs.
+    }, []);
 
     // Enhanced tooltip component for mobile and desktop
     const MetricTooltip = ({
@@ -131,7 +105,7 @@ const MetricSelector = memo<MetricSelectorProps>(
           <Card title="Evaluation Metrics">
             <div className="space-y-3">
               {metrics.map((metric) => {
-                const isChecked = isSelected(metric.id);
+                const isChecked = !isDisabled(metric.id);
                 return (
                   <div key={metric.id} className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -202,7 +176,7 @@ const MetricSelector = memo<MetricSelectorProps>(
         ) : (
           <div className="space-y-3">
             {metrics.map((metric) => {
-              const isChecked = isSelected(metric.id);
+              const isChecked = !isDisabled(metric.id);
               return (
                 <div key={metric.id} className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -269,15 +243,14 @@ const MetricSelector = memo<MetricSelectorProps>(
   },
   (prevProps, nextProps) => {
     // Custom comparison for React.memo optimization
+    const prevDisabled = prevProps.disabledMetrics ?? [];
+    const nextDisabled = nextProps.disabledMetrics ?? [];
+
     return (
       prevProps.compact === nextProps.compact &&
       prevProps.metrics === nextProps.metrics &&
-      prevProps.selectedMetrics.length === nextProps.selectedMetrics.length &&
-      prevProps.selectedMetrics.every(
-        (metric, index) =>
-          metric.id === nextProps.selectedMetrics[index]?.id &&
-          metric.input === nextProps.selectedMetrics[index]?.input,
-      )
+      prevDisabled.length === nextDisabled.length &&
+      prevDisabled.every((metricId, index) => metricId === nextDisabled[index])
     );
   },
 );

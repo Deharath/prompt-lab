@@ -37,6 +37,7 @@ export interface JobRequest {
   topP?: number;
   maxTokens?: number;
   metrics?: Array<{ id: string; input?: string }>;
+  disabledMetrics?: string[];
 }
 
 // Re-export from shared-types

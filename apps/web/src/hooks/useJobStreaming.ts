@@ -17,7 +17,7 @@ export interface JobStreamingActions {
     temperature: number;
     topP: number;
     maxTokens: number;
-    selectedMetrics: any[];
+    disabledMetrics: string[];
   }) => Promise<void>;
   cancelJob: () => Promise<void>;
   reset: () => void;

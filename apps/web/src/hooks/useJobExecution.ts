@@ -14,7 +14,7 @@ export interface JobExecutionParams {
   temperature: number;
   topP: number;
   maxTokens: number;
-  selectedMetrics: any[];
+  disabledMetrics: string[];
 }
 
 export interface JobExecutionState {
@@ -79,7 +79,7 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
           temperature,
           topP,
           maxTokens,
-          selectedMetrics,
+          disabledMetrics,
         } = params;
 
         let finalPrompt = template;
@@ -98,8 +98,7 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
         }
         finalPrompt = finalPrompt.replace(/\{\{\s*input\s*\}\}/g, inputData);
 
-        const metricsToSend =
-          selectedMetrics.length > 0 ? selectedMetrics : undefined;
+        const disabledMetricsToSend = disabledMetrics;
 
         const job = await ApiClient.createJob({
           prompt: finalPrompt,
@@ -110,7 +109,7 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
           temperature,
           topP,
           maxTokens: maxTokens > 0 ? maxTokens : undefined,
-          metrics: metricsToSend,
+          disabledMetrics: disabledMetricsToSend,
         });
 
         // Set current job and start in store

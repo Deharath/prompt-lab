@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MetricSelector from '../../src/components/features/metrics/MetricSelector.js';
-import type { MetricOption, SelectedMetric } from '@prompt-lab/shared-types';
+import type { MetricOption } from '@prompt-lab/shared-types';
 import { MetricCategory } from '@prompt-lab/shared-types';
 
 // Mock the child components
@@ -62,13 +62,13 @@ describe('MetricSelector', () => {
     },
   ];
 
-  const mockSelectedMetrics: SelectedMetric[] = [{ id: 'word_count' }];
+  const mockDisabledMetrics: string[] = ['sentiment', 'keywords'];
 
   const mockOnChange = vi.fn();
 
   const defaultProps = {
     metrics: mockMetrics,
-    selectedMetrics: mockSelectedMetrics,
+    disabledMetrics: mockDisabledMetrics,
     onChange: mockOnChange,
     compact: false,
   };
@@ -106,7 +106,7 @@ describe('MetricSelector', () => {
       });
     });
 
-    it('should show selected metrics as checked', () => {
+    it('should show non-disabled metrics as checked', () => {
       render(<MetricSelector {...defaultProps} />);
 
       expect(screen.getByLabelText('Word Count')).toBeChecked();
@@ -136,41 +136,42 @@ describe('MetricSelector', () => {
   });
 
   describe('Metric Selection', () => {
-    it('should call onChange when metric is selected', () => {
+    it('should call onChange when metric is enabled (removed from disabled list)', () => {
       render(<MetricSelector {...defaultProps} />);
 
       fireEvent.click(screen.getByLabelText('Sentiment Analysis'));
 
+      expect(mockOnChange).toHaveBeenCalledWith(['keywords']);
+    });
+
+    it('should call onChange when metric is disabled (added to disabled list)', () => {
+      render(<MetricSelector {...defaultProps} />);
+
+      fireEvent.click(screen.getByLabelText('Word Count'));
+
       expect(mockOnChange).toHaveBeenCalledWith([
-        { id: 'word_count' },
-        { id: 'sentiment' },
+        'sentiment',
+        'keywords',
+        'word_count',
       ]);
     });
 
-    it('should call onChange when metric is deselected', () => {
-      render(<MetricSelector {...defaultProps} />);
+    it('should handle multiple metric operations', () => {
+      render(<MetricSelector {...defaultProps} disabledMetrics={[]} />);
 
       fireEvent.click(screen.getByLabelText('Word Count'));
-
-      expect(mockOnChange).toHaveBeenCalledWith([]);
-    });
-
-    it('should handle multiple metric selections', () => {
-      render(<MetricSelector {...defaultProps} selectedMetrics={[]} />);
-
-      fireEvent.click(screen.getByLabelText('Word Count'));
-      expect(mockOnChange).toHaveBeenCalledWith([{ id: 'word_count' }]);
+      expect(mockOnChange).toHaveBeenCalledWith(['word_count']);
 
       fireEvent.click(screen.getByLabelText('Sentiment Analysis'));
-      expect(mockOnChange).toHaveBeenCalledWith([{ id: 'sentiment' }]);
+      expect(mockOnChange).toHaveBeenCalledWith(['sentiment']);
     });
   });
 
   describe('Input Fields for Metrics', () => {
-    it('should show input field when metric requires input and is selected', () => {
+    it('should show input field when metric requires input and is enabled', () => {
       const propsWithKeywords = {
         ...defaultProps,
-        selectedMetrics: [{ id: 'keywords' }],
+        disabledMetrics: ['sentiment'], // keywords is enabled (not in disabled list)
       };
 
       render(<MetricSelector {...propsWithKeywords} />);
@@ -182,16 +183,16 @@ describe('MetricSelector', () => {
       );
     });
 
-    it('should not show input field when metric requires input but is not selected', () => {
+    it('should not show input field when metric requires input but is disabled', () => {
       render(<MetricSelector {...defaultProps} />);
 
       expect(screen.queryByTestId('keyword-input')).not.toBeInTheDocument();
     });
 
-    it('should update selected metrics when input value changes', async () => {
+    it('should handle input value changes locally', async () => {
       const propsWithKeywords = {
         ...defaultProps,
-        selectedMetrics: [{ id: 'keywords' }],
+        disabledMetrics: ['sentiment'], // keywords is enabled
       };
 
       render(<MetricSelector {...propsWithKeywords} />);
@@ -199,17 +200,15 @@ describe('MetricSelector', () => {
       const input = screen.getByTestId('keyword-input');
       fireEvent.change(input, { target: { value: 'test, keywords' } });
 
-      await waitFor(() => {
-        expect(mockOnChange).toHaveBeenCalledWith([
-          { id: 'keywords', input: 'test, keywords' },
-        ]);
-      });
+      // Input changes should update local state, not call onChange
+      expect(input).toHaveValue('test, keywords');
+      expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it('should preserve input value when metric is selected with existing input', () => {
+    it('should preserve input value when metric is enabled with existing input', () => {
       const propsWithKeywords = {
         ...defaultProps,
-        selectedMetrics: [{ id: 'keywords', input: 'existing, keywords' }],
+        disabledMetrics: ['sentiment'], // keywords enabled, with input handling
       };
 
       render(<MetricSelector {...propsWithKeywords} />);
@@ -220,36 +219,30 @@ describe('MetricSelector', () => {
       expect(input).toHaveValue('');
     });
 
-    it('should include input when selecting metric that requires input', async () => {
+    it('should include input when enabling metric that requires input', async () => {
       const { rerender } = render(<MetricSelector {...defaultProps} />);
 
-      // First select the metric to show input field
+      // First enable the metric (remove from disabled list) to show input field
       fireEvent.click(screen.getByLabelText('Keyword Presence'));
 
-      // Verify the onChange was called for selection
-      expect(mockOnChange).toHaveBeenCalledWith([
-        { id: 'word_count' },
-        { id: 'keywords' },
-      ]);
+      // Verify the onChange was called for enabling (removing from disabled list)
+      expect(mockOnChange).toHaveBeenCalledWith(['sentiment']);
 
-      // To test the input, we need to provide the updated selectedMetrics back to the component
+      // To test the input, we need to provide the updated disabledMetrics back to the component
       // This simulates what would happen in a real React app with state management
-      const propsWithUpdatedSelection = {
+      const propsWithUpdatedDisabled = {
         ...defaultProps,
-        selectedMetrics: [{ id: 'word_count' }, { id: 'keywords' }],
+        disabledMetrics: ['sentiment'], // keywords is now enabled
       };
 
-      rerender(<MetricSelector {...propsWithUpdatedSelection} />);
+      rerender(<MetricSelector {...propsWithUpdatedDisabled} />);
 
       // Now the input field should be visible
       const input = screen.getByTestId('keyword-input');
       fireEvent.change(input, { target: { value: 'test keywords' } });
 
-      // Verify the onChange was called with the input
-      expect(mockOnChange).toHaveBeenLastCalledWith([
-        { id: 'word_count' },
-        { id: 'keywords', input: 'test keywords' },
-      ]);
+      // Verify the onChange was called (input changes don't affect disabled list directly)
+      expect(mockOnChange).toHaveBeenLastCalledWith(['sentiment']);
     });
   });
 
@@ -339,7 +332,7 @@ describe('MetricSelector', () => {
     it('should handle input fields correctly in compact mode', () => {
       const compactWithKeywords = {
         ...compactProps,
-        selectedMetrics: [{ id: 'keywords' }],
+        disabledMetrics: ['sentiment'], // keywords enabled
       };
 
       render(<MetricSelector {...compactWithKeywords} />);
@@ -405,7 +398,7 @@ describe('MetricSelector', () => {
     it('should have proper screen reader labels for input fields', () => {
       const propsWithKeywords = {
         ...defaultProps,
-        selectedMetrics: [{ id: 'keywords' }],
+        disabledMetrics: ['sentiment'], // keywords enabled
       };
 
       render(<MetricSelector {...propsWithKeywords} />);

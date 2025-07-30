@@ -1,0 +1,1 @@
+ALTER TABLE `jobs` ADD `disabled_metrics` text;

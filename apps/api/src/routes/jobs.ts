@@ -126,6 +126,7 @@ async function calculateJobMetrics(
   output: string,
   selectedMetrics?: unknown,
   jobContext?: { prompt?: string; inputData?: unknown; template?: string },
+  userDisabledMetrics?: string[],
 ): Promise<Record<string, unknown>> {
   if (!output || typeof output !== 'string') {
     return {};
@@ -210,12 +211,15 @@ async function calculateJobMetrics(
     return cachedEntry.result;
   }
 
+  // Combine system-level disabled metrics with user-disabled metrics
+  const systemDisabledMetrics = getDisabledMetricsForSystem();
+  const allDisabledMetrics = new Set([
+    ...systemDisabledMetrics,
+    ...(userDisabledMetrics || []),
+  ]);
+
   // Calculate metrics if not cached
-  const result = await calculateMetrics(
-    output,
-    metrics,
-    getDisabledMetricsForSystem(),
-  );
+  const result = await calculateMetrics(output, metrics, allDisabledMetrics);
 
   // Cache the result for future use
   metricsCache.set(cacheKey, {
@@ -282,6 +286,7 @@ jobsRouter.post(
         topP,
         maxTokens,
         metrics: selectedMetrics,
+        disabledMetrics,
       } = req.body;
 
       // Enhanced validation
@@ -370,6 +375,7 @@ jobsRouter.post(
         ...(topP !== undefined && { topP }),
         ...(maxTokens !== undefined && { maxTokens }),
         ...(selectedMetrics !== undefined && { selectedMetrics }),
+        ...(disabledMetrics !== undefined && { disabledMetrics }),
       };
 
       const job = await createJob(jobData);
@@ -703,6 +709,7 @@ jobsRouter.get(
                 inputData: job.inputData,
                 template: job.template || undefined,
               },
+              (job.disabledMetrics as string[]) || [],
             );
 
             // Only include meaningful metrics - remove obsolete ones
@@ -783,6 +790,7 @@ jobsRouter.get(
               inputData: job.inputData,
               template: job.template || undefined,
             },
+            (job.disabledMetrics as string[]) || [],
           );
 
           const metrics: import('@prompt-lab/evaluation-engine').JobMetrics = {

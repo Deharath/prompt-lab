@@ -64,7 +64,7 @@ const AppSidebar = memo<AppSidebarProps>(
       temperature,
       topP,
       maxTokens,
-      selectedMetrics,
+      disabledMetrics,
 
       // Setters
       setFocusedJobIndex,
@@ -73,7 +73,7 @@ const AppSidebar = memo<AppSidebarProps>(
       setTemperature,
       setTopP,
       setMaxTokens,
-      setSelectedMetrics,
+      setDisabledMetrics,
 
       // Handlers
       handleDelete,

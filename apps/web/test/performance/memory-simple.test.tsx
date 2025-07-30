@@ -100,7 +100,7 @@ describe('Memory Leak Detection (Simplified)', () => {
         const { unmount } = render(
           <MetricSelector
             metrics={mockMetrics}
-            selectedMetrics={[{ id: 'sentiment' }]}
+            disabledMetrics={['word_count']}
             onChange={vi.fn()}
             compact={false}
           />,
@@ -142,7 +142,7 @@ describe('Memory Leak Detection (Simplified)', () => {
             temperature: 0.7,
             topP: 0.9,
             maxTokens: 1000,
-            selectedMetrics: [],
+            disabledMetrics: [],
           });
         });
 
@@ -234,7 +234,7 @@ describe('Memory Leak Detection (Simplified)', () => {
                 category: MetricCategory.QUALITY,
               },
             ]}
-            selectedMetrics={[]}
+            disabledMetrics={[]}
             onChange={vi.fn()}
             compact={false}
           />,
@@ -270,7 +270,7 @@ describe('Memory Leak Detection (Simplified)', () => {
             requiresInput: false,
             category: MetricCategory.QUALITY,
           }))}
-          selectedMetrics={[]}
+          disabledMetrics={[]}
           onChange={vi.fn()}
           compact={false}
         />,
@@ -326,7 +326,7 @@ describe('Memory Leak Detection (Simplified)', () => {
                   category: MetricCategory.QUALITY,
                 },
               ]}
-              selectedMetrics={i % 3 === 0 ? [{ id: `dynamic_${i}` }] : []}
+              disabledMetrics={i % 3 === 0 ? [`dynamic_${i}`] : []}
               onChange={vi.fn()}
               compact={i % 4 === 0}
             />,
@@ -372,7 +372,7 @@ describe('Memory Leak Detection (Simplified)', () => {
                 category: MetricCategory.QUALITY,
               },
             ]}
-            selectedMetrics={[]}
+            disabledMetrics={[]}
             onChange={vi.fn()}
             compact={false}
           />,

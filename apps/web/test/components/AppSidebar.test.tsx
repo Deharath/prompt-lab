@@ -261,14 +261,14 @@ describe('AppSidebar', () => {
     temperature: 0.7,
     topP: 0.9,
     maxTokens: 1000,
-    selectedMetrics: [],
+    disabledMetrics: [],
     setFocusedJobIndex: vi.fn(),
     setActiveTab: vi.fn(),
 
     setTemperature: vi.fn(),
     setTopP: vi.fn(),
     setMaxTokens: vi.fn(),
-    setSelectedMetrics: vi.fn(),
+    setDisabledMetrics: vi.fn(),
     handleDelete: vi.fn(),
 
     handleSelect: vi.fn(),

@@ -114,7 +114,7 @@ describe('useJobStreaming', () => {
       temperature: 0.7,
       topP: 0.9,
       maxTokens: 1000,
-      selectedMetrics: [],
+      disabledMetrics: [],
     };
 
     await act(async () => {
