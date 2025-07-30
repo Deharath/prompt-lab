@@ -16,15 +16,94 @@ import {
   getMetricCategoryDescription,
   createEmptyMetricsResult,
 } from '@prompt-lab/shared-types';
-// MetricRegistry import removed - web app should not directly import server-side components
+import {
+  metricsApiService,
+  type ApiMetricOption,
+} from '../../services/metricsApi.js';
 
-// Centralized metric display configuration
+// Dynamic metric display configuration
+let metricDisplayConfig: Record<string, MetricDisplayConfig> | null = null;
+let isLoadingConfig = false;
+
 /**
- * Generate metric display configuration from the plugin registry
+ * Generate metric display configuration from the API
  */
-function generateMetricDisplayConfig(): Record<string, MetricDisplayConfig> {
-  // Static configuration for known metrics
-  // In a real implementation, this would fetch from the API
+async function getMetricDisplayConfig(): Promise<
+  Record<string, MetricDisplayConfig>
+> {
+  if (metricDisplayConfig) {
+    return metricDisplayConfig;
+  }
+
+  if (isLoadingConfig) {
+    // Wait for existing request to complete
+    return new Promise((resolve) => {
+      const checkConfig = () => {
+        if (metricDisplayConfig) {
+          resolve(metricDisplayConfig);
+        } else if (!isLoadingConfig) {
+          // Loading failed, resolve with fallback
+          resolve(getFallbackMetricDisplayConfig());
+        } else {
+          setTimeout(checkConfig, 100);
+        }
+      };
+      checkConfig();
+    });
+  }
+
+  isLoadingConfig = true;
+
+  try {
+    const apiMetrics = await metricsApiService.getAvailableMetrics();
+
+    // Convert API metrics to display config
+    const config: Record<string, MetricDisplayConfig> = {};
+
+    apiMetrics.forEach((metric: ApiMetricOption) => {
+      config[metric.id] = {
+        id: metric.id,
+        name: metric.name,
+        description: metric.description,
+        category: metric.category || MetricCategory.CUSTOM,
+        unit: metric.displayConfig?.unit,
+        formatter: metric.displayConfig?.formatter as
+          | ((value: unknown) => string)
+          | undefined,
+        precision: metric.displayConfig?.precision,
+        thresholds: metric.displayConfig?.thresholds,
+        colSpan: metric.displayConfig?.colSpan || 1,
+        isEnabled: true,
+      };
+    });
+
+    metricDisplayConfig = config;
+    return config;
+  } catch (error) {
+    console.error(
+      '[MetricsProcessor] Failed to load metric display config:',
+      error,
+    );
+
+    // Return fallback config
+    metricDisplayConfig = getFallbackMetricDisplayConfig();
+    return metricDisplayConfig;
+  } finally {
+    isLoadingConfig = false;
+  }
+}
+
+/**
+ * Clear cached configuration - useful for refreshing
+ */
+export function clearMetricDisplayConfig(): void {
+  metricDisplayConfig = null;
+}
+
+/**
+ * Fallback metric display configuration
+ */
+function getFallbackMetricDisplayConfig(): Record<string, MetricDisplayConfig> {
   const config: Record<string, MetricDisplayConfig> = {
     word_count: {
       id: 'word_count',
@@ -157,8 +236,10 @@ function generateMetricDisplayConfig(): Record<string, MetricDisplayConfig> {
 
   return config;
 }
+
+// Deprecated: Use getMetricDisplayConfig() instead
 export const METRIC_DISPLAY_CONFIG: Record<string, MetricDisplayConfig> =
-  generateMetricDisplayConfig();
+  getFallbackMetricDisplayConfig();
 
 // Formatters for different metric types
 const formatters: Record<string, MetricFormatter> = {
@@ -381,12 +462,13 @@ function getMetricFormatter(metricId: string, value: unknown): MetricFormatter {
 /**
  * Process a single metric into display format
  */
-function processMetricItem(
+async function processMetricItem(
   key: string,
   value: unknown,
-  config?: MetricDisplayConfig,
-): MetricDisplayItem {
-  const metricConfig = config || METRIC_DISPLAY_CONFIG[key];
+  displayConfig?: Record<string, MetricDisplayConfig>,
+): Promise<MetricDisplayItem> {
+  const config = displayConfig || (await getMetricDisplayConfig());
+  const metricConfig = config[key];
   const formatter = getMetricFormatter(key, value);
   const formatted = formatter(value, key);
 
@@ -442,10 +524,10 @@ function groupMetricsByCategory(metrics: MetricDisplayItem[]): MetricGroup[] {
 }
 
 /**
- * Main metrics processing function
- * Replaces both metricsProcessor.ts and UnifiedPanelResults.tsx logic
+ * Synchronous fallback metrics processing function
+ * Uses cached display config or fallback config
  */
-export function processMetrics(
+export function processMetricsSync(
   metricsData: MetricResult | Record<string, unknown> | null | undefined,
   options: MetricProcessingOptions = {},
 ): ProcessedMetricsResult {
@@ -463,7 +545,11 @@ export function processMetrics(
   } = options;
 
   try {
-    // Convert metrics to display items
+    // Use cached display config or fallback
+    const displayConfig =
+      metricDisplayConfig || getFallbackMetricDisplayConfig();
+
+    // Convert metrics to display items synchronously
     const metricItems: MetricDisplayItem[] = [];
     let errorCount = 0;
 
@@ -474,7 +560,27 @@ export function processMetrics(
       }
 
       try {
-        const item = processMetricItem(key, value);
+        const metricConfig = displayConfig[key];
+        const formatter = getMetricFormatter(key, value);
+        const formatted = formatter(value, key);
+
+        const item: MetricDisplayItem = {
+          id: key,
+          name:
+            metricConfig?.name ||
+            key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+          value: formatted.displayValue,
+          unit: formatted.unit || metricConfig?.unit,
+          description: metricConfig?.description || '',
+          originalValue: value,
+          originalKey: key,
+          category: metricConfig?.category || MetricCategory.CUSTOM,
+          tooltip: metricConfig?.tooltip,
+          hasError: formatted.hasError,
+          errorMessage: formatted.errorMessage,
+          isDisabled: formatted.isDisabled || false,
+          colSpan: metricConfig?.colSpan || 1,
+        };
 
         if (item.hasError) {
           errorCount++;
@@ -485,7 +591,6 @@ export function processMetrics(
         }
       } catch (error) {
         errorCount++;
-        // Metric processing warning handled by error boundary
       }
     });
 
@@ -529,7 +634,112 @@ export function processMetrics(
 
     return result;
   } catch (error) {
-    // Metrics processing error handled by error boundary
+    console.error('[MetricsProcessor] Sync processing failed:', error);
+    return {
+      ...createEmptyMetricsResult(),
+      errorCount: 1,
+      processingTime: performance.now() - startTime,
+    };
+  }
+}
+
+/**
+ * Main metrics processing function (async version)
+ * Replaces both metricsProcessor.ts and UnifiedPanelResults.tsx logic
+ */
+export async function processMetrics(
+  metricsData: MetricResult | Record<string, unknown> | null | undefined,
+  options: MetricProcessingOptions = {},
+): Promise<ProcessedMetricsResult> {
+  // Handle empty or invalid data
+  if (!metricsData || typeof metricsData !== 'object') {
+    return createEmptyMetricsResult();
+  }
+
+  const startTime = performance.now();
+  const {
+    includeDisabled = true,
+    sortBy = 'name',
+    sortOrder = 'asc',
+    groupByCategory = true,
+  } = options;
+
+  try {
+    // Load display configuration once for all metrics
+    const displayConfig = await getMetricDisplayConfig();
+
+    // Convert metrics to display items
+    const metricItems: MetricDisplayItem[] = [];
+    let errorCount = 0;
+
+    // Process all metrics in parallel for better performance
+    const metricPromises = Object.entries(metricsData)
+      .filter(([key]) => !key.endsWith('_error')) // Skip error metrics
+      .map(async ([key, value]) => {
+        try {
+          return await processMetricItem(key, value, displayConfig);
+        } catch (error) {
+          errorCount++;
+          return null; // Filter out failed items
+        }
+      });
+
+    const processedItems = await Promise.all(metricPromises);
+
+    // Filter out null items and apply disabled filter
+    processedItems.forEach((item) => {
+      if (item) {
+        if (item.hasError) {
+          errorCount++;
+        }
+
+        if (includeDisabled || !item.isDisabled) {
+          metricItems.push(item);
+        }
+      }
+    });
+
+    // Sort metrics if requested
+    if (sortBy !== 'category') {
+      metricItems.sort((a, b) => {
+        let aValue: string | number = a.name;
+        let bValue: string | number = b.name;
+
+        if (sortBy === 'value') {
+          aValue = typeof a.value === 'number' ? a.value : String(a.value);
+          bValue = typeof b.value === 'number' ? b.value : String(b.value);
+        }
+
+        const compareResult = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        return sortOrder === 'asc' ? compareResult : -compareResult;
+      });
+    }
+
+    // Group by category if requested
+    const groups = groupByCategory
+      ? groupMetricsByCategory(metricItems)
+      : [
+          {
+            category: MetricCategory.CUSTOM,
+            title: 'All Metrics',
+            description: 'All available metrics',
+            items: metricItems,
+            isCollapsed: false,
+            hasErrors: errorCount > 0,
+          },
+        ];
+
+    const result = {
+      groups,
+      totalMetrics: metricItems.length,
+      errorCount,
+      processingTime: performance.now() - startTime,
+      hasData: metricItems.length > 0,
+    };
+
+    return result;
+  } catch (error) {
+    console.error('[MetricsProcessor] Processing failed:', error);
     return {
       ...createEmptyMetricsResult(),
       errorCount: 1,
@@ -541,19 +751,20 @@ export function processMetrics(
 /**
  * Get metric configuration by ID
  */
-export function getMetricConfig(
+export async function getMetricConfig(
   metricId: string,
-): MetricDisplayConfig | undefined {
-  return METRIC_DISPLAY_CONFIG[metricId];
+): Promise<MetricDisplayConfig | undefined> {
+  const config = await getMetricDisplayConfig();
+  return config[metricId];
 }
 
 /**
  * Check if metric has threshold violations
  */
-export function hasThresholdViolation(
+export async function hasThresholdViolation(
   item: MetricDisplayItem,
-): 'good' | 'warning' | 'error' | null {
-  const config = getMetricConfig(item.id);
+): Promise<'good' | 'warning' | 'error' | null> {
+  const config = await getMetricConfig(item.id);
   if (!config?.thresholds || typeof item.originalValue !== 'number') {
     return null;
   }

@@ -76,16 +76,16 @@ function cleanupCache(): void {
 }
 
 /**
- * Get default metrics based on system memory constraints
- * Disables sentiment analysis on low-memory systems (< 2GB RAM)
+ * Get all available metrics based on system memory constraints
+ * Disables memory-intensive metrics on low-memory systems (< 2GB RAM)
  */
 function getDefaultMetrics(): MetricInput[] {
   const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
   const isLowMemorySystem = totalSystemMemoryGB < 2;
 
   try {
-    // Get defaults from registry and filter by memory requirements
-    const defaultMetrics = MetricRegistry.getDefaults()
+    // Get ALL metrics from registry and filter by memory requirements
+    const allMetrics = MetricRegistry.getAll()
       .filter((plugin) => {
         // Filter out memory-intensive metrics on low-memory systems
         if (
@@ -101,7 +101,7 @@ function getDefaultMetrics(): MetricInput[] {
 
     // Memory management metrics loading - logged by service layer
 
-    return defaultMetrics;
+    return allMetrics;
   } catch (error) {
     // Fallback metrics warning - logged by service layer
 
@@ -142,8 +142,8 @@ async function calculateJobMetrics(
     // Use the selected metrics from the job
     metrics = selectedMetrics as MetricInput[];
   } else {
-    // Fall back to default metrics only (not ALL metrics) for better performance
-    const defaultMetrics = MetricRegistry.getDefaults()
+    // Use ALL available metrics (not just defaults) for comprehensive evaluation
+    const allMetrics = MetricRegistry.getAll()
       .filter((plugin) => {
         // Filter out memory-intensive metrics on low-memory systems
         const totalSystemMemoryGB = os.totalmem() / 1024 ** 3;
@@ -161,7 +161,7 @@ async function calculateJobMetrics(
       })
       .map((plugin) => ({ id: plugin.id }));
 
-    metrics = defaultMetrics;
+    metrics = allMetrics;
   }
 
   // For precision, recall, f_score, BLEU, and ROUGE: if no explicit input provided, use job context as reference

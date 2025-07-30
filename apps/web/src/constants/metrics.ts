@@ -1,4 +1,8 @@
 import { MetricOption, MetricCategory } from '@prompt-lab/shared-types';
+import {
+  metricsApiService,
+  type ApiMetricOption,
+} from '../services/metricsApi.js';
 
 /**
  * Available metrics that can be selected for evaluation.
@@ -11,12 +15,85 @@ import { MetricOption, MetricCategory } from '@prompt-lab/shared-types';
  * - inputPlaceholder: Placeholder text for the input field (if requiresInput is true)
  * - category: Metric category for organization
  */
+
+let cachedMetrics: MetricOption[] | null = null;
+let isLoading = false;
+
 /**
- * Generate available metrics from the plugin registry
+ * Get available metrics from the API
+ * Returns cached results on subsequent calls
  */
-function generateAvailableMetrics(): MetricOption[] {
-  // Return a static list of metrics for now
-  // In a real implementation, this would fetch from the API
+export async function getAvailableMetrics(): Promise<MetricOption[]> {
+  if (cachedMetrics) {
+    return cachedMetrics;
+  }
+
+  if (isLoading) {
+    // Wait for existing request to complete
+    return new Promise((resolve) => {
+      const checkCache = () => {
+        if (cachedMetrics) {
+          resolve(cachedMetrics);
+        } else if (!isLoading) {
+          // Loading failed, resolve with empty array
+          resolve([]);
+        } else {
+          setTimeout(checkCache, 100);
+        }
+      };
+      checkCache();
+    });
+  }
+
+  isLoading = true;
+
+  try {
+    const apiMetrics = await metricsApiService.getAvailableMetrics();
+
+    // Convert API metrics to MetricOption format
+    cachedMetrics = apiMetrics.map(
+      (metric: ApiMetricOption): MetricOption => ({
+        id: metric.id,
+        name: metric.name,
+        description: metric.description,
+        category: metric.category,
+        requiresInput: metric.requiresInput,
+        inputLabel: metric.inputLabel,
+        inputPlaceholder: metric.inputPlaceholder,
+      }),
+    );
+
+    return cachedMetrics;
+  } catch (error) {
+    console.error('[Metrics] Failed to load available metrics:', error);
+
+    // Return fallback static metrics
+    cachedMetrics = getFallbackMetrics();
+    return cachedMetrics;
+  } finally {
+    isLoading = false;
+  }
+}
+
+/**
+ * Clear cached metrics - useful for refreshing the list
+ */
+export function clearMetricsCache(): void {
+  cachedMetrics = null;
+  metricsApiService.clearCache();
+}
+
+/**
+ * Synchronous access to cached metrics (returns empty array if not loaded)
+ */
+export function getCachedMetrics(): MetricOption[] {
+  return cachedMetrics || [];
+}
+
+/**
+ * Fallback metrics for when API is unavailable
+ */
+function getFallbackMetrics(): MetricOption[] {
   return [
     {
       id: 'word_count',
@@ -114,4 +191,6 @@ function generateAvailableMetrics(): MetricOption[] {
     },
   ];
 }
-export const AVAILABLE_METRICS: MetricOption[] = generateAvailableMetrics();
+
+// Deprecated: Use getAvailableMetrics() instead
+export const AVAILABLE_METRICS: MetricOption[] = getFallbackMetrics();

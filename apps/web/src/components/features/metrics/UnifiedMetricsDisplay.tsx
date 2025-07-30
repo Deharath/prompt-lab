@@ -3,7 +3,7 @@
  * Ultra-compact, space-efficient metrics display with fixed button functionality
  */
 
-import React, { memo, useMemo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import {
   type MetricResult,
   type MetricGroup,
@@ -12,7 +12,7 @@ import {
   MetricCategory,
 } from '@prompt-lab/shared-types';
 import {
-  processMetrics,
+  processMetricsSync,
   hasThresholdViolation,
 } from '../../../lib/metrics/processor.js';
 import { useStorage } from '../../../hooks/useStorage.js';
@@ -70,17 +70,50 @@ const UnifiedMetricsDisplay = memo<UnifiedMetricsDisplayProps>(
       },
     );
 
-    // Process metrics with memoization for performance
-    const processedMetrics = useMemo<ProcessedMetricsResult>(() => {
-      if (!metrics || (Array.isArray(metrics) && metrics.length === 0)) {
-        return { groups: [], hasData: false, errorCount: 0, totalMetrics: 0 };
-      }
-      return processMetrics(metrics, {
-        groupByCategory: showCategories,
-        sortBy: viewState.sortBy,
-        sortOrder: viewState.sortOrder,
-        showTooltips,
+    // Process metrics with async handling
+    const [processedMetrics, setProcessedMetrics] =
+      useState<ProcessedMetricsResult>({
+        groups: [],
+        hasData: false,
+        errorCount: 0,
+        totalMetrics: 0,
       });
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    useEffect(() => {
+      if (!metrics || (Array.isArray(metrics) && metrics.length === 0)) {
+        setProcessedMetrics({
+          groups: [],
+          hasData: false,
+          errorCount: 0,
+          totalMetrics: 0,
+        });
+        return;
+      }
+
+      setIsProcessing(true);
+      try {
+        const result = processMetricsSync(metrics, {
+          groupByCategory: showCategories,
+          sortBy: viewState.sortBy,
+          sortOrder: viewState.sortOrder,
+          showTooltips,
+        });
+        setProcessedMetrics(result);
+      } catch (error) {
+        console.error(
+          '[UnifiedMetricsDisplay] Failed to process metrics:',
+          error,
+        );
+        setProcessedMetrics({
+          groups: [],
+          hasData: false,
+          errorCount: 1,
+          totalMetrics: 0,
+        });
+      } finally {
+        setIsProcessing(false);
+      }
     }, [
       metrics,
       showCategories,

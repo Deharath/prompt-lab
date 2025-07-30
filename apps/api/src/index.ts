@@ -9,6 +9,7 @@ import { ApiError } from '@prompt-lab/evaluation-engine';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
 import dashboardRouter from './routes/dashboard.js';
+import metricsRouter from './routes/metrics.js';
 import {
   qualitySummaryRouter,
   initializeCache,
@@ -77,6 +78,7 @@ app.post('/jobs', jobsWriteRateLimit);
 app.use('/jobs', jobsRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/sentiment', sentimentRouter);
+app.use('/api/metrics', metricsRouter);
 app.use('/api', qualitySummaryRouter);
 
 // Serve built web UI from /public when present (production only)
@@ -97,6 +99,7 @@ app.get('*', (_req, res) => {
         '/health',
         '/jobs',
         '/api/dashboard',
+        '/api/metrics',
         '/api/quality-summary',
       ],
     });

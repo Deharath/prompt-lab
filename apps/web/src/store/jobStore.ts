@@ -62,13 +62,41 @@ export const useJobStore = create<JobState>((set, get) => ({
   topP: 1.0,
   maxTokens: 0, // 0 means use model default
   selectedMetrics: [
+    // Readability metrics
     { id: 'flesch_reading_ease' },
-    { id: 'sentiment_detailed' },
-    { id: 'sentiment' },
+    { id: 'flesch_kincaid_grade' },
+    { id: 'smog_index' },
+    { id: 'text_complexity' },
+
+    // Structure metrics
     { id: 'word_count' },
+    { id: 'sentence_count' },
+    { id: 'token_count' },
+    { id: 'avg_words_per_sentence' },
+
+    // Quality metrics
     { id: 'precision' },
     { id: 'recall' },
     { id: 'f_score' },
+    { id: 'bleu_score' },
+    { id: 'rouge_1' },
+    { id: 'rouge_2' },
+    { id: 'rouge_l' },
+    { id: 'vocab_diversity' },
+    { id: 'completeness_score' },
+
+    // Sentiment metrics
+    { id: 'sentiment' },
+    { id: 'sentiment_detailed' },
+
+    // Keywords metrics
+    { id: 'keywords' },
+    { id: 'weighted_keywords' },
+
+    // Validation metrics
+    { id: 'is_valid_json' },
+
+    // Performance metrics
     { id: 'response_latency' }, // Essential for Model Efficiency dashboard
   ] as SelectedMetric[],
   comparison: {},

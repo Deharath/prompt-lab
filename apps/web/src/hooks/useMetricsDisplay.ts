@@ -11,7 +11,7 @@ import {
   type MetricsViewState,
   MetricCategory,
 } from '@prompt-lab/shared-types';
-import { processMetrics } from '../lib/metrics/processor.js';
+import { processMetricsSync } from '../lib/metrics/processor.js';
 import { useStorage } from './useStorage.js';
 
 interface UseMetricsDisplayOptions {
@@ -159,7 +159,7 @@ export function useMetricsDisplay(
       }
 
       // Process metrics
-      const result = processMetrics(metrics, processingOptions);
+      const result = processMetricsSync(metrics, processingOptions);
       cacheStats.misses++;
 
       // Cache result if enabled
