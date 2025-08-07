@@ -22,12 +22,13 @@ try {
   // In production, environment variables are provided by container/platform
   if (process.env.NODE_ENV === 'production') {
     rootDir = process.cwd();
-    envLoaded = true; // Production uses platform env vars
+    // Do NOT load any files in production; rely on process.env
+    envLoaded = true;
   } else {
-    // In development, look for workspace root and .env file
+    // In development/test, detect workspace root and load .env files
     rootDir = process.cwd();
 
-    // Look for workspace root by finding pnpm-workspace.yaml
+    // Discover workspace root (pnpm monorepo root)
     let currentDir = rootDir;
     while (currentDir !== dirname(currentDir)) {
       if (existsSync(join(currentDir, 'pnpm-workspace.yaml'))) {
@@ -37,10 +38,17 @@ try {
       currentDir = dirname(currentDir);
     }
 
-    // Load .env file for development
-    const envPath = join(rootDir, '.env');
-    if (existsSync(envPath)) {
-      dotenv.config({ path: envPath });
+    // Precedence: base .env first, then .env.local overrides
+    const envBase = join(rootDir, '.env');
+    const envLocal = join(rootDir, '.env.local');
+
+    if (existsSync(envBase)) {
+      dotenv.config({ path: envBase });
+      envLoaded = true;
+    }
+    if (existsSync(envLocal)) {
+      // Load after base so .env.local can override
+      dotenv.config({ path: envLocal, override: true as any });
       envLoaded = true;
     }
   }

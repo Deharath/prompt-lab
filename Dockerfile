@@ -36,16 +36,11 @@ COPY --from=builder /app/package.json \
 COPY --from=builder /app/apps/api/package.json   ./apps/api/package.json
 COPY --from=builder /app/packages/evaluation-engine/package.json ./packages/evaluation-engine/package.json
 COPY --from=builder /app/packages/shared-types/package.json       ./packages/shared-types/package.json
-# install all dependencies for CI/dev (including devDependencies for lint/test)
-RUN pnpm install --frozen-lockfile
+# install only production dependencies for runtime image
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 ENV NODE_ENV=production
 RUN mkdir -p /app/db
-# Debug environment variables for configuration troubleshooting
-RUN echo "=== Environment variables for debugging ===" && \
-    echo "NODE_ENV=$NODE_ENV" && \
-    echo "DATABASE_URL=$DATABASE_URL" && \
-    echo "PORT=$PORT"
 EXPOSE 3000
 
 # start the API (entrypoint produced by tsc)

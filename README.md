@@ -118,21 +118,25 @@ prompt-lab/
     pnpm install
     ```
 
-3.  **Set up environment variables:**
+3.  **Set up environment variables (local only):**
 
-    Copy the `.env.example` file to a new `.env` file and configure your API keys:
+    Copy the template to a local, untracked file and add your keys:
 
     ```bash
-    cp .env.example .env
+    cp .env.example .env.local
     ```
 
-    Edit the `.env` file and add your API keys:
+    Then edit `.env.local`:
 
     ```bash
     OPENAI_API_KEY=your_openai_api_key_here
     GEMINI_API_KEY=your_gemini_api_key_here
     ANTHROPIC_API_KEY=your_anthropic_api_key_here
     ```
+
+    Notes:
+    - `.env.local` is git‑ignored and overrides `.env` in development/test.
+    - In production, the app does not read files; inject env via your platform.
 
 4.  **Initialize the database:**
 
