@@ -89,7 +89,7 @@ function createConfigSchema() {
         // Otherwise, fall back to environment-appropriate defaults
         return process.env.NODE_ENV === 'test'
           ? ':memory:'
-          : 'sqlite://./db.sqlite';
+          : 'sqlite://./db/db.sqlite';
       }),
       maxConnections: z.coerce
         .number()
@@ -148,6 +148,12 @@ function createConfigSchema() {
       requestSizeLimit: z.string().default(SECURITY.REQUEST_SIZE_LIMIT),
       enableTrustProxy: z.coerce.boolean().default(false),
     }),
+
+    // CORS configuration
+    cors: z.object({
+      // Comma-separated list of allowed origins for production; use '*' in development
+      allowedOrigins: z.string().optional(),
+    }),
   });
 }
 
@@ -196,6 +202,10 @@ function createConfig() {
       requestSizeLimit: process.env.REQUEST_SIZE_LIMIT,
       enableTrustProxy:
         String(process.env.TRUST_PROXY).toLowerCase() === 'true',
+    },
+
+    cors: {
+      allowedOrigins: process.env.ALLOWED_ORIGINS,
     },
   };
 
