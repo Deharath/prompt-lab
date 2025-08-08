@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
+import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 import { log, config, getDb } from '@prompt-lab/evaluation-engine';
 import { ApiError } from '@prompt-lab/evaluation-engine';
@@ -41,11 +42,41 @@ if (config.security.enableTrustProxy) {
 // Performance middleware
 app.use(compression()); // Enable gzip compression
 
-// Basic security headers (without adding external deps)
+// Security headers via helmet if available (configurable CSP)
+{
+  const isProd = config.server.env === 'production';
+  const csp = isProd
+    ? {
+        useDefaults: true,
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'"], // allow API + SSE on same origin
+          imgSrc: ["'self'", 'data:'],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+        },
+      }
+    : false; // disable CSP in dev to avoid blocking Vite, etc.
+
+  const require = createRequire(import.meta.url);
+  try {
+    const helmet = require('helmet');
+    app.use(
+      helmet({
+        contentSecurityPolicy: csp as any,
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        xPoweredBy: false as any,
+      }),
+    );
+  } catch {
+    // Helmet not installed; continue with minimal headers below
+  }
+}
+
+// Keep minimal additional headers (helmet already covers many)
 app.use((req, res, next) => {
   if (config.server.env === 'production') {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    // Ensure referrer policy is set as desired
     res.setHeader('Referrer-Policy', 'no-referrer');
   }
   next();
