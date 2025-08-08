@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { LLMProvider, ProviderOptions } from './index.js';
+import { callWithResilience } from './resilience.js';
 import { PRICING } from './pricing.js';
 
 function getAnthropicClient(): Anthropic | null {
@@ -21,15 +22,24 @@ async function complete(
     );
   }
 
-  const message = await anthropic.messages.create({
-    model: options.model,
-    max_tokens: options.maxTokens ?? 4096,
-    messages: [{ role: 'user', content: prompt }],
-    ...(options.temperature !== undefined && {
-      temperature: options.temperature,
-    }),
-    ...(options.topP !== undefined && { top_p: options.topP }),
-  });
+  const message = await callWithResilience(
+    'anthropic.complete',
+    () =>
+      anthropic.messages.create({
+        model: options.model,
+        max_tokens: options.maxTokens ?? 4096,
+        messages: [{ role: 'user', content: prompt }],
+        ...(options.temperature !== undefined && {
+          temperature: options.temperature,
+        }),
+        ...(options.topP !== undefined && { top_p: options.topP }),
+      }),
+    {
+      provider: 'anthropic',
+      model: options.model,
+      requestId: options.requestId,
+    },
+  );
 
   const output = message.content
     .filter((block) => block.type === 'text')
@@ -74,16 +84,25 @@ async function* stream(
     );
   }
 
-  const stream = await anthropic.messages.create({
-    model: options.model,
-    max_tokens: options.maxTokens ?? 4096,
-    messages: [{ role: 'user', content: prompt }],
-    stream: true,
-    ...(options.temperature !== undefined && {
-      temperature: options.temperature,
-    }),
-    ...(options.topP !== undefined && { top_p: options.topP }),
-  });
+  const stream = await callWithResilience(
+    'anthropic.stream',
+    () =>
+      anthropic.messages.create({
+        model: options.model,
+        max_tokens: options.maxTokens ?? 4096,
+        messages: [{ role: 'user', content: prompt }],
+        stream: true,
+        ...(options.temperature !== undefined && {
+          temperature: options.temperature,
+        }),
+        ...(options.topP !== undefined && { top_p: options.topP }),
+      }) as unknown as Promise<AsyncIterable<any>>,
+    {
+      provider: 'anthropic',
+      model: options.model,
+      requestId: options.requestId,
+    },
+  );
 
   for await (const chunk of stream) {
     if (

@@ -7,6 +7,7 @@ export interface ProviderOptions {
   temperature?: number;
   topP?: number;
   maxTokens?: number;
+  requestId?: string;
 }
 
 export interface ProviderStreamChunk {

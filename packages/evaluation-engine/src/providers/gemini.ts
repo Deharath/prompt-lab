@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { LLMProvider, ProviderOptions } from './index.js';
+import { callWithResilience } from './resilience.js';
 import { PRICING } from './pricing.js';
 
 import { getGeminiTokenCount } from '../jobs/helpers.js';
@@ -20,12 +21,18 @@ async function complete(
     throw new Error('Gemini API key not configured. Cannot process request.');
   }
 
-  const model = genAI.getGenerativeModel({
-    model: options.model,
-  });
+  const model = genAI.getGenerativeModel({ model: options.model });
 
   try {
-    const resp = await model.generateContent(prompt);
+    const resp = await callWithResilience(
+      'gemini.complete',
+      () => model.generateContent(prompt),
+      {
+        provider: 'gemini',
+        model: options.model,
+        requestId: options.requestId,
+      },
+    );
     const output = resp.response.text();
     const tokens = getGeminiTokenCount(resp);
     const pricing =

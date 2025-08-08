@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import type { LLMProvider, ProviderOptions } from './index.js';
+import { callWithResilience } from './resilience.js';
 import { PRICING } from './pricing.js';
 
 function getOpenAIClient(): OpenAI | null {
@@ -19,15 +20,22 @@ async function complete(
     throw new Error('OpenAI API key not configured. Cannot process request.');
   }
 
-  const resp = await openai.chat.completions.create({
-    model: options.model,
-    messages: [{ role: 'user', content: prompt }],
-    ...(options.temperature !== undefined && {
-      temperature: options.temperature,
-    }),
-    ...(options.topP !== undefined && { top_p: options.topP }),
-    ...(options.maxTokens !== undefined && { max_tokens: options.maxTokens }),
-  });
+  const resp = await callWithResilience(
+    'openai.complete',
+    () =>
+      openai.chat.completions.create({
+        model: options.model,
+        messages: [{ role: 'user', content: prompt }],
+        ...(options.temperature !== undefined && {
+          temperature: options.temperature,
+        }),
+        ...(options.topP !== undefined && { top_p: options.topP }),
+        ...(options.maxTokens !== undefined && {
+          max_tokens: options.maxTokens,
+        }),
+      }),
+    { provider: 'openai', model: options.model, requestId: options.requestId },
+  );
 
   const output = resp.choices[0]?.message?.content ?? '';
   const promptTokens = resp.usage?.prompt_tokens ?? 0;
@@ -56,16 +64,23 @@ async function* stream(
   let _tokens = 0;
   let _cost = 0;
 
-  const stream = await openai.chat.completions.create({
-    model: options.model,
-    messages: [{ role: 'user', content: prompt }],
-    stream: true,
-    ...(options.temperature !== undefined && {
-      temperature: options.temperature,
-    }),
-    ...(options.topP !== undefined && { top_p: options.topP }),
-    ...(options.maxTokens !== undefined && { max_tokens: options.maxTokens }),
-  });
+  const stream = await callWithResilience(
+    'openai.stream',
+    () =>
+      openai.chat.completions.create({
+        model: options.model,
+        messages: [{ role: 'user', content: prompt }],
+        stream: true,
+        ...(options.temperature !== undefined && {
+          temperature: options.temperature,
+        }),
+        ...(options.topP !== undefined && { top_p: options.topP }),
+        ...(options.maxTokens !== undefined && {
+          max_tokens: options.maxTokens,
+        }),
+      }) as unknown as Promise<AsyncIterable<any>>, // stream is async iterable
+    { provider: 'openai', model: options.model, requestId: options.requestId },
+  );
 
   for await (const chunk of stream) {
     const delta = chunk.choices[0]?.delta?.content ?? '';

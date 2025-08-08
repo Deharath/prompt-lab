@@ -574,10 +574,11 @@ jobsRouter.get(
         if (provider.stream) {
           const streamIterator = provider.stream(job.prompt, {
             model: job.model,
+            requestId: (req as any).requestId,
             ...(job.temperature !== null && { temperature: job.temperature }),
             ...(job.topP !== null && { topP: job.topP }),
             ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
-          });
+          } as any);
           try {
             while (true) {
               // Check for client disconnect and memory usage before processing
@@ -765,10 +766,11 @@ jobsRouter.get(
           // Fallback to non-streaming
           const result = await provider.complete(job.prompt, {
             model: job.model,
+            requestId: (req as any).requestId,
             ...(job.temperature !== null && { temperature: job.temperature }),
             ...(job.topP !== null && { topP: job.topP }),
             ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
-          });
+          } as any);
           output = result.output;
           tokens = result.tokens;
           cost = result.cost;
