@@ -132,6 +132,8 @@ prompt-lab/
     OPENAI_API_KEY=your_openai_api_key_here
     GEMINI_API_KEY=your_gemini_api_key_here
     ANTHROPIC_API_KEY=your_anthropic_api_key_here
+    # Optional: restrict CORS origins in prod (comma-separated)
+    # ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
     ```
 
     Notes:
@@ -165,8 +167,26 @@ docker run -d -p 3000:3000 \
   -e OPENAI_API_KEY=your_key \
   -e GEMINI_API_KEY=your_key \
   -e ANTHROPIC_API_KEY=your_key \
+  # Optional: restrict CORS in production
+  -e ALLOWED_ORIGINS=https://yourdomain.com \
   prompt-lab
 ```
+
+## Configuration
+
+- CORS: In production, set `ALLOWED_ORIGINS` to a comma-separated list of allowed origins. In development, `*` is allowed by default.
+- Database: Default `DATABASE_URL` is `sqlite://./db/db.sqlite`. The server ensures the directory exists and enables WAL mode.
+
+## Streaming Events (SSE)
+
+The API streams job progress and results via Server-Sent Events at `/jobs/:id/stream`.
+
+- `status`: `{ status: 'running' | 'evaluating' | 'completed' | 'failed' }`
+- `token`: Partial output token chunks during generation.
+- `metrics`: Final metrics JSON after completion.
+- `job-error`: Application-level errors (distinct from transport errors handled by `EventSource.onerror`).
+- `cancelled`: `{ message: 'Job was cancelled' }` when a user cancels a job.
+- `done`: Signals the end of the stream.
 
 ## Usage
 
