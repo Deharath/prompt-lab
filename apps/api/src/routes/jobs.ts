@@ -481,8 +481,7 @@ jobsRouter.get(
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+      // Rely on global CORS middleware; avoid overriding with wildcard here
       res.flushHeaders();
 
       const provider = getProvider(job.provider);
@@ -632,7 +631,7 @@ jobsRouter.get(
                 if (!clientDisconnected) {
                   sendEvent(
                     { error: 'Job aborted due to memory constraints' },
-                    'error',
+                    'job-error',
                   );
                   sendEvent({ done: true }, 'done');
                 }
