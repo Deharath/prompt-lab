@@ -653,7 +653,7 @@ jobsRouter.get(
                     ? streamError.message
                     : 'An unknown error occurred during streaming.';
                 if (!clientDisconnected) {
-                  sendEvent({ error: errorMessage }, 'error');
+                  sendEvent({ error: errorMessage }, 'job-error');
                   sendEvent({ done: true }, 'done');
                 }
                 if (!res.writableEnded) {
@@ -752,7 +752,7 @@ jobsRouter.get(
             sendEvent({ status: 'failed' }, 'status');
             cleanupJobMemory(id, baselineMemoryMB);
             if (!clientDisconnected) {
-              sendEvent({ error: errorMessage }, 'error');
+              sendEvent({ error: errorMessage }, 'job-error');
               sendEvent({ done: true }, 'done');
             }
             if (!res.writableEnded) {
@@ -826,7 +826,7 @@ jobsRouter.get(
         cleanupJobMemory(id, baselineMemoryMB);
         // Always use sendEvent for error event
         if (!clientDisconnected) {
-          sendEvent({ error: errorMessage }, 'error');
+          sendEvent({ error: errorMessage }, 'job-error');
           sendEvent({ done: true }, 'done');
         }
       } finally {

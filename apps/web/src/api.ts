@@ -226,12 +226,11 @@ export class ApiClient {
       }
     });
 
-    es.addEventListener('error', (_e: MessageEvent) => {
+    // Application-level job errors come via custom 'job-error' events
+    es.addEventListener('job-error', (e: MessageEvent) => {
       try {
-        // Only call onError if the stream didn't complete normally
-        if (onError) {
-          onError(new Error('Stream error'));
-        }
+        const data = JSON.parse(e.data);
+        if (onError) onError(new Error(data?.error || 'Job error'));
       } catch (_err) {
         // intentionally empty: ignore parse errors in event stream
       }
