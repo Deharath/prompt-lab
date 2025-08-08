@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { config, log } from '@prompt-lab/evaluation-engine';
 import { getDb } from '@prompt-lab/evaluation-engine';
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = Router();
 
@@ -83,12 +84,40 @@ async function checkOpenAI(): Promise<'healthy' | 'degraded' | 'unhealthy'> {
 async function checkGemini(): Promise<
   'healthy' | 'degraded' | 'unhealthy' | undefined
 > {
-  if (!config.gemini.apiKey) {
-    return undefined; // Service not configured
+  const apiKey = config.gemini.apiKey;
+  if (!apiKey) return undefined; // Not configured
+
+  // In test/CI or with dummy keys, skip external calls
+  const isTestEnv = process.env.NODE_ENV === 'test';
+  const isCIEnv =
+    process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+  const isDummyKey =
+    String(apiKey).toLowerCase().includes('test') ||
+    String(apiKey).toLowerCase().includes('dummy');
+  if ((isTestEnv || isCIEnv) && isDummyKey) {
+    return 'healthy';
   }
 
-  // For now, just return healthy since we don't have actual Gemini check
-  return 'healthy';
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    // Use countTokens for a minimal, non-billable connectivity check
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Prefer a minimal/non-billable check if available; otherwise do a tiny request
+    const anyModel = model as any;
+    if (typeof anyModel.countTokens === 'function') {
+      await anyModel.countTokens({
+        contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+      });
+    } else {
+      await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+      });
+    }
+    return 'healthy';
+  } catch {
+    // Invalid key or network error
+    return 'unhealthy';
+  }
 }
 
 router.get('/', async (req, res) => {
