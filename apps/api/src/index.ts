@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
+import { randomUUID } from 'node:crypto';
 import { log, config, getDb } from '@prompt-lab/evaluation-engine';
 import { ApiError } from '@prompt-lab/evaluation-engine';
 import jobsRouter from './routes/jobs.js';
@@ -39,13 +40,65 @@ if (config.security.enableTrustProxy) {
 // Performance middleware
 app.use(compression()); // Enable gzip compression
 
-// CORS for development
+// Basic security headers (without adding external deps)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  if (config.server.env === 'production') {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+  }
+  next();
+});
+
+// Request ID + access logging
+app.use((req, res, next) => {
+  const requestId =
+    (req.headers['x-request-id'] as string | undefined) || randomUUID();
+  res.setHeader('X-Request-ID', requestId);
+  (req as any).requestId = requestId;
+
+  const start = Date.now();
+  log.request(req.method, req.originalUrl || req.url, { requestId });
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    log.response(
+      req.method,
+      req.originalUrl || req.url,
+      res.statusCode,
+      duration,
+      { requestId },
+    );
+  });
+  next();
+});
+
+// CORS (config-based)
+app.use((req, res, next) => {
+  const isProd = config.server.env === 'production';
+  const allowedCsv = config.cors?.allowedOrigins;
+  const allowedOrigins = new Set(
+    (allowedCsv || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+
+  const origin = req.headers.origin;
+  if (!isProd) {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else if (
+    origin &&
+    (allowedOrigins.size === 0 || allowedOrigins.has(origin))
+  ) {
+    // If no list provided, default to allow same-origin deployments
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, X-Request-ID',
   );
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
