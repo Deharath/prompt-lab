@@ -62,6 +62,11 @@ export const jobs = sqliteTable(
     // Indexes for better query performance
     statusIdx: index('jobs_status_idx').on(table.status),
     createdAtIdx: index('jobs_created_at_idx').on(table.createdAt),
+    // Composite index to speed status-filtered, time-ordered queries
+    statusCreatedAtIdx: index('jobs_status_created_at_idx').on(
+      table.status,
+      table.createdAt,
+    ),
     providerModelIdx: index('jobs_provider_model_idx').on(
       table.provider,
       table.model,
