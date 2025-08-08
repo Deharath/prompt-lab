@@ -74,6 +74,7 @@ Prompt Lab follows a modern monorepo architecture designed for scalability and m
 - **Rate Limiting:** Built-in rate limiting and request throttling for API protection
 - **Authentication:** Secure API key management and provider authentication
 - **Health Monitoring:** Comprehensive health checks and monitoring endpoints
+- **Observability:** Prometheus-compatible `/metrics` endpoint with HTTP counters and histograms
 
 ### Packages
 
@@ -171,6 +172,13 @@ docker run -d -p 3000:3000 \
   -e ALLOWED_ORIGINS=https://yourdomain.com \
   prompt-lab
 ```
+
+### Observability
+
+- Prometheus endpoint: `GET /metrics` returns standard exposition format.
+- Includes default Node/process metrics and HTTP request metrics:
+  - `http_requests_total{method, status_code}`
+  - `http_request_duration_seconds{method, status_code}`
 
 ## Configuration
 

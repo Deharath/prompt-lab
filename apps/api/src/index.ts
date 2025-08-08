@@ -17,6 +17,7 @@ import {
   initializeMetrics,
 } from '@prompt-lab/evaluation-engine';
 import sentimentRouter from './routes/sentiment.js';
+import { httpMetricsMiddleware, metricsHandler } from './lib/prometheus.js';
 
 // Resolve repo root from this file location
 const rootDir = (() => {
@@ -71,6 +72,9 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+// HTTP metrics middleware (Prometheus)
+app.use(httpMetricsMiddleware);
 
 // CORS (config-based)
 app.use((req, res, next) => {
@@ -133,6 +137,9 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/sentiment', sentimentRouter);
 app.use('/api/metrics', metricsRouter);
 app.use('/api', qualitySummaryRouter);
+
+// Prometheus metrics endpoint
+app.get('/metrics', metricsHandler);
 
 // Serve built web UI from /public when present (production only)
 app.use(express.static(join(rootDir, 'public')));
