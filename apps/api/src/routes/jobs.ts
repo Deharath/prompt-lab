@@ -47,6 +47,12 @@ import {
   MetricRegistry,
   type MetricInput,
 } from '@prompt-lab/evaluation-engine';
+import {
+  transitionJobState,
+  incrementJobState,
+  decrementJobState,
+  type JobState,
+} from '../lib/prometheus.js';
 
 // Simple in-memory cache for metrics results
 const metricsCache = new Map<
@@ -380,6 +386,9 @@ jobsRouter.post(
 
       const job = await createJob(jobData);
 
+      // Metrics: newly created jobs are pending
+      incrementJobState('pending');
+
       res.status(202).json(job);
     } catch (error) {
       next(error);
@@ -515,6 +524,8 @@ jobsRouter.get(
       res.on('close', cleanup);
 
       await updateJob(id, { status: 'running' });
+      // Metrics: transition pending -> running
+      transitionJobState('pending', 'running');
       const startTime = Date.now();
 
       // PROPER memory management: measure growth from baseline, not absolute usage
@@ -602,6 +613,8 @@ jobsRouter.get(
                     errorMessage: 'Job cancelled by user',
                   });
                 }
+                // Metrics: transition running -> cancelled
+                transitionJobState('running', 'cancelled');
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent({ message: 'Job was cancelled' }, 'cancelled');
@@ -628,6 +641,8 @@ jobsRouter.get(
                   result: '',
                   errorMessage: 'Job aborted due to memory constraints',
                 });
+                // Metrics: transition running -> failed
+                transitionJobState('running', 'failed');
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!clientDisconnected) {
                   sendEvent(
@@ -647,6 +662,8 @@ jobsRouter.get(
                 result = await streamIterator.next();
               } catch (streamError) {
                 await updateJobWithError(id, streamError);
+                // Metrics: transition running -> failed
+                transitionJobState('running', 'failed');
                 cleanupJobMemory(id, baselineMemoryMB);
                 const errorMessage =
                   streamError instanceof Error
@@ -673,6 +690,8 @@ jobsRouter.get(
                     result: '',
                     errorMessage: 'Client disconnected during streaming',
                   });
+                  // Metrics: transition running -> failed
+                  transitionJobState('running', 'failed');
                   cleanupJobMemory(id, baselineMemoryMB);
                   return;
                 }
@@ -686,6 +705,8 @@ jobsRouter.get(
                 result: '',
                 errorMessage: 'Client disconnected before completion',
               });
+              // Metrics: transition running -> failed
+              transitionJobState('running', 'failed');
               cleanupJobMemory(id, baselineMemoryMB);
               return;
             }
@@ -727,6 +748,8 @@ jobsRouter.get(
               result: output,
               metrics,
             });
+            // Metrics: transition running -> completed
+            transitionJobState('running', 'completed');
             sendEvent({ status: 'completed' }, 'status');
 
             // Send metrics first, then done event
@@ -783,7 +806,7 @@ jobsRouter.get(
           const endTime = Date.now();
 
           // Calculate metrics for non-streaming responses
-          const customMetrics = await calculateJobMetrics(
+          const customMetrics2 = await calculateJobMetrics(
             output,
             job.selectedMetrics,
             {
@@ -794,8 +817,8 @@ jobsRouter.get(
             (job.disabledMetrics as string[]) || [],
           );
 
-          const metrics: import('@prompt-lab/evaluation-engine').JobMetrics = {
-            ...customMetrics, // Our valuable metrics from metrics.ts
+          const metrics2: import('@prompt-lab/evaluation-engine').JobMetrics = {
+            ...customMetrics2, // Our valuable metrics from metrics.ts
             response_time_ms: endTime - startTime,
             // Only include cost if it's actually valuable for the use case
             ...(cost > 0 && { estimated_cost_usd: cost }),
@@ -804,12 +827,14 @@ jobsRouter.get(
           await updateJob(id, {
             status: 'completed',
             result: output,
-            metrics,
+            metrics: metrics2,
           });
+          // Metrics: transition running -> completed
+          transitionJobState('running', 'completed');
           sendEvent({ status: 'completed' }, 'status');
 
           if (!clientDisconnected) {
-            sendEvent(metrics, 'metrics');
+            sendEvent(metrics2, 'metrics');
           }
 
           // Clean up memory after successful completion (non-streaming)
@@ -823,6 +848,8 @@ jobsRouter.get(
           result: '',
           errorMessage,
         });
+        // Metrics: transition running -> failed
+        transitionJobState('running', 'failed');
         sendEvent({ status: 'failed' }, 'status');
         cleanupJobMemory(id, baselineMemoryMB);
         // Always use sendEvent for error event
@@ -889,10 +916,34 @@ jobsRouter.delete(
     try {
       const { id } = req.params;
 
-      const deleted = await deleteJob(id);
+      // Fetch job first to get its last-known status for gauge decrement
+      const job = await getJob(id);
+      if (!job) {
+        throw new NotFoundError('Job not found');
+      }
 
+      const deleted = await deleteJob(id);
       if (!deleted) {
         throw new NotFoundError('Job not found');
+      }
+
+      // Decrement gauge for the job's terminal state
+      const state: JobState | null = ((): JobState | null => {
+        const s = job.status as string;
+        const mapped = s === 'evaluating' ? 'running' : s;
+        const allowed: JobState[] = [
+          'pending',
+          'running',
+          'completed',
+          'failed',
+          'cancelled',
+        ];
+        return (allowed as string[]).includes(mapped)
+          ? (mapped as JobState)
+          : null;
+      })();
+      if (state) {
+        decrementJobState(state);
       }
 
       res.status(204).send(); // 204 No Content for successful deletion
@@ -926,6 +977,13 @@ jobsRouter.put(
         status: 'cancelled' as any, // Type assertion until schema migration
         errorMessage: 'Job cancelled by user',
       });
+
+      // Metrics: transition from previous state to cancelled
+      if (job.status === 'pending') {
+        transitionJobState('pending', 'cancelled');
+      } else if (job.status === 'running' || job.status === 'evaluating') {
+        transitionJobState('running', 'cancelled');
+      }
 
       // Immediately cancel the active job if it's streaming
       const cancelFunction = activeJobCancellations.get(id);

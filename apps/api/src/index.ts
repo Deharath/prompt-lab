@@ -7,6 +7,8 @@ import compression from 'compression';
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 import { log, config, getDb } from '@prompt-lab/evaluation-engine';
+import { db, jobs } from '@prompt-lab/evaluation-engine';
+import { eq, sql } from 'drizzle-orm';
 import { ApiError } from '@prompt-lab/evaluation-engine';
 import jobsRouter from './routes/jobs.js';
 import healthRouter from './routes/health.js';
@@ -18,7 +20,12 @@ import {
   initializeMetrics,
 } from '@prompt-lab/evaluation-engine';
 import sentimentRouter from './routes/sentiment.js';
-import { httpMetricsMiddleware, metricsHandler } from './lib/prometheus.js';
+import {
+  httpMetricsMiddleware,
+  metricsHandler,
+  seedJobStateGauges,
+  type JobState,
+} from './lib/prometheus.js';
 
 // Resolve repo root from this file location
 const rootDir = (() => {
@@ -255,6 +262,43 @@ if (process.argv[1] === __filename) {
       await getDb(); // This will run migrations and set up the database
       const dbInitTime = performance.now() - dbStartTime;
       log.info(`Database initialized in ${dbInitTime.toFixed(2)}ms`);
+
+      // Seed Prometheus job state gauges from DB on startup
+      try {
+        const countBy = async (status: string) => {
+          const rows = await db
+            .select({ c: sql<number>`count(*)` })
+            .from(jobs)
+            .where(eq(jobs.status, status as any));
+          return Number(rows[0]?.c ?? 0);
+        };
+        const pending = await countBy('pending');
+        const runningRaw = await countBy('running');
+        const evaluating = await countBy('evaluating');
+        const running = runningRaw + evaluating; // fold evaluating into running
+        const completed = await countBy('completed');
+        const failed = await countBy('failed');
+        const cancelled = await countBy('cancelled');
+
+        seedJobStateGauges({
+          pending,
+          running,
+          completed,
+          failed,
+          cancelled,
+        });
+        log.info('Seeded job-state gauges from DB', {
+          pending,
+          running,
+          completed,
+          failed,
+          cancelled,
+        });
+      } catch (e) {
+        log.warn('Failed seeding job-state gauges; continuing without seed', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
 
       // Initialize quality summary cache
       initializeCache();

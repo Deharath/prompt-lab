@@ -23,6 +23,73 @@ const httpRequestDurationSeconds = new client.Histogram({
   registers: [registry],
 });
 
+// Job state gauge (current counts by state)
+const jobStateGauge = new client.Gauge({
+  name: 'jobs_state',
+  help: 'Number of jobs in each state',
+  labelNames: ['state'] as const,
+  registers: [registry],
+});
+
+// Job transitions counter (how many jobs entered a given state)
+const jobTransitionsTotal = new client.Counter({
+  name: 'jobs_transitions_total',
+  help: 'Total number of job state transitions',
+  labelNames: ['from', 'to'] as const,
+  registers: [registry],
+});
+
+export type JobState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
+
+function incState(state: JobState) {
+  jobStateGauge.inc({ state });
+  jobTransitionsTotal.inc({ from: 'none', to: state });
+}
+
+function decState(state: JobState) {
+  jobStateGauge.dec({ state });
+}
+
+export function transitionJobState(from: JobState | null, to: JobState | null) {
+  if (from) {
+    decState(from);
+  }
+  if (to) {
+    jobStateGauge.inc({ state: to });
+  }
+  jobTransitionsTotal.inc({ from: from ?? 'none', to: to ?? 'none' });
+}
+
+export function incrementJobState(state: JobState) {
+  incState(state);
+}
+
+export function decrementJobState(state: JobState) {
+  decState(state);
+}
+
+export function setJobStateGauge(state: JobState, value: number) {
+  jobStateGauge.set({ state }, value);
+}
+
+export function seedJobStateGauges(values: Partial<Record<JobState, number>>) {
+  const states: JobState[] = [
+    'pending',
+    'running',
+    'completed',
+    'failed',
+    'cancelled',
+  ];
+  for (const s of states) {
+    jobStateGauge.set({ state: s }, values[s] ?? 0);
+  }
+}
+
 // Express middleware to track HTTP metrics
 export function httpMetricsMiddleware(
   req: Request,
@@ -52,4 +119,6 @@ export const metrics = {
   registry,
   httpRequestsTotal,
   httpRequestDurationSeconds,
+  jobStateGauge,
+  jobTransitionsTotal,
 };
