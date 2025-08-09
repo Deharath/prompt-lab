@@ -34,7 +34,10 @@ import {
   updateJobWithError,
   type Job,
 } from '@prompt-lab/evaluation-engine';
+import { db as _db, jobs as jobsTable } from '@prompt-lab/evaluation-engine';
+import { eq as drEq } from 'drizzle-orm';
 import { WebSocketJobManager } from '../lib/websocketManager.js';
+import { jobEvents } from '../lib/jobEvents.js';
 import {
   ValidationError,
   NotFoundError,
@@ -493,11 +496,15 @@ jobsRouter.get(
       // Rely on global CORS middleware; avoid overriding with wildcard here
       res.flushHeaders();
 
-      const provider = getProvider(job.provider);
-      if (!provider) {
-        throw new Error(
-          `Internal error: Provider '${job.provider}' not found for job ${id}`,
-        );
+      const workerEnabled =
+        String(process.env.WORKER_ENABLED).toLowerCase() === 'true';
+      const provider = workerEnabled ? null : getProvider(job.provider);
+      if (!workerEnabled) {
+        if (!provider) {
+          throw new Error(
+            `Internal error: Provider '${job.provider}' not found for job ${id}`,
+          );
+        }
       }
 
       // Track if client disconnected and job cancellation
@@ -524,9 +531,11 @@ jobsRouter.get(
       req.on('aborted', cleanup);
       res.on('close', cleanup);
 
-      await updateJob(id, { status: 'running' });
-      // Metrics: transition pending -> running
-      transitionJobState('pending', 'running');
+      if (!workerEnabled) {
+        await updateJob(id, { status: 'running' });
+        // Metrics: transition pending -> running
+        transitionJobState('pending', 'running');
+      }
       const startTime = Date.now();
 
       // PROPER memory management: measure growth from baseline, not absolute usage
@@ -583,148 +592,244 @@ jobsRouter.get(
         let output = '';
         let tokens = 0;
         let cost = 0;
-        if (provider.stream) {
-          const streamIterator = provider.stream(job.prompt, {
-            model: job.model,
-            requestId: (req as any).requestId,
-            ...(job.temperature !== null && { temperature: job.temperature }),
-            ...(job.topP !== null && { topP: job.topP }),
-            ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
-          } as any);
-          try {
-            while (true) {
-              // Check for client disconnect and memory usage before processing
-              if (clientDisconnected) {
-                await updateJob(id, {
-                  status: 'failed',
-                  result: '',
-                  errorMessage: 'Client disconnected during streaming',
-                });
-                cleanupJobMemory(id, baselineMemoryMB);
-                return;
-              }
-
-              // Check if job was cancelled (more frequent checks)
-              if (jobCancelled || abortController.signal.aborted) {
-                // Save the partial output that was generated before cancellation
-                if (output.length > 0) {
-                  await updateJob(id, {
-                    status: 'cancelled' as any,
-                    result: output,
-                    errorMessage: 'Job cancelled by user',
-                  });
-                }
-                // Metrics: transition running -> cancelled
-                transitionJobState('running', 'cancelled');
-                cleanupJobMemory(id, baselineMemoryMB);
-                if (!clientDisconnected) {
-                  sendEvent({ message: 'Job was cancelled' }, 'cancelled');
-                  sendEvent({ done: true }, 'done');
-                }
-                if (!res.writableEnded) {
-                  res.end();
-                }
-                return;
-              }
-
-              // Periodic database check for cancellation (every 10 iterations)
-              if (tokens % 10 === 0) {
-                const currentJob = await getJob(id);
-                if (currentJob?.status === 'cancelled') {
-                  cancelJob();
-                  continue; // Will be caught by the check above
-                }
-              }
-
-              if (!memoryCheck()) {
-                await updateJob(id, {
-                  status: 'failed',
-                  result: '',
-                  errorMessage: 'Job aborted due to memory constraints',
-                });
-                // Metrics: transition running -> failed
-                transitionJobState('running', 'failed');
-                cleanupJobMemory(id, baselineMemoryMB);
-                if (!clientDisconnected) {
-                  sendEvent(
-                    { error: 'Job aborted due to memory constraints' },
-                    'job-error',
-                  );
-                  sendEvent({ done: true }, 'done');
-                }
-                if (!res.writableEnded) {
-                  res.end();
-                }
-                return;
-              }
-
-              let result;
-              try {
-                result = await streamIterator.next();
-              } catch (streamError) {
-                await updateJobWithError(id, streamError);
-                // Metrics: transition running -> failed
-                transitionJobState('running', 'failed');
-                cleanupJobMemory(id, baselineMemoryMB);
-                const errorMessage =
-                  streamError instanceof Error
-                    ? streamError.message
-                    : 'An unknown error occurred during streaming.';
-                if (!clientDisconnected) {
-                  sendEvent({ error: errorMessage }, 'job-error');
-                  sendEvent({ done: true }, 'done');
-                }
-                if (!res.writableEnded) {
-                  if (typeof res.flush === 'function') res.flush();
-                  await new Promise((r) => setTimeout(r, 10));
-                  if (!res.writableEnded) res.end();
-                }
-                return;
-              }
-              if (result.done) break;
-              if (result.value && result.value.content) {
-                output += result.value.content;
-                if (!sendEvent({ token: result.value.content })) {
-                  // Client disconnected while sending
+        if (!workerEnabled) {
+          const p: any = provider!;
+          if (p && typeof p.stream === 'function') {
+            const streamIterator = p.stream(job.prompt, {
+              model: job.model,
+              requestId: (req as any).requestId,
+              ...(job.temperature !== null && { temperature: job.temperature }),
+              ...(job.topP !== null && { topP: job.topP }),
+              ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
+            } as any);
+            try {
+              while (true) {
+                // Check for client disconnect and memory usage before processing
+                if (clientDisconnected) {
                   await updateJob(id, {
                     status: 'failed',
                     result: '',
                     errorMessage: 'Client disconnected during streaming',
                   });
-                  // Metrics: transition running -> failed
-                  transitionJobState('running', 'failed');
                   cleanupJobMemory(id, baselineMemoryMB);
                   return;
                 }
-              }
-            }
 
-            // Check one more time before finalizing
-            if (clientDisconnected) {
+                // Check if job was cancelled (more frequent checks)
+                if (jobCancelled || abortController.signal.aborted) {
+                  // Save the partial output that was generated before cancellation
+                  if (output.length > 0) {
+                    await updateJob(id, {
+                      status: 'cancelled' as any,
+                      result: output,
+                      errorMessage: 'Job cancelled by user',
+                    });
+                  }
+                  // Metrics: transition running -> cancelled
+                  transitionJobState('running', 'cancelled');
+                  cleanupJobMemory(id, baselineMemoryMB);
+                  if (!clientDisconnected) {
+                    sendEvent({ message: 'Job was cancelled' }, 'cancelled');
+                    sendEvent({ done: true }, 'done');
+                  }
+                  if (!res.writableEnded) {
+                    res.end();
+                  }
+                  return;
+                }
+
+                // Periodic database check for cancellation (every 10 iterations)
+                if (tokens % 10 === 0) {
+                  const currentJob = await getJob(id);
+                  if (currentJob?.status === 'cancelled') {
+                    cancelJob();
+                    continue; // Will be caught by the check above
+                  }
+                }
+
+                if (!memoryCheck()) {
+                  await updateJob(id, {
+                    status: 'failed',
+                    result: '',
+                    errorMessage: 'Job aborted due to memory constraints',
+                  });
+                  // Metrics: transition running -> failed
+                  transitionJobState('running', 'failed');
+                  cleanupJobMemory(id, baselineMemoryMB);
+                  if (!clientDisconnected) {
+                    sendEvent(
+                      { error: 'Job aborted due to memory constraints' },
+                      'job-error',
+                    );
+                    sendEvent({ done: true }, 'done');
+                  }
+                  if (!res.writableEnded) {
+                    res.end();
+                  }
+                  return;
+                }
+
+                let result;
+                try {
+                  result = await streamIterator.next();
+                } catch (streamError) {
+                  await updateJobWithError(id, streamError);
+                  // Metrics: transition running -> failed
+                  transitionJobState('running', 'failed');
+                  cleanupJobMemory(id, baselineMemoryMB);
+                  const errorMessage =
+                    streamError instanceof Error
+                      ? streamError.message
+                      : 'An unknown error occurred during streaming.';
+                  if (!clientDisconnected) {
+                    sendEvent({ error: errorMessage }, 'job-error');
+                    sendEvent({ done: true }, 'done');
+                  }
+                  if (!res.writableEnded) {
+                    if (typeof res.flush === 'function') res.flush();
+                    await new Promise((r) => setTimeout(r, 10));
+                    if (!res.writableEnded) res.end();
+                  }
+                  return;
+                }
+                if (result.done) break;
+                if (result.value && result.value.content) {
+                  output += result.value.content;
+                  if (!sendEvent({ token: result.value.content })) {
+                    // Client disconnected while sending
+                    await updateJob(id, {
+                      status: 'failed',
+                      result: '',
+                      errorMessage: 'Client disconnected during streaming',
+                    });
+                    // Metrics: transition running -> failed
+                    transitionJobState('running', 'failed');
+                    cleanupJobMemory(id, baselineMemoryMB);
+                    return;
+                  }
+                }
+              }
+
+              // Check one more time before finalizing
+              if (clientDisconnected) {
+                await updateJob(id, {
+                  status: 'failed',
+                  result: '',
+                  errorMessage: 'Client disconnected before completion',
+                });
+                // Metrics: transition running -> failed
+                transitionJobState('running', 'failed');
+                cleanupJobMemory(id, baselineMemoryMB);
+                return;
+              }
+
+              // Streaming is complete: mark completed quickly and calculate metrics in background
+              const endTime = Date.now();
+              tokens = Math.floor(output.length / 4);
+              const pricePerK = 0.002;
+              cost = (tokens / 1000) * pricePerK;
+
+              await updateJob(id, { status: 'completed', result: output });
+              transitionJobState('running', 'completed');
+              sendEvent({ status: 'completed' }, 'status');
+              if (!clientDisconnected) {
+                sendEvent({ done: true }, 'done');
+              }
+
+              metricsPending = true;
+              setImmediate(async () => {
+                try {
+                  const customMetrics = await calculateJobMetrics(
+                    output,
+                    job.selectedMetrics,
+                    {
+                      prompt: job.prompt,
+                      inputData: job.inputData,
+                      template: job.template || undefined,
+                    },
+                    (job.disabledMetrics as string[]) || [],
+                  );
+                  const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
+                    {
+                      ...customMetrics,
+                      response_time_ms: endTime - startTime,
+                      ...(cost > 0 && { estimated_cost_usd: cost }),
+                    };
+                  await updateJob(id, { metrics });
+                  if (!clientDisconnected) {
+                    sendEvent(metrics, 'metrics');
+                  }
+                } catch (bgErr) {
+                  const msg =
+                    bgErr instanceof Error ? bgErr.message : String(bgErr);
+                  if (!clientDisconnected) {
+                    sendEvent({ error: msg }, 'job-error');
+                  }
+                } finally {
+                  metricsPending = false;
+                  // Clean up memory and then end the response
+                  cleanupJobMemory(id, baselineMemoryMB);
+                  if (!res.writableEnded && !clientDisconnected) {
+                    res.end();
+                  }
+                }
+              });
+              return;
+            } catch (streamError) {
+              // Defensive: should never reach here, but just in case
+              const errorMessage =
+                streamError instanceof Error
+                  ? streamError.message
+                  : 'An unknown error occurred during streaming.';
               await updateJob(id, {
                 status: 'failed',
                 result: '',
-                errorMessage: 'Client disconnected before completion',
+                errorMessage,
               });
-              // Metrics: transition running -> failed
-              transitionJobState('running', 'failed');
+              sendEvent({ status: 'failed' }, 'status');
               cleanupJobMemory(id, baselineMemoryMB);
+              if (!clientDisconnected) {
+                sendEvent({ error: errorMessage }, 'job-error');
+                sendEvent({ done: true }, 'done');
+              }
+              if (!res.writableEnded) {
+                if (typeof res.flush === 'function') res.flush();
+                await new Promise((r) => setTimeout(r, 10));
+                if (!res.writableEnded) res.end();
+              }
               return;
             }
+          } else {
+            // Fallback to non-streaming
+            const result = await p.complete(job.prompt, {
+              model: job.model,
+              requestId: (req as any).requestId,
+              ...(job.temperature !== null && { temperature: job.temperature }),
+              ...(job.topP !== null && { topP: job.topP }),
+              ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
+            } as any);
+            output = result.output;
+            tokens = result.tokens;
+            cost = result.cost;
 
-            // Streaming is complete: mark completed quickly and calculate metrics in background
+            if (!clientDisconnected) {
+              sendEvent({ token: output });
+            }
+
             const endTime = Date.now();
-            tokens = Math.floor(output.length / 4);
-            const pricePerK = 0.002;
-            cost = (tokens / 1000) * pricePerK;
 
-            await updateJob(id, { status: 'completed', result: output });
+            // Mark completed and notify quickly
+            await updateJob(id, {
+              status: 'completed',
+              result: output,
+            });
             transitionJobState('running', 'completed');
             sendEvent({ status: 'completed' }, 'status');
             if (!clientDisconnected) {
               sendEvent({ done: true }, 'done');
             }
 
+            // Background metrics calculation
             metricsPending = true;
             setImmediate(async () => {
               try {
@@ -756,107 +861,42 @@ jobsRouter.get(
                 }
               } finally {
                 metricsPending = false;
-                // Clean up memory and then end the response
+                // Clean up memory after successful completion (non-streaming)
                 cleanupJobMemory(id, baselineMemoryMB);
                 if (!res.writableEnded && !clientDisconnected) {
                   res.end();
                 }
               }
             });
-            return;
-          } catch (streamError) {
-            // Defensive: should never reach here, but just in case
-            const errorMessage =
-              streamError instanceof Error
-                ? streamError.message
-                : 'An unknown error occurred during streaming.';
-            await updateJob(id, {
-              status: 'failed',
-              result: '',
-              errorMessage,
-            });
-            sendEvent({ status: 'failed' }, 'status');
-            cleanupJobMemory(id, baselineMemoryMB);
-            if (!clientDisconnected) {
-              sendEvent({ error: errorMessage }, 'job-error');
-              sendEvent({ done: true }, 'done');
-            }
-            if (!res.writableEnded) {
-              if (typeof res.flush === 'function') res.flush();
-              await new Promise((r) => setTimeout(r, 10));
-              if (!res.writableEnded) res.end();
-            }
-            return;
           }
         } else {
-          // Fallback to non-streaming
-          const result = await provider.complete(job.prompt, {
-            model: job.model,
-            requestId: (req as any).requestId,
-            ...(job.temperature !== null && { temperature: job.temperature }),
-            ...(job.topP !== null && { topP: job.topP }),
-            ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
-          } as any);
-          output = result.output;
-          tokens = result.tokens;
-          cost = result.cost;
-
-          if (!clientDisconnected) {
-            sendEvent({ token: output });
-          }
-
-          const endTime = Date.now();
-
-          // Mark completed and notify quickly
-          await updateJob(id, {
-            status: 'completed',
-            result: output,
-          });
-          transitionJobState('running', 'completed');
-          sendEvent({ status: 'completed' }, 'status');
-          if (!clientDisconnected) {
-            sendEvent({ done: true }, 'done');
-          }
-
-          // Background metrics calculation
-          metricsPending = true;
-          setImmediate(async () => {
-            try {
-              const customMetrics = await calculateJobMetrics(
-                output,
-                job.selectedMetrics,
-                {
-                  prompt: job.prompt,
-                  inputData: job.inputData,
-                  template: job.template || undefined,
-                },
-                (job.disabledMetrics as string[]) || [],
-              );
-              const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
-                {
-                  ...customMetrics,
-                  response_time_ms: endTime - startTime,
-                  ...(cost > 0 && { estimated_cost_usd: cost }),
-                };
-              await updateJob(id, { metrics });
-              if (!clientDisconnected) {
-                sendEvent(metrics, 'metrics');
-              }
-            } catch (bgErr) {
-              const msg =
-                bgErr instanceof Error ? bgErr.message : String(bgErr);
-              if (!clientDisconnected) {
-                sendEvent({ error: msg }, 'job-error');
-              }
-            } finally {
-              metricsPending = false;
-              // Clean up memory after successful completion (non-streaming)
-              cleanupJobMemory(id, baselineMemoryMB);
-              if (!res.writableEnded && !clientDisconnected) {
-                res.end();
-              }
+          // Worker-enabled path: subscribe to events and stream them through SSE
+          const unsubscribe = jobEvents.subscribe(id, (evt) => {
+            if (clientDisconnected || res.writableEnded) return;
+            switch (evt.type) {
+              case 'token':
+                sendEvent({ token: evt.content });
+                break;
+              case 'status':
+                sendEvent({ status: evt.status }, 'status');
+                break;
+              case 'metrics':
+                sendEvent(evt.payload, 'metrics');
+                break;
+              case 'error':
+                sendEvent({ error: evt.message }, 'job-error');
+                break;
+              case 'done':
+                sendEvent({ done: true }, 'done');
+                if (!res.writableEnded) res.end();
+                break;
             }
           });
+          // Ensure unsubscribe on close
+          const cleanupSub = () => unsubscribe();
+          req.on('close', cleanupSub);
+          res.on('close', cleanupSub);
+          return; // Worker will drive the rest
         }
       } catch (error) {
         const errorMessage =
@@ -996,6 +1036,16 @@ jobsRouter.put(
         errorMessage: 'Job cancelled by user',
       });
 
+      // Mark cancelRequested so worker honors it
+      try {
+        await (_db as any)
+          .update(jobsTable as any)
+          .set({ cancelRequested: 1 } as any)
+          .where(drEq((jobsTable as any).id, id));
+      } catch (_e) {
+        void _e;
+      }
+
       // Metrics: transition from previous state to cancelled
       if (job.status === 'pending') {
         transitionJobState('pending', 'cancelled');
@@ -1007,6 +1057,15 @@ jobsRouter.put(
       const cancelFunction = activeJobCancellations.get(id);
       if (cancelFunction) {
         cancelFunction();
+      }
+      // For worker-enabled mode, mark cancelRequested as well
+      try {
+        await _db
+          .update(jobsTable)
+          .set({ cancelRequested: 1 as any })
+          .where(drEq(jobsTable.id, id));
+      } catch (_e) {
+        void _e;
       }
 
       // Notify WebSocket connections about cancellation

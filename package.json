@@ -29,6 +29,7 @@
     "deps:check": "depcheck --ignores='@types/*,@testing-library/*,@vitejs/*,@vitest/*,eslint-*,@eslint/*,typescript,react-dom,better-sqlite3,get-port,rimraf,supertest,@jridgewell/set-array' --ignore-patterns='scripts/**/*'",
     "deps:update": "pnpm update --recursive --latest --reporter=silent",
     "prepare": "husky",
+    "db:reset": "node scripts/db-reset.js",
     "migrate": "node --loader ts-node/esm scripts/migrate-drizzle.ts",
     "migrate:generate": "cd packages/evaluation-engine && pnpm drizzle-kit generate",
     "db:studio": "cd packages/evaluation-engine && pnpm drizzle-kit studio",

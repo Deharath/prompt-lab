@@ -21,6 +21,47 @@ export async function runDrizzleMigrations(sqlite: Database.Database) {
   try {
     const db = drizzle(sqlite);
 
+    // --- Simple DB-based migration lock (SQLite) ---
+    const nowSec = Math.floor(Date.now() / 1000);
+    const LOCK_TTL_SEC = 300; // 5 minutes
+    try {
+      sqlite.exec(
+        'CREATE TABLE IF NOT EXISTS migrations_lock (id text primary key, updated_at integer)',
+      );
+      // Try to acquire lock by inserting a single row with fixed id
+      const insert = sqlite.prepare(
+        'INSERT INTO migrations_lock (id, updated_at) VALUES (?, ?)',
+      );
+      try {
+        insert.run('leader', nowSec);
+        // acquired
+      } catch (e) {
+        // Already locked: check TTL
+        const row = sqlite
+          .prepare('SELECT updated_at FROM migrations_lock WHERE id = ?')
+          .get('leader') as { updated_at?: number } | undefined;
+        const ts = Number(row?.updated_at ?? 0);
+        const age = nowSec - ts;
+        if (age > LOCK_TTL_SEC) {
+          // Stale lock: take over
+          sqlite
+            .prepare('DELETE FROM migrations_lock WHERE id = ?')
+            .run('leader');
+          insert.run('leader', nowSec);
+        } else {
+          log.info('Skipping migrations: another instance holds the lock', {
+            ageSeconds: age,
+          });
+          return; // do not run migrations
+        }
+      }
+    } catch (e) {
+      // If lock fails, continue without it (best-effort in dev)
+      log.warn('Migration lock unavailable; continuing without lock', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+
     // More comprehensive search for migration path
     const possiblePaths = [
       // Standard development/build path
@@ -62,6 +103,12 @@ export async function runDrizzleMigrations(sqlite: Database.Database) {
     });
 
     await migrate(db, { migrationsFolder: migrationPath });
+    try {
+      // Release lock
+      sqlite.prepare('DELETE FROM migrations_lock WHERE id = ?').run('leader');
+    } catch (_e) {
+      void _e;
+    }
     log.info('Database migrations completed successfully');
   } catch (error) {
     log.error(

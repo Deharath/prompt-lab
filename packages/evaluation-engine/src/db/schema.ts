@@ -49,6 +49,11 @@ export const jobs = sqliteTable(
     selectedMetrics: text('selected_metrics', { mode: 'json' }), // Array of selected metric configs
     disabledMetrics: text('disabled_metrics', { mode: 'json' }), // Array of disabled metric IDs
 
+    // Queue groundwork fields
+    claimedAt: integer('claimed_at', { mode: 'timestamp' }),
+    workerId: text('worker_id'),
+    cancelRequested: integer('cancel_requested').default(0), // 0 = false, 1 = true
+
     attemptCount: integer('attempt_count').notNull().default(1),
     maxAttempts: integer('max_attempts').notNull().default(3),
     createdAt: integer('created_at', { mode: 'timestamp' })
@@ -70,6 +75,14 @@ export const jobs = sqliteTable(
     providerModelIdx: index('jobs_provider_model_idx').on(
       table.provider,
       table.model,
+    ),
+    claimedAtIdx: index('jobs_claimed_at_idx').on(table.claimedAt),
+    cancelRequestedIdx: index('jobs_cancel_requested_idx').on(
+      table.cancelRequested,
+    ),
+    statusClaimedIdx: index('jobs_status_claimed_idx').on(
+      table.status,
+      table.claimedAt,
     ),
   }),
 );

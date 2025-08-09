@@ -72,6 +72,36 @@ async function initializeDb() {
 
       _db = drizzle(sqlite, { schema });
 
+      // Backfill safety: ensure new queue columns exist even if journal drifted
+      try {
+        const cols = sqlite.prepare('PRAGMA table_info(jobs);').all() as Array<{
+          name: string;
+        }>;
+        const has = (n: string) => cols.some((c) => c.name === n);
+        const exec = (sql: string) => sqlite.prepare(sql).run();
+        if (!has('claimed_at'))
+          exec('ALTER TABLE `jobs` ADD COLUMN `claimed_at` integer');
+        if (!has('worker_id'))
+          exec('ALTER TABLE `jobs` ADD COLUMN `worker_id` text');
+        if (!has('cancel_requested'))
+          exec(
+            'ALTER TABLE `jobs` ADD COLUMN `cancel_requested` integer DEFAULT 0',
+          );
+        if (!has('disabled_metrics'))
+          exec('ALTER TABLE `jobs` ADD COLUMN `disabled_metrics` text');
+        exec(
+          'CREATE INDEX IF NOT EXISTS `jobs_claimed_at_idx` ON `jobs` (`claimed_at`)',
+        );
+        exec(
+          'CREATE INDEX IF NOT EXISTS `jobs_cancel_requested_idx` ON `jobs` (`cancel_requested`)',
+        );
+        exec(
+          'CREATE INDEX IF NOT EXISTS `jobs_status_claimed_idx` ON `jobs` (`status`,`claimed_at`)',
+        );
+      } catch (e) {
+        // Non-fatal: continue if PRAGMA or DDL fails; migrations likely handled it
+      }
+
       // Attach raw methods for test setup compatibility
       Object.assign(_db, {
         run: (sql: string) => sqlite.prepare(sql).run(),

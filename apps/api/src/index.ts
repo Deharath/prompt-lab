@@ -26,6 +26,7 @@ import {
   seedJobStateGauges,
   type JobState,
 } from './lib/prometheus.js';
+import { runJobsWorker } from './worker/jobsWorker.js';
 
 // Resolve repo root from this file location
 const rootDir = (() => {
@@ -262,6 +263,11 @@ if (process.argv[1] === __filename) {
       await getDb(); // This will run migrations and set up the database
       const dbInitTime = performance.now() - dbStartTime;
       log.info(`Database initialized in ${dbInitTime.toFixed(2)}ms`);
+      // Surface the configured DB URL for clarity in dev
+      log.info('Database config', {
+        url: config.database.url,
+        cwd: process.cwd(),
+      });
 
       // Seed Prometheus job state gauges from DB on startup
       try {
@@ -319,6 +325,12 @@ if (process.argv[1] === __filename) {
         log.info(
           `Health endpoints available at http://${config.server.host}:${config.server.port}/health/*`,
         );
+        const workerEnabled =
+          String(process.env.WORKER_ENABLED).toLowerCase() === 'true';
+        if (workerEnabled) {
+          log.info('Starting in-process jobs worker...');
+          runJobsWorker({ enabled: true });
+        }
       });
 
       server.on('error', (error) => {
