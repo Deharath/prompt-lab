@@ -503,6 +503,7 @@ jobsRouter.get(
       // Track if client disconnected and job cancellation
       let clientDisconnected = false;
       let jobCancelled = false;
+      let metricsPending = false; // Background metrics calculation in progress
       const abortController = new AbortController();
 
       const cleanup = () => {
@@ -711,55 +712,57 @@ jobsRouter.get(
               return;
             }
 
-            // Streaming is complete, transition to evaluating state
-            await updateJob(id, { status: 'evaluating' });
-            sendEvent({ status: 'evaluating' }, 'status');
-
-            // Don't send 'done' event yet - calculate metrics first
+            // Streaming is complete: mark completed quickly and calculate metrics in background
             const endTime = Date.now();
             tokens = Math.floor(output.length / 4);
             const pricePerK = 0.002;
             cost = (tokens / 1000) * pricePerK;
 
-            // Calculate metrics including defaults
-            const customMetrics = await calculateJobMetrics(
-              output,
-              job.selectedMetrics,
-              {
-                prompt: job.prompt,
-                inputData: job.inputData,
-                template: job.template || undefined,
-              },
-              (job.disabledMetrics as string[]) || [],
-            );
-
-            // Only include meaningful metrics - remove obsolete ones
-            const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
-              {
-                ...customMetrics, // Our valuable metrics from metrics.ts
-                response_time_ms: endTime - startTime,
-                // Only include cost if it's actually valuable for the use case
-                ...(cost > 0 && { estimated_cost_usd: cost }),
-              };
-
-            // Update database with final result and metrics
-            await updateJob(id, {
-              status: 'completed',
-              result: output,
-              metrics,
-            });
-            // Metrics: transition running -> completed
+            await updateJob(id, { status: 'completed', result: output });
             transitionJobState('running', 'completed');
             sendEvent({ status: 'completed' }, 'status');
-
-            // Send metrics first, then done event
             if (!clientDisconnected) {
-              sendEvent(metrics, 'metrics');
               sendEvent({ done: true }, 'done');
             }
 
-            // Clean up memory after successful completion
-            cleanupJobMemory(id, baselineMemoryMB);
+            metricsPending = true;
+            setImmediate(async () => {
+              try {
+                const customMetrics = await calculateJobMetrics(
+                  output,
+                  job.selectedMetrics,
+                  {
+                    prompt: job.prompt,
+                    inputData: job.inputData,
+                    template: job.template || undefined,
+                  },
+                  (job.disabledMetrics as string[]) || [],
+                );
+                const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
+                  {
+                    ...customMetrics,
+                    response_time_ms: endTime - startTime,
+                    ...(cost > 0 && { estimated_cost_usd: cost }),
+                  };
+                await updateJob(id, { metrics });
+                if (!clientDisconnected) {
+                  sendEvent(metrics, 'metrics');
+                }
+              } catch (bgErr) {
+                const msg =
+                  bgErr instanceof Error ? bgErr.message : String(bgErr);
+                if (!clientDisconnected) {
+                  sendEvent({ error: msg }, 'job-error');
+                }
+              } finally {
+                metricsPending = false;
+                // Clean up memory and then end the response
+                cleanupJobMemory(id, baselineMemoryMB);
+                if (!res.writableEnded && !clientDisconnected) {
+                  res.end();
+                }
+              }
+            });
             return;
           } catch (streamError) {
             // Defensive: should never reach here, but just in case
@@ -800,45 +803,60 @@ jobsRouter.get(
 
           if (!clientDisconnected) {
             sendEvent({ token: output });
-            sendEvent({ done: true }, 'done');
           }
 
           const endTime = Date.now();
 
-          // Calculate metrics for non-streaming responses
-          const customMetrics2 = await calculateJobMetrics(
-            output,
-            job.selectedMetrics,
-            {
-              prompt: job.prompt,
-              inputData: job.inputData,
-              template: job.template || undefined,
-            },
-            (job.disabledMetrics as string[]) || [],
-          );
-
-          const metrics2: import('@prompt-lab/evaluation-engine').JobMetrics = {
-            ...customMetrics2, // Our valuable metrics from metrics.ts
-            response_time_ms: endTime - startTime,
-            // Only include cost if it's actually valuable for the use case
-            ...(cost > 0 && { estimated_cost_usd: cost }),
-          };
-
+          // Mark completed and notify quickly
           await updateJob(id, {
             status: 'completed',
             result: output,
-            metrics: metrics2,
           });
-          // Metrics: transition running -> completed
           transitionJobState('running', 'completed');
           sendEvent({ status: 'completed' }, 'status');
-
           if (!clientDisconnected) {
-            sendEvent(metrics2, 'metrics');
+            sendEvent({ done: true }, 'done');
           }
 
-          // Clean up memory after successful completion (non-streaming)
-          cleanupJobMemory(id, baselineMemoryMB);
+          // Background metrics calculation
+          metricsPending = true;
+          setImmediate(async () => {
+            try {
+              const customMetrics = await calculateJobMetrics(
+                output,
+                job.selectedMetrics,
+                {
+                  prompt: job.prompt,
+                  inputData: job.inputData,
+                  template: job.template || undefined,
+                },
+                (job.disabledMetrics as string[]) || [],
+              );
+              const metrics: import('@prompt-lab/evaluation-engine').JobMetrics =
+                {
+                  ...customMetrics,
+                  response_time_ms: endTime - startTime,
+                  ...(cost > 0 && { estimated_cost_usd: cost }),
+                };
+              await updateJob(id, { metrics });
+              if (!clientDisconnected) {
+                sendEvent(metrics, 'metrics');
+              }
+            } catch (bgErr) {
+              const msg =
+                bgErr instanceof Error ? bgErr.message : String(bgErr);
+              if (!clientDisconnected) {
+                sendEvent({ error: msg }, 'job-error');
+              }
+            } finally {
+              metricsPending = false;
+              // Clean up memory after successful completion (non-streaming)
+              cleanupJobMemory(id, baselineMemoryMB);
+              if (!res.writableEnded && !clientDisconnected) {
+                res.end();
+              }
+            }
+          });
         }
       } catch (error) {
         const errorMessage =
@@ -861,8 +879,8 @@ jobsRouter.get(
         // Clean up the cancellation function
         activeJobCancellations.delete(id);
 
-        // Only end the response if not already ended
-        if (!res.writableEnded && !clientDisconnected) {
+        // Only end the response if not already ended and no background metrics
+        if (!metricsPending && !res.writableEnded && !clientDisconnected) {
           res.end();
         }
       }
