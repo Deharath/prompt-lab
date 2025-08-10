@@ -115,10 +115,54 @@ export async function metricsHandler(_req: Request, res: Response) {
   res.setHeader('Content-Type', registry.contentType);
   res.end(await registry.metrics());
 }
+// Worker metrics (added in roadmap item #6)
+export const workerRunningGauge = new client.Gauge({
+  name: 'worker_running',
+  help: '1 if the in-process worker loop is active',
+  registers: [registry],
+});
+
+export const workerClaimAttemptsTotal = new client.Counter({
+  name: 'worker_claim_attempts_total',
+  help: 'Total attempts to claim a job (including when none available)',
+  registers: [registry],
+});
+
+export const workerClaimsSucceededTotal = new client.Counter({
+  name: 'worker_claims_succeeded_total',
+  help: 'Total successful job claims',
+  registers: [registry],
+});
+
+export const workerCancellationsHonoredTotal = new client.Counter({
+  name: 'worker_cancellations_honored_total',
+  help: 'Jobs cancelled during execution due to cancelRequested flag',
+  registers: [registry],
+});
+
+export const workerRetriesTotal = new client.Counter({
+  name: 'worker_retries_total',
+  help: 'Automatic retry attempts performed by worker',
+  registers: [registry],
+});
+
+export const workerBackoffSecondsHistogram = new client.Histogram({
+  name: 'worker_backoff_seconds',
+  help: 'Observed backoff delay seconds between polling loops',
+  buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 5],
+  registers: [registry],
+});
+
 export const metrics = {
   registry,
   httpRequestsTotal,
   httpRequestDurationSeconds,
   jobStateGauge,
   jobTransitionsTotal,
+  workerRunningGauge,
+  workerClaimAttemptsTotal,
+  workerClaimsSucceededTotal,
+  workerCancellationsHonoredTotal,
+  workerRetriesTotal,
+  workerBackoffSecondsHistogram,
 };

@@ -167,6 +167,9 @@ importers:
       express-rate-limit:
         specifier: ^7.5.1
         version: 7.5.1(express@4.21.2)
+      helmet:
+        specifier: ^7.1.0
+        version: 7.2.0
       openai:
         specifier: ^4.104.0
         version: 4.104.0(ws@8.18.3)(zod@3.25.76)
@@ -5265,6 +5268,13 @@ packages:
       {
         integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==,
       }
+
+  helmet@7.2.0:
+    resolution:
+      {
+        integrity: sha512-ZRiwvN089JfMXokizgqEPXsl2Guk094yExfoDXR0cBYWxtBbaSww/w+vT4WEJsBW2iTUi1GgZ6swmoug3Oy4Xw==,
+      }
+    engines: { node: '>=16.0.0' }
 
   homedir-polyfill@1.0.3:
     resolution:
@@ -12023,6 +12033,8 @@ snapshots:
   hast-util-whitespace@3.0.0:
     dependencies:
       '@types/hast': 3.0.4
+
+  helmet@7.2.0: {}
 
   homedir-polyfill@1.0.3:
     dependencies:

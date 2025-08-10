@@ -10,7 +10,15 @@ import {
   updateJobWithError,
 } from '@prompt-lab/evaluation-engine';
 import { jobEvents } from '../lib/jobEvents.js';
-import { transitionJobState } from '../lib/prometheus.js';
+import {
+  transitionJobState,
+  workerRunningGauge,
+  workerClaimAttemptsTotal,
+  workerClaimsSucceededTotal,
+  workerCancellationsHonoredTotal,
+  workerRetriesTotal,
+  workerBackoffSecondsHistogram,
+} from '../lib/prometheus.js';
 import {
   MetricRegistry,
   calculateMetrics,
@@ -52,19 +60,38 @@ async function claimNextPendingJob() {
 
 export async function runJobsWorker({ enabled }: { enabled: boolean }) {
   if (!enabled) return;
-  // Simple loop; could be improved with notifiers later
+  workerRunningGauge.set(1);
+  let idleRounds = 0;
+  const MIN_DELAY_MS = 50;
+  const MAX_DELAY_MS = 2000;
+  // Basic startup log (could swap for shared logger if desired)
+  console.log('[worker] started', { workerId: WORKER_ID });
+
   const loop = async () => {
+    const loopStart = Date.now();
+    let delay = MIN_DELAY_MS;
     try {
+      workerClaimAttemptsTotal.inc();
       const jobId = await claimNextPendingJob();
       if (jobId) {
-        // Transition metrics pending->running was handled by route before; do it here as well
+        workerClaimsSucceededTotal.inc();
+        console.log('[worker] claimed job', { jobId });
+        idleRounds = 0; // reset backoff
         transitionJobState('pending', 'running');
         await executeJob(jobId);
+      } else {
+        // No job; increase idle backoff with exponential strategy
+        idleRounds += 1;
+        const exp = Math.min(MAX_DELAY_MS, MIN_DELAY_MS * 2 ** idleRounds);
+        delay = exp + Math.floor(Math.random() * 50); // jitter
       }
     } catch (e) {
-      // Swallow to keep loop alive
+      // In case of unexpected error, backoff modestly
+      delay = Math.min(MAX_DELAY_MS, delay * 2);
     } finally {
-      setTimeout(loop, 200);
+      const elapsed = (Date.now() - loopStart) / 1000;
+      workerBackoffSecondsHistogram.observe(delay / 1000);
+      setTimeout(loop, delay - Math.min(delay, elapsed * 1000));
     }
   };
   loop();
@@ -99,14 +126,16 @@ async function executeJob(jobId: string) {
         ...(job.maxTokens !== null && { maxTokens: job.maxTokens }),
       } as any);
 
+      let tokenCounter = 0;
       while (true) {
-        // Check DB cancel flag periodically
-        if (output.length % 200 === 0) {
+        // Periodic cancellation check every ~100 tokens or on first iteration
+        if (tokenCounter % 100 === 0) {
           const current = await getJob(jobId);
           if (
             current?.status === 'cancelled' ||
             (current as any)?.cancelRequested === 1
           ) {
+            workerCancellationsHonoredTotal.inc();
             await updateJob(jobId, {
               status: 'cancelled' as any,
               result: output,
@@ -122,6 +151,7 @@ async function executeJob(jobId: string) {
         if (r.done) break;
         if (r.value?.content) {
           output += r.value.content;
+          tokenCounter += 1;
           jobEvents.publish(jobId, { type: 'token', content: r.value.content });
         }
       }
@@ -170,9 +200,45 @@ async function executeJob(jobId: string) {
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    await updateJobWithError(jobId, err);
-    jobEvents.publish(jobId, { type: 'error', message: msg });
-    jobEvents.publish(jobId, { type: 'done' });
-    transitionJobState('running', 'failed');
+    // Retry logic: attempt limited automatic retry before marking failed
+    const current = await getJob(jobId);
+    const attemptCount = (current as any)?.attemptCount ?? 1;
+    const maxAttempts = (current as any)?.maxAttempts ?? 3;
+    if (attemptCount < maxAttempts) {
+      workerRetriesTotal.inc();
+      // Increment attempt count & reset claim markers so it can be reclaimed
+      await db
+        .update(jobs as any)
+        .set({
+          status: 'pending' as any,
+          errorMessage: msg,
+          attemptCount: attemptCount + 1,
+          claimedAt: null as any,
+          workerId: null as any,
+          updatedAt: new Date() as any,
+        })
+        .where(eq((jobs as any).id, jobId));
+      transitionJobState('running', 'pending');
+      jobEvents.publish(jobId, { type: 'status', status: 'pending' });
+      console.warn('[worker] retrying job', {
+        jobId,
+        attempt: attemptCount + 1,
+        maxAttempts,
+        error: msg,
+      });
+      // do not emit done; stream will continue when re-executed
+      return;
+    } else {
+      await updateJobWithError(jobId, err);
+      jobEvents.publish(jobId, { type: 'error', message: msg });
+      jobEvents.publish(jobId, { type: 'done' });
+      transitionJobState('running', 'failed');
+      console.error('[worker] job failed permanently', {
+        jobId,
+        attempts: attemptCount,
+        maxAttempts,
+        error: msg,
+      });
+    }
   }
 }

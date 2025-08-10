@@ -3,7 +3,13 @@ import { EventEmitter } from 'node:events';
 type JobEvent =
   | {
       type: 'status';
-      status: 'running' | 'evaluating' | 'completed' | 'failed' | 'cancelled';
+      status:
+        | 'pending'
+        | 'running'
+        | 'evaluating'
+        | 'completed'
+        | 'failed'
+        | 'cancelled';
     }
   | { type: 'token'; content: string }
   | { type: 'metrics'; payload: Record<string, unknown> }
