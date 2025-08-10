@@ -123,144 +123,242 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
         let fullText = '';
         let metricsReceived = false;
         let cancelled = false;
+        let fallbackStarted = false;
+        let reconnectAttempts = 0;
 
-        const stream = ApiClient.streamJob(
-          job.id,
-          // On token received
-          (token) => {
-            if (cancelled) return;
+        // Fallback: poll job status if streaming is unavailable
+        const pollUntilTerminal = async () => {
+          if (fallbackStarted) return;
+          fallbackStarted = true;
 
-            fullText += token;
-            // Direct, synchronous React state update
-            setOutputText(fullText);
+          try {
+            // Keep executing state until terminal status
+            setIsStreaming(true); // indicate live progress even if not token-by-token
+            setIsExecuting(true);
 
-            // Update cache to show running status
-            if (fullText.length === token.length) {
+            let attempts = 0;
+            let finalJob;
+            while (attempts < 120) {
+              // Exponential-ish backoff but capped
+              const delay = Math.min(250 + attempts * 100, 1500);
+              await new Promise((r) => setTimeout(r, delay));
+
+              finalJob = await ApiClient.fetchJob(job.id);
+
+              // Update cache with latest status so UI stays fresh
               batchUpdateJobsCache(queryClient, [
-                { id: job.id, status: 'running' },
+                { id: job.id, status: finalJob.status as any },
+              ]);
+
+              if (finalJob.result && !fullText) {
+                fullText = finalJob.result;
+                setOutputText(fullText);
+              }
+
+              if (
+                finalJob.status === 'completed' ||
+                finalJob.status === 'failed' ||
+                finalJob.status === 'cancelled'
+              ) {
+                break;
+              }
+              attempts++;
+            }
+
+            if (finalJob && !metricsReceived && finalJob.metrics) {
+              finish(finalJob.metrics || {});
+            }
+
+            if (finalJob) {
+              const resultSnippet = finalJob.result
+                ? generateResultSnippet(finalJob.result)
+                : fullText
+                  ? generateResultSnippet(fullText)
+                  : null;
+
+              batchUpdateJobsCache(queryClient, [
+                {
+                  id: job.id,
+                  status: finalJob.status,
+                  costUsd: finalJob.costUsd,
+                  resultSnippet,
+                },
               ]);
             }
-          },
-          // On stream complete
-          async () => {
-            if (cancelled) return;
-
+          } catch (pollErr) {
+            console.warn('Fallback polling failed:', pollErr);
+          } finally {
+            setCurrentJob(null);
+            setIsExecuting(false);
             setIsStreaming(false);
-            // Keep isExecuting true until all completion work is done
+          }
+        };
 
-            // Generate snippet synchronously from current output
-            const resultSnippet = fullText
-              ? generateResultSnippet(fullText)
-              : null;
+        const openStream = () => {
+          const stream = ApiClient.streamJob(
+            job.id,
+            // On token received
+            (token) => {
+              if (cancelled) return;
 
-            // Update cache with completion
-            batchUpdateJobsCache(queryClient, [
-              { id: job.id, status: 'completed', resultSnippet },
-            ]);
+              fullText += token;
+              // Direct, synchronous React state update
+              setOutputText(fullText);
 
-            // Wait for final job data
-            try {
-              let attempts = 0;
-              let finalJob;
-
-              while (attempts < 10) {
-                await new Promise((resolve) =>
-                  setTimeout(
-                    resolve,
-                    Math.min(100 * Math.pow(1.5, attempts), 500),
-                  ),
-                );
-                finalJob = await ApiClient.fetchJob(job.id);
-
-                if (
-                  finalJob.status === 'completed' ||
-                  finalJob.status === 'failed'
-                ) {
-                  break;
-                }
-                attempts++;
-              }
-
-              if (finalJob && !metricsReceived) {
-                finish(finalJob.metrics || {});
-              }
-
-              if (finalJob) {
+              // Update cache to show running status
+              if (fullText.length === token.length) {
                 batchUpdateJobsCache(queryClient, [
-                  {
-                    id: job.id,
-                    status: finalJob.status,
-                    costUsd: finalJob.costUsd,
-                    resultSnippet: finalJob.result
-                      ? generateResultSnippet(finalJob.result)
-                      : resultSnippet,
-                  },
+                  { id: job.id, status: 'running' },
                 ]);
               }
-            } catch (err) {
-              console.error('Failed to fetch final job status:', err);
+            },
+            // On stream complete
+            async () => {
+              if (cancelled) return;
+
+              setIsStreaming(false);
+              // Keep isExecuting true until all completion work is done
+
+              // Generate snippet synchronously from current output
+              const resultSnippet = fullText
+                ? generateResultSnippet(fullText)
+                : null;
+
+              // Update cache with completion
               batchUpdateJobsCache(queryClient, [
-                { id: job.id, status: 'failed' },
+                { id: job.id, status: 'completed', resultSnippet },
               ]);
-            }
 
-            // Clear current job and set execution to false ONLY after everything is done
-            setCurrentJob(null);
-            setIsExecuting(false);
-          },
-          // On stream error
-          (streamError) => {
-            if (cancelled) return;
+              // Wait for final job data
+              try {
+                let attempts = 0;
+                let finalJob;
 
-            setIsStreaming(false);
-            setIsExecuting(false);
-            setError(`Stream error: ${streamError.message}`);
+                while (attempts < 10) {
+                  await new Promise((resolve) =>
+                    setTimeout(
+                      resolve,
+                      Math.min(100 * Math.pow(1.5, attempts), 500),
+                    ),
+                  );
+                  finalJob = await ApiClient.fetchJob(job.id);
 
-            batchUpdateJobsCache(queryClient, [
-              { id: job.id, status: 'failed' },
-            ]);
+                  if (
+                    finalJob.status === 'completed' ||
+                    finalJob.status === 'failed'
+                  ) {
+                    break;
+                  }
+                  attempts++;
+                }
 
-            setCurrentJob(null);
-          },
-          // On metrics received
-          (metrics) => {
-            if (cancelled) return;
+                if (finalJob && !metricsReceived) {
+                  finish(finalJob.metrics || {});
+                }
 
-            metricsReceived = true;
-            finish(metrics || {});
+                if (finalJob) {
+                  batchUpdateJobsCache(queryClient, [
+                    {
+                      id: job.id,
+                      status: finalJob.status,
+                      costUsd: finalJob.costUsd,
+                      resultSnippet: finalJob.result
+                        ? generateResultSnippet(finalJob.result)
+                        : resultSnippet,
+                    },
+                  ]);
+                }
+              } catch (err) {
+                console.error('Failed to fetch final job status:', err);
+                batchUpdateJobsCache(queryClient, [
+                  { id: job.id, status: 'failed' },
+                ]);
+              }
 
-            batchUpdateJobsCache(queryClient, [
-              { id: job.id, status: 'completed' },
-            ]);
-          },
-          // On status update
-          (status) => {
-            if (cancelled) return;
+              // Clear current job and set execution to false ONLY after everything is done
+              setCurrentJob(null);
+              setIsExecuting(false);
+            },
+            // On stream error
+            async (streamError) => {
+              if (cancelled) return;
 
-            batchUpdateJobsCache(queryClient, [
-              { id: job.id, status: status as any },
-            ]);
-          },
-          // On cancellation
-          (message) => {
-            cancelled = true;
-            setIsStreaming(false);
-            setIsExecuting(false);
+              console.warn('Stream connection error:', streamError);
+              try {
+                stream.close();
+                setEventSource(null);
+              } catch (_e) {
+                void _e; // ignore close errors
+              }
 
-            // Generate snippet from current output
-            const resultSnippet = fullText
-              ? generateResultSnippet(fullText)
-              : null;
+              // Check job status; if still running, attempt limited reconnects
+              try {
+                const statusCheck = await ApiClient.fetchJob(job.id);
+                if (
+                  statusCheck.status === 'pending' ||
+                  statusCheck.status === 'running' ||
+                  (statusCheck as any).status === 'evaluating'
+                ) {
+                  reconnectAttempts += 1;
+                  if (reconnectAttempts <= 3) {
+                    const delay = 200 * reconnectAttempts;
+                    setTimeout(() => {
+                      // Keep showing streaming state during reconnect attempts
+                      setIsStreaming(true);
+                      openStream();
+                    }, delay);
+                    return;
+                  }
+                }
+              } catch (e) {
+                // ignore, fallback below
+              }
 
-            batchUpdateJobsCache(queryClient, [
-              { id: job.id, status: 'cancelled', resultSnippet },
-            ]);
+              // Fallback to polling when reconnect attempts are exhausted or job not running
+              void pollUntilTerminal();
+            },
+            // On metrics received
+            (metrics) => {
+              if (cancelled) return;
 
-            setCurrentJob(null);
-          },
-        );
+              metricsReceived = true;
+              finish(metrics || {});
 
-        setEventSource(stream);
+              batchUpdateJobsCache(queryClient, [
+                { id: job.id, status: 'completed' },
+              ]);
+            },
+            // On status update
+            (status) => {
+              if (cancelled) return;
+
+              batchUpdateJobsCache(queryClient, [
+                { id: job.id, status: status as any },
+              ]);
+            },
+            // On cancellation
+            (message) => {
+              cancelled = true;
+              setIsStreaming(false);
+              setIsExecuting(false);
+
+              // Generate snippet from current output
+              const resultSnippet = fullText
+                ? generateResultSnippet(fullText)
+                : null;
+
+              batchUpdateJobsCache(queryClient, [
+                { id: job.id, status: 'cancelled', resultSnippet },
+              ]);
+
+              setCurrentJob(null);
+            },
+          );
+
+          setEventSource(stream);
+        };
+
+        openStream();
       } catch (err) {
         setIsExecuting(false);
         setIsStreaming(false);

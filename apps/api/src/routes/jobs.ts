@@ -491,10 +491,22 @@ jobsRouter.get(
       }
 
       res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
       res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Transfer-Encoding', 'chunked');
+      // Hint to proxies (nginx) not to buffer SSE
+      res.setHeader('X-Accel-Buffering', 'no');
+      // Ensure identity encoding (avoid gzip on this route)
+      res.setHeader('Content-Encoding', 'identity');
       // Rely on global CORS middleware; avoid overriding with wildcard here
       res.flushHeaders();
+
+      // Send initial padding/comment to bypass proxy buffering thresholds
+      try {
+        res.write(`:ok ${' '.repeat(2048)}\n\n`);
+      } catch (_e) {
+        void _e; // ignore write errors
+      }
 
       const workerEnabled =
         String(process.env.WORKER_ENABLED).toLowerCase() === 'true';
@@ -511,6 +523,7 @@ jobsRouter.get(
       let clientDisconnected = false;
       let jobCancelled = false;
       let metricsPending = false; // Background metrics calculation in progress
+      let sseActive = false; // Keep connection open for worker-bridged SSE
       const abortController = new AbortController();
 
       const cleanup = () => {
@@ -587,6 +600,15 @@ jobsRouter.get(
           return false;
         }
       };
+
+      // Keep-alive ping to ensure proxies flush periodically
+      const keepAlive = setInterval(() => {
+        try {
+          if (!res.writableEnded) res.write(':keep-alive\n\n');
+        } catch (_e) {
+          void _e; // ignore periodic write errors
+        }
+      }, 15000);
 
       try {
         let output = '';
@@ -871,6 +893,7 @@ jobsRouter.get(
           }
         } else {
           // Worker-enabled path: subscribe to events and stream them through SSE
+          sseActive = true;
           const unsubscribe = jobEvents.subscribe(id, (evt) => {
             if (clientDisconnected || res.writableEnded) return;
             switch (evt.type) {
@@ -889,14 +912,22 @@ jobsRouter.get(
               case 'done':
                 sendEvent({ done: true }, 'done');
                 if (!res.writableEnded) res.end();
+                sseActive = false;
                 break;
             }
           });
           // Ensure unsubscribe on close
-          const cleanupSub = () => unsubscribe();
+          const cleanupSub = () => {
+            try {
+              unsubscribe();
+            } finally {
+              sseActive = false;
+            }
+          };
           req.on('close', cleanupSub);
           res.on('close', cleanupSub);
-          return; // Worker will drive the rest
+          // Do not return; keep handler open so finally doesn't end response prematurely
+          // The response will be ended on 'done' or client disconnect
         }
       } catch (error) {
         const errorMessage =
@@ -920,9 +951,16 @@ jobsRouter.get(
         activeJobCancellations.delete(id);
 
         // Only end the response if not already ended and no background metrics
-        if (!metricsPending && !res.writableEnded && !clientDisconnected) {
+        // and not actively bridged to worker events
+        if (
+          !sseActive &&
+          !metricsPending &&
+          !res.writableEnded &&
+          !clientDisconnected
+        ) {
           res.end();
         }
+        clearInterval(keepAlive);
       }
     } catch (error) {
       next(error);

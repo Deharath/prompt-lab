@@ -48,7 +48,25 @@ if (config.security.enableTrustProxy) {
 }
 
 // Performance middleware
-app.use(compression()); // Enable gzip compression
+// Enable gzip compression, but skip SSE to avoid buffering token streams
+app.use(
+  compression({
+    filter: (req, res) => {
+      try {
+        const ct = res.getHeader('Content-Type');
+        const accept = req.headers.accept || '';
+        const isSse =
+          (typeof ct === 'string' && ct.includes('text/event-stream')) ||
+          (typeof accept === 'string' && accept.includes('text/event-stream'));
+        if (isSse) return false;
+        // Use default filter for other content types
+        return compression.filter(req as any, res as any);
+      } catch {
+        return compression.filter(req as any, res as any);
+      }
+    },
+  }),
+);
 
 // Security headers via helmet if available (configurable CSP)
 {
