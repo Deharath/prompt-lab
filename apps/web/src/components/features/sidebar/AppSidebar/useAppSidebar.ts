@@ -133,8 +133,14 @@ export const useAppSidebar = (
     async (jobId: string, event: React.MouseEvent) => {
       event.stopPropagation();
       try {
+        // Optimistically update the list so UI reflects deletion immediately
+        queryClient.setQueryData<JobSummary[]>(['jobs'], (old) =>
+          Array.isArray(old) ? old.filter((j) => j.id !== jobId) : old,
+        );
+
         await ApiClient.deleteJob(jobId);
-        // Invalidate and refetch the job history
+
+        // Ensure server truth by invalidating (will refetch if active)
         queryClient.invalidateQueries({ queryKey: ['jobs'] });
       } catch (error) {
         console.error('Failed to delete job:', error);
@@ -178,7 +184,22 @@ export const useAppSidebar = (
           if (focusedJobIndex >= 0 && focusedJobIndex < history.length) {
             const job = history[focusedJobIndex];
             try {
+              // Optimistically update cache to remove the job
+              queryClient.setQueryData<JobSummary[]>(['jobs'], (old) =>
+                Array.isArray(old) ? old.filter((j) => j.id !== job.id) : old,
+              );
+
               await ApiClient.deleteJob(job.id);
+
+              // Adjust focus to a valid index after removal
+              setFocusedJobIndex((prev) => {
+                const newLen = Math.max(history.length - 1, 0);
+                if (newLen === 0) return -1;
+                const next = Math.min(prev, newLen - 1);
+                return next;
+              });
+
+              // Ensure fresh data from server
               queryClient.invalidateQueries({ queryKey: ['jobs'] });
             } catch (error) {
               console.error('Failed to delete job:', error);
