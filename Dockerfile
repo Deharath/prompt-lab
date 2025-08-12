@@ -36,10 +36,12 @@ COPY --from=builder /app/package.json \
 COPY --from=builder /app/apps/api/package.json   ./apps/api/package.json
 COPY --from=builder /app/packages/evaluation-engine/package.json ./packages/evaluation-engine/package.json
 COPY --from=builder /app/packages/shared-types/package.json       ./packages/shared-types/package.json
-# install only production dependencies for runtime image
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
+# Install only production dependencies, but allow lifecycle scripts so native
+# modules like better-sqlite3 can download/build their bindings for this image.
 ENV NODE_ENV=production
+RUN pnpm install --prod --frozen-lockfile \
+    && pnpm rebuild better-sqlite3 || true
 RUN mkdir -p /app/db
 EXPOSE 3000
 
