@@ -284,6 +284,13 @@ export const useJobExecution = (): JobExecutionState & JobExecutionActions => {
               if (cancelled) return;
 
               console.warn('Stream connection error:', streamError);
+              // Surface the error so UI and tests can react immediately
+              const message =
+                streamError instanceof Error
+                  ? streamError.message
+                  : 'Streaming connection error';
+              setError(message);
+              setIsStreaming(false);
               try {
                 stream.close();
                 setEventSource(null);

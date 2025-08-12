@@ -1,244 +1,161 @@
 # Prompt Lab
 
-An advanced environment for testing and evaluating AI models and prompts.
+Test, compare, and evaluate prompts across multiple LLM providers with live streaming, rich metrics, and cost tracking — all in one place.
 
-## Overview
+## What It Is
 
-Prompt Lab is a modern platform for prompt engineering and AI model evaluation. Built with React, TypeScript, and Node.js, it enables systematic development, testing, and optimization of prompts across multiple AI providers while tracking performance metrics and costs in real-time.
+Prompt Lab is a monorepo that provides:
 
-## Vision
+- A web UI for designing and iterating on prompts
+- An API for running jobs and streaming results via SSE
+- A pluggable evaluation engine with built‑in metrics and provider integrations
 
-Prompt Lab addresses the critical challenges in prompt engineering by providing a unified, model-agnostic platform that streamlines the development lifecycle. Whether you're optimizing for performance, cost-effectiveness, or specific quality metrics, Prompt Lab provides the tools and insights needed to make data-driven decisions in your AI workflow.
+Current providers: OpenAI, Google Gemini, Anthropic. Tokens and estimated costs are tracked per job.
 
-## Core Features
+## Highlights
 
-### Model Integration
+- Multi‑provider: OpenAI, Gemini, Anthropic (extensible via a provider interface)
+- Live streaming (SSE): token‑level output with cancellation support
+- Metrics: readability, structure, quality (precision/recall/F‑score, ROUGE, BLEU), sentiment, keywords, latency, token count
+- Prometheus: `/metrics` endpoint + HTTP request histograms/counters
+- Database: SQLite via Drizzle ORM; WAL mode and indexes in place
+- Safe defaults: rate limiting, request size limits, CORS, optional `helmet`
 
-- **Multi-Provider Support:** Seamless integration with OpenAI, Google Gemini, Anthropic Claude, and extensible architecture for additional providers
-- **Unified Interface:** Consistent API abstraction across different AI models and providers
-- **Authentication Management:** Secure API key handling and provider-specific configuration
-
-### Prompt Development
-
-- **Template System:** Create, organize, and version reusable prompt templates with variable substitution
-- **Live Testing:** Real-time prompt testing with immediate feedback and iteration capabilities
-- **Parameter Tuning:** Fine-tune model parameters (temperature, max tokens, etc.) with visual controls
-
-### Evaluation Framework
-
-- **Automated Metrics:** Built-in evaluation metrics including sentiment analysis, readability scores, and custom quality assessments
-- **Side-by-Side Comparison:** Compare outputs from different models or prompt variations in a unified interface
-- **Job History:** View and manage previous evaluation runs with status tracking
-- **Real-time Results:** Live streaming of evaluation results with immediate feedback
-
-### Performance Monitoring
-
-- **Cost Tracking:** Real-time monitoring of API usage costs across providers with detailed breakdowns
-- **Latency Metrics:** Track response times and identify performance bottlenecks
-- **Token Usage:** Monitor token consumption patterns and optimize for efficiency
-- **Quality Scoring:** Comprehensive quality metrics including readability, sentiment, and keyword analysis
-
-### Data Management
-
-- **Share Functionality:** Share evaluation runs with teammates via secure links
-- **Data Persistence:** Reliable SQLite storage for prompts, jobs, and evaluation results
-- **Job Management:** Create, view, and delete evaluation jobs with comprehensive status tracking
-- **Settings Storage:** Persistent storage of model configurations and user preferences
-
-## Tech Stack
-
-- **Framework:** React (Vite)
-- **UI:** Tailwind CSS, Shadcn UI
-- **Language:** TypeScript
-- **Backend:** Node.js, Express.js
-- **Database:** SQLite with Drizzle ORM
-- **Testing:** Vitest, Playwright
-- **Linting/Formatting:** ESLint, Prettier
-- **CI/CD:** GitHub Actions
-- **Containerization:** Docker
-
-## Architecture
-
-Prompt Lab follows a modern monorepo architecture designed for scalability and maintainability:
-
-### Frontend (apps/web)
-
-- **React Application:** Built with Vite for fast development and optimized production builds
-- **State Management:** Zustand for lightweight, type-safe state management
-- **UI Components:** Tailwind CSS with Shadcn UI for consistent, accessible design
-- **Real-time Updates:** Server-Sent Events (SSE) for live prompt evaluation feedback
-
-### Backend (apps/api)
-
-- **REST API:** Express.js-based API with comprehensive error handling and validation
-- **Rate Limiting:** Built-in rate limiting and request throttling for API protection
-- **Authentication:** Secure API key management and provider authentication
-- **Health Monitoring:** Comprehensive health checks and monitoring endpoints
-- **Observability:** Prometheus-compatible `/metrics` endpoint with HTTP counters and histograms
-
-### Packages
-
-- **evaluation-engine:** Core evaluation logic with pluggable metrics system and AI provider integrations
-- **shared-types:** Shared TypeScript type definitions across the monorepo
-
-## Monorepo Structure
-
-This project is a monorepo managed with `pnpm` workspaces, providing efficient dependency management and build orchestration.
+## Repo Layout
 
 ```
 prompt-lab/
 ├── apps/
-│   ├── web/          # React frontend application
-│   └── api/          # Express.js backend API
+│   ├── api/   # Express API (SSE, jobs, metrics)
+│   └── web/   # React (Vite) frontend
 ├── packages/
-│   ├── evaluation-engine/  # Core evaluation framework and AI providers
-│   └── shared-types/       # Shared TypeScript definitions
-└── scripts/               # Build and deployment scripts
+│   ├── evaluation-engine/  # Providers, metrics, DB, services
+│   └── shared-types/       # Shared TypeScript contracts
+└── scripts/                # DB migrations and utilities
 ```
 
-## Getting Started
+## Quick Start (Local)
 
-### Prerequisites
+Prerequisites: Node 18+, pnpm
 
-- Node.js (v18 or higher)
-- pnpm
-- Docker (optional, for deployment)
+1. Install deps
 
-### Installation & Setup
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/Deharath/prompt-lab.git
-    cd prompt-lab
-    ```
-
-2.  **Install dependencies:**
-
-    ```bash
-    pnpm install
-    ```
-
-3.  **Set up environment variables (local only):**
-
-    Copy the template to a local, untracked file and add your keys:
-
-    ```bash
-    cp .env.example .env.local
-    ```
-
-    Then edit `.env.local`:
-
-    ```bash
-    OPENAI_API_KEY=your_openai_api_key_here
-    GEMINI_API_KEY=your_gemini_api_key_here
-    ANTHROPIC_API_KEY=your_anthropic_api_key_here
-    # Optional: restrict CORS origins in prod (comma-separated)
-    # ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
-    ```
-
-    Notes:
-    - `.env.local` is git‑ignored and overrides `.env` in development/test.
-    - In production, the app does not read files; inject env via your platform.
-
-4.  **Initialize the database:**
-
-    ```bash
-    pnpm migrate
-    ```
-
-5.  **Start the development servers:**
-
-    ```bash
-    pnpm dev
-    ```
-
-    This starts both the web application (http://localhost:5173) and the API server (http://localhost:3000) concurrently.
-
-### Docker Deployment
-
-For production deployment using Docker:
-
-```bash
-# Build the Docker image
-docker build -t prompt-lab .
-
-# Run the container
-docker run -d -p 3000:3000 \
-  -e OPENAI_API_KEY=your_key \
-  -e GEMINI_API_KEY=your_key \
-  -e ANTHROPIC_API_KEY=your_key \
-  # Optional: restrict CORS in production
-  -e ALLOWED_ORIGINS=https://yourdomain.com \
-  prompt-lab
+```
+pnpm install
 ```
 
-### Observability
+2. Configure environment
 
-- Prometheus endpoint: `GET /metrics` returns standard exposition format.
-- Includes default Node/process metrics and HTTP request metrics:
-  - `http_requests_total{method, status_code}`
-  - `http_request_duration_seconds{method, status_code}`
+```
+cp .env.example .env.local
+# then edit .env.local with your keys
+# OPENAI_API_KEY=...
+# GEMINI_API_KEY=...
+# ANTHROPIC_API_KEY=...
+```
+
+3. Migrate database
+
+```
+pnpm migrate
+```
+
+4. Run both servers
+
+```
+pnpm dev
+```
+
+- Web: http://localhost:5173
+- API: http://localhost:3000
+
+## API Overview
+
+Base URL: same origin as the API server (default `http://localhost:3000`).
+
+- `POST /jobs`: Create a job (provider, model, prompt, optional params)
+- `GET /jobs`: List jobs with filters (limit, offset, status, since)
+- `GET /jobs/:id`: Get job by id
+- `GET /jobs/:id/stream`: Server‑Sent Events stream (status, token, metrics, done)
+- `PUT /jobs/:id/cancel`: Cancel a pending/running job
+- `DELETE /jobs/:id`: Delete a job
+- `POST /jobs/:id/retry`: Retry a failed job
+- `GET /health`, `/health/ready`, `/health/live`, `/health/ping`: Health probes
+- `GET /metrics`: Prometheus metrics exposition
+- `GET /api/metrics/*`: Explore available metric plugins
+
+Example: create and stream a job with OpenAI
+
+```
+curl -s -X POST http://localhost:3000/jobs \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "Summarize: Prompt Lab is an evaluation tool...",
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.2
+  }'
+
+# Then stream updates (SSE)
+curl -N http://localhost:3000/jobs/<JOB_ID>/stream
+```
+
+SSE events you may see:
+
+- `status`: running | evaluating | completed | failed | cancelled
+- `token`: partial text chunks as the model streams
+- `metrics`: final metrics JSON after completion
+- `job-error`: recoverable/application errors
+- `done`: end of stream
 
 ## Configuration
 
-- CORS: In production, set `ALLOWED_ORIGINS` to a comma-separated list of allowed origins. In development, `*` is allowed by default.
-- Database: Default `DATABASE_URL` is `sqlite://./db/db.sqlite`. The server ensures the directory exists and enables WAL mode.
+Copy `.env.example` to `.env.local` and tune as needed:
 
-## Streaming Events (SSE)
+- `DATABASE_URL`: `sqlite://./db/db.sqlite` by default
+- `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`: provider auth
+- Rate limits: `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_GLOBAL_MAX`, `RATE_LIMIT_JOBS_MAX`
+- Security: `REQUEST_SIZE_LIMIT`, `TRUST_PROXY`
+- Features: `WORKER_ENABLED` (toggle background worker mode)
 
-The API streams job progress and results via Server-Sent Events at `/jobs/:id/stream`.
-
-- `status`: `{ status: 'running' | 'evaluating' | 'completed' | 'failed' }`
-- `token`: Partial output token chunks during generation.
-- `metrics`: Final metrics JSON after completion.
-- `job-error`: Application-level errors (distinct from transport errors handled by `EventSource.onerror`).
-- `cancelled`: `{ message: 'Job was cancelled' }` when a user cancels a job.
-- `done`: Signals the end of the stream.
-
-## Usage
-
-### Basic Workflow
-
-1. **Configure Providers:** Set up your AI provider API keys in the environment configuration
-2. **Create Prompts:** Use the prompt editor to create and template your prompts
-3. **Set Parameters:** Configure model parameters (temperature, max tokens, etc.)
-4. **Run Evaluations:** Execute prompts and compare results across different models
-5. **Analyze Results:** Review metrics, costs, and performance data
-6. **Iterate:** Refine prompts based on evaluation feedback
-
-### Advanced Features
-
-- **Custom Prompt Templates:** Pre-built templates for common use cases like summarization, sentiment analysis, and code review
-- **Custom Metrics:** Define custom evaluation criteria specific to your use case with flexible metric plugins
-- **Real-time Streaming:** Live evaluation results with Server-Sent Events for immediate feedback
-- **Cost Optimization:** Monitor and optimize API usage costs across providers with detailed pricing breakdowns
+CORS: In development all origins are allowed. For production, set `ALLOWED_ORIGINS` (comma‑separated) to restrict origins.
 
 ## Development
 
-### Scripts
+Useful root scripts:
 
-- `pnpm dev` - Start development servers (web + api)
-- `pnpm build` - Build all packages for production
-- `pnpm test` - Run test suite with coverage
-- `pnpm lint` - Run ESLint across all packages
-- `pnpm format` - Format code with Prettier
-- `pnpm tsc` - Type check all TypeScript code
-- `pnpm clean` - Clean build artifacts and dependencies
+- `pnpm dev`: run API and Web together
+- `pnpm build`: build all packages
+- `pnpm test`: run tests (engine, api, web)
+- `pnpm lint` / `pnpm format` / `pnpm tsc`
+- `pnpm migrate`: run DB migrations
+- `pnpm db:reset`: reset local DB (destructive)
+- `pnpm docker:run`: local Docker build and run
 
-### Testing
+Testing stack: Vitest across packages; API E2E test is available; Playwright is included for browser flows.
 
-The project includes comprehensive testing:
+## Docker
 
-- **Unit Tests:** Individual component and function testing
-- **Integration Tests:** API and database integration testing
-- **End-to-End Tests:** Full workflow testing with Playwright
-- **Coverage Reporting:** Automated test coverage tracking
+```
+docker build -t prompt-lab .
+docker run -d -p 3000:3000 \
+  -e OPENAI_API_KEY=... \
+  -e GEMINI_API_KEY=... \
+  -e ANTHROPIC_API_KEY=... \
+  prompt-lab
+```
+
+## Security & Reliability
+
+- Rate limiting on write endpoints; JSON body size limits
+- Optional `helmet` headers in production; request id tagging and structured logging
+- Graceful SSE handling with keep‑alives and client disconnect detection
+- Sentiment metrics auto‑disabled on low‑memory systems or via env flags
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
+PRs and issues are welcome. If you plan a larger change (new provider, metrics plugin), please open an issue to discuss design and scope first.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT — see `LICENSE`.
